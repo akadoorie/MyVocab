@@ -1,15 +1,19 @@
 import { TurnstileVerifier } from './auth/turnstile';
 import type { AppConfig } from './config';
 import { createDb, type Db } from './db/client';
+import { D1AccountRepository } from './repositories/d1/accounts';
 import { D1AuditRepository } from './repositories/d1/audit';
 import { D1CategoryRepository } from './repositories/d1/categories';
 import { D1ImportWriter } from './repositories/d1/import-writer';
 import { D1ItemRepository } from './repositories/d1/items';
+import { D1KnownRepository } from './repositories/d1/known';
 import { D1LanguageRepository } from './repositories/d1/languages';
 import { D1LoopRepository } from './repositories/d1/loops';
 import { D1SettingsRepository } from './repositories/d1/settings';
 import { D1UsageRepository } from './repositories/d1/usage';
+import { AccountService } from './services/account-service';
 import { CsvImportService } from './services/csv-import-service';
+import { KnownItemsService } from './services/known-items-service';
 import { LoopService } from './services/loop-service';
 import { SettingsService } from './services/settings-service';
 import { UsageLimitService } from './services/usage-limit-service';
@@ -40,6 +44,8 @@ export function createContainer(
       items,
       writer: new D1ImportWriter(db, d1),
     }),
+    known: new KnownItemsService({ known: new D1KnownRepository(db), languages }),
+    accounts: new AccountService({ accounts: new D1AccountRepository(db) }),
     loops: new LoopService({
       languages,
       categories,

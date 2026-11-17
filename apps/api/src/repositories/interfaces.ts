@@ -113,3 +113,63 @@ export interface LoopRepository {
   /** Random playable items (PRD §11.3), at most `limit`. */
   selectPlayable(selection: LoopSelection, limit: number): Promise<ItemData[]>;
 }
+
+export type KnownMarkRow = { itemId: number; target: string; cycle: number };
+
+export type KnownFilterInput = {
+  q?: string | undefined;
+  lang?: string | undefined;
+  type?: ItemType | undefined;
+  categoryId?: number | undefined;
+};
+
+export type KnownSortKey = 'newest' | 'oldest' | 'az';
+
+/** Position after the last row of a page: the sort value + item id (keyset pagination). */
+export type KnownCursor = { key: number | string; itemId: number };
+
+export type KnownListRow = {
+  itemId: number;
+  text: string;
+  normalizedText: string;
+  lang: string;
+  type: ItemType;
+  multipleMeanings: boolean;
+  translation: Record<string, string[]>;
+  explanation: string[];
+  knownTarget: string;
+  knownInCycle: number;
+  knownAt: number;
+};
+
+export interface KnownRepository {
+  /** Idempotent: existing rows are kept (earliest `known_at`); missing or trashed items skipped. */
+  insertMany(userId: string, marks: readonly KnownMarkRow[], now: number): Promise<number>;
+  remove(userId: string, itemId: number): Promise<number>;
+  /** Removes the given items (only ones not in Trash). */
+  removeMany(userId: string, itemIds: readonly number[]): Promise<number>;
+  /** Removes every known item matching the filter (not in Trash). */
+  removeByFilter(userId: string, filter: KnownFilterInput): Promise<number>;
+  list(
+    userId: string,
+    filter: KnownFilterInput,
+    sort: KnownSortKey,
+    cursor: KnownCursor | null,
+    limit: number,
+  ): Promise<KnownListRow[]>;
+  count(userId: string, filter: KnownFilterInput): Promise<number>;
+  categoriesFor(itemIds: readonly number[]): Promise<Map<number, { id: number; name: string }[]>>;
+}
+
+export type AccountRow = { id: string; role: string };
+
+export interface AccountRepository {
+  find(userId: string): Promise<AccountRow | null>;
+  /** Admins that are not banned. */
+  countActiveAdmins(): Promise<number>;
+  /**
+   * Deletes the user and everything that belongs to them in one batch: sessions, accounts and
+   * known items (FK cascade), usage counters, plus an audit entry.
+   */
+  deleteUser(userId: string, now: number): Promise<void>;
+}

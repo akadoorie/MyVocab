@@ -1,22 +1,34 @@
-/**
- * The signed-in user. M3: everyone is a guest; M4 replaces this with Better Auth (`GET /api/me`).
- */
-export type SessionUser = {
-  id: string;
-  name: string;
-  email: string;
-  image: string | null;
-  role: 'user' | 'admin';
-  isOwner: boolean;
-};
+import type { SessionUser } from '@myvocab/contracts';
+import { useQuery } from '@tanstack/react-query';
+import { api } from './api';
+
+export type { SessionUser };
 
 export type SessionState = { user: SessionUser | null; isGuest: boolean; loading: boolean };
 
+export const ME_QUERY_KEY = ['me'] as const;
+
+/** The signed-in user from `GET /api/me` (PRD §12.2). A failed lookup counts as a guest. */
 export function useSession(): SessionState {
-  return { user: null, isGuest: true, loading: false };
+  const me = useQuery({ queryKey: ME_QUERY_KEY, queryFn: api.me, staleTime: 5 * 60_000 });
+  const user = me.data?.user ?? null;
+  return { user, isGuest: user === null, loading: me.isPending };
 }
 
-/** Starts Google sign-in (wired to Better Auth in M4). */
+/** Where to come back after signing in: the current page, except the loop screen. */
+function returnPath(): string {
+  const { pathname } = window.location;
+  return pathname.startsWith('/loop') ? '/' : pathname;
+}
+
+/** Starts Google sign-in through Better Auth (PRD §13.1): the server answers with Google's URL. */
 export function startGoogleSignIn(): void {
-  window.location.assign('/?signin=google');
+  api
+    .signInSocial({
+      provider: 'google',
+      callbackURL: returnPath(),
+      errorCallbackURL: '/?signin=error',
+    })
+    .then((res) => window.location.assign(res.url))
+    .catch(() => window.location.assign('/?signin=error'));
 }

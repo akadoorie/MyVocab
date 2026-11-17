@@ -18,11 +18,26 @@ const envSchema = z
     TURNSTILE_SITE_KEY: z.string().min(1),
     TURNSTILE_SECRET_KEY: z.string().min(1),
     USAGE_HASH_SECRET: z.string().min(16),
+    BETTER_AUTH_SECRET: z.string().min(32),
+    GOOGLE_CLIENT_ID: z.string().default(''),
+    GOOGLE_CLIENT_SECRET: z.string().default(''),
+    /** Comma-separated owner emails (PRD §13.2). */
+    ADMIN_EMAILS: z.string().default(''),
     CF_ACCESS_TEAM_DOMAIN: z.string().default(''),
     CF_ACCESS_AUD: z.string().default(''),
   })
   .superRefine((env, ctx) => {
+    if (env.ENVIRONMENT === 'test') {
+      // Test mode enables /api/test/*: it may only ever run on this machine (PRD §12.5).
+      const host = new URL(env.APP_URL).hostname;
+      if (host !== 'localhost' && host !== '127.0.0.1') {
+        ctx.addIssue({ code: 'custom', message: 'ENVIRONMENT=test requires a localhost APP_URL' });
+      }
+    }
     if (env.ENVIRONMENT !== 'production') return;
+    if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+      ctx.addIssue({ code: 'custom', message: 'Google OAuth must be configured in production' });
+    }
     if (!env.CF_ACCESS_TEAM_DOMAIN || !env.CF_ACCESS_AUD) {
       ctx.addIssue({
         code: 'custom',
@@ -41,7 +56,18 @@ export type AppConfig = z.infer<typeof envSchema> & {
   isProduction: boolean;
   /** Expected Turnstile hostname; null outside production (test keys report another host). */
   turnstileHostname: string | null;
+  /** Owner emails, lower-cased (PRD §13.2). */
+  ownerEmails: ReadonlySet<string>;
 };
+
+export function parseOwnerEmails(raw: string): Set<string> {
+  return new Set(
+    raw
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter((e) => e.length > 0),
+  );
+}
 
 const cache = new WeakMap<object, AppConfig>();
 
@@ -59,6 +85,7 @@ export function loadConfig(env: Env): AppConfig {
     ...result.data,
     isProduction,
     turnstileHostname: isProduction ? new URL(result.data.APP_URL).hostname : null,
+    ownerEmails: parseOwnerEmails(result.data.ADMIN_EMAILS),
   };
   cache.set(env, config);
   return config;

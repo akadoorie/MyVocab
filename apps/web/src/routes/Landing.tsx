@@ -1,6 +1,8 @@
 import type { StartChoices } from '@myvocab/core';
 import { useQuery } from '@tanstack/react-query';
-import { useLocation } from 'react-router';
+import { useEffect } from 'react';
+import { useLocation, useSearchParams } from 'react-router';
+import { useToast } from '../components/Toast';
 import { StartCard } from '../features/setup/StartCard';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
@@ -15,6 +17,16 @@ export function Landing() {
   const location = useLocation();
   const meta = useQuery({ queryKey: ['meta'], queryFn: api.meta, staleTime: 60_000 });
   const initialSelection = (location.state as { selection?: StartChoices } | null)?.selection;
+  const toast = useToast();
+  const [params, setParams] = useSearchParams();
+
+  // Back from a failed Google sign-in (`/?signin=error&error=…`).
+  const signInFailed = params.get('signin') === 'error';
+  useEffect(() => {
+    if (!signInFailed) return;
+    toast.show({ message: strings.auth.signInFailed });
+    setParams({}, { replace: true });
+  }, [signInFailed, toast, setParams]);
 
   return (
     <main
@@ -26,7 +38,7 @@ export function Landing() {
           {strings.landing.heroTitle}
         </h1>
         <p className="text-lg text-muted">{strings.landing.heroBody}</p>
-        {session.isGuest && (
+        {session.isGuest && !session.loading && (
           <p className="rounded-[10px] border border-border bg-surface px-4 py-3 text-sm text-muted">
             {strings.landing.guestBanner}
           </p>
@@ -49,7 +61,7 @@ export function Landing() {
       </div>
 
       <div>
-        {meta.data ? (
+        {meta.data && !session.loading ? (
           <StartCard
             key={session.isGuest ? 'guest' : 'user'}
             meta={meta.data}

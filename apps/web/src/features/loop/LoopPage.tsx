@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'r
 import { Navigate, useLocation, useNavigate } from 'react-router';
 import { useToast } from '../../components/Toast';
 import { strings } from '../../strings';
+import { useKnownQueue } from '../known/KnownQueueProvider';
 import type { LoopStartNotice } from '../setup/StartCard';
 import { ButtonBar } from './ButtonBar';
 import { FlipCard } from './FlipCard';
@@ -28,10 +29,28 @@ export type KnownSink = {
 
 const noopSink: KnownSink = { onKnow: () => undefined, onUndo: () => undefined };
 
-export function LoopPage({ knownSink = noopSink }: { knownSink?: KnownSink }) {
+/**
+ * The loop screen. Signed-in learners' Know marks go to the Know queue (PRD §6.4); guests' marks
+ * go nowhere (FR-L55). `knownSink` overrides the queue (tests).
+ */
+export function LoopPage({ knownSink }: { knownSink?: KnownSink }) {
   const [stored] = useState<StoredLoop | null>(() => loadLoop());
+  const queue = useKnownQueue();
+  const sink = useMemo<KnownSink>(() => {
+    if (knownSink) return knownSink;
+    if (!queue || !stored || stored.isGuest) return noopSink;
+    const undoMs = stored.undoWindowSeconds * 1000;
+    return {
+      onKnow: (mark, target) => queue.add({ itemId: mark.id, target, cycle: mark.cycle }, undoMs),
+      onUndo: (mark) => queue.undo(mark.id),
+    };
+  }, [knownSink, queue, stored]);
+
+  // Leaving the loop screen ends every undo window: pending marks become final.
+  useEffect(() => () => queue?.finalizeAll(), [queue]);
+
   if (!stored) return <Navigate to="/" replace />;
-  return <Loop stored={stored} knownSink={knownSink} />;
+  return <Loop stored={stored} knownSink={sink} />;
 }
 
 function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink }) {

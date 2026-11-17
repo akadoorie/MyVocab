@@ -32,6 +32,23 @@ describe('loadConfig', () => {
     ).toThrow(/https/);
   });
 
+  it('refuses production without Google OAuth, and a short auth secret anywhere', () => {
+    expect(() => loadConfig({ ...base, GOOGLE_CLIENT_SECRET: '' } as unknown as Env)).toThrow(
+      /Google/,
+    );
+    expect(() => loadConfig({ ...env, BETTER_AUTH_SECRET: 'too-short' } as unknown as Env)).toThrow(
+      /BETTER_AUTH_SECRET/,
+    );
+  });
+
+  it('parses owner emails case-insensitively', () => {
+    const config = loadConfig({
+      ...base,
+      ADMIN_EMAILS: ' A@x.test, b@x.test ,,',
+    } as unknown as Env);
+    expect([...config.ownerEmails]).toEqual(['a@x.test', 'b@x.test']);
+  });
+
   it('never includes secret values in the error', () => {
     try {
       loadConfig({ ...base, USAGE_HASH_SECRET: 'short' } as unknown as Env);

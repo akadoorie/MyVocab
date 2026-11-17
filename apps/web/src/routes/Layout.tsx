@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, Outlet } from 'react-router';
+import { Link, NavLink, Outlet } from 'react-router';
+import { UserMenu } from '../components/UserMenu';
 import { api } from '../lib/api';
 import { startGoogleSignIn, useSession } from '../lib/session';
 import { strings } from '../strings';
@@ -28,14 +29,28 @@ export function Layout() {
           My<span className="text-accent">Vocab</span>
         </Link>
         <nav className="flex items-center gap-3 text-sm">
-          {session.isGuest && (
-            <button
-              type="button"
-              onClick={startGoogleSignIn}
-              className="rounded-[10px] border border-border px-3 py-2 hover:border-accent"
-            >
-              {strings.nav.signIn}
-            </button>
+          {session.user ? (
+            <>
+              <NavLink
+                to="/known"
+                className={({ isActive }) =>
+                  `hidden min-h-11 items-center rounded-[10px] px-3 hover:text-text sm:flex ${isActive ? 'text-text' : 'text-muted'}`
+                }
+              >
+                {strings.nav.knownWords}
+              </NavLink>
+              <UserMenu user={session.user} />
+            </>
+          ) : (
+            !session.loading && (
+              <button
+                type="button"
+                onClick={startGoogleSignIn}
+                className="min-h-11 rounded-[10px] border border-border px-3 py-2 hover:border-accent"
+              >
+                {strings.nav.signIn}
+              </button>
+            )
           )}
         </nav>
       </header>

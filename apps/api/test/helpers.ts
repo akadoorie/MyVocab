@@ -80,3 +80,37 @@ export function postJson(path: string, body: unknown, headers: Record<string, st
     body: JSON.stringify(body),
   });
 }
+
+/** Signs in through the test-only endpoint; returns the session cookie (`name=value`). */
+export async function signIn(
+  role: 'user' | 'admin' = 'user',
+  email?: string,
+): Promise<{ cookie: string; userId: string }> {
+  const res = await postJson('/test/session', { role, ...(email ? { email } : {}) });
+  if (res.status !== 200) throw new Error(`test session failed: ${res.status}`);
+  const setCookie = res.headers.get('Set-Cookie') ?? '';
+  const cookie = setCookie.split(';')[0] ?? '';
+  const body = await res.json<{ user: { id: string } }>();
+  return { cookie, userId: body.user.id };
+}
+
+/** A request with a session cookie (mutations get the Origin and JSON content type). */
+export function authed(cookie: string, path: string, init: RequestInit & { json?: unknown } = {}) {
+  const { json, ...rest } = init;
+  const headers: Record<string, string> = { Cookie: cookie, ...(rest.headers as object) };
+  if (rest.method && rest.method !== 'GET') headers.Origin = ORIGIN;
+  if (json !== undefined) headers['Content-Type'] = 'application/json';
+  return api(path, {
+    ...rest,
+    headers,
+    ...(json === undefined ? {} : { body: JSON.stringify(json) }),
+  });
+}
+
+export async function itemId(text: string): Promise<number> {
+  const row = await env.DB.prepare('SELECT id FROM items WHERE text = ?')
+    .bind(text)
+    .first<{ id: number }>();
+  if (!row) throw new Error(`No item ${text}`);
+  return row.id;
+}

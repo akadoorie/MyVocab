@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { itemTypeSchema } from './loops';
+import { itemTypeSchema } from './common';
 
 /** Admin-editable runtime settings with their defaults (PRD §7.7). */
 export const settingsSchema = z.object({

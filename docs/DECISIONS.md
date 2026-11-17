@@ -119,3 +119,34 @@ Format: date · context · decision · consequences.
 - **E2E:** `scripts/e2e-server.mjs` builds the SPA, seeds a separate local D1
   (`apps/api/.wrangler/e2e-state`, synthetic `seed/sample.csv` only) and runs `wrangler dev` on port
   8788 with test vars. `pnpm db:seed` gained `--persist-to`.
+
+## D-012 · 2026-11-17 · Auth and known items (M4)
+
+- **Better Auth** (1.7, Drizzle adapter, admin plugin) is created per request and only when needed:
+  guests without a session cookie never build it. Sessions are 30 days rolling, refreshed at most
+  daily; the refreshed cookie from `getSession` is passed on in the response.
+- **Allow-list of Better Auth routes:** only sign-in (Google), the Google callback and sign-out
+  reach Better Auth. Everything else, including the admin plugin's HTTP endpoints and
+  impersonation, answers 404; admin actions will go through `/api/admin` with both locks and audit.
+  The sign-in body is checked with a strict Zod schema (Google only, same-site relative callback).
+- **Privacy and write budget:** OAuth state in an encrypted cookie (`storeStateStrategy: 'cookie'`),
+  so starting a sign-in writes nothing; sessions store no IP or user agent; Google tokens are never
+  stored (database hooks null them); `updateAccountOnSignIn: false`; telemetry off.
+- **Owners:** a verified `ADMIN_EMAILS` address becomes admin at user creation, and an existing user
+  is promoted at the next sign-in with one conditional `UPDATE` (writes only when the role changes).
+- **Test session:** `POST /api/test/session` answers 404 unless `ENVIRONMENT=test`, and the config
+  refuses `ENVIRONMENT=test` with a non-localhost `APP_URL`.
+- **Known items:** one `INSERT … SELECT … FROM json_each(?) … ON CONFLICT DO NOTHING` per batch
+  (idempotent, earliest mark wins, trashed/missing items skipped). The list uses keyset pagination
+  (base64url cursor of sort key + item id), 50 per page, total on the first page only. Search uses
+  `LIKE … ESCAPE '\'` on `normalized_text` and on translation entries via `json_each`.
+- **Account deletion:** one batch deletes usage counters, the user (FK cascade: sessions, accounts,
+  known items) and writes a `user.self_delete` audit row with the id only. The last active admin
+  can't delete themselves (409).
+- **Know queue (web):** localStorage per user (ids, target, cycle, a nonce; never text). Pending
+  during the undo window, final after it or after a newer Know; debounced 2 s batches of ≤ 100;
+  `keepalive` flush of everything on `pagehide`/hidden; exponential backoff; 401 pauses until the
+  next start, 400 drops the batch. Undo deletes on the server when the mark may already be there
+  (sent, in flight, or sent by another tab). Leaving the loop screen finalizes pending marks.
+- **Follow-up for M7:** make the deployed default `ENVIRONMENT=production` in `wrangler.jsonc` and
+  move the development values to `.dev.vars`, so a deploy without overrides fails closed.

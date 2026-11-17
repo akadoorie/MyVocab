@@ -1,13 +1,23 @@
 import {
   availableResponseSchema,
+  deleteKnownResponseSchema,
   errorResponseSchema,
+  knownListResponseSchema,
+  meResponseSchema,
   metaResponseSchema,
+  postKnownResponseSchema,
+  restoreKnownResponseSchema,
+  socialSignInResponseSchema,
   startLoopResponseSchema,
   type AvailableQuery,
   type ErrorCode,
+  type KnownListQuery,
+  type KnownMarkInput,
+  type RestoreKnownRequest,
+  type SocialSignInRequest,
   type StartLoopRequest,
 } from '@myvocab/contracts';
-import type { z } from 'zod';
+import { z } from 'zod';
 
 /** An error response from /api, in the shared shape (PRD §12). */
 export class ApiError extends Error {
@@ -43,6 +53,17 @@ async function request<S extends z.ZodType>(
   return schema.parse(body);
 }
 
+function json(method: string, body: unknown, extra: RequestInit = {}): RequestInit {
+  return {
+    ...extra,
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  };
+}
+
+const okSchema = z.object({ ok: z.literal(true) });
+
 export const api = {
   meta: () => request('/meta', metaResponseSchema),
   available: (q: AvailableQuery) => {
@@ -51,9 +72,27 @@ export const api = {
     return request(`/loops/available?${params}`, availableResponseSchema);
   },
   startLoop: (body: StartLoopRequest) =>
-    request('/loops', startLoopResponseSchema, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    }),
+    request('/loops', startLoopResponseSchema, json('POST', body)),
+
+  // Current user (PRD §12.2)
+  me: () => request('/me', meResponseSchema),
+  deleteMe: () => request('/me', okSchema, json('DELETE', { confirm: 'DELETE' })),
+  signInSocial: (body: SocialSignInRequest) =>
+    request('/auth/sign-in/social', socialSignInResponseSchema, json('POST', body)),
+  signOut: () => request('/auth/sign-out', z.unknown(), json('POST', {})),
+
+  // Known items (PRD §12.3)
+  markKnown: (items: KnownMarkInput[], keepalive = false) =>
+    request('/me/known', postKnownResponseSchema, json('POST', { items }, { keepalive })),
+  unmarkKnown: (itemId: number) =>
+    request(`/me/known/${itemId}`, deleteKnownResponseSchema, { method: 'DELETE' }),
+  restoreKnown: (body: RestoreKnownRequest) =>
+    request('/me/known/restore', restoreKnownResponseSchema, json('POST', body)),
+  knownList: (q: KnownListQuery) => {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(q)) {
+      if (value !== undefined && value !== '') params.set(key, String(value));
+    }
+    return request(`/me/known?${params}`, knownListResponseSchema);
+  },
 };

@@ -11,6 +11,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router/dom';
 import { ToastProvider } from './components/Toast';
+import { KnownQueueProvider } from './features/known/KnownQueueProvider';
 import { createRouter } from './router';
 
 const root = document.getElementById('root');
@@ -23,9 +24,11 @@ const queryClient = new QueryClient({
 createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <RouterProvider router={createRouter()} />
-      </ToastProvider>
+      <KnownQueueProvider>
+        <ToastProvider>
+          <RouterProvider router={createRouter()} />
+        </ToastProvider>
+      </KnownQueueProvider>
     </QueryClientProvider>
   </StrictMode>,
 );

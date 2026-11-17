@@ -76,6 +76,7 @@ export function FlipCard({
             <p
               lang={card.front.lang}
               dir={card.front.dir}
+              data-testid="front-text"
               className="text-[clamp(2rem,6vw,3.5rem)] leading-tight font-semibold break-words"
             >
               {card.front.text}

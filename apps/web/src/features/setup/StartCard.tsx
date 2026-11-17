@@ -7,14 +7,14 @@ import {
   randomSeed,
   type StartChoices,
 } from '@myvocab/core';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { Button3D } from '../../components/Button3D';
 import { Field, Segmented } from '../../components/Field';
 import { useToast } from '../../components/Toast';
 import { api, ApiError } from '../../lib/api';
-import { startGoogleSignIn, type SessionState } from '../../lib/session';
+import { ME_QUERY_KEY, startGoogleSignIn, type SessionState } from '../../lib/session';
 import { readFlag, writeFlag } from '../../lib/storage';
 import { strings } from '../../strings';
 import { saveLoop } from '../loop/loop-storage';
@@ -24,6 +24,11 @@ import { useTurnstile } from './useTurnstile';
 const GUEST_TOAST_FLAG = 'myvocab.guestAmountToast';
 
 export type LoopStartNotice = { insufficient?: string };
+
+function remainingOf(details: unknown): number {
+  const remaining = (details as { remaining?: unknown } | undefined)?.remaining;
+  return typeof remaining === 'number' ? remaining : 0;
+}
 
 /** The start card (PRD §6.1, §9.5). Every field has a default, so Start works immediately. */
 export function StartCard({
@@ -38,6 +43,7 @@ export function StartCard({
   const isGuest = session.isGuest;
   const navigate = useNavigate();
   const toast = useToast();
+  const queryClient = useQueryClient();
   const { containerRef, getToken } = useTurnstile(
     meta.turnstileSiteKey,
     isGuest && meta.guest.enabled,
@@ -138,7 +144,12 @@ export function StartCard({
     } catch (e) {
       if (e instanceof ApiError && e.code === 'BOT_CHECK_FAILED')
         setError(strings.setup.botCheckFailed);
-      else if (e instanceof ApiError) setError(e.message);
+      else if (e instanceof ApiError && e.code === 'RATE_LIMITED' && !isGuest)
+        setError(strings.setup.dailyCap(remainingOf(e.details)));
+      else if (e instanceof ApiError && e.code === 'UNAUTHORIZED' && !isGuest) {
+        setError(strings.setup.sessionExpired);
+        void queryClient.invalidateQueries({ queryKey: ME_QUERY_KEY });
+      } else if (e instanceof ApiError) setError(e.message);
       else if (e instanceof Error && e.message.startsWith('Turnstile'))
         setError(strings.setup.botCheckFailed);
       else setError(strings.setup.genericError);
@@ -299,6 +310,11 @@ export function StartCard({
           <div className="rounded-[10px] border border-border bg-surface-2 p-4 text-center">
             <p className="font-semibold">{strings.setup.emptyTitle}</p>
             <p className="mt-1 text-sm text-muted">{strings.setup.emptyBody}</p>
+            {!isGuest && (
+              <Link to="/known" className="mt-3 inline-block text-sm text-accent hover:underline">
+                {strings.setup.emptyKnownLink}
+              </Link>
+            )}
           </div>
         ) : (
           <Button3D

@@ -1,9 +1,6 @@
 import { z } from 'zod';
 import type { CardView } from '@myvocab/core';
-
-const langCode = z.string().regex(/^[a-z]{2,3}(-[a-z0-9]{2,8})?$/, 'Invalid language code');
-const dir = z.enum(['ltr', 'rtl']);
-export const itemTypeSchema = z.enum(['word', 'expr']);
+import { dirSchema as dir, itemTypeSchema, langCodeSchema as langCode } from './common';
 
 /** GET /api/meta (PRD §12.1). */
 export const metaResponseSchema = z.object({
