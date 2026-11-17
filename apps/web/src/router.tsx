@@ -34,6 +34,11 @@ export const routes = [
     ],
   },
   { path: '/loop', Component: LoopPage },
+  {
+    // The admin bundle is lazy-loaded: learners never download it (PRD §7).
+    path: '/admin/*',
+    lazy: async () => ({ Component: (await import('./features/admin/AdminApp')).AdminApp }),
+  },
 ];
 
 export function createRouter() {

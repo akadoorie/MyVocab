@@ -1,3 +1,4 @@
+import type { SessionUser } from '@myvocab/contracts';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 import type { ReactNode } from 'react';
@@ -6,12 +7,12 @@ import { vi } from 'vitest';
 import { ToastProvider } from '../components/Toast';
 import { META } from './fixtures';
 
-export const TEST_USER = {
+export const TEST_USER: SessionUser = {
   id: 'u1',
   name: 'Test Learner',
   email: 'learner@example.test',
   image: null,
-  role: 'user' as const,
+  role: 'user',
   isOwner: false,
 };
 
@@ -23,7 +24,7 @@ type Handler = (init: RequestInit | undefined, url: string) => Response | Promis
  */
 export function mockFetch(
   routes: Record<string, Handler>,
-  user: typeof TEST_USER | null | (() => typeof TEST_USER | null) = TEST_USER,
+  user: SessionUser | null | (() => SessionUser | null) = TEST_USER,
 ) {
   return vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
     const url = String(input);

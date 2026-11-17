@@ -91,6 +91,12 @@ export function UserMenu({ user }: { user: SessionUser }) {
             <Link to="/account" className={itemClass} onClick={close}>
               {strings.nav.account}
             </Link>
+            {user.role === 'admin' && (
+              // Full-page navigation so Cloudflare Access can intercept it (PRD §13.4).
+              <a href="/admin" className={itemClass}>
+                {strings.nav.admin}
+              </a>
+            )}
             <button
               type="button"
               className={itemClass}

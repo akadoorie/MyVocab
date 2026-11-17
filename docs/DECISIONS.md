@@ -150,3 +150,45 @@ Format: date · context · decision · consequences.
   (sent, in flight, or sent by another tab). Leaving the loop screen finalizes pending marks.
 - **Follow-up for M7:** make the deployed default `ENVIRONMENT=production` in `wrangler.jsonc` and
   move the development values to `.dev.vars`, so a deploy without overrides fails closed.
+
+## D-013 · 2026-11-17 · Admin (M5)
+
+- **Both locks:** `requireAdmin` on the whole `/api/admin` router: DB-backed session with role
+  `admin` (no session or banned → 401, other roles → 403), then, outside development/test, the
+  `Cf-Access-Jwt-Assertion` JWT verified with `jose` (RS256 against the team certs, cached per
+  isolate; `iss`, `aud`, expiry) and its email must equal the session email. Tested in production
+  mode with real signed tokens (missing, wrong audience/issuer, expired, foreign key, email
+  mismatch → 403).
+- **Audit in the same batch:** every admin mutation is one D1 batch: the change, then an
+  `INSERT INTO audit_log … SELECT … WHERE changes() = 1` right after it, so a change that didn't
+  apply writes no audit row. (The PRD's example condition `version = :newVersion` would also match
+  when _another_ edit produced that version; `changes()` doesn't have that flaw.) Category links of
+  an item update are rewritten **before** the version bump, guarded by `version = :expected`, which
+  can't change inside the transaction.
+- **D1 change counts:** for a DELETE, D1's `meta.changes` includes rows removed by
+  `ON DELETE CASCADE`, so "applied" means `changes > 0`; SQL `changes()` counts direct rows only.
+- **New items** are created in one batch: insert, category links and audit find the new id through
+  its identity (unique among non-deleted items).
+- **Item updates** validate the merged item with the shared core rules (all known languages, so
+  data of an inactive language is kept); new translations only into active languages. Only changed
+  fields are written and audited (before/after). 409 `CONFLICT` details carry
+  `reason: 'stale' | 'duplicate'`.
+- **Preview** returns `CardView[]` for every playable active direction, built by the same
+  `buildCard` as `POST /loops`.
+- **Trash / cron:** the hourly cron purges up to 100 expired items per run in **one** batch
+  (pairs of DELETE + conditional audit with the full snapshot, `auto: true`), deletes usage counters
+  older than 48 h, and expired sessions and verifications.
+- **Categories:** reorder puts the given ids first, the rest keep their order; delete is blocked
+  while any item (including trashed ones, FK `RESTRICT`) uses the category. **Languages:** at
+  least one stays active. **Users:** owners can't be demoted or banned, no self-demotion or
+  self-ban, the last active admin can't be demoted; banning deletes every session.
+- **Settings:** `PUT` takes any subset of keys (no defaults), the server validates the merged
+  result (defaults active, `defaultSize` in `sizeOptions`, options ≤ `maxSize`), sorts/dedupes the
+  amount choices, writes only changed keys.
+- **Web:** the admin area is a lazy route (`/admin/*`, own chunk ≈ 15 KB gzip) with descendant
+  routes; its strings live in `strings-admin.ts` so learners never download them. The admin client
+  treats a redirect or a non-JSON 401/403 as an expired Access session and reloads `/admin`.
+  "Admin" links are plain `<a href="/admin">` (full-page navigation for Access). The item editor
+  serializes saves (each with the newest version); on a stale 409 it reloads the item and says so.
+- **`useDebounced`** compares values by content (JSON): passing a fresh object each render no
+  longer restarts its timer.

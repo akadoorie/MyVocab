@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Button3D } from './Button3D';
 
 /**
@@ -13,6 +13,10 @@ export function ConfirmDialog({
   busy = false,
   onConfirm,
   onCancel,
+  requireText,
+  requireTextLabel,
+  danger = false,
+  children,
 }: {
   title: string;
   body: string;
@@ -21,9 +25,16 @@ export function ConfirmDialog({
   busy?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  /** Typed confirmation: the confirm button stays disabled until this text is typed. */
+  requireText?: string;
+  requireTextLabel?: string;
+  danger?: boolean;
+  children?: ReactNode;
 }) {
   const titleId = useId();
   const bodyId = useId();
+  const inputId = useId();
+  const [typed, setTyped] = useState('');
   const dialogRef = useRef<HTMLDivElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
 
@@ -42,7 +53,9 @@ export function ConfirmDialog({
       }
       if (e.key !== 'Tab') return;
       const focusable =
-        dialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled])') ?? [];
+        dialogRef.current?.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), textarea:not([disabled])',
+        ) ?? [];
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       if (!first || !last) return;
@@ -75,6 +88,22 @@ export function ConfirmDialog({
         <p id={bodyId} className="mt-2 text-muted">
           {body}
         </p>
+        {children}
+        {requireText && (
+          <div className="mt-4 flex flex-col gap-1.5">
+            <label htmlFor={inputId} className="text-sm text-muted">
+              {requireTextLabel ?? requireText}
+            </label>
+            <input
+              id={inputId}
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              autoComplete="off"
+              spellCheck={false}
+              className="min-h-11 rounded-[10px] border border-border bg-surface-2 px-3 outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            />
+          </div>
+        )}
         <div className="mt-6 flex justify-end gap-3">
           <button
             ref={cancelRef}
@@ -84,7 +113,11 @@ export function ConfirmDialog({
           >
             {cancelLabel}
           </button>
-          <Button3D disabled={busy} onClick={onConfirm}>
+          <Button3D
+            variant={danger ? 'dontknow' : 'accent'}
+            disabled={busy || (requireText !== undefined && typed !== requireText)}
+            onClick={onConfirm}
+          >
             {confirmLabel}
           </Button3D>
         </div>

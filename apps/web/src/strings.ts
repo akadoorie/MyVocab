@@ -14,6 +14,7 @@ export const strings = {
     accountMenu: 'Account menu',
     knownWords: 'My known words',
     account: 'Account',
+    admin: 'Admin',
     privacy: 'Privacy',
     github: 'GitHub',
     skipToContent: 'Skip to content',

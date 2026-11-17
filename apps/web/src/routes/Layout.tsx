@@ -31,6 +31,15 @@ export function Layout() {
         <nav className="flex items-center gap-3 text-sm">
           {session.user ? (
             <>
+              {session.user.role === 'admin' && (
+                // Full-page navigation so Cloudflare Access can intercept it (PRD §13.4).
+                <a
+                  href="/admin"
+                  className="hidden min-h-11 items-center rounded-[10px] px-3 text-muted hover:text-text sm:flex"
+                >
+                  {strings.nav.admin}
+                </a>
+              )}
               <NavLink
                 to="/known"
                 className={({ isActive }) =>
