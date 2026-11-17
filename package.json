@@ -17,10 +17,12 @@
     "test:coverage": "pnpm --filter @myvocab/core test:coverage",
     "check:no-vocabulary": "tsx scripts/check-no-vocabulary.ts",
     "db:migrate:local": "pnpm --filter @myvocab/api db:migrate:local",
-    "db:seed": "pnpm --filter @myvocab/api db:seed"
+    "db:seed": "pnpm --filter @myvocab/api db:seed",
+    "e2e": "playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.1",
     "@types/node": "^22.19.0",
     "eslint": "^10.0.0",
     "eslint-plugin-jsx-a11y-x": "^0.2.0",

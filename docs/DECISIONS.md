@@ -98,3 +98,24 @@ Format: date · context · decision · consequences.
   confirmation; it needs the owner's `wrangler login`.
 - **Languages** are seeded by migration `0001_seed_languages.sql` (data only).
 - **Tests** reset storage and re-apply the migrations before every test.
+
+## D-011 · 2026-11-17 · Learning experience (M3)
+
+- **Order of guest checks in `POST /loops`:** validation → guests enabled / maintenance → Turnstile →
+  hourly cap → selection → counter increment. Turnstile runs before the cap so an unverified request
+  writes nothing at all (PRD §11.2 rule 5).
+- **Turnstile in the browser:** a small wrapper (`useTurnstile`) instead of a package: the script
+  loads only for guests, the widget renders with `execution: 'execute'` and
+  `appearance: 'interaction-only'`, and a fresh single-use token is requested when Start is
+  pressed. Local dev uses Cloudflare's invisible always-pass test keys.
+- **Routing:** React Router 8 data router (`createBrowserRouter`). `/loop` is outside the main
+  layout so the loop screen stays focused.
+- **Loop persistence:** `sessionStorage` holds the cards and the reducer state of the current loop,
+  validated with Zod on restore; it is cleared on Stop and when the loop ends (and saved again if
+  Undo turns the summary back into a cycle break).
+- **Button layout:** one set of buttons placed with CSS grid areas (mobile two rows, desktop one row
+  under the card). Component CSS (`.btn3d`) lives in `@layer components` so Tailwind utilities win.
+- **Toasts** sit above the loop button bar (mobile bottom-center, desktop bottom-right).
+- **E2E:** `scripts/e2e-server.mjs` builds the SPA, seeds a separate local D1
+  (`apps/api/.wrangler/e2e-state`, synthetic `seed/sample.csv` only) and runs `wrangler dev` on port
+  8788 with test vars. `pnpm db:seed` gained `--persist-to`.

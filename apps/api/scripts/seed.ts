@@ -21,11 +21,16 @@ const repoRoot = path.resolve(apiDir, '..', '..');
 const invokedFrom = process.env.INIT_CWD ?? process.cwd();
 
 function parseArgs(argv: string[]) {
-  const args = { file: undefined as string | undefined, remote: false };
+  const args = {
+    file: undefined as string | undefined,
+    remote: false,
+    persistTo: undefined as string | undefined,
+  };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--remote') args.remote = true;
     else if (a === '--file') args.file = argv[++i];
+    else if (a === '--persist-to') args.persistTo = argv[++i];
     else if (a === '--') continue;
     else throw new Error(`Unknown argument: ${a}`);
   }
@@ -85,9 +90,12 @@ async function main() {
       return;
     }
   } else {
+    const persist = args.persistTo
+      ? ['--persist-to', path.resolve(invokedFrom, args.persistTo)]
+      : [];
     const migrate = spawnSync(
       'pnpm',
-      ['exec', 'wrangler', 'd1', 'migrations', 'apply', 'myvocab-prod', '--local'],
+      ['exec', 'wrangler', 'd1', 'migrations', 'apply', 'myvocab-prod', '--local', ...persist],
       {
         cwd: apiDir,
         stdio: 'inherit',
@@ -100,6 +108,9 @@ async function main() {
   const proxy = await getPlatformProxy<Env>({
     configPath: args.remote ? remoteConfig() : path.join(apiDir, 'wrangler.jsonc'),
     remoteBindings: args.remote,
+    ...(args.persistTo && !args.remote
+      ? { persist: { path: path.join(path.resolve(invokedFrom, args.persistTo), 'v3') } }
+      : {}),
   });
   try {
     const report = await createContainer(proxy.env.DB).csvImport.run({

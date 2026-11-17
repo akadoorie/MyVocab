@@ -43,7 +43,7 @@
     "APP_URL": "http://localhost:5173",
     "CF_ACCESS_TEAM_DOMAIN": "",
     "CF_ACCESS_AUD": "",
-    "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+    "TURNSTILE_SITE_KEY": "1x00000000000000000000BB",
   },
 
   "observability": { "enabled": true },
