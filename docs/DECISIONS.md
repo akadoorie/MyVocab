@@ -54,3 +54,26 @@ Format: date · context · decision · consequences.
   git-ignored (so it also catches files about to be committed). Allow-listed: `seed/sample.csv`,
   `apps/api/migrations/*.sql` (schema only) and `**/fixtures/*.csv`; every allow-listed CSV is
   capped at 20 data rows.
+
+## D-008 · 2026-11-17 · Loop engine details
+
+- **Decision:** The loop state stores a seeded PRNG state (mulberry32), so `loopReducer` stays
+  pure, tests are deterministic, and a loop restored from `sessionStorage` continues identically.
+  The reducer works with item ids only; the UI looks up card content separately.
+- **Undo:** the reducer keeps the most recent Know (`lastKnow`) until a new Know or Stop; the
+  ~4-second Undo window is enforced by the UI timer. An undone card is appended to the next
+  cycle's set; undoing after the last Know turns the summary back into a cycle break.
+- **Order differs:** compared on the cards shared with the previous cycle (relative order); up to
+  10 re-shuffles, then a rotation by one.
+
+## D-009 · 2026-11-17 · CSV details
+
+- **Decision:** Core has its own small RFC 4180 parser/serializer (no runtime dependency).
+- Row numbers in import reports are spreadsheet lines (the header is line 1).
+- "At least one translation or an explanation" is checked on the **merged** item (all rows of
+  the same item in the file, plus the existing item), so a row may add only hints to an item
+  defined elsewhere. Warnings (multiple meanings, mixed scripts) are also computed on the merged
+  result, only for items the import creates or changes.
+- `multiple_meanings` accepts `true/false`, `yes/no`, `1/0` (empty = false).
+- List entries may not contain `|` (the CSV list separator, PRD §8.3); the shared item
+  validation rejects it everywhere, which keeps the export round-trip exact.
