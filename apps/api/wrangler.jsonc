@@ -25,25 +25,29 @@
     },
   ],
 
-  // Burst limits (PRD §14.3). Hourly/daily caps live in D1 usage_counters.
+  // Burst limits per minute (PRD §14.3), one binding per rule. Hourly/daily caps live in D1
+  // usage_counters. No D1 writes are involved.
   "ratelimits": [
-    {
-      "name": "RATE_LIMITER",
-      "namespace_id": "1001",
-      "simple": { "limit": 60, "period": 60 },
-    },
+    { "name": "RL_LOOPS", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },
+    { "name": "RL_AVAILABLE", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } },
+    { "name": "RL_AUTH", "namespace_id": "1003", "simple": { "limit": 20, "period": 60 } },
+    { "name": "RL_IMPORT", "namespace_id": "1004", "simple": { "limit": 10, "period": 60 } },
+    { "name": "RL_ADMIN", "namespace_id": "1005", "simple": { "limit": 120, "period": 60 } },
   ],
 
   // Hourly: Trash purge + usage counter cleanup (PRD §7.3, §11.1).
   "triggers": { "crons": ["0 * * * *"] },
 
-  // Non-secret configuration. Secrets go in .dev.vars locally and `wrangler secret put` in production.
+  // Non-secret configuration for PRODUCTION (the owner fills these in, PRD §19). The defaults fail
+  // closed: production refuses to serve until Access, https APP_URL etc. are configured.
+  // Local development overrides them in .dev.vars (git-ignored; see .dev.vars.example), tests in
+  // vitest.config.ts and scripts/e2e-server.mjs. Secrets: `wrangler secret put` (PRD §16).
   "vars": {
-    "ENVIRONMENT": "development",
-    "APP_URL": "http://localhost:5173",
+    "ENVIRONMENT": "production",
+    "APP_URL": "https://myvocab.example.workers.dev",
     "CF_ACCESS_TEAM_DOMAIN": "",
     "CF_ACCESS_AUD": "",
-    "TURNSTILE_SITE_KEY": "1x00000000000000000000BB",
+    "TURNSTILE_SITE_KEY": "set-your-turnstile-site-key",
   },
 
   "observability": { "enabled": true },

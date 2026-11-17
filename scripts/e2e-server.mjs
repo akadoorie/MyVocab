@@ -35,11 +35,20 @@ run(
   apiDir,
 );
 
+// Everything the Worker needs, so CI (which has no .dev.vars) runs the same as a local machine.
+// Test values only; Turnstile uses Cloudflare's always-pass test keys.
 const vars = {
   ENVIRONMENT: 'test',
   APP_URL: `http://localhost:${PORT}`,
+  TURNSTILE_SITE_KEY: '1x00000000000000000000BB',
   TURNSTILE_SECRET_KEY: '1x0000000000000000000000000000000AA',
   USAGE_HASH_SECRET: 'e2e-usage-hash-secret-0123456789',
+  BETTER_AUTH_SECRET: 'e2e-better-auth-secret-0123456789abcdef',
+  GOOGLE_CLIENT_ID: 'e2e-client-id',
+  GOOGLE_CLIENT_SECRET: 'e2e-client-secret',
+  ADMIN_EMAILS: 'owner@example.test',
+  CF_ACCESS_TEAM_DOMAIN: '',
+  CF_ACCESS_AUD: '',
 };
 const child = spawn(
   'pnpm',

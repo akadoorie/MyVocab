@@ -9,6 +9,7 @@ import { resolveStartDefaults } from '@myvocab/core';
 import { Hono } from 'hono';
 import type { AppEnv } from '../app';
 import { parseOrThrow, readJson } from '../lib/validate';
+import { burstLimit, ipKey } from '../middleware/burst-limit';
 
 /** Public endpoints (PRD §12.1). */
 export const publicRoutes = new Hono<AppEnv>()
@@ -57,7 +58,7 @@ export const publicRoutes = new Hono<AppEnv>()
       turnstileSiteKey: c.get('config').TURNSTILE_SITE_KEY,
     });
   })
-  .get('/loops/available', async (c) => {
+  .get('/loops/available', burstLimit('RL_AVAILABLE', ipKey), async (c) => {
     const q = parseOrThrow(availableQuerySchema, c.req.query());
     const available = await c
       .get('container')
@@ -67,7 +68,7 @@ export const publicRoutes = new Hono<AppEnv>()
       );
     return c.json<AvailableResponse>({ available });
   })
-  .post('/loops', async (c) => {
+  .post('/loops', burstLimit('RL_LOOPS', ipKey), async (c) => {
     const body = parseOrThrow(startLoopRequestSchema, await readJson(c.req));
     const result = await c.get('container').loops.start(body, await c.get('requester')());
     return c.json<StartLoopResponse>(result);

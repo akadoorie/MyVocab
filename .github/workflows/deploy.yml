@@ -1,0 +1,68 @@
+# Production deploy (PRD §16). Runs on pushes to main (and manually), but its job targets the
+# GitHub Environment "production", whose required reviewer (the owner) must click Approve before
+# anything runs. Only then: the checks again → D1 migrations → wrangler deploy.
+# It never seeds, exports or prints data. Cloudflare credentials exist only in that Environment.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Checks, migrations, deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Guard - no vocabulary in the public repo
+        run: pnpm check:no-vocabulary
+
+      - name: Lint, typecheck, test
+        run: |
+          pnpm lint
+          pnpm typecheck
+          pnpm test
+
+      - name: Build the SPA
+        run: pnpm build
+
+      - name: Apply D1 migrations (production)
+        working-directory: apps/api
+        run: pnpm exec wrangler d1 migrations apply myvocab-prod --remote
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Deploy the Worker
+        working-directory: apps/api
+        run: pnpm exec wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

@@ -1,5 +1,10 @@
+# MyVocab: the landing page may be indexed; the app, the API and the admin area may not
+# (PRD §14.2–14.3). /api/* also answers with X-Robots-Tag: noindex.
 User-agent: *
+Allow: /$
+Allow: /privacy
 Disallow: /api/
 Disallow: /admin
+Disallow: /loop
 Disallow: /known
 Disallow: /account

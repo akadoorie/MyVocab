@@ -19,6 +19,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { AppEnv } from '../app';
 import { parseOrThrow, readJson } from '../lib/validate';
+import { adminKey, burstLimit } from '../middleware/burst-limit';
 import { ValidationError } from '../middleware/errors';
 import { requireAdmin } from '../middleware/require-admin';
 import { importTemplateCsv } from '../services/admin/import-template';
@@ -33,6 +34,7 @@ const codeParam = z.object({ code: langCodeSchema });
  */
 export const adminRoutes = new Hono<AppEnv>()
   .use('*', requireAdmin)
+  .use('*', burstLimit('RL_ADMIN', adminKey))
 
   .get('/stats', async (c) => c.json(await c.get('container').admin.ops.stats()))
 
@@ -145,7 +147,7 @@ export const adminRoutes = new Hono<AppEnv>()
       'Content-Disposition': 'attachment; filename="myvocab-import-template.csv"',
     });
   })
-  .post('/import', async (c) => {
+  .post('/import', burstLimit('RL_IMPORT', adminKey), async (c) => {
     const q = parseOrThrow(importQuerySchema, c.req.query());
     const tooLarge = () => new ValidationError('The file is larger than 2 MB');
     // Refuse oversized uploads before reading them (the multipart overhead is small).

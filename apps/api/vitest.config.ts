@@ -10,8 +10,19 @@ export default defineConfig(async () => {
       cloudflareTest({
         wrangler: { configPath: './wrangler.jsonc' },
         miniflare: {
+          // Generous burst limits for the suite; the 429 path is tested with a fake limiter.
+          ratelimits: Object.fromEntries(
+            ['RL_LOOPS', 'RL_AVAILABLE', 'RL_AUTH', 'RL_IMPORT', 'RL_ADMIN'].map((name, i) => [
+              name,
+              { namespace_id: String(9001 + i), simple: { limit: 100_000, period: 60 as const } },
+            ]),
+          ),
           bindings: {
             ENVIRONMENT: 'test',
+            APP_URL: 'http://localhost:5173',
+            TURNSTILE_SITE_KEY: '1x00000000000000000000BB',
+            CF_ACCESS_TEAM_DOMAIN: '',
+            CF_ACCESS_AUD: '',
             TEST_MIGRATIONS: migrations,
             // Test-only values (CI has no .dev.vars). Turnstile: Cloudflare's always-pass test secret.
             TURNSTILE_SECRET_KEY: '1x0000000000000000000000000000000AA',

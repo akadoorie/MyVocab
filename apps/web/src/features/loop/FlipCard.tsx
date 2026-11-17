@@ -1,5 +1,5 @@
 import type { CardSide, CardView } from '@myvocab/core';
-import type { KeyboardEvent } from 'react';
+import { useId, type KeyboardEvent } from 'react';
 import { strings } from '../../strings';
 
 function Extras({ card }: { card: CardView }) {
@@ -57,13 +57,19 @@ export function FlipCard({
   };
   const front = side === 'front';
   const Answer = card.answer.numbered ? 'ol' : 'ul';
+  const hintId = useId();
 
+  // The accessible name comes from the visible face (WCAG 2.5.3 "label in name"); the hidden face
+  // is inert and aria-hidden, so it isn't read. The instruction is a description.
   return (
     <div className={`flip-card ${front ? '' : 'is-flipped'}`}>
+      <span id={hintId} className="sr-only">
+        {strings.card.flipHint(side)}
+      </span>
       <div
         role="button"
         tabIndex={0}
-        aria-label={strings.card.flipLabel(card.front.text, side)}
+        aria-describedby={hintId}
         className="flip-card__inner"
         onClick={onFlip}
         onKeyDown={onKeyDown}

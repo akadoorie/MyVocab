@@ -68,8 +68,16 @@ export const errorHandler: ErrorHandler = (err, c) => {
     if (err.details !== undefined) body.error.details = err.details;
     return errorJson(c, err.status, body);
   }
+  // Content-free structured log: no bodies, no card text, no SQL (PRD §15 Observability).
   console.error(
-    JSON.stringify({ level: 'error', msg: 'unhandled', name: err.name, path: c.req.path }),
+    JSON.stringify({
+      level: 'error',
+      msg: 'unhandled',
+      name: err.name,
+      method: c.req.method,
+      path: c.req.path,
+      requestId: c.req.header('cf-ray') ?? null,
+    }),
   );
   return errorJson(c, 500, { error: { code: 'INTERNAL', message: 'Something went wrong' } });
 };

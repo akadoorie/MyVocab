@@ -1,4 +1,12 @@
 # Copy to .dev.vars (git-ignored) for local development. Never commit real values.
+# Local overrides of the production vars in wrangler.jsonc:
+ENVIRONMENT=development
+APP_URL=http://localhost:5173
+# Cloudflare Turnstile invisible test site key: always passes (PRD §12.5)
+TURNSTILE_SITE_KEY=1x00000000000000000000BB
+CF_ACCESS_TEAM_DOMAIN=
+CF_ACCESS_AUD=
+# Secrets:
 BETTER_AUTH_SECRET=replace-with-a-long-random-string
 GOOGLE_CLIENT_ID=replace-me.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=replace-me

@@ -55,7 +55,9 @@ async function chooseFile() {
 describe('ImportPage (FR-A60–61)', () => {
   it('lists dry-run errors and keeps Import disabled', async () => {
     setup(() =>
-      report({ errors: [{ row: 3, column: 'translation_en', message: 'Own-language translation' }] }),
+      report({
+        errors: [{ row: 3, column: 'translation_en', message: 'Own-language translation' }],
+      }),
     );
     await chooseFile();
     fireEvent.click(screen.getByRole('button', { name: 'Check the file (dry run)' }));

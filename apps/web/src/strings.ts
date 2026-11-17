@@ -164,8 +164,8 @@ export const strings = {
     synonyms: 'Synonyms:',
     noHints: 'Hint is not available',
     multipleMeanings: 'Multiple meanings',
-    flipLabel: (text: string, side: 'front' | 'back') =>
-      `Card: ${text}. Showing ${side === 'front' ? 'front' : 'answer'}. Press to flip.`,
+    flipHint: (side: 'front' | 'back') =>
+      `Showing ${side === 'front' ? 'the front' : 'the answer'}. Press to flip.`,
     showingFront: 'Showing front',
     showingAnswer: 'Showing answer',
     hintsShown: 'Hints shown',

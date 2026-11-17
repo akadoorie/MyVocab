@@ -215,3 +215,32 @@ Format: date · context · decision · consequences.
   scripts take `--config <copy>`: a copy of `wrangler.jsonc` in a temp folder keeps its local
   state next to it. `pnpm db:seed` gained the same option. The scripts tests (round trip,
   manifest counts, JSON shape, zip, `schema.sql` recreating every table) run in `pnpm test`.
+
+## D-015 · 2026-11-17 · Hardening and release (M7)
+
+- **Fail-closed configuration:** `wrangler.jsonc` vars default to `ENVIRONMENT=production` with
+  placeholder values; production startup refuses to serve until Access, an https `APP_URL` etc.
+  are set. Local development overrides the vars in `.dev.vars` (verified with `wrangler dev`);
+  the test suites pass their full configuration explicitly (`vitest.config.ts`,
+  `scripts/e2e-server.mjs`), so CI needs no `.dev.vars`.
+- **Burst limits:** one Rate Limiting binding per PRD §14.3 rule (`RL_LOOPS` 10/min, `RL_AVAILABLE`
+  60/min, `RL_AUTH` 20/min, `RL_IMPORT` 10/min, `RL_ADMIN` 120/min), checked before any other work.
+  Keys: the hashed IP for guests, the **user id for signed-in requests** (a school or office
+  network shares one IP; per-IP limits would block many learners), the admin id for admin routes.
+  The test suite overrides the bindings with generous limits and tests the 429 path with a fake
+  limiter (nothing is written).
+- **Headers:** pages and static files get CSP + security headers from `apps/web/public/_headers`
+  (Workers Assets); `/api/*` from the Worker middleware (`default-src 'none'`). The CSP is the
+  PRD's, plus `object-src 'none'`, `font-src 'self'` and COOP `same-origin`; the build has no inline
+  scripts or data URIs, and E2E checks there are no CSP violations. `robots.txt` allows only the
+  landing and privacy pages.
+- **Accessibility:** an axe scan (WCAG 2.0–2.2 A/AA, incl. contrast) of every learner and admin
+  page on both viewports runs in E2E, plus a keyboard-only loop. It found one issue: the flip card's
+  `aria-label` didn't contain its visible text (WCAG 2.5.3). The card's name now comes from the
+  visible face; the instruction is an `aria-describedby`.
+- **Logs:** unhandled errors log `{ name, method, path, requestId (cf-ray) }` only.
+- **Workflows:** `deploy.yml` (push to main / manual → `production` Environment with required
+  reviewer → checks → remote migrations → deploy; never seeds or exports), `codeql.yml`,
+  `dependabot.yml`. Actions pinned to commit SHAs (CodeQL v4.38.3, older than two weeks).
+- **Google redirect URI for local development** is `http://localhost:5173/api/auth/callback/google`
+  (the Vite dev server forwards `/api` and `APP_URL` is 5173), not the 8787 URI in PRD §19.

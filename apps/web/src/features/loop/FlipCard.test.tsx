@@ -84,12 +84,12 @@ describe('FlipCard', () => {
     expect(screen.getByText(/Multiple meanings/)).toBeInTheDocument();
   });
 
-  it('flips on click and on Enter, with an accessible label', () => {
+  it('flips on click and on Enter; its name is the visible face, the instruction a description', () => {
     const onFlip = vi.fn();
     render(<FlipCard card={makeCard(6)} side="front" hintsShown={false} onFlip={onFlip} />);
-    const el = screen.getByRole('button', {
-      name: 'Card: sample-6. Showing front. Press to flip.',
-    });
+    const el = screen.getByRole('button', { name: /sample-6/ });
+    expect(el).toHaveAccessibleName(expect.not.stringContaining('מילה-6') as unknown as string);
+    expect(el).toHaveAccessibleDescription('Showing the front. Press to flip.');
     fireEvent.click(el);
     fireEvent.keyDown(el, { key: 'Enter' });
     expect(onFlip).toHaveBeenCalledTimes(2);

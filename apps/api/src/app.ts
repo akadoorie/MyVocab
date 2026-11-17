@@ -9,6 +9,7 @@ import { loadConfig, type AppConfig } from './config';
 import { createContainer, type Container } from './container';
 import { parseOrThrow, readJson } from './lib/validate';
 import { apiHeaders } from './middleware/api-headers';
+import { burstLimit, ipKey } from './middleware/burst-limit';
 import { errorHandler, NotFoundError, notFoundHandler } from './middleware/errors';
 import { mutationGuard } from './middleware/mutation-guard';
 import { adminRoutes } from './routes/admin';
@@ -101,7 +102,7 @@ export function createApp() {
   app.use('*', mutationGuard);
 
   // Better Auth: only the endpoints this app uses; the body of sign-in is checked strictly.
-  app.on(['GET', 'POST'], '/auth/*', async (c) => {
+  app.on(['GET', 'POST'], '/auth/*', burstLimit('RL_AUTH', ipKey), async (c) => {
     if (!ALLOWED_AUTH_ROUTES.has(`${c.req.method} ${c.req.path}`)) throw new NotFoundError();
     if (c.req.path === '/api/auth/sign-in/social') {
       parseOrThrow(socialSignInRequestSchema, await readJson(c.req.raw.clone()));
