@@ -15,12 +15,13 @@
     "run_worker_first": ["/api/*"],
   },
 
-  // D1 (PRD §11). Placeholder id: the owner creates "myvocab-prod" and pastes its id (PRD §19).
+  // D1 (PRD §11): the production database "myvocab-prod" (region WEUR). The id isn't a secret;
+  // local development and tests use local copies keyed by this id.
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "myvocab-prod",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "c5805b60-82e9-4bac-bc5a-401690221579",
       "migrations_dir": "migrations",
     },
   ],
