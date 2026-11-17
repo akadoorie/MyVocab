@@ -9,15 +9,13 @@
  * the owner's `wrangler login` and asks for a typed confirmation. Never run in CI.
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { createInterface } from 'node:readline/promises';
-import { fileURLToPath } from 'node:url';
 import { getPlatformProxy } from 'wrangler';
 import { createContainer } from '../src/container';
+import { apiDir, DB_NAME, repoRoot, writeConfigCopy } from './lib/wrangler-config';
 
-const apiDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const repoRoot = path.resolve(apiDir, '..', '..');
 const invokedFrom = process.env.INIT_CWD ?? process.cwd();
 
 function parseArgs(argv: string[]) {
@@ -25,12 +23,15 @@ function parseArgs(argv: string[]) {
     file: undefined as string | undefined,
     remote: false,
     persistTo: undefined as string | undefined,
+    /** Tests: a wrangler config copy whose local state is a throw-away database. */
+    config: undefined as string | undefined,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--remote') args.remote = true;
     else if (a === '--file') args.file = argv[++i];
     else if (a === '--persist-to') args.persistTo = argv[++i];
+    else if (a === '--config') args.config = argv[++i];
     else if (a === '--') continue;
     else throw new Error(`Unknown argument: ${a}`);
   }
@@ -44,30 +45,6 @@ function resolveCsv(file: string | undefined): string {
   if (existsSync(starter)) return starter;
   console.log(`No ${starter}; using the synthetic seed/sample.csv instead.`);
   return path.join(repoRoot, 'seed', 'sample.csv');
-}
-
-/** A copy of wrangler.jsonc with `remote: true` on the D1 binding and absolute paths. */
-function remoteConfig(): string {
-  const source = readFileSync(path.join(apiDir, 'wrangler.jsonc'), 'utf8');
-  const json = source.replace(/^\s*\/\/.*$/gm, '').replace(/,(\s*[}\]])/g, '$1');
-  const config = JSON.parse(json) as Record<string, unknown> & {
-    main: string;
-    assets: { directory: string };
-    d1_databases: Array<Record<string, unknown>>;
-  };
-  config.main = path.join(apiDir, config.main);
-  config.assets.directory = path.join(apiDir, config.assets.directory);
-  config.d1_databases = config.d1_databases.map((d) => ({
-    ...d,
-    remote: true,
-    migrations_dir: path.join(apiDir, 'migrations'),
-  }));
-  delete config.$schema;
-  const dir = path.join(apiDir, '.wrangler', 'tmp');
-  mkdirSync(dir, { recursive: true });
-  const out = path.join(dir, 'wrangler.seed-remote.json');
-  writeFileSync(out, JSON.stringify(config, null, 2));
-  return out;
 }
 
 async function confirmRemote(): Promise<boolean> {
@@ -93,9 +70,10 @@ async function main() {
     const persist = args.persistTo
       ? ['--persist-to', path.resolve(invokedFrom, args.persistTo)]
       : [];
+    const config = args.config ? ['--config', path.resolve(invokedFrom, args.config)] : [];
     const migrate = spawnSync(
       'pnpm',
-      ['exec', 'wrangler', 'd1', 'migrations', 'apply', 'myvocab-prod', '--local', ...persist],
+      ['exec', 'wrangler', 'd1', 'migrations', 'apply', DB_NAME, '--local', ...persist, ...config],
       {
         cwd: apiDir,
         stdio: 'inherit',
@@ -106,7 +84,11 @@ async function main() {
   }
 
   const proxy = await getPlatformProxy<Env>({
-    configPath: args.remote ? remoteConfig() : path.join(apiDir, 'wrangler.jsonc'),
+    configPath: args.remote
+      ? writeConfigCopy({ remote: true, name: 'wrangler.seed-remote.json' })
+      : args.config
+        ? path.resolve(invokedFrom, args.config)
+        : path.join(apiDir, 'wrangler.jsonc'),
     remoteBindings: args.remote,
     ...(args.persistTo && !args.remote
       ? { persist: { path: path.join(path.resolve(invokedFrom, args.persistTo), 'v3') } }

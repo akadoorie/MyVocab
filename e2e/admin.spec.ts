@@ -92,3 +92,51 @@ test('a learner is refused by the admin area', async ({ page, baseURL }, testInf
   await expect(page.getByRole('heading', { name: 'Admins only' })).toBeVisible();
   expect((await page.request.get('/api/admin/stats')).status()).toBe(403);
 });
+
+test('CSV import: a dry run with errors and warnings, then a commit', async ({
+  page,
+  baseURL,
+}, testInfo) => {
+  await page.request.post('/api/test/session', {
+    data: { role: 'admin', email: `e2e-import-${testInfo.project.name}@example.test` },
+    headers: { Origin: baseURL! },
+  });
+  const suffix = `${testInfo.project.name}-${Date.now()}`;
+  const header =
+    'lang,text,type,multiple_meanings,categories,translation_he,translation_en,explanation,synonyms,hints,status';
+  // Synthetic rows: one error (own-language translation), one with multiple-meanings warnings.
+  const okRow = `en,csv-ok-${suffix},word,true,,מילה-סינתטית,,Only one synthetic meaning,,,published`;
+  const bad = [header, `en,csv-bad-${suffix},word,false,,,own-language,,,,published`, okRow].join(
+    '\n',
+  );
+  const good = [header, okRow].join('\n');
+  const fileInput = () => page.getByLabel('CSV file (≤ 2 MB, ≤ 5,000 rows)');
+  const importButton = () => page.getByRole('button', { name: 'Import', exact: true });
+
+  expect((await page.request.get('/api/admin/import/template')).status()).toBe(200);
+  await page.goto('/admin/import');
+
+  await fileInput().setInputFiles({
+    name: 'bad.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(bad),
+  });
+  await page.getByRole('button', { name: 'Check the file (dry run)' }).click();
+  await expect(page.getByText('1 error')).toBeVisible();
+  await expect(page.getByText('2 warnings')).toBeVisible();
+  await expect(importButton()).toBeDisabled();
+
+  await fileInput().setInputFiles({
+    name: 'good.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(good),
+  });
+  await page.getByRole('button', { name: 'Check the file (dry run)' }).click();
+  await expect(page.getByText('No errors. You can import this file.')).toBeVisible();
+  await importButton().click();
+  await expect(page.getByRole('heading', { name: 'Import complete' })).toBeVisible();
+
+  await page.goto('/admin/items');
+  await page.getByLabel('Search').fill(`csv-ok-${suffix}`);
+  await expect(page.getByRole('link', { name: new RegExp(`csv-ok-${suffix}`) })).toBeVisible();
+});

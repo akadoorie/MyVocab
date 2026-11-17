@@ -10,6 +10,7 @@ import {
   auditListResponseSchema,
   cardViewSchema,
   errorResponseSchema,
+  importReportSchema,
   settingsSchema,
   trashListResponseSchema,
   type AdminItemCreate,
@@ -114,6 +115,16 @@ export const adminApi = {
     adminRequest('/settings', settingsSchema, json('PUT', body)),
 
   audit: (q: AuditQuery) => adminRequest(`/audit${query(q)}`, auditListResponseSchema),
+
+  /** Multipart upload (the browser sets the boundary). */
+  importCsv: (file: File, options: { dryRun: boolean; createMissingCategories: boolean }) => {
+    const form = new FormData();
+    form.append('file', file);
+    return adminRequest(`/import${query(options)}`, importReportSchema, {
+      method: 'POST',
+      body: form,
+    });
+  },
 };
 
 /** The `details` of a validation error, as `{ path: message }`. */

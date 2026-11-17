@@ -8,6 +8,8 @@ import {
   categoryCreateSchema,
   categoryOrderSchema,
   categoryPatchSchema,
+  IMPORT_MAX_FILE_BYTES,
+  importQuerySchema,
   langCodeSchema,
   languagePatchSchema,
   purgeRequestSchema,
@@ -17,7 +19,9 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { AppEnv } from '../app';
 import { parseOrThrow, readJson } from '../lib/validate';
+import { ValidationError } from '../middleware/errors';
 import { requireAdmin } from '../middleware/require-admin';
+import { importTemplateCsv } from '../services/admin/import-template';
 
 const idParam = z.object({ id: z.coerce.number().int().positive() });
 const userIdParam = z.object({ id: z.string().min(1).max(200) });
@@ -129,6 +133,52 @@ export const adminRoutes = new Hono<AppEnv>()
   .put('/settings', async (c) => {
     const body = parseOrThrow(settingsUpdateSchema, await readJson(c.req));
     return c.json(await c.get('container').admin.ops.updateSettings(body, c.get('actor')));
+  })
+
+  // CSV import (PRD §8.3, FR-A60): template, dry run, commit. Same service as `pnpm db:seed`.
+  .get('/import/template', async (c) => {
+    const languages = (await c.get('container').languages.listAll())
+      .filter((l) => l.isActive)
+      .map((l) => l.code);
+    return c.body(importTemplateCsv(languages), 200, {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': 'attachment; filename="myvocab-import-template.csv"',
+    });
+  })
+  .post('/import', async (c) => {
+    const q = parseOrThrow(importQuerySchema, c.req.query());
+    const tooLarge = () => new ValidationError('The file is larger than 2 MB');
+    // Refuse oversized uploads before reading them (the multipart overhead is small).
+    if (Number(c.req.header('Content-Length') ?? '0') > IMPORT_MAX_FILE_BYTES + 64 * 1024) {
+      throw tooLarge();
+    }
+    let form: FormData;
+    try {
+      form = await c.req.formData();
+    } catch {
+      throw new ValidationError('Expected a multipart form with a "file" field');
+    }
+    const file = form.get('file');
+    if (!(file instanceof File)) throw new ValidationError('Choose a CSV file to upload');
+    if (file.size > IMPORT_MAX_FILE_BYTES) throw tooLarge();
+    let csvText: string;
+    try {
+      csvText = new TextDecoder('utf-8', { fatal: true, ignoreBOM: false }).decode(
+        await file.arrayBuffer(),
+      );
+    } catch {
+      throw new ValidationError(
+        'The file isn’t valid UTF-8. In Excel, save it as “CSV UTF-8 (Comma delimited)”.',
+      );
+    }
+    const report = await c.get('container').csvImport.run({
+      csvText,
+      fileName: file.name.slice(0, 200) || 'upload.csv',
+      dryRun: q.dryRun,
+      createMissingCategories: q.createMissingCategories,
+      actor: c.get('actor'),
+    });
+    return c.json(report);
   })
 
   // Audit log (read-only: there is no endpoint to change or delete entries)

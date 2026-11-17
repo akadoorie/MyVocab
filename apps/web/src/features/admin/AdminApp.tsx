@@ -6,6 +6,7 @@ import { AuditPage } from './AuditPage';
 import { CategoriesPage, LanguagesPage } from './CatalogPages';
 import { Dashboard } from './Dashboard';
 import { ItemEditorPage, NewItemPage } from './ItemEditor';
+import { ImportPage } from './ImportPage';
 import { ItemsPage } from './ItemsPage';
 import { SettingsPage } from './SettingsPage';
 import { TrashPage } from './TrashPage';
@@ -18,6 +19,7 @@ const NAV = [
   { to: '/admin/trash', label: s.nav.trash },
   { to: '/admin/categories', label: s.nav.categories },
   { to: '/admin/languages', label: s.nav.languages },
+  { to: '/admin/import', label: s.nav.import },
   { to: '/admin/users', label: s.nav.users },
   { to: '/admin/settings', label: s.nav.settings },
   { to: '/admin/audit', label: s.nav.audit },
@@ -110,6 +112,7 @@ export function AdminApp() {
           <Route path="trash" element={<TrashPage />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="languages" element={<LanguagesPage />} />
+          <Route path="import" element={<ImportPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="audit" element={<AuditPage />} />

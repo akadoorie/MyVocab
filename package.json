@@ -13,12 +13,13 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "pnpm -r typecheck && tsc -p tsconfig.scripts.json",
-    "test": "pnpm -r test && vitest run --config vitest.scripts.config.ts",
+    "test": "pnpm -r test && vitest run --config vitest.scripts.config.ts && pnpm --filter @myvocab/api test:scripts",
     "test:coverage": "pnpm --filter @myvocab/core test:coverage",
     "check:no-vocabulary": "tsx scripts/check-no-vocabulary.ts",
     "db:migrate:local": "pnpm --filter @myvocab/api db:migrate:local",
     "db:seed": "pnpm --filter @myvocab/api db:seed",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "db:export": "pnpm --filter @myvocab/api db:export"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

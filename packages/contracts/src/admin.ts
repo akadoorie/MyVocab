@@ -284,3 +284,41 @@ export const adminStatsSchema = z.object({
   limitEvents24h: z.number().int(),
 });
 export type AdminStats = z.infer<typeof adminStatsSchema>;
+
+// ---------------------------------------------------------------------------------------------
+// CSV import (PRD §8.3, FR-A60–61)
+// ---------------------------------------------------------------------------------------------
+
+export const IMPORT_MAX_FILE_BYTES = 2 * 1024 * 1024;
+
+export const importQuerySchema = z
+  .object({
+    dryRun: flag.default(true),
+    createMissingCategories: flag.default(false),
+  })
+  .strict();
+
+const csvIssueSchema = z.object({ row: z.number().int(), column: z.string(), message: z.string() });
+export type CsvIssueView = z.infer<typeof csvIssueSchema>;
+
+export const importReportSchema = z.object({
+  dryRun: z.boolean(),
+  committed: z.boolean(),
+  totals: z
+    .object({
+      newItems: z.number().int(),
+      mergedItems: z.number().int(),
+      newTranslationEntries: z.number().int(),
+      newExplanationEntries: z.number().int(),
+      newSynonyms: z.number().int(),
+      newHints: z.number().int(),
+      newCategories: z.number().int(),
+      skippedDuplicates: z.number().int(),
+    })
+    .nullable(),
+  errors: z.array(csvIssueSchema),
+  warnings: z.array(csvIssueSchema),
+  skippedConcurrent: z.number().int(),
+  batches: z.number().int(),
+});
+export type ImportReportView = z.infer<typeof importReportSchema>;
