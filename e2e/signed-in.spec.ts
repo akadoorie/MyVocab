@@ -25,13 +25,12 @@ async function available(request: APIRequestContext, source: string, target: str
 }
 
 async function openKnownWords(page: Page) {
-  const headerLink = page.getByRole('banner').getByRole('link', { name: 'My known words' });
-  if (await headerLink.isVisible()) {
-    await headerLink.click();
-  } else {
-    await page.getByRole('button', { name: 'Account menu' }).click();
-    await page.getByRole('link', { name: 'My known words' }).click();
-  }
+  // Through the account menu (present on every viewport), scoped to the menu's own links.
+  await page.getByRole('button', { name: 'Account menu' }).click();
+  await page
+    .getByRole('navigation', { name: 'Account menu' })
+    .getByRole('link', { name: 'My known words' })
+    .click();
   await expect(page).toHaveURL(/\/known$/);
 }
 
