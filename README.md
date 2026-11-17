@@ -244,8 +244,10 @@ plans (Workers Free, D1, Turnstile, Zero Trust ≤ 50 users, GitHub Free).
    cd ../MyVocab-Content
    gh repo create MyVocab-Content --private --source . --push
    ```
-   Then, in `MyVocab` → Settings → Code security: enable **secret scanning**, **push protection**,
-   **Dependabot alerts** and **Dependabot security updates**.
+   Public repos get **secret scanning**, **push protection** and **Dependabot alerts** on by
+   default. Turn on the one that isn't: `MyVocab` → Settings → **Advanced Security** → Dependabot →
+   **Dependabot security updates** → Enable. (Check all four with
+   `gh api repos/<you>/MyVocab --jq .security_and_analysis`.)
 3. **Google OAuth client** (Google Cloud Console → APIs & Services → Credentials → Create
    credentials → OAuth client ID → Web application). Authorized redirect URIs:
    - `http://localhost:5173/api/auth/callback/google` (local: the Vite dev server forwards `/api`)
