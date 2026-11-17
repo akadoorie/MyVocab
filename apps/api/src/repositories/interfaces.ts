@@ -173,3 +173,244 @@ export interface AccountRepository {
    */
   deleteUser(userId: string, now: number): Promise<void>;
 }
+
+// ---------------------------------------------------------------------------------------------
+// Admin (PRD §7, §12.4). Every mutation writes its audit entry in the same D1 batch.
+// ---------------------------------------------------------------------------------------------
+
+export type ItemRecord = ItemContent & {
+  id: number;
+  normalizedText: string;
+  status: 'draft' | 'published';
+  version: number;
+  createdAt: number;
+  updatedAt: number;
+  deletedAt: number | null;
+  deletedBy: string | null;
+  categoryIds: number[];
+  categorySlugs: string[];
+};
+
+export type NewItem = ItemContent & {
+  normalizedText: string;
+  status: 'draft' | 'published';
+  categoryIds: number[];
+};
+
+/** The columns an update may change (never `lang`). */
+export type ItemChanges = Partial<
+  Pick<
+    ItemContent,
+    'text' | 'type' | 'multipleMeanings' | 'translation' | 'explanation' | 'synonyms' | 'hints'
+  > & { normalizedText: string; status: 'draft' | 'published' }
+>;
+
+export type AdminItemFilter = {
+  q?: string | undefined;
+  lang?: string | undefined;
+  type?: ItemType | undefined;
+  categoryId?: number | undefined;
+  status?: 'draft' | 'published' | undefined;
+  multipleMeanings?: boolean | undefined;
+  missingTranslation?: string | undefined;
+  missingExplanation?: boolean | undefined;
+  noHints?: boolean | undefined;
+  notPlayable?: boolean | undefined;
+  sort: 'updated' | 'text' | 'created';
+};
+
+export type AdminItemListRow = {
+  id: number;
+  text: string;
+  lang: string;
+  type: ItemType;
+  multipleMeanings: boolean;
+  translation: Record<string, string[]>;
+  explanationCount: number;
+  synonymCount: number;
+  hintCount: number;
+  status: 'draft' | 'published';
+  updatedAt: number;
+};
+
+export type TrashRow = {
+  id: number;
+  text: string;
+  lang: string;
+  type: ItemType;
+  deletedAt: number;
+  deletedBy: { id: string; name: string } | null;
+};
+
+export type AuditDetails = { action: string; details: unknown };
+
+export interface AdminItemRepository {
+  /** Any item, including one in Trash. */
+  get(id: number): Promise<ItemRecord | null>;
+  /** A non-deleted item with this identity (other than `excludeId`). */
+  findDuplicate(
+    lang: string,
+    normalizedText: string,
+    type: ItemType,
+    excludeId?: number,
+  ): Promise<number | null>;
+  list(
+    filter: AdminItemFilter,
+    activeLangs: readonly string[],
+    limit: number,
+    offset: number,
+  ): Promise<{ rows: AdminItemListRow[]; total: number }>;
+  categoriesFor(itemIds: readonly number[]): Promise<Map<number, { id: number; name: string }[]>>;
+  /** Inserts the item, its category links and the audit entry; returns the new id. */
+  create(item: NewItem, actor: Actor, audit: AuditDetails, now: number): Promise<number>;
+  /** Optimistic update: false if `version` is stale (nothing written, no audit). */
+  update(
+    id: number,
+    version: number,
+    changes: ItemChanges,
+    categoryIds: number[] | undefined,
+    actor: Actor,
+    audit: AuditDetails,
+    now: number,
+  ): Promise<boolean>;
+  trash(
+    id: number,
+    version: number,
+    actor: Actor,
+    audit: AuditDetails,
+    now: number,
+  ): Promise<boolean>;
+  restore(
+    id: number,
+    version: number,
+    actor: Actor,
+    audit: AuditDetails,
+    now: number,
+  ): Promise<boolean>;
+  purge(
+    id: number,
+    version: number,
+    actor: Actor,
+    audit: AuditDetails,
+    now: number,
+  ): Promise<boolean>;
+  listTrash(limit: number): Promise<TrashRow[]>;
+  /** Trashed items deleted at or before `cutoff`, oldest first. */
+  expiredTrash(cutoff: number, limit: number): Promise<ItemRecord[]>;
+  /** Purges several trashed items in one batch, each with its audit entry; returns the count. */
+  purgeMany(
+    entries: readonly { id: number; version: number; audit: AuditDetails }[],
+    actor: Actor,
+    now: number,
+  ): Promise<number>;
+}
+
+export type CategoryWithCount = CategoryRow & { itemCount: number };
+
+export interface AdminCategoryRepository {
+  listWithCounts(): Promise<CategoryWithCount[]>;
+  get(id: number): Promise<CategoryWithCount | null>;
+  findBySlug(slug: string): Promise<CategoryRow | null>;
+  create(
+    input: { slug: string; name: string; isActive: boolean },
+    actor: Actor,
+    now: number,
+  ): Promise<number>;
+  update(
+    id: number,
+    changes: Partial<{ slug: string; name: string; isActive: boolean }>,
+    actor: Actor,
+    audit: AuditDetails,
+    now: number,
+  ): Promise<boolean>;
+  /** Deletes only when no item links to it; false otherwise. */
+  delete(id: number, actor: Actor, audit: AuditDetails, now: number): Promise<boolean>;
+  reorder(ids: readonly number[], actor: Actor, now: number): Promise<void>;
+}
+
+export interface AdminLanguageRepository {
+  setActive(code: string, isActive: boolean, actor: Actor, now: number): Promise<boolean>;
+}
+
+export type AdminUserRow = {
+  id: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  image: string | null;
+  role: string;
+  banned: boolean;
+  banReason: string | null;
+  createdAt: number;
+  lastSeenAt: number | null;
+};
+
+export interface AdminUserRepository {
+  get(id: string): Promise<AdminUserRow | null>;
+  list(
+    q: string | undefined,
+    cursor: { createdAt: number; id: string } | null,
+    limit: number,
+  ): Promise<AdminUserRow[]>;
+  countActiveAdmins(): Promise<number>;
+  /** Applies role/ban changes (banning revokes every session) with their audit entries. */
+  apply(
+    id: string,
+    changes: { role?: string; banned?: boolean; banReason?: string | null },
+    audits: readonly AuditDetails[],
+    actor: Actor,
+    now: number,
+  ): Promise<void>;
+}
+
+export interface AdminSettingsRepository {
+  write(
+    values: Readonly<Record<string, unknown>>,
+    actor: Actor,
+    audit: AuditDetails,
+    now: number,
+  ): Promise<void>;
+}
+
+export type AuditRow = {
+  id: number;
+  createdAt: number;
+  actorUserId: string | null;
+  actorEmail: string | null;
+  action: string;
+  entityType: string;
+  entityId: string | null;
+  details: unknown;
+};
+
+export type AuditFilter = {
+  actor?: string | undefined;
+  action?: string | undefined;
+  entityType?: string | undefined;
+  from?: number | undefined;
+  to?: number | undefined;
+  beforeId?: number | undefined;
+};
+
+export interface AuditQueryRepository {
+  list(filter: AuditFilter, limit: number): Promise<AuditRow[]>;
+}
+
+export interface StatsRepository {
+  stats(
+    activeLangs: readonly string[],
+    since: number,
+  ): Promise<{
+    total: number;
+    drafts: number;
+    noExplanation: number;
+    noHints: number;
+    multipleMeanings: number;
+    byLangType: { lang: string; type: ItemType; count: number }[];
+    missingTranslation: Record<string, number>;
+    users: number;
+    admins: number;
+    trash: number;
+    limitEvents: number;
+  }>;
+}

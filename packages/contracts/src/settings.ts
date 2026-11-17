@@ -27,3 +27,19 @@ export const settingsSchema = z.object({
 export type Settings = z.infer<typeof settingsSchema>;
 export type SettingKey = keyof Settings;
 export const SETTING_KEYS = Object.keys(settingsSchema.shape) as SettingKey[];
+
+type SettingsShape = typeof settingsSchema.shape;
+
+/**
+ * PUT /api/admin/settings: any subset of the settings, without defaults (a missing key keeps its
+ * current value). Cross-field rules (e.g. `loop.defaultSize` in `loop.sizeOptions`, default
+ * languages active) are checked by the server against the merged result (FR-A50).
+ */
+export const settingsUpdateSchema = z
+  .object(
+    Object.fromEntries(
+      SETTING_KEYS.map((key) => [key, settingsSchema.shape[key].unwrap().optional()]),
+    ) as { [K in SettingKey]: z.ZodOptional<ReturnType<SettingsShape[K]['unwrap']>> },
+  )
+  .strict();
+export type SettingsUpdate = z.infer<typeof settingsUpdateSchema>;

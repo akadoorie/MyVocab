@@ -11,10 +11,12 @@ import { parseOrThrow, readJson } from './lib/validate';
 import { apiHeaders } from './middleware/api-headers';
 import { errorHandler, NotFoundError, notFoundHandler } from './middleware/errors';
 import { mutationGuard } from './middleware/mutation-guard';
+import { adminRoutes } from './routes/admin';
 import { meRoutes } from './routes/me';
 import { publicRoutes } from './routes/public';
 import { testRoutes } from './routes/test-only';
 import { hashIp } from './services/usage-limit-service';
+import type { Actor } from './repositories/interfaces';
 import type { Requester } from './services/loop-service';
 import { APP_VERSION } from './version';
 
@@ -29,6 +31,8 @@ export type AppEnv = {
     currentUser: () => Promise<SessionUser | null>;
     /** Who is calling: resolved lazily (and once) per request. */
     requester: () => Promise<Requester>;
+    /** The admin making the request (set by requireAdmin, used for audit entries). */
+    actor: Actor;
   };
 };
 
@@ -107,6 +111,7 @@ export function createApp() {
 
   app.route('/', publicRoutes);
   app.route('/', meRoutes);
+  app.route('/admin', adminRoutes);
   app.route('/test', testRoutes);
 
   app.notFound(notFoundHandler);
