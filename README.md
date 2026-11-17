@@ -254,6 +254,10 @@ plans (Workers Free, D1, Turnstile, Zero Trust ≤ 50 users, GitHub Free).
    - `https://<your-app-host>/api/auth/callback/google` (e.g. `myvocab.<subdomain>.workers.dev`)
 
    Scopes: the defaults (`openid`, `email`, `profile`). Keep the client id and secret for step 6.
+   Until the app is deployed, leave the consent screen in **Testing** and add yourself under
+   Audience → **Test users** (local sign-in works). After the first deploy, fill in Branding →
+   home page `https://<your-app-host>/` and privacy policy `https://<your-app-host>/privacy`, add
+   the authorized domain, then Audience → **Publish app**.
 
 4. **D1 database**:
    ```sh
