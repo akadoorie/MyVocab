@@ -69,7 +69,7 @@ export const strings = {
     title: 'My known words',
     count: (n: number) => `${n} known ${n === 1 ? 'word' : 'words'}`,
     search: 'Search',
-    searchPlaceholder: 'Search words and translations',
+    searchPlaceholder: 'Word or translation',
     language: 'Language',
     type: 'Type',
     category: 'Topic',

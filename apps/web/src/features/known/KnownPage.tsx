@@ -107,8 +107,8 @@ function KnownList() {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 rounded-[14px] border border-border bg-surface p-4 md:grid-cols-6">
-        <div className="col-span-2 flex flex-col gap-1.5">
+      <div className="grid grid-cols-2 gap-3 rounded-[14px] border border-border bg-surface p-4 md:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))]">
+        <div className="col-span-2 flex flex-col gap-1.5 md:col-span-1">
           <label htmlFor={ids.search} className="text-sm text-muted">
             {strings.known.search}
           </label>
