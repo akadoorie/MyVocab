@@ -14,7 +14,7 @@ import path from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { getPlatformProxy } from 'wrangler';
 import { createContainer } from '../src/container';
-import { apiDir, DB_NAME, repoRoot, writeConfigCopy } from './lib/wrangler-config';
+import { apiDir, DB_NAME, localPersistFor, repoRoot, writeConfigCopy } from './lib/wrangler-config';
 
 const invokedFrom = process.env.INIT_CWD ?? process.cwd();
 
@@ -92,7 +92,9 @@ async function main() {
     remoteBindings: args.remote,
     ...(args.persistTo && !args.remote
       ? { persist: { path: path.join(path.resolve(invokedFrom, args.persistTo), 'v3') } }
-      : {}),
+      : args.config && !args.remote
+        ? { persist: localPersistFor(path.resolve(invokedFrom, args.config)) }
+        : {}),
   });
   try {
     const report = await createContainer(proxy.env.DB).csvImport.run({

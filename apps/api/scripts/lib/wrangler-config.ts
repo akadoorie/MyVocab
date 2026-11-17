@@ -35,3 +35,12 @@ export function writeConfigCopy(options: { remote: boolean; dir?: string; name?:
   writeFileSync(out, JSON.stringify(config, null, 2));
   return out;
 }
+
+/**
+ * Where local D1 state lives for a config copy: next to it. `wrangler d1 …` derives this from the
+ * config location, but getPlatformProxy defaults to the working directory, so it is passed
+ * explicitly (otherwise a script could silently read apps/api/.wrangler instead).
+ */
+export function localPersistFor(configPath: string): { path: string } {
+  return { path: path.join(path.dirname(configPath), '.wrangler', 'state', 'v3') };
+}

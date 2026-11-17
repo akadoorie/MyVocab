@@ -22,7 +22,7 @@ import {
   schemaVersion,
   vocabularyCsv,
 } from './lib/export-data';
-import { apiDir, DB_NAME, repoRoot, writeConfigCopy } from './lib/wrangler-config';
+import { apiDir, DB_NAME, localPersistFor, repoRoot, writeConfigCopy } from './lib/wrangler-config';
 import { zip } from './lib/zip';
 
 const invokedFrom = process.env.INIT_CWD ?? process.cwd();
@@ -93,6 +93,7 @@ export async function runExport(args: ExportArgs, now = new Date()): Promise<str
   const proxy = await getPlatformProxy<Env>({
     configPath: configPath(args),
     remoteBindings: !args.local,
+    ...(args.config ? { persist: localPersistFor(path.resolve(invokedFrom, args.config)) } : {}),
   });
   try {
     const d1 = proxy.env.DB;

@@ -9,8 +9,16 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # Node types follow the Node version in .nvmrc (22), not the newest Node.
+      - dependency-name: '@types/node'
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      # Every github/codeql-action step must use the same version.
+      codeql:
+        patterns: ['github/codeql-action*']

@@ -5,7 +5,7 @@ import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
 import { runExport } from './export';
-import { apiDir, DB_NAME, repoRoot, writeConfigCopy } from './lib/wrangler-config';
+import { apiDir, DB_NAME, localPersistFor, repoRoot, writeConfigCopy } from './lib/wrangler-config';
 
 /**
  * PRD §17 "Scripts": export round-trip and full-export checks, each against a throw-away local
@@ -34,7 +34,10 @@ function seed(config: string, file: string) {
 }
 
 async function withDb<T>(config: string, fn: (d1: D1Database) => Promise<T>): Promise<T> {
-  const proxy = await getPlatformProxy<Env>({ configPath: config });
+  const proxy = await getPlatformProxy<Env>({
+    configPath: config,
+    persist: localPersistFor(config),
+  });
   try {
     return await fn(proxy.env.DB);
   } finally {
@@ -77,7 +80,9 @@ describe('pnpm db:export', () => {
     const target = freshDb('target');
     seed(target, out);
     const [a, b] = [await withDb(source, content), await withDb(target, content)];
-    expect(a.length).toBeGreaterThan(5);
+    // Only the synthetic sample: proves the throw-away databases were used, not apps/api/.wrangler.
+    expect(a.length).toBe(13);
+    expect(a.every((row) => /sample|לדוגמה|טיוטה/.test(String(row.text)))).toBe(true);
     expect(b).toEqual(a);
   });
 
