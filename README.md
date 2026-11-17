@@ -312,7 +312,9 @@ plans (Workers Free, D1, Turnstile, Zero Trust ≤ 50 users, GitHub Free).
 
 ## Restore with D1 Time Travel
 
-D1 keeps a point-in-time history of the production database (7 days on the free plan). Restoring
+D1 keeps a point-in-time history of the production database: always on, free, 7 days on the
+free plan (30 on Workers Paid). `wrangler d1 info myvocab-prod` should show `version: production`
+(older `alpha` databases only have snapshot backups). Restoring
 replaces the whole database with its state at that moment, so take a full export first if you are
 unsure.
 
