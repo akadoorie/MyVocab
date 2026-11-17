@@ -1,0 +1,33 @@
+{
+  "name": "myvocab",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.21.0",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @myvocab/web --filter @myvocab/api dev",
+    "build": "pnpm --filter @myvocab/web build",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r typecheck && tsc -p tsconfig.scripts.json",
+    "test": "pnpm -r test && vitest run --config vitest.scripts.config.ts",
+    "test:coverage": "pnpm --filter @myvocab/core test:coverage",
+    "check:no-vocabulary": "tsx scripts/check-no-vocabulary.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.19.0",
+    "eslint": "^10.0.0",
+    "eslint-plugin-jsx-a11y-x": "^0.2.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.14.0",
+    "prettier": "^3.10.1",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.70.0",
+    "vitest": "^5.0.5"
+  }
+}

@@ -1,0 +1,9 @@
+# Copy to .dev.vars (git-ignored) for local development. Never commit real values.
+BETTER_AUTH_SECRET=replace-with-a-long-random-string
+GOOGLE_CLIENT_ID=replace-me.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=replace-me
+# Comma-separated owner emails (PRD §13.2)
+ADMIN_EMAILS=owner@example.com
+# Cloudflare Turnstile test secret: always passes (PRD §12.5)
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+USAGE_HASH_SECRET=replace-with-a-long-random-string

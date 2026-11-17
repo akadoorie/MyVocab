@@ -1,0 +1,24 @@
+{
+  "name": "@myvocab/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/ensure-assets-dir.mjs && wrangler dev --port 8787",
+    "cf-typegen": "wrangler types",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node scripts/ensure-assets-dir.mjs && vitest run"
+  },
+  "dependencies": {
+    "@myvocab/contracts": "workspace:*",
+    "@myvocab/core": "workspace:*",
+    "hono": "^4.13.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.8.0",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.5",
+    "wrangler": "^4.160.0"
+  }
+}

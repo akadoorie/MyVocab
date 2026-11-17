@@ -1,0 +1,32 @@
+/* Design tokens: dark theme only (PRD §9.1). */
+:root {
+  --bg: #111014;
+  --surface: #1b1a21;
+  --surface-2: #24232c;
+  --border: #33313d;
+  --text: #edebf5;
+  --text-muted: #a09cb3;
+  --on-color: #111014; /* text on colored buttons (contrast >= 4.5:1 on every button color) */
+
+  --accent: #8b7cf6;
+  --accent-ledge: #685db9;
+  --know: #5bbf85;
+  --know-ledge: #448f64;
+  --dontknow: #e0605e;
+  --dontknow-ledge: #a84846;
+  --hint: #edbe57;
+  --hint-ledge: #b28e41;
+  --flip: #5b9fe3;
+  --flip-ledge: #4477aa;
+  --stop: #6a6678;
+  --stop-ledge: #504c5a;
+
+  --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.35);
+
+  --radius-flip-card: 18px;
+  --radius-card: 14px;
+  --radius-button: 12px;
+  --radius-input: 10px;
+
+  --font-sans: 'Rubik', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}

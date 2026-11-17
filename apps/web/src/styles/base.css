@@ -1,0 +1,109 @@
+@import 'tailwindcss';
+@import './tokens.css';
+
+/* Expose the design tokens to Tailwind utilities (bg-surface, text-muted, …). */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-know: var(--know);
+  --color-dontknow: var(--dontknow);
+  --color-hint: var(--hint);
+  --color-flip: var(--flip);
+  --color-stop: var(--stop);
+  --font-sans: var(--font-sans);
+}
+
+html {
+  color-scheme: dark;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--bg);
+  overflow-x: hidden;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Pressable-ledge 3D buttons (PRD §9.2). */
+.btn3d {
+  --c: var(--accent);
+  --c-ledge: var(--accent-ledge);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0.75rem 1.25rem;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: var(--c);
+  color: var(--on-color);
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.1;
+  cursor: pointer;
+  box-shadow: 0 6px 0 var(--c-ledge);
+  transform: translateY(0);
+  transition:
+    transform 80ms ease,
+    box-shadow 80ms ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn3d:active:not(:disabled) {
+  transform: translateY(6px);
+  box-shadow: 0 0 0 var(--c-ledge);
+}
+.btn3d:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+  transform: translateY(6px);
+  cursor: not-allowed;
+}
+.btn3d--know {
+  --c: var(--know);
+  --c-ledge: var(--know-ledge);
+}
+.btn3d--dontknow {
+  --c: var(--dontknow);
+  --c-ledge: var(--dontknow-ledge);
+}
+.btn3d--hint {
+  --c: var(--hint);
+  --c-ledge: var(--hint-ledge);
+}
+.btn3d--flip {
+  --c: var(--flip);
+  --c-ledge: var(--flip-ledge);
+}
+.btn3d--stop {
+  --c: var(--stop);
+  --c-ledge: var(--stop-ledge);
+  color: var(--text);
+}
+.btn3d--lg {
+  min-height: 56px;
+  padding: 0.9rem 1.75rem;
+  font-size: 1.125rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn3d {
+    transition: none;
+  }
+}
