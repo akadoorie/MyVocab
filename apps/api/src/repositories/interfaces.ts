@@ -1,4 +1,11 @@
-import type { ExistingItem, ImportPlan, ItemContent, ItemType, LanguageInfo } from '@myvocab/core';
+import type {
+  ExistingItem,
+  ImportPlan,
+  ItemContent,
+  ItemData,
+  ItemType,
+  LanguageInfo,
+} from '@myvocab/core';
 
 /**
  * Repository interfaces (PRD §10.4, dependency inversion): services depend on these, the D1
@@ -67,3 +74,42 @@ export interface ImportWriter {
 }
 
 export type { ItemContent };
+
+export interface SettingsRepository {
+  /** Raw stored values (JSON-decoded), keyed by setting key. Missing keys use defaults. */
+  getAll(): Promise<Record<string, unknown>>;
+}
+
+export interface UsageRepository {
+  get(subject: string, period: string): Promise<number>;
+  increment(subject: string, period: string, by: number, now: number): Promise<void>;
+  /** Inserts a marker row once per subject/period; true only the first time. */
+  markOnce(subject: string, period: string, now: number): Promise<boolean>;
+}
+
+export type AuditEntry = {
+  actor: Actor;
+  action: string;
+  entityType: string;
+  entityId?: string | null;
+  details?: unknown;
+};
+
+export interface AuditRepository {
+  insert(entry: AuditEntry, now: number): Promise<void>;
+}
+
+export type LoopSelection = {
+  source: string;
+  target: string;
+  type: ItemType;
+  categoryId: number | null;
+  /** Signed-in learner: their known items are excluded (every direction). */
+  userId: string | null;
+};
+
+export interface LoopRepository {
+  countPlayable(selection: LoopSelection): Promise<number>;
+  /** Random playable items (PRD §11.3), at most `limit`. */
+  selectPlayable(selection: LoopSelection, limit: number): Promise<ItemData[]>;
+}

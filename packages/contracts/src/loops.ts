@@ -1,0 +1,80 @@
+import { z } from 'zod';
+import type { CardView } from '@myvocab/core';
+
+const langCode = z.string().regex(/^[a-z]{2,3}(-[a-z0-9]{2,8})?$/, 'Invalid language code');
+const dir = z.enum(['ltr', 'rtl']);
+export const itemTypeSchema = z.enum(['word', 'expr']);
+
+/** GET /api/meta (PRD §12.1). */
+export const metaResponseSchema = z.object({
+  languages: z.array(z.object({ code: langCode, name: z.string(), nativeName: z.string(), dir })),
+  categories: z.array(z.object({ id: z.number().int(), slug: z.string(), name: z.string() })),
+  types: z.array(z.object({ id: itemTypeSchema, label: z.string() })),
+  defaults: z.object({
+    sourceLang: langCode,
+    targetLang: langCode,
+    categoryId: z.number().int().nullable(),
+    type: itemTypeSchema,
+    size: z.number().int(),
+  }),
+  sizeOptions: z.array(z.number().int()),
+  guest: z.object({ enabled: z.boolean(), loopSize: z.number().int() }),
+  undoWindowSeconds: z.number().int(),
+  maintenance: z.object({ enabled: z.boolean(), message: z.string() }),
+  turnstileSiteKey: z.string(),
+});
+export type MetaResponse = z.infer<typeof metaResponseSchema>;
+
+/** Query of GET /api/loops/available. */
+export const availableQuerySchema = z
+  .object({
+    source: langCode,
+    target: langCode,
+    type: itemTypeSchema,
+    categoryId: z.coerce.number().int().positive().optional(),
+  })
+  .strict();
+export type AvailableQuery = z.infer<typeof availableQuerySchema>;
+
+export const availableResponseSchema = z.object({ available: z.number().int().nonnegative() });
+export type AvailableResponse = z.infer<typeof availableResponseSchema>;
+
+/** Body of POST /api/loops. */
+export const startLoopRequestSchema = z
+  .object({
+    source: langCode,
+    target: langCode,
+    type: itemTypeSchema,
+    categoryId: z.number().int().positive().nullable(),
+    size: z.number().int().positive().max(1000).optional(),
+    turnstileToken: z.string().min(1).max(4096).optional(),
+  })
+  .strict();
+export type StartLoopRequest = z.infer<typeof startLoopRequestSchema>;
+
+const langDir = { lang: langCode, dir };
+
+/** One card as rendered by the browser (mirrors `CardView` in @myvocab/core). */
+export const cardViewSchema = z.object({
+  itemId: z.number().int(),
+  type: itemTypeSchema,
+  direction: z.object({ source: langCode, target: langCode }),
+  multipleMeanings: z.boolean(),
+  front: z.object({ text: z.string(), ...langDir }),
+  answer: z.object({
+    kind: z.enum(['translation', 'explanation']),
+    lines: z.array(z.string()).min(1),
+    numbered: z.boolean(),
+    ...langDir,
+  }),
+  hints: z.array(z.string()),
+  synonyms: z.array(z.string()),
+  extrasLang: z.object(langDir),
+}) satisfies z.ZodType<CardView>;
+
+export const startLoopResponseSchema = z.object({
+  requested: z.number().int(),
+  returned: z.number().int(),
+  cards: z.array(cardViewSchema),
+});
+export type StartLoopResponse = z.infer<typeof startLoopResponseSchema>;

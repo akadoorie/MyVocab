@@ -10,7 +10,17 @@ export default defineConfig(async () => {
       cloudflareTest({
         wrangler: { configPath: './wrangler.jsonc' },
         miniflare: {
-          bindings: { ENVIRONMENT: 'test', TEST_MIGRATIONS: migrations },
+          bindings: {
+            ENVIRONMENT: 'test',
+            TEST_MIGRATIONS: migrations,
+            // Test-only values (CI has no .dev.vars). Turnstile: Cloudflare's always-pass test secret.
+            TURNSTILE_SECRET_KEY: '1x0000000000000000000000000000000AA',
+            USAGE_HASH_SECRET: 'test-usage-hash-secret-0123456789',
+            BETTER_AUTH_SECRET: 'test-better-auth-secret-0123456789abcdef',
+            GOOGLE_CLIENT_ID: 'test-client-id',
+            GOOGLE_CLIENT_SECRET: 'test-client-secret',
+            ADMIN_EMAILS: 'owner@example.test',
+          },
         },
       }),
     ],

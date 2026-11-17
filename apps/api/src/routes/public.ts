@@ -1,0 +1,74 @@
+import {
+  availableQuerySchema,
+  startLoopRequestSchema,
+  type AvailableResponse,
+  type MetaResponse,
+  type StartLoopResponse,
+} from '@myvocab/contracts';
+import { resolveStartDefaults } from '@myvocab/core';
+import { Hono } from 'hono';
+import type { AppEnv } from '../app';
+import { parseOrThrow, readJson } from '../lib/validate';
+
+/** Public endpoints (PRD §12.1). */
+export const publicRoutes = new Hono<AppEnv>()
+  .get('/meta', async (c) => {
+    const { settings, languages, categories } = c.get('container');
+    const [s, langs, cats] = await Promise.all([
+      settings.get(),
+      languages.listAll(),
+      categories.listAll(),
+    ]);
+    const activeLangs = langs.filter((l) => l.isActive);
+    const activeCats = cats.filter((x) => x.isActive);
+    const defaults = resolveStartDefaults({
+      settings: {
+        defaults: {
+          sourceLang: s['defaults.sourceLang'],
+          targetLang: s['defaults.targetLang'],
+          categoryId: s['defaults.categoryId'],
+          type: s['defaults.type'],
+        },
+        sizeOptions: s['loop.sizeOptions'],
+        defaultSize: s['loop.defaultSize'],
+        guestLoopSize: s['guests.loopSize'],
+      },
+      activeLanguages: activeLangs.map((l) => l.code),
+      activeCategoryIds: activeCats.map((x) => x.id),
+      isGuest: false,
+    });
+    return c.json<MetaResponse>({
+      languages: activeLangs.map(({ code, name, nativeName, dir }) => ({
+        code,
+        name,
+        nativeName,
+        dir,
+      })),
+      categories: activeCats.map(({ id, slug, name }) => ({ id, slug, name })),
+      types: [
+        { id: 'word', label: 'Words' },
+        { id: 'expr', label: 'Expressions' },
+      ],
+      defaults,
+      sizeOptions: s['loop.sizeOptions'],
+      guest: { enabled: s['guests.enabled'], loopSize: s['guests.loopSize'] },
+      undoWindowSeconds: s['undo.windowSeconds'],
+      maintenance: { enabled: s['maintenance.enabled'], message: s['maintenance.message'] },
+      turnstileSiteKey: c.get('config').TURNSTILE_SITE_KEY,
+    });
+  })
+  .get('/loops/available', async (c) => {
+    const q = parseOrThrow(availableQuerySchema, c.req.query());
+    const available = await c
+      .get('container')
+      .loops.available(
+        { source: q.source, target: q.target, type: q.type, categoryId: q.categoryId ?? null },
+        await c.get('requester')(),
+      );
+    return c.json<AvailableResponse>({ available });
+  })
+  .post('/loops', async (c) => {
+    const body = parseOrThrow(startLoopRequestSchema, await readJson(c.req));
+    const result = await c.get('container').loops.start(body, await c.get('requester')());
+    return c.json<StartLoopResponse>(result);
+  });
