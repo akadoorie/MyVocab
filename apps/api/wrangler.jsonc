@@ -46,8 +46,8 @@
   "vars": {
     "ENVIRONMENT": "production",
     "APP_URL": "https://myvocab.akadoorie.workers.dev",
-    "CF_ACCESS_TEAM_DOMAIN": "",
-    "CF_ACCESS_AUD": "",
+    "CF_ACCESS_TEAM_DOMAIN": "myvocab.cloudflareaccess.com",
+    "CF_ACCESS_AUD": "3c55a3d4d48afb9515c0860c62861f67dcc8928d22241da5a0069d5559ef77e2",
     "TURNSTILE_SITE_KEY": "0x4AAAAAAGFj7AM8TqFNelyK",
   },
 
