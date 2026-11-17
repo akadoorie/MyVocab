@@ -45,7 +45,7 @@
   // vitest.config.ts and scripts/e2e-server.mjs. Secrets: `wrangler secret put` (PRD §16).
   "vars": {
     "ENVIRONMENT": "production",
-    "APP_URL": "https://myvocab.example.workers.dev",
+    "APP_URL": "https://myvocab.akadoorie.workers.dev",
     "CF_ACCESS_TEAM_DOMAIN": "",
     "CF_ACCESS_AUD": "",
     "TURNSTILE_SITE_KEY": "set-your-turnstile-site-key",
