@@ -31,6 +31,9 @@ export function shuffle<T>(items: readonly T[], state: RngState): [T[], RngState
 /** A random 32-bit seed for a new loop (uses crypto when available). */
 export function randomSeed(): RngState {
   const buf = new Uint32Array(1);
-  globalThis.crypto.getRandomValues(buf);
+  const { crypto } = globalThis as unknown as {
+    crypto: { getRandomValues(array: Uint32Array): Uint32Array };
+  };
+  crypto.getRandomValues(buf);
   return buf[0] ?? 0;
 }

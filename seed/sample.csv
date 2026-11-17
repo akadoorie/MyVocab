@@ -1,0 +1,14 @@
+lang,text,type,multiple_meanings,categories,translation_he,translation_en,explanation,synonyms,hints,status
+en,sample-word-1,word,false,home,מילה-לדוגמה-1,,Synthetic explanation for sample word one,sample-synonym-1,Synthetic hint sentence for sample word one.,published
+en,sample-word-2,word,true,home,מילה-לדוגמה-2א|מילה-לדוגמה-2ב,,First synthetic meaning of sample word two|Second synthetic meaning of sample word two,,Synthetic hint one for word two.|Synthetic hint two for word two.,published
+en,sample-word-3,word,false,nature,מילה-לדוגמה-3,,Synthetic explanation for sample word three,sample-synonym-3a|sample-synonym-3b,,published
+en,sample-word-4,word,false,nature,מילה-לדוגמה-4,,Synthetic explanation for sample word four,,Synthetic hint sentence for sample word four.,published
+en,sample-word-5,word,false,,מילה-לדוגמה-5,,Synthetic explanation for sample word five,,,published
+en,sample-word-6,word,false,home,מילה-לדוגמה-6,,Synthetic explanation for sample word six,,Synthetic hint for word six.,published
+en,sample-expression-1,expr,false,,ביטוי-לדוגמה-1,,Synthetic explanation for sample expression one,,Synthetic hint sentence for sample expression one.,published
+en,sample-expression-2,expr,false,,ביטוי-לדוגמה-2,,Synthetic explanation for sample expression two,,,published
+en,sample-draft-1,word,false,,מילה-טיוטה-1,,Synthetic draft item that never appears in loops,,,draft
+he,מילה-לדוגמה-א,word,false,home,,sample-he-word-a,הסבר לדוגמה למילה א,מילה-נרדפת-א,משפט רמז לדוגמה למילה א.,published
+he,מילה-לדוגמה-ב,word,false,nature,,sample-he-word-b,הסבר לדוגמה למילה ב,,,published
+he,מילה-לדוגמה-ג,word,false,,,sample-he-word-c,הסבר לדוגמה למילה ג,,משפט רמז לדוגמה למילה ג.,published
+he,ביטוי-לדוגמה-א,expr,false,,,sample-he-expression-a,הסבר לדוגמה לביטוי א,,,published

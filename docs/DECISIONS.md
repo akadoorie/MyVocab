@@ -77,3 +77,24 @@ Format: date · context · decision · consequences.
 - `multiple_meanings` accepts `true/false`, `yes/no`, `1/0` (empty = false).
 - List entries may not contain `|` (the CSV list separator, PRD §8.3); the shared item
   validation rejects it everywhere, which keeps the export round-trip exact.
+
+## D-010 · 2026-11-17 · Database layer details
+
+- **WITHOUT ROWID:** Drizzle 0.45 can't express it, so `migrations/0000_init.sql` was edited by hand
+  for `item_categories`, `user_known_items` and `usage_counters`. `test/schema.test.ts` asserts it
+  after all migrations run, so a future drizzle-kit table rebuild that drops it fails CI.
+  When generating a new migration that rebuilds one of these tables, re-add `WITHOUT ROWID`.
+- **Batches:** a D1 `batch()` counts as one query toward the per-invocation limit (50 on Free) and
+  is one transaction. Drizzle's `db.batch()` can't hold raw SQL, so the import writer compiles every
+  statement to `{ sql, params }` (still parameterized) and calls `D1Database.batch()` directly, up
+  to 1,000 statements per batch.
+- **Identity lookup:** existing items for an import are found with one query: the keys travel as
+  a single JSON parameter (`json_each`) joined against `ux_items_identity`.
+- **Concurrent edits during an import:** updates use the item `version`; an item that changed
+  meanwhile is skipped and counted in `skippedConcurrent` (re-run the import to merge it).
+- **Seeding:** `pnpm db:seed` applies local migrations, then runs the same `CsvImportService`
+  through wrangler's `getPlatformProxy` (the local D1 that `wrangler dev` uses). `--remote` writes a
+  temporary config with `remote: true` under `apps/api/.wrangler/tmp/` and asks for a typed
+  confirmation; it needs the owner's `wrangler login`.
+- **Languages** are seeded by migration `0001_seed_languages.sql` (data only).
+- **Tests** reset storage and re-apply the migrations before every test.

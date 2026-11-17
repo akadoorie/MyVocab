@@ -15,7 +15,9 @@
     "typecheck": "pnpm -r typecheck && tsc -p tsconfig.scripts.json",
     "test": "pnpm -r test && vitest run --config vitest.scripts.config.ts",
     "test:coverage": "pnpm --filter @myvocab/core test:coverage",
-    "check:no-vocabulary": "tsx scripts/check-no-vocabulary.ts"
+    "check:no-vocabulary": "tsx scripts/check-no-vocabulary.ts",
+    "db:migrate:local": "pnpm --filter @myvocab/api db:migrate:local",
+    "db:seed": "pnpm --filter @myvocab/api db:seed"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
