@@ -48,7 +48,7 @@
     "APP_URL": "https://myvocab.akadoorie.workers.dev",
     "CF_ACCESS_TEAM_DOMAIN": "",
     "CF_ACCESS_AUD": "",
-    "TURNSTILE_SITE_KEY": "set-your-turnstile-site-key",
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAGFj7AM8TqFNelyK",
   },
 
   "observability": { "enabled": true },
