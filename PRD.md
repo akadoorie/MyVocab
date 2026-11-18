@@ -381,7 +381,8 @@ so learners never download it. All admin pages work on mobile (tables collapse i
   - **Hints**: an inline list editor.
   - **Preview as learner**: renders the **flip card** exactly as the loop would (Hints and Flip working), for every
     direction: each other active language (translation) and the same language (explanation). It uses the server's card
-    builder (§12.4), so it always matches what learners see.
+    builder (§12.4), so it always matches what learners see. The cards are stacked one under the other, each with the
+    session card's size and the session's Hints toggle.
   - **Warnings** (badges; they never block saving):
     - not playable for a direction (no translation into X, or no explanation);
     - **Multiple meanings** is on, but a translation list or the explanation has only one entry;

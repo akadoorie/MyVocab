@@ -9,6 +9,8 @@ import { useToast } from '../../components/Toast';
 import { ApiError } from '../../lib/api';
 import { strings } from '../../strings';
 import { adminStrings as s } from '../../strings-admin';
+import { BulbIcon } from '../../components/Icons';
+import { LoopButton } from '../loop/ButtonBar';
 import { FlipCard } from '../loop/FlipCard';
 import { adminApi, errorMessage, fieldErrors } from './admin-api';
 import { ListEditor } from './ListEditor';
@@ -509,7 +511,8 @@ function Preview({ itemId, version }: { itemId: number; version: number }) {
     <section className="flex flex-col gap-3">
       <h2 className="text-lg font-semibold">{s.editor.preview}</h2>
       {preview.data?.length === 0 && <p className="text-sm text-muted">{s.editor.previewNone}</p>}
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* One card under the other, each the size of the card in a real session. */}
+      <div className="flex flex-col gap-10">
         {preview.data?.map((card) => (
           <PreviewCard key={`${card.direction.source}-${card.direction.target}`} card={card} />
         ))}
@@ -522,22 +525,26 @@ function PreviewCard({ card }: { card: CardView }) {
   const [side, setSide] = useState<'front' | 'back'>('front');
   const [hintsShown, setHintsShown] = useState(false);
   return (
-    <div className="flex flex-col gap-3">
-      <FlipCard
-        card={card}
-        side={side}
-        hintsShown={hintsShown}
-        onFlip={() => setSide((v) => (v === 'front' ? 'back' : 'front'))}
-      />
-      <div className="flex gap-3">
-        <Button3D
-          variant="hint"
-          disabled={side !== 'front' || hintsShown}
-          onClick={() => setHintsShown(true)}
-        >
-          {strings.loop.hints}
-        </Button3D>
+    <div className="flex w-full max-w-[1036px] flex-col gap-5">
+      {/* Same height rule as the session card (LoopPage); on phones a fixed share of the screen. */}
+      <div className="flex h-[min(68dvh,560px)] flex-col md:h-[clamp(420px,58vh,600px)]">
+        <FlipCard
+          card={card}
+          side={side}
+          hintsShown={hintsShown}
+          onFlip={() => setSide((v) => (v === 'front' ? 'back' : 'front'))}
+        />
       </div>
+      {/* The session's Hints toggle (FR-L24); Know / Don't know have no meaning in a preview. */}
+      <LoopButton
+        kind="hint"
+        className="self-start"
+        icon={<BulbIcon />}
+        label={strings.loop.hints}
+        pressed={hintsShown && side === 'front'}
+        disabled={side !== 'front'}
+        onClick={() => setHintsShown((v) => !v)}
+      />
     </div>
   );
 }
