@@ -162,6 +162,10 @@ export const adminStrings = {
   categories: {
     title: 'Categories',
     slug: 'Slug',
+    slugHelp: 'Used in CSV files. Lowercase letters, digits and dashes.',
+    slugNeeded: 'Type a slug in English letters, e.g. food.',
+    slugInvalid: 'Use lowercase English letters, digits and single dashes, e.g. home-garden.',
+    slugTaken: (name: string) => `Already used by “${name}”.`,
     name: 'Name',
     items: (n: number) => `${n} ${n === 1 ? 'item' : 'items'}`,
     add: 'Add category',

@@ -1,4 +1,4 @@
-import type { AdminCategory } from '@myvocab/contracts';
+import { categorySlugSchema, type AdminCategory } from '@myvocab/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useId, useState } from 'react';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -7,14 +7,30 @@ import { adminStrings as s } from '../../strings-admin';
 import { adminApi, errorMessage } from './admin-api';
 import { Badge, ErrorState, Field, ghostButton, inputClass, Loading, PageTitle } from './ui';
 
+/**
+ * A slug suggestion from a category name: "Home & Garden" → "home-garden". Accents are dropped;
+ * letters outside a–z (e.g. Hebrew) give nothing, so the admin types the slug themselves.
+ */
+export function slugify(name: string): string {
+  return name
+    .normalize('NFKD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .slice(0, 50)
+    .replace(/^-+|-+$/g, '');
+}
+
 /** `/admin/categories` (FR-A30). */
 export function CategoriesPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
-  const ids = { slug: useId(), name: useId() };
+  const ids = { slug: useId(), name: useId(), slugNote: useId() };
   const list = useQuery({ queryKey: ['admin', 'categories'], queryFn: adminApi.categories });
   const [slug, setSlug] = useState('');
   const [name, setName] = useState('');
+  /** True while the slug follows the name; the admin typing in the slug field takes it over. */
+  const [slugAuto, setSlugAuto] = useState(true);
   const [editing, setEditing] = useState<{ id: number; name: string; slug: string } | null>(null);
   const [deleting, setDeleting] = useState<AdminCategory | null>(null);
 
@@ -31,6 +47,7 @@ export function CategoriesPage() {
     onSuccess: () => {
       setSlug('');
       setName('');
+      setSlugAuto(true);
       done(s.categories.created);
     },
     onError: fail,
@@ -62,6 +79,19 @@ export function CategoriesPage() {
   });
 
   const categories = list.data?.categories ?? [];
+
+  const slugValue = slug.trim();
+  const takenBy = categories.find((c) => c.slug === slugValue);
+  const slugError = !slugValue
+    ? null
+    : !categorySlugSchema.safeParse(slugValue).success
+      ? s.categories.slugInvalid
+      : takenBy
+        ? s.categories.slugTaken(takenBy.name)
+        : null;
+  const slugNote = name.trim() && !slugValue ? s.categories.slugNeeded : s.categories.slugHelp;
+  const canAdd = !!slugValue && !!name.trim() && !slugError && !create.isPending;
+
   const move = (index: number, delta: number) => {
     const order = categories.map((c) => c.id);
     const [id] = order.splice(index, 1);
@@ -73,10 +103,10 @@ export function CategoriesPage() {
     <div className="flex flex-col gap-4">
       <PageTitle>{s.categories.title}</PageTitle>
       <form
-        className="grid gap-3 rounded-[14px] border border-border bg-surface p-4 md:grid-cols-[1fr_1fr_auto] md:items-end"
+        className="grid gap-3 rounded-[14px] border border-border bg-surface p-4 md:grid-cols-[1fr_1fr_auto] md:items-start"
         onSubmit={(e) => {
           e.preventDefault();
-          create.mutate();
+          if (canAdd) create.mutate();
         }}
       >
         <Field id={ids.name} label={s.categories.name}>
@@ -84,7 +114,10 @@ export function CategoriesPage() {
             id={ids.name}
             value={name}
             maxLength={60}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (slugAuto) setSlug(slugify(e.target.value));
+            }}
             className={inputClass}
           />
         </Field>
@@ -93,16 +126,26 @@ export function CategoriesPage() {
             id={ids.slug}
             value={slug}
             maxLength={50}
-            onChange={(e) => setSlug(e.target.value.toLowerCase())}
+            onChange={(e) => {
+              const next = e.target.value.toLowerCase();
+              setSlug(next);
+              // Clearing the field hands it back to the Name; any other edit takes it over.
+              setSlugAuto(next === '');
+            }}
             className={inputClass}
             placeholder="home-garden"
+            aria-invalid={slugError ? true : undefined}
+            aria-describedby={ids.slugNote}
           />
+          <p
+            id={ids.slugNote}
+            className={`text-sm ${slugError ? 'text-dontknow' : 'text-muted'}`}
+            aria-live="polite"
+          >
+            {slugError ?? slugNote}
+          </p>
         </Field>
-        <button
-          type="submit"
-          className={ghostButton}
-          disabled={!slug.trim() || !name.trim() || create.isPending}
-        >
+        <button type="submit" className={`${ghostButton} md:mt-[1.625rem]`} disabled={!canAdd}>
           + {s.categories.add}
         </button>
       </form>

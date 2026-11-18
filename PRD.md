@@ -411,7 +411,9 @@ so learners never download it. All admin pages work on mobile (tables collapse i
   (all fields and lists + category slugs) that is **kept permanently**.
 
 ### 7.4 Categories (`/admin/categories`)
-- **FR-A30** CRUD: slug (lowercase, `a-z0-9-`), name, active, sort order (reorder). Deleting a category that still has
+- **FR-A30** CRUD: slug (lowercase, `a-z0-9-`), name, active, sort order (reorder). The add form fills the slug from
+  the name as it is typed ("Home & Garden" → `home-garden`) until the admin edits the slug; a hint under the field says
+  what it is for, and an invalid or already-used slug is reported under the field while typing (Add stays disabled). Deleting a category that still has
   items is blocked: deactivate it instead, or remove it from those items first.
 
 ### 7.5 Languages (`/admin/languages`)
