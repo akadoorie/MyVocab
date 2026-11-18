@@ -1,7 +1,7 @@
 import type { AdminCategory, AdminItem, AdminItemPatch, AdminLanguage } from '@myvocab/contracts';
 import { ITEM_LIMITS, type CardView } from '@myvocab/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { Button3D } from '../../components/Button3D';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -521,19 +521,65 @@ function Preview({ itemId, version }: { itemId: number; version: number }) {
   );
 }
 
+/**
+ * The session card's size at this window (LoopPage, desktop): the page is at most 1100px wide with
+ * 32px side padding, and the card is clamp(420px, 58vh, 600px) tall. The preview draws the card at
+ * exactly that size and scales it down to its column, so it is a true miniature of the session card.
+ * Null on phones (and where it can't be measured), where the card simply fills the column.
+ */
+function useSessionCardFit(ref: RefObject<HTMLDivElement | null>) {
+  const [fit, setFit] = useState<{ width: number; height: number; scale: number } | null>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const mq = window.matchMedia?.('(min-width: 768px)');
+    if (!el || !mq || typeof ResizeObserver === 'undefined') return;
+    const update = () => {
+      if (!mq.matches) return setFit(null);
+      const width = Math.min(1100, document.documentElement.clientWidth) - 64;
+      const height = Math.min(600, Math.max(420, window.innerHeight * 0.58));
+      setFit({ width, height, scale: Math.min(1, el.clientWidth / width) });
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    window.addEventListener('resize', update);
+    mq.addEventListener('change', update);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', update);
+      mq.removeEventListener('change', update);
+    };
+  }, [ref]);
+  return fit;
+}
+
 function PreviewCard({ card }: { card: CardView }) {
   const [side, setSide] = useState<'front' | 'back'>('front');
   const [hintsShown, setHintsShown] = useState(false);
+  const frame = useRef<HTMLDivElement>(null);
+  const fit = useSessionCardFit(frame);
   return (
-    <div className="flex w-full max-w-[1036px] flex-col gap-5">
-      {/* Same height rule as the session card (LoopPage); on phones a fixed share of the screen. */}
-      <div className="flex h-[min(68dvh,560px)] flex-col md:h-[clamp(420px,58vh,600px)]">
-        <FlipCard
-          card={card}
-          side={side}
-          hintsShown={hintsShown}
-          onFlip={() => setSide((v) => (v === 'front' ? 'back' : 'front'))}
-        />
+    <div className="flex w-full flex-col gap-5">
+      <div
+        ref={frame}
+        className={fit ? 'relative w-full' : 'flex h-[min(68dvh,560px)] w-full flex-col'}
+        style={fit ? { height: fit.height * fit.scale } : undefined}
+      >
+        <div
+          className={fit ? 'absolute top-0 left-0 flex origin-top-left flex-col' : 'contents'}
+          style={
+            fit
+              ? { width: fit.width, height: fit.height, transform: `scale(${fit.scale})` }
+              : undefined
+          }
+        >
+          <FlipCard
+            card={card}
+            side={side}
+            hintsShown={hintsShown}
+            onFlip={() => setSide((v) => (v === 'front' ? 'back' : 'front'))}
+          />
+        </div>
       </div>
       {/* The session's Hints toggle (FR-L24); Know / Don't know have no meaning in a preview. */}
       <LoopButton
