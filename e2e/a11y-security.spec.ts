@@ -96,7 +96,10 @@ test('the loop works with the keyboard only', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Next', exact: true }).last()).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(progress).toHaveText(/Card 3\/\d+/);
-  await page.keyboard.press('Escape'); // Stop
+  await page.keyboard.press('Escape'); // Stop: asks first
+  await expect(page.getByRole('dialog', { name: 'Stop the session?' })).toBeVisible();
+  await page.keyboard.press('Tab'); // from No to Yes
+  await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/$/);
 });
 

@@ -271,10 +271,11 @@ private content repository. It never appears in the public code repo or any publ
   Next was easy to miss).
 - **FR-L29 Next**: moves to the next card (only enabled in the Revealed phase). The next card enters front side up with
   a short rise-in (no reverse-flip animation).
-- **FR-L30 Stop**: ends the loop immediately and returns to `/` with no confirmation dialog. Already-made Know marks are
-  kept (and flushed, §6.4).
+- **FR-L30 Stop**: the **Stop** button (or Esc) first asks **"Stop the session? This will stop the session. Are you
+  sure?"** with **Yes** / **No**, the same question as Home (FR-L30a; owner request, 2026-11-18). **Yes** ends the
+  loop and returns to `/`; already-made Know marks are kept (and flushed, §6.4). **No** continues where it was.
 - **FR-L30a Home from the loop**: the loop header has a **"← Home"** link like the other pages. Because it leaves the
-  loop, it first asks **"This will stop the loop. Are you sure?"** with **Yes** / **No**. **Yes** = Stop (FR-L30);
+  loop, it first asks **"Back to Home? This will stop the session. Are you sure?"** with **Yes** / **No**. **Yes** = Stop (FR-L30);
   **No** closes the question and the loop continues where it was. While the question is open, loop shortcuts are
   ignored and Esc means No (owner request, 2026-11-18).
 - **FR-L31 Cycle break**: when a cycle ends and "Don't know" cards remain, an interstitial shows
@@ -285,7 +286,7 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L33** The loop state (including the current card's side and whether its hints are shown) is saved in
   `sessionStorage`, so a page refresh resumes the same loop. Stop or finishing clears it.
 - **FR-L34** Desktop keyboard shortcuts (listed in a "Keyboard shortcuts" popover in the loop header): **K** Know, **D** Don't know, **H** Hints,
-  **Space/F** Flip, **Enter** Next or Continue, **Esc** Stop. Shortcuts respect the enabled/disabled state.
+  **Space/F** Flip, **Enter** Next or Continue, **Esc** Stop (asks first, FR-L30). Shortcuts respect the enabled/disabled state.
 
 ### 6.3 What the back of the card shows
 The front always shows the item text. The back depends only on whether the two languages are the **same or

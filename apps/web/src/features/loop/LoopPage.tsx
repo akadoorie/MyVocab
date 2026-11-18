@@ -65,7 +65,8 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   const nextRef = useRef<HTMLButtonElement>(null);
   const [expired, setExpired] = useState<KnownMark | null>(null);
   const [announcement, setAnnouncement] = useState('');
-  const [confirmHome, setConfirmHome] = useState(false);
+  // Stop and Home both ask before ending the session (PRD FR-L30, FR-L30a).
+  const [confirmLeave, setConfirmLeave] = useState<'stop' | 'home' | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const counterRef = useRef<HTMLSpanElement>(null);
   const [crumple, setCrumple] = useState<Crumple | null>(null);
@@ -138,11 +139,12 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
 
   const onShortcut = useCallback(
     (action: LoopActionType | 'ENTER') => {
-      if (confirmHome) return; // the "back home" question is open
+      if (confirmLeave) return; // the "are you sure?" question is open
       if (action === 'ENTER') act(state.phase === 'cycleBreak' ? 'CONTINUE' : 'NEXT');
+      else if (action === 'STOP') setConfirmLeave('stop');
       else act(action);
     },
-    [act, state.phase, confirmHome],
+    [act, state.phase, confirmLeave],
   );
   useLoopShortcuts(onShortcut);
 
@@ -228,23 +230,27 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           <ShortcutsMenu />
           <button
             type="button"
-            onClick={() => setConfirmHome(true)}
+            onClick={() => setConfirmLeave('home')}
             className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-[10px] px-2 text-sm text-muted hover:text-text md:text-base"
           >
             <span aria-hidden="true">←</span> {strings.nav.home}
           </button>
         </div>
-        {confirmHome && (
+        {confirmLeave && (
           <ConfirmDialog
-            title={strings.loop.homeConfirmTitle}
+            title={
+              confirmLeave === 'home'
+                ? strings.loop.homeConfirmTitle
+                : strings.loop.stopConfirmTitle
+            }
             body={strings.loop.homeConfirmBody}
             confirmLabel={strings.loop.yes}
             cancelLabel={strings.loop.no}
             onConfirm={() => {
-              setConfirmHome(false);
+              setConfirmLeave(null);
               act('STOP');
             }}
-            onCancel={() => setConfirmHome(false)}
+            onCancel={() => setConfirmLeave(null)}
           />
         )}
       </header>
@@ -274,7 +280,11 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
             {undoBar}
           </div>
         )}
-        <ButtonBar state={state} onAction={act} nextRef={nextRef} />
+        <ButtonBar
+          state={state}
+          onAction={(type) => (type === 'STOP' ? setConfirmLeave('stop') : act(type))}
+          nextRef={nextRef}
+        />
       </div>
       {ghost}
     </main>

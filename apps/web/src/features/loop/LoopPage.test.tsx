@@ -143,11 +143,18 @@ describe('LoopPage', () => {
     expect(loadLoop()).toBeNull(); // finishing clears the saved loop
   });
 
-  it('saves progress so a refresh resumes, and Stop clears it and goes home', async () => {
+  it('saves progress so a refresh resumes; Stop asks, then clears it and goes home', async () => {
     const router = setup();
     fireEvent.click(btn('Know'));
     expect(loadLoop()?.state.index).toBe(1);
     fireEvent.click(screen.getAllByRole('button', { name: /Stop/ })[0] as HTMLElement);
+    // Stop asks first, like Home; No keeps the session.
+    const dialog = screen.getByRole('dialog', { name: 'Stop the session?' });
+    expect(dialog).toHaveTextContent('This will stop the session. Are you sure?');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'No' }));
+    expect(loadLoop()).not.toBeNull();
+    fireEvent.keyDown(window, { key: 'Escape' }); // Esc = Stop, which asks too
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Yes' }));
     await vi.waitFor(() => expect(router.state.location.pathname).toBe('/'));
     expect(loadLoop()).toBeNull();
   });

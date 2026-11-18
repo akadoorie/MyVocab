@@ -158,6 +158,7 @@ export const strings = {
     insufficient: (n: number, topic: string) =>
       `Only ${n} new ${n === 1 ? 'card' : 'cards'} in ${topic}, starting with ${n}`,
     homeConfirmTitle: 'Back to Home?',
+    stopConfirmTitle: 'Stop the session?',
     homeConfirmBody: 'This will stop the session. Are you sure?',
     yes: 'Yes',
     no: 'No',

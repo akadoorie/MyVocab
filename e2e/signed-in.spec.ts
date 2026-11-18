@@ -63,6 +63,7 @@ test('Know → My known words → hidden in every direction → Return to loops'
   await button(page, 'Know').click();
   await expect(page.getByTestId('progress')).toContainText('1 known');
   await button(page, 'Stop').click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Yes' }).click();
   await expect(page).toHaveURL(/\/$/);
 
   // It appears in My known words…

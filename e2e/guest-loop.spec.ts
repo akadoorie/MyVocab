@@ -78,7 +78,7 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   await expect(page).toHaveURL(/\/$/);
 });
 
-test('Stop ends the loop immediately and returns home', async ({ page }) => {
+test('Stop asks first, then ends the session and returns home', async ({ page }) => {
   await page.goto('/');
   await page
     .getByRole('region', { name: 'Start a session' })
@@ -86,6 +86,7 @@ test('Stop ends the loop immediately and returns home', async ({ page }) => {
     .click();
   await expect(page).toHaveURL(/\/loop$/);
   await page.getByRole('button', { name: /Stop/ }).first().click({ force: true });
+  await page.getByRole('dialog').getByRole('button', { name: 'Yes' }).click();
   await expect(page).toHaveURL(/\/$/);
   await page.goto('/loop');
   await expect(page).toHaveURL(/\/$/); // nothing to resume
