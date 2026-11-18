@@ -204,7 +204,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   return (
     <main
       id="main"
-      className="mx-auto flex min-h-dvh w-full max-w-[1100px] flex-col gap-5 px-4 pt-4 md:gap-10 md:px-8 md:pt-8"
+      className="mx-auto flex h-dvh w-full max-w-[1100px] flex-col gap-5 px-4 pt-4 md:h-auto md:min-h-dvh md:gap-10 md:px-8 md:pt-8"
     >
       <header className="flex items-center justify-between gap-3">
         <p
@@ -251,7 +251,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
       <div
         key={`${state.cycle}-${state.index}`}
         ref={cardRef}
-        className="card-enter flex flex-1 flex-col md:flex-none"
+        className="card-enter flex min-h-0 flex-1 flex-col md:h-[clamp(420px,58vh,600px)] md:flex-none"
       >
         <FlipCard
           card={card}

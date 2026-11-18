@@ -81,7 +81,9 @@ export function FlipCard({
       >
         <div className="flip-card__face flip-card__front" inert={!front} aria-hidden={!front}>
           <p className="chip self-start">{label}</p>
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 py-6 text-center">
+          {/* The item sits in the upper part of the card and never moves; hints and synonyms
+              appear below it in the space kept for them (PRD §9.3). */}
+          <div className="flex min-h-[46%] shrink-0 flex-col items-center justify-center gap-4 py-4 text-center">
             <p
               lang={card.front.lang}
               dir={card.front.dir}
@@ -110,7 +112,7 @@ export function FlipCard({
               ? strings.card.translation
               : strings.card.explanation}
           </p>
-          <div className="flex flex-1 flex-col items-center justify-center py-6 text-center">
+          <div className="flex min-h-[46%] shrink-0 flex-col items-center justify-center py-4 text-center">
             <Answer
               lang={card.answer.lang}
               dir={card.answer.dir}

@@ -703,9 +703,13 @@ Disabled buttons lose glow and ledge and look muted. Base mechanics:
   **Hints** as a muted list and a "Synonyms: …" line (or "Hint is not available").
 - A round **Flip** button (↻) sits in the bottom-right corner of **both** faces, so the card can be turned back from
   the answer side too.
-- **Size**: both faces share one grid cell (`display:grid` with both faces at `grid-area: 1 / 1`), so the card takes the
-  height of the taller face and doesn't jump when flipped. Minimum height about 300px on mobile, 420px on desktop. On
-  small phones, if a face is very long it scrolls inside the card (max height ≈ 60vh).
+- **Size** (owner request, 2026-11-18): in the loop the card has a **fixed height** that never changes when it flips,
+  shows hints, or moves to the next card: on phones it fills the space between the header and the buttons; on desktop
+  it is `clamp(420px, 58vh, 600px)`. Both faces share one grid cell. A face with more content than fits scrolls
+  inside the card.
+- **Placement**: the item (front) and the answer (back) sit in the **upper part** of the card (a block of at least
+  46% of its height, content centered in it) and never move; hints, synonyms and the literal meaning appear below
+  it, in the space kept for them.
 
 ```
 FRONT, after Hints               BACK, after Flip (EN → HE)
