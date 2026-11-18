@@ -322,6 +322,16 @@ different**:
   "Swift" in EN → HE also hides it from EN → EN. Separate items are not affected: the Hebrew item "מהיר" still appears
   in HE → EN loops.
 - **FR-L55** Guests: nothing is queued or stored.
+- **FR-L56 Failed sign-in** (owner request, 2026-11-18): the server rewrites Better Auth's error redirect to one of two
+  neutral addresses, never carrying the error code or its description: `/?signin=refused` when the account may not
+  sign in (a banned account) and `/?signin=error` for anything else. Better Auth's banned text is replaced by a
+  neutral one, so **"banned" never appears** in the address bar or the page. The start page then shows a notice that
+  **stays until dismissed** (✕), above the hero:
+  - refused: "We couldn't sign you in with this Google account. You can keep learning as a guest.";
+  - error: "Sign-in didn't complete. Please try again."
+  The automatic guest "please register" toast (FR-L6) is held back on that visit, so the two never contradict each
+  other. The address is cleaned at once, so a refresh doesn't repeat the notice. A ban with an end date simply stops
+  refusing once it ends.
 
 ### 6.5 "My known words" page (`/known`, signed-in only)
 - **FR-L60** A paginated list (cursor, 50 per page) of the learner's known items: item text (with `dir`), language,

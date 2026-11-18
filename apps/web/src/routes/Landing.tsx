@@ -1,8 +1,7 @@
 import type { StartChoices } from '@myvocab/core';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router';
-import { useToast } from '../components/Toast';
 import { StartCard } from '../features/setup/StartCard';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
@@ -17,22 +16,49 @@ export function Landing() {
   const location = useLocation();
   const meta = useQuery({ queryKey: ['meta'], queryFn: api.meta, staleTime: 60_000 });
   const initialSelection = (location.state as { selection?: StartChoices } | null)?.selection;
-  const toast = useToast();
   const [params, setParams] = useSearchParams();
 
-  // Back from a failed Google sign-in (`/?signin=error&error=…`).
-  const signInFailed = params.get('signin') === 'error';
+  // Back from a failed Google sign-in: the server sends `?signin=refused` (this account may not
+  // sign in) or `?signin=error` (anything else), never the reason (PRD FR-L56). The notice stays
+  // until dismissed; the address is cleaned at once, so a refresh doesn't repeat it.
+  const signin = params.get('signin');
+  const [signInNotice, setSignInNotice] = useState<string | null>(() =>
+    signin === 'refused'
+      ? strings.auth.signInRefused
+      : signin === 'error'
+        ? strings.auth.signInFailed
+        : null,
+  );
+  // Remembered for this visit: the address is cleaned right away, but the guest toast stays quiet.
+  const [backFromSignIn] = useState(signin !== null);
   useEffect(() => {
-    if (!signInFailed) return;
-    toast.show({ message: strings.auth.signInFailed });
-    setParams({}, { replace: true });
-  }, [signInFailed, toast, setParams]);
+    if (signin) setParams({}, { replace: true });
+  }, [signin, setParams]);
 
   return (
     <main
       id="main"
       className="mx-auto grid w-full max-w-6xl flex-1 gap-8 px-4 pb-10 md:grid-cols-2 md:items-start md:gap-12 md:pt-8"
     >
+      {signInNotice && (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-[16px] border border-[rgba(250,204,21,0.45)] bg-[rgba(250,204,21,0.08)] px-4 py-3 md:col-span-2"
+        >
+          <span aria-hidden="true" className="pt-0.5 text-hint">
+            ⓘ
+          </span>
+          <p className="flex-1 text-text">{signInNotice}</p>
+          <button
+            type="button"
+            aria-label={strings.auth.dismiss}
+            onClick={() => setSignInNotice(null)}
+            className="-my-1 flex min-h-9 min-w-9 items-center justify-center rounded-full text-muted hover:text-text"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <div className="flex flex-col gap-6">
         <h1 className="bg-gradient-to-br from-text to-[#b9a6ff] bg-clip-text text-3xl leading-tight font-bold tracking-tight text-transparent md:text-5xl">
           {strings.landing.heroTitle}
@@ -65,6 +91,7 @@ export function Landing() {
             meta={meta.data}
             session={session}
             initialSelection={initialSelection}
+            quiet={backFromSignIn}
           />
         ) : meta.isError ? (
           <p role="alert" className="text-dontknow">

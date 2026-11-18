@@ -35,10 +35,13 @@ export function StartCard({
   meta,
   session,
   initialSelection,
+  quiet = false,
 }: {
   meta: MetaResponse;
   session: SessionState;
   initialSelection?: StartChoices | undefined;
+  /** Hold back the automatic guest toast (a failed sign-in notice is showing, FR-L56). */
+  quiet?: boolean;
 }) {
   const isGuest = session.isGuest;
   const navigate = useNavigate();
@@ -73,11 +76,11 @@ export function StartCard({
   // FR-L6: the guest toast appears once per browser session automatically.
   const shownRef = useRef(false);
   useEffect(() => {
-    if (!isGuest || shownRef.current || readFlag('session', GUEST_TOAST_FLAG)) return;
+    if (quiet || !isGuest || shownRef.current || readFlag('session', GUEST_TOAST_FLAG)) return;
     shownRef.current = true;
     writeFlag('session', GUEST_TOAST_FLAG);
     toast.show(guestToast);
-  }, [isGuest, toast, guestToast]);
+  }, [quiet, isGuest, toast, guestToast]);
 
   const query = useDebounced(
     {

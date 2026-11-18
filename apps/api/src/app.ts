@@ -5,6 +5,7 @@ import {
   type SessionUser,
 } from '@myvocab/contracts';
 import { ALLOWED_AUTH_ROUTES, createAuth, toSessionUser, type Auth } from './auth/auth';
+import { withNeutralSignInRedirect } from './auth/sign-in-error';
 import { loadConfig, type AppConfig } from './config';
 import { createContainer, type Container } from './container';
 import { parseOrThrow, readJson } from './lib/validate';
@@ -107,7 +108,9 @@ export function createApp() {
     if (c.req.path === '/api/auth/sign-in/social') {
       parseOrThrow(socialSignInRequestSchema, await readJson(c.req.raw.clone()));
     }
-    return c.get('auth')().handler(c.req.raw);
+    // A failed sign-in comes back to a neutral address that never says why (PRD FR-L56).
+    const res = await c.get('auth')().handler(c.req.raw);
+    return withNeutralSignInRedirect(res, new URL(c.get('config').APP_URL).origin);
   });
 
   app.route('/', publicRoutes);

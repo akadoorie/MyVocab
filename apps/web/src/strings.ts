@@ -65,6 +65,9 @@ export const strings = {
   },
   auth: {
     signInFailed: 'Sign-in didn’t complete. Please try again.',
+    signInRefused:
+      'We couldn’t sign you in with this Google account. You can keep learning as a guest.',
+    dismiss: 'Dismiss',
     signInRequiredTitle: 'Sign in to continue',
     signInRequiredBody: 'Sign in with Google to see the words you know and manage your account.',
   },

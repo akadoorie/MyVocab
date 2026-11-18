@@ -108,7 +108,14 @@ export function createAuth(config: AuthConfig, db: Db) {
         update: { before: async () => ({ data: NO_TOKENS }) },
       },
     },
-    plugins: [admin({ defaultRole: 'user', adminRoles: ['admin'] })],
+    // A neutral text: whatever Better Auth reports for a banned account never says "banned".
+    plugins: [
+      admin({
+        defaultRole: 'user',
+        adminRoles: ['admin'],
+        bannedUserMessage: 'Sign-in is not available for this account.',
+      }),
+    ],
   });
 }
 
