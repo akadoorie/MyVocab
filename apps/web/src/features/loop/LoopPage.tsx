@@ -20,6 +20,7 @@ import { ButtonBar } from './ButtonBar';
 import { FlipCard } from './FlipCard';
 import { clearLoop, loadLoop, saveLoop, type StoredLoop } from './loop-storage';
 import { CycleBreak, ShortcutsMenu, Summary, UndoBar } from './LoopScreens';
+import { CrumpleGhost, type Crumple } from './CrumpleGhost';
 import { useLoopShortcuts } from './useLoopShortcuts';
 
 export type KnownSink = {
@@ -65,6 +66,10 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   const [expired, setExpired] = useState<KnownMark | null>(null);
   const [announcement, setAnnouncement] = useState('');
   const [confirmHome, setConfirmHome] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const counterRef = useRef<HTMLSpanElement>(null);
+  const [crumple, setCrumple] = useState<Crumple | null>(null);
+  const clearCrumple = useCallback(() => setCrumple(null), []);
 
   // Persist on every change; Stop and the end of the loop clear it (FR-L33).
   useEffect(() => {
@@ -100,6 +105,21 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
       if (type === 'KNOW' && id !== null) {
         const mark = { id, cycle: state.cycle };
         knownSink.onKnow(mark, cards.get(id)?.direction.target ?? '');
+        // The known card crumples and flies into the "known" counter (PRD §9.4).
+        const known = cards.get(id);
+        const from = cardRef.current?.getBoundingClientRect();
+        const to = counterRef.current?.getBoundingClientRect();
+        if (known && from && to && motionAllowed()) {
+          setCrumple({
+            key: Date.now(),
+            card: known,
+            side: state.side,
+            hintsShown: state.hintsShown,
+            rect: { top: from.top, left: from.left, width: from.width, height: from.height },
+            dx: to.left + to.width / 2 - (from.left + from.width / 2),
+            dy: to.top + to.height / 2 - (from.top + from.height / 2),
+          });
+        }
       }
       if (type === 'UNDO_KNOW' && state.lastKnow) knownSink.onUndo(state.lastKnow);
       if (type === 'FLIP') {
@@ -130,6 +150,18 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   const card = id === null ? undefined : cards.get(id);
   const lastKnownCard = state.lastKnow ? cards.get(state.lastKnow.id) : undefined;
 
+  const ghost = crumple ? (
+    <CrumpleGhost key={crumple.key} crumple={crumple} onDone={clearCrumple} />
+  ) : null;
+  const [progressHead, progressKnown] = splitKnown(
+    strings.loop.progress(
+      progress.cycle,
+      progress.cardNumber,
+      progress.cycleSize,
+      progress.knownCount,
+    ),
+  );
+
   const undoBar =
     undoVisible && lastKnownCard ? (
       <UndoBar label={undoBarLabel(lastKnownCard)} onUndo={() => act('UNDO_KNOW')} />
@@ -144,6 +176,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           onContinue={() => act('CONTINUE')}
         />
         <div className="sticky bottom-4">{undoBar}</div>
+        {ghost}
       </main>
     );
   }
@@ -157,6 +190,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           onNewLoop={() => navigate('/', { state: { selection: stored.selection } })}
         />
         <div className="sticky bottom-4">{undoBar}</div>
+        {ghost}
       </main>
     );
   }
@@ -174,12 +208,14 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
         >
           <LogoMark className="h-8 w-8 shrink-0 md:h-10 md:w-10" />
           <span>
-            {strings.loop.progress(
-              progress.cycle,
-              progress.cardNumber,
-              progress.cycleSize,
-              progress.knownCount,
-            )}
+            {progressHead}
+            <span
+              ref={counterRef}
+              key={progress.knownCount}
+              className={`inline-block ${crumple ? 'count-pop' : ''}`}
+            >
+              {progressKnown}
+            </span>
           </span>
         </p>
         <div className="flex items-center gap-2 md:gap-4">
@@ -209,6 +245,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
 
       <div
         key={`${state.cycle}-${state.index}`}
+        ref={cardRef}
         className="card-enter flex flex-1 flex-col md:flex-none"
       >
         <FlipCard
@@ -227,6 +264,18 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
         {undoBar}
         <ButtonBar state={state} onAction={act} nextRef={nextRef} />
       </div>
+      {ghost}
     </main>
   );
+}
+
+/** "Cycle 1 · Card 2/5 · 1 known" → ["Cycle 1 · Card 2/5 · ", "1 known"]: the counter is the target. */
+function splitKnown(text: string): [string, string] {
+  const at = text.lastIndexOf(' · ') + 3;
+  return [text.slice(0, at), text.slice(at)];
+}
+
+/** The crumple is skipped for "reduce motion" (and where it can't be detected, e.g. tests). */
+function motionAllowed(): boolean {
+  return window.matchMedia?.('(prefers-reduced-motion: no-preference)').matches ?? false;
 }

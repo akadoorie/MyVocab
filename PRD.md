@@ -267,7 +267,7 @@ private content repository. It never appears in the public code repo or any publ
   round Next is hidden), so the only way on is the biggest button on screen (owner request, 2026-11-18: the small
   Next was easy to miss).
 - **FR-L29 Next**: moves to the next card (only enabled in the Revealed phase). The next card enters front side up with
-  a short slide-in (no reverse-flip animation).
+  a short rise-in (no reverse-flip animation).
 - **FR-L30 Stop**: ends the loop immediately and returns to `/` with no confirmation dialog. Already-made Know marks are
   kept (and flushed, §6.4).
 - **FR-L30a Home from the loop**: the loop header has a **"← Home"** link like the other pages. Because it leaves the
@@ -740,7 +740,15 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   `aria-hidden="true"`, so only the visible face's Flip button is focusable. An `aria-live="polite"` region announces
   "Showing answer" / "Showing front" / "Hints shown".
 - After **Don't know** on the front, the same flip animation plays automatically.
-- **Next** / **Know**: the next card enters front side up with a short slide-in (200ms; none with reduced motion).
+- **Next** / **Know**: the next card enters front side up, rising in (≈ 260ms: from slightly lower, smaller and
+  transparent to full size; a plain 150ms fade with reduced motion).
+- **Know animation** (owner idea, 2026-11-18): a decorative copy of the card **crumples like paper** and is **sucked
+  along a curve into the "N known" counter** in the header, which pops (bigger, green) as it lands. After a quick
+  green ✓ glow the card folds into ~10 triangular facets, each tilting its own way in 3D with its own light or shadow,
+  like real crumpled paper; the wad shrinks and turns as it flies. About 0.8s in total, and the next card rises in at
+  the same time, so Know never feels slow. Reduced motion: no crumple. (A first, simpler "squash into a ball"
+  version was tried and dropped in favour of this one.) Undo has no reverse
+  animation (the card returns to the next cycle, not to the screen). Don't know keeps the flip.
 
 ### 9.5 Start card (look)
 - Five fields stacked on mobile (2-column grid on desktop), each with a label and either a select (languages,

@@ -39,12 +39,16 @@ export function FlipCard({
   side,
   hintsShown,
   onFlip,
+  decorative = false,
 }: {
   card: CardView;
   side: CardSide;
   hintsShown: boolean;
   onFlip: () => void;
+  /** A purely visual copy (the Know animation): no test ids. */
+  decorative?: boolean;
 }) {
+  const tid = (id: string) => (decorative ? undefined : id);
   const label = `${card.direction.source.toUpperCase()} → ${card.direction.target.toUpperCase()} · ${strings.types[card.type]}`;
   const front = side === 'front';
   const Answer = card.answer.numbered ? 'ol' : 'ul';
@@ -69,14 +73,19 @@ export function FlipCard({
     <div className={`flip-card ${front ? '' : 'is-flipped'}`}>
       {/* A pointer shortcut: the Flip button and the F/Space keys are the keyboard controls. */}
       {/* eslint-disable-next-line jsx-a11y-x/click-events-have-key-events, jsx-a11y-x/no-static-element-interactions */}
-      <div className="flip-card__inner" onClick={onFlip} data-testid="flip-card" data-side={side}>
+      <div
+        className="flip-card__inner"
+        onClick={onFlip}
+        data-testid={tid('flip-card')}
+        data-side={side}
+      >
         <div className="flip-card__face flip-card__front" inert={!front} aria-hidden={!front}>
           <p className="chip self-start">{label}</p>
           <div className="flex flex-1 flex-col items-center justify-center gap-4 py-6 text-center">
             <p
               lang={card.front.lang}
               dir={card.front.dir}
-              data-testid="front-text"
+              data-testid={tid('front-text')}
               className="text-[clamp(2.5rem,8vw,5.5rem)] leading-tight font-bold tracking-tight break-words"
             >
               {card.front.text}
@@ -88,7 +97,7 @@ export function FlipCard({
             )}
           </div>
           {hintsShown && (
-            <div className="border-t border-border pt-4" data-testid="front-hints">
+            <div className="border-t border-border pt-4" data-testid={tid('front-hints')}>
               <Extras card={card} />
             </div>
           )}
@@ -118,7 +127,7 @@ export function FlipCard({
               ))}
             </Answer>
             {card.answer.literal.length > 0 && (
-              <p className="mt-3 text-lg text-muted" data-testid="literal">
+              <p className="mt-3 text-lg text-muted" data-testid={tid('literal')}>
                 <span className="font-medium">{strings.card.literal}</span>{' '}
                 <span lang={card.answer.lang} dir={card.answer.dir}>
                   {card.answer.literal.join(', ')}
@@ -126,7 +135,7 @@ export function FlipCard({
               </p>
             )}
           </div>
-          <div className="border-t border-border pt-4" data-testid="back-hints">
+          <div className="border-t border-border pt-4" data-testid={tid('back-hints')}>
             <Extras card={card} />
           </div>
           {flipButton}
