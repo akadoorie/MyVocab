@@ -10,6 +10,7 @@ import {
 } from '@myvocab/core';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { useToast } from '../../components/Toast';
 import { strings } from '../../strings';
 import { useKnownQueue } from '../known/KnownQueueProvider';
@@ -63,6 +64,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   const nextRef = useRef<HTMLButtonElement>(null);
   const [expired, setExpired] = useState<KnownMark | null>(null);
   const [announcement, setAnnouncement] = useState('');
+  const [confirmHome, setConfirmHome] = useState(false);
 
   // Persist on every change; Stop and the end of the loop clear it (FR-L33).
   useEffect(() => {
@@ -115,10 +117,11 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
 
   const onShortcut = useCallback(
     (action: LoopActionType | 'ENTER') => {
+      if (confirmHome) return; // the "back home" question is open
       if (action === 'ENTER') act(state.phase === 'cycleBreak' ? 'CONTINUE' : 'NEXT');
       else act(action);
     },
-    [act, state.phase],
+    [act, state.phase, confirmHome],
   );
   useLoopShortcuts(onShortcut);
 
@@ -179,7 +182,29 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
             )}
           </span>
         </p>
-        <ShortcutsMenu />
+        <div className="flex items-center gap-2 md:gap-4">
+          <ShortcutsMenu />
+          <button
+            type="button"
+            onClick={() => setConfirmHome(true)}
+            className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-[10px] px-2 text-sm text-muted hover:text-text md:text-base"
+          >
+            <span aria-hidden="true">←</span> {strings.nav.home}
+          </button>
+        </div>
+        {confirmHome && (
+          <ConfirmDialog
+            title={strings.loop.homeConfirmTitle}
+            body={strings.loop.homeConfirmBody}
+            confirmLabel={strings.loop.yes}
+            cancelLabel={strings.loop.no}
+            onConfirm={() => {
+              setConfirmHome(false);
+              act('STOP');
+            }}
+            onCancel={() => setConfirmHome(false)}
+          />
+        )}
       </header>
 
       <div

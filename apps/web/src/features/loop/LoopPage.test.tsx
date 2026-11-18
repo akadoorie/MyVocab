@@ -140,6 +140,24 @@ describe('LoopPage', () => {
     expect(loadLoop()).not.toBeNull(); // still in the loop
   });
 
+  it('Home asks first: No keeps the loop (shortcuts paused meanwhile), Yes stops it', async () => {
+    const router = setup();
+    fireEvent.click(screen.getByRole('button', { name: /Home/ }));
+    const dialog = screen.getByRole('dialog', { name: 'Back to Home?' });
+    expect(dialog).toHaveTextContent('This will stop the loop. Are you sure?');
+    fireEvent.keyDown(window, { key: 'k' }); // ignored while the question is open
+    expect(progress()).toBe('Cycle 1 · Card 1/3 · 0 known');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'No' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/loop');
+    expect(loadLoop()).not.toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /Home/ }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Yes' }));
+    await vi.waitFor(() => expect(router.state.location.pathname).toBe('/'));
+    expect(loadLoop()).toBeNull();
+  });
+
   it('redirects home when there is no loop to resume', async () => {
     const router = createMemoryRouter(
       [

@@ -157,6 +157,10 @@ export const strings = {
       `Cycle ${cycle} · ${left} ${left === 1 ? 'card' : 'cards'} left`,
     insufficient: (n: number, topic: string) =>
       `Only ${n} new ${n === 1 ? 'card' : 'cards'} in ${topic}, starting with ${n}`,
+    homeConfirmTitle: 'Back to Home?',
+    homeConfirmBody: 'This will stop the loop. Are you sure?',
+    yes: 'Yes',
+    no: 'No',
     shortcutsTitle: 'Keyboard shortcuts',
     shortcuts: [
       ['K', 'Know'],

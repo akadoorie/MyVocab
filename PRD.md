@@ -267,6 +267,10 @@ private content repository. It never appears in the public code repo or any publ
   a short slide-in (no reverse-flip animation).
 - **FR-L30 Stop**: ends the loop immediately and returns to `/` with no confirmation dialog. Already-made Know marks are
   kept (and flushed, §6.4).
+- **FR-L30a Home from the loop**: the loop header has a **"← Home"** link like the other pages. Because it leaves the
+  loop, it first asks **"This will stop the loop. Are you sure?"** with **Yes** / **No**. **Yes** = Stop (FR-L30);
+  **No** closes the question and the loop continues where it was. While the question is open, loop shortcuts are
+  ignored and Esc means No (owner request, 2026-11-18).
 - **FR-L31 Cycle break**: when a cycle ends and "Don't know" cards remain, an interstitial shows
   "Cycle 3 · 2 cards left" with a **Continue** button (Enter also continues).
 - **FR-L32 End of loop**: when a cycle ends with no "Don't know" cards, a summary shows the total cards, the number of
@@ -758,7 +762,8 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   2. Use Hints or Flip, then mark what you know · 3. Repeat until nothing is left); Start card; footer (Privacy,
   GitHub). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
 - **Loop header**: the MyVocab logo mark (two stacked cards) and the progress `Cycle 1 • Card 2/10 • 1 known` on the
-  left; on desktop, a "⌨ Keyboard shortcuts" link on the right that opens a small popover listing the shortcuts.
+  left; on the right, on desktop a "⌨ Keyboard shortcuts" link that opens a small popover listing the shortcuts, and
+  "← Home" (asks before stopping the loop, FR-L30a).
 - **Loop buttons**: on desktop, one row under the card, in this order: `Stop · Hints · Know · Don't know · Next`
   (round, round, pill, pill, round). Flip is on the card itself.
 - **Loop (mobile, 360–767px)**: the flip card fills the space above; the buttons form a **sticky bottom bar** in the
