@@ -8,7 +8,7 @@ export const ORIGIN = 'http://localhost:5173'; // APP_URL in wrangler.jsonc vars
 
 // Synthetic content only (PRD §14.2).
 export const FIXTURE_CSV = [
-  'lang,text,type,multiple_meanings,categories,translation_he,translation_en,explanation,synonyms,hints,status',
+  'lang,text,type,multiple_meanings,categories,translation_he,translation_en,explanation,synonyms,hints,status,literal_he',
   'en,fx-word-1,word,false,home,מילה-1,,Explanation one,,Hint one.,published',
   'en,fx-word-2,word,true,home,מילה-2א|מילה-2ב,,First meaning|Second meaning,syn-a,,published',
   'en,fx-word-3,word,false,nature,מילה-3,,,,,published',
@@ -17,7 +17,7 @@ export const FIXTURE_CSV = [
   'en,fx-word-6,word,false,home,מילה-6,,Explanation six,,,published',
   'en,fx-word-7,word,false,,מילה-7,,Explanation seven,,,published',
   'en,fx-draft,word,false,home,מילה-טיוטה,,Draft explanation,,,draft',
-  'en,fx-expr-1,expr,false,,ביטוי-1,,Expression explanation,,,published',
+  'en,fx-expr-1,expr,false,,ביטוי-1,,Expression explanation,,,published,מילולי-1',
   'he,מילה-א,word,false,home,,fx-he-a,הסבר א,,,published',
 ].join('\n');
 

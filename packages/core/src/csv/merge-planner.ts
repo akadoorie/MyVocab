@@ -43,6 +43,7 @@ export type ImportTotals = {
   newItems: number;
   mergedItems: number;
   newTranslationEntries: number;
+  newLiteralEntries: number;
   newExplanationEntries: number;
   newSynonyms: number;
   newHints: number;
@@ -79,6 +80,7 @@ function cloneContent(c: ItemContent): ItemContent {
   return {
     ...c,
     translation: Object.fromEntries(Object.entries(c.translation).map(([k, v]) => [k, [...v]])),
+    literal: Object.fromEntries(Object.entries(c.literal).map(([k, v]) => [k, [...v]])),
     explanation: [...c.explanation],
     synonyms: [...c.synonyms],
     hints: [...c.hints],
@@ -90,6 +92,7 @@ function emptyContent(from: ItemContent): ItemContent {
     ...from,
     multipleMeanings: false,
     translation: {},
+    literal: {},
     explanation: [],
     synonyms: [],
     hints: [],
@@ -105,6 +108,7 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
       newItems: 0,
       mergedItems: 0,
       newTranslationEntries: 0,
+      newLiteralEntries: 0,
       newExplanationEntries: 0,
       newSynonyms: 0,
       newHints: 0,
@@ -130,6 +134,7 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
     const content = existing ? cloneContent(existing.content) : emptyContent(first.content);
     const counts = {
       translation: { added: 0, skipped: 0 },
+      literal: { added: 0, skipped: 0 },
       explanation: { added: 0, skipped: 0 },
       synonyms: { added: 0, skipped: 0 },
       hints: { added: 0, skipped: 0 },
@@ -142,6 +147,10 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
       for (const [lang, entries] of Object.entries(row.content.translation)) {
         const list = (content.translation[lang] ??= []);
         appendUnique(list, entries, counts.translation);
+      }
+      for (const [lang, entries] of Object.entries(row.content.literal)) {
+        const list = (content.literal[lang] ??= []);
+        appendUnique(list, entries, counts.literal);
       }
       appendUnique(content.explanation, row.content.explanation, counts.explanation);
       appendUnique(content.synonyms, row.content.synonyms, counts.synonyms);
@@ -191,12 +200,16 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
     for (const [lang, entries] of Object.entries(content.translation)) {
       tooMany('translation', entries.length, `translation_${lang}`);
     }
+    for (const [lang, entries] of Object.entries(content.literal)) {
+      tooMany('literal', entries.length, `literal_${lang}`);
+    }
     tooMany('explanation', content.explanation.length, CSV_COLUMNS.explanation);
     tooMany('synonyms', content.synonyms.length, CSV_COLUMNS.synonyms);
     tooMany('hints', content.hints.length, CSV_COLUMNS.hints);
 
     const added =
       counts.translation.added +
+      counts.literal.added +
       counts.explanation.added +
       counts.synonyms.added +
       counts.hints.added;
@@ -210,11 +223,13 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
     }
 
     plan.totals.newTranslationEntries += counts.translation.added;
+    plan.totals.newLiteralEntries += counts.literal.added;
     plan.totals.newExplanationEntries += counts.explanation.added;
     plan.totals.newSynonyms += counts.synonyms.added;
     plan.totals.newHints += counts.hints.added;
     plan.totals.skippedDuplicates +=
       counts.translation.skipped +
+      counts.literal.skipped +
       counts.explanation.skipped +
       counts.synonyms.skipped +
       counts.hints.skipped;

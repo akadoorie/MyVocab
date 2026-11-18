@@ -16,6 +16,7 @@ const ITEM: AdminItem = {
   categoryIds: [],
   categories: [],
   translation: { he: ['מילה'] },
+  literal: {},
   explanation: [],
   synonyms: [],
   hints: ['First hint.'],

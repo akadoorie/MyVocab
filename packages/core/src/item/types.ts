@@ -16,6 +16,11 @@ export type ItemContent = {
   type: ItemType;
   multipleMeanings: boolean;
   translation: Translations;
+  /**
+   * Word-for-word translations per other language, for expressions whose literal words differ
+   * from their meaning. Shown under the translation as "Literal meaning" (PRD §8.1). Optional.
+   */
+  literal: Translations;
   explanation: string[];
   synonyms: string[];
   hints: string[];

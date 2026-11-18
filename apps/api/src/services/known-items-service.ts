@@ -99,7 +99,10 @@ export class KnownItemsService {
 
     const items: KnownItem[] = page.map((r) => {
       const strategy = strategyFor(r.lang, r.knownTarget);
-      const lines = strategy.answerLines({ ...r, synonyms: [], hints: [] }, r.knownTarget);
+      const lines = strategy.answerLines(
+        { ...r, literal: {}, synonyms: [], hints: [] },
+        r.knownTarget,
+      );
       const answerLang = strategy.kind === 'translation' ? r.knownTarget : r.lang;
       return {
         itemId: r.itemId,

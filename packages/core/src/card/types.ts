@@ -16,6 +16,8 @@ export type CardView = {
     kind: AnswerKind;
     lines: string[];
     numbered: boolean;
+    /** Word-for-word meaning in the answer language; only for translations (may be empty). */
+    literal: string[];
   } & LangDir;
   hints: string[];
   synonyms: string[];

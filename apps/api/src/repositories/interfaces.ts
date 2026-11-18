@@ -201,7 +201,14 @@ export type NewItem = ItemContent & {
 export type ItemChanges = Partial<
   Pick<
     ItemContent,
-    'text' | 'type' | 'multipleMeanings' | 'translation' | 'explanation' | 'synonyms' | 'hints'
+    | 'text'
+    | 'type'
+    | 'multipleMeanings'
+    | 'translation'
+    | 'literal'
+    | 'explanation'
+    | 'synonyms'
+    | 'hints'
   > & { normalizedText: string; status: 'draft' | 'published' }
 >;
 

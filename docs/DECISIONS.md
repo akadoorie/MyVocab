@@ -244,3 +244,18 @@ Format: date · context · decision · consequences.
   `dependabot.yml`. Actions pinned to commit SHAs (CodeQL v4.38.3, older than two weeks).
 - **Google redirect URI for local development** is `http://localhost:5173/api/auth/callback/google`
   (the Vite dev server forwards `/api` and `APP_URL` is 5173), not the 8787 URI in PRD §19.
+
+## D-016 · 2026-11-18 · Literal meaning (owner request)
+
+- **Why:** for idioms the meaning and the word-for-word translation are different things; keeping
+  both in `translation` mixed them (the owner found such a row in the starter set).
+- **Model:** a new `literal` JSON column on `items`, same shape as `translation`
+  (`{ "<lang>": [entries] }`, never the item's own language, ≤ 5 entries of ≤ 200 chars), with
+  matching CHECK constraints. CSV: `literal_<code>` columns (optional; old files stay valid).
+  Admin: a "Literal meaning" list editor under each translation. Card: `answer.literal`, filled
+  only for translation cards, rendered under the answer as "Literal meaning: …".
+- **Not** used for playability, Hints, the Undo bar or "My known words" (PRD FR-L43).
+- **Migration `0002_item_literal` is hand-written** (`ALTER TABLE … ADD COLUMN` with the CHECKs).
+  drizzle-kit generated a table rebuild, and on D1 (foreign keys always enforced) dropping the old
+  `items` table would cascade-delete known marks and category links. The drizzle snapshot is
+  still updated, so `db:generate` reports no drift. Future column additions follow the same rule.

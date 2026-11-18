@@ -60,6 +60,7 @@ export class D1ImportWriter implements ImportWriter {
             type: c.type,
             multipleMeanings: c.multipleMeanings,
             translation: c.translation,
+            literal: c.literal,
             explanation: c.explanation,
             synonyms: c.synonyms,
             hints: c.hints,
@@ -99,6 +100,7 @@ export class D1ImportWriter implements ImportWriter {
           .update(items)
           .set({
             translation: c.translation,
+            literal: c.literal,
             explanation: c.explanation,
             synonyms: c.synonyms,
             hints: c.hints,

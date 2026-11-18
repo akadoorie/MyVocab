@@ -100,6 +100,15 @@ describe('PATCH /api/admin/items/:id (optimistic concurrency)', () => {
     });
   });
 
+  it('sets and clears a literal meaning per language', async () => {
+    const id = await itemId('fx-word-1');
+    const set = await patch(id, { version: 1, literal: { he: ['מילולי'] } });
+    expect(set.status).toBe(200);
+    expect(await set.json<Item>()).toMatchObject({ version: 2, literal: { he: ['מילולי'] } });
+    const cleared = await patch(id, { version: 2, literal: {} });
+    expect(await cleared.json<Item>()).toMatchObject({ version: 3, literal: {} });
+  });
+
   it('a stale version gets 409 and writes nothing, even after another edit bumped the version', async () => {
     const id = await itemId('fx-word-1');
     const nature = await categoryId('nature');
@@ -144,6 +153,7 @@ describe('PATCH /api/admin/items/:id (optimistic concurrency)', () => {
     const id = await itemId('fx-word-1');
     expect((await patch(id, { version: 1, lang: 'he' })).status).toBe(400);
     expect((await patch(id, { version: 1, translation: { en: ['x'] } })).status).toBe(400);
+    expect((await patch(id, { version: 1, literal: { en: ['x'] } })).status).toBe(400);
     expect((await patch(id, { version: 1, hints: ['a', 'A'] })).status).toBe(400);
     expect((await patch(id, { version: 1, text: 'fx-word-2' })).status).toBe(409);
     expect(await count('audit_log')).toBe(0);

@@ -9,6 +9,7 @@ const TOTALS = {
   newItems: 1,
   mergedItems: 0,
   newTranslationEntries: 1,
+  newLiteralEntries: 0,
   newExplanationEntries: 0,
   newSynonyms: 0,
   newHints: 0,

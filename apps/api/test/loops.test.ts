@@ -149,6 +149,19 @@ describe('POST /api/loops (guest)', () => {
     expect(body.cards.every((c) => c.answer.kind === 'explanation')).toBe(true);
   });
 
+  it('adds the literal meaning to translation cards, not to explanation cards', async () => {
+    mockTurnstile(true);
+    const he = startLoopResponseSchema.parse(
+      await (await postJson('/loops', { ...guestBody, type: 'expr' })).json(),
+    );
+    expect(he.cards.map((c) => c.answer.literal)).toEqual([['מילולי-1']]);
+    mockTurnstile(true);
+    const en = startLoopResponseSchema.parse(
+      await (await postJson('/loops', { ...guestBody, type: 'expr', target: 'en' })).json(),
+    );
+    expect(en.cards.map((c) => c.answer.literal)).toEqual([[]]);
+  });
+
   it('refuses a missing or invalid Turnstile token and writes nothing', async () => {
     const res1 = await postJson('/loops', { ...guestBody, turnstileToken: undefined });
     expect(res1.status).toBe(403);

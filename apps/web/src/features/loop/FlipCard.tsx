@@ -34,7 +34,8 @@ function Extras({ card }: { card: CardView }) {
 
 /**
  * The flip card (PRD FR-L22, §9.3–9.4). Front: the item, the multiple-meanings badge and, after
- * Hints, the hints and synonyms. Back: the answer lines, then hints and synonyms (always).
+ * Hints, the hints and synonyms. Back: the answer lines and, for a translation, the literal
+ * meaning if any; then hints and synonyms (always).
  */
 export function FlipCard({
   card,
@@ -125,6 +126,14 @@ export function FlipCard({
                 <li key={line}>{line}</li>
               ))}
             </Answer>
+            {card.answer.literal.length > 0 && (
+              <p className="mt-3 text-base text-muted md:text-lg" data-testid="literal">
+                <span className="font-medium">{strings.card.literal}</span>{' '}
+                <span lang={card.answer.lang} dir={card.answer.dir}>
+                  {card.answer.literal.join(', ')}
+                </span>
+              </p>
+            )}
           </div>
           <div className="border-t border-border pt-4" data-testid="back-hints">
             <Extras card={card} />

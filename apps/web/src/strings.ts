@@ -162,6 +162,7 @@ export const strings = {
   card: {
     translation: 'Translation',
     explanation: 'Explanation',
+    literal: 'Literal meaning:',
     hints: 'Hints',
     synonyms: 'Synonyms:',
     noHints: 'Hint is not available',

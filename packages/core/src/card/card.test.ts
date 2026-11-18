@@ -48,6 +48,7 @@ describe('buildCard', () => {
         kind: 'translation',
         lines: ['תאריך', 'תמר'],
         numbered: false,
+        literal: [],
         lang: 'he',
         dir: 'rtl',
       },
@@ -55,6 +56,18 @@ describe('buildCard', () => {
       synonyms: [],
       extrasLang: { lang: 'en', dir: 'ltr' },
     });
+  });
+
+  it('adds the literal meaning to translation cards only', () => {
+    const item = makeItem({
+      text: 'sample expression',
+      type: 'expr',
+      multipleMeanings: false,
+      translation: { he: ['משמעות-1'] },
+      literal: { he: ['מילולי-1'] },
+    });
+    expect(buildCard(item, 'he', LANGS).answer.literal).toEqual(['מילולי-1']);
+    expect(buildCard(item, 'en', LANGS).answer.literal).toEqual([]);
   });
 
   it('builds an explanation card (EN → EN), numbered when there are two or more lines', () => {

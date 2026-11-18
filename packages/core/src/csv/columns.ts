@@ -1,6 +1,9 @@
 import type { LangCode } from '../lang/languages';
 
-/** CSV columns (PRD §8.3). Translations use one `translation_<code>` column per language. */
+/**
+ * CSV columns (PRD §8.3). Translations and literal meanings use one `translation_<code>` /
+ * `literal_<code>` column per language.
+ */
 export const CSV_COLUMNS = {
   lang: 'lang',
   text: 'text',
@@ -19,6 +22,13 @@ export const TRANSLATION_PREFIX = 'translation_';
 
 export function translationColumn(lang: LangCode): string {
   return `${TRANSLATION_PREFIX}${lang}`;
+}
+
+/** Literal (word-for-word) meanings use one `literal_<code>` column per language. */
+export const LITERAL_PREFIX = 'literal_';
+
+export function literalColumn(lang: LangCode): string {
+  return `${LITERAL_PREFIX}${lang}`;
 }
 
 export const CATEGORY_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;

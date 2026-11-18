@@ -2,7 +2,7 @@ import { csvHeader, serializeCsv } from '@myvocab/core';
 
 /**
  * The CSV template (FR-A60, PRD §8.3): the header for the active languages and the two
- * illustrative rows from the PRD. UTF-8 with BOM so Excel shows Hebrew correctly.
+ * illustrative rows (the second shows a literal meaning). UTF-8 with BOM so Excel shows Hebrew correctly.
  */
 const EXAMPLES: Record<string, string>[] = [
   {
@@ -15,6 +15,19 @@ const EXAMPLES: Record<string, string>[] = [
     explanation: 'Moving or able to move very fast|A small bird that flies very fast',
     synonyms: 'fast|quick|rapid',
     hints: 'He gave a swift reply.|A swift nested under the roof.',
+    status: 'published',
+  },
+  {
+    lang: 'en',
+    text: 'sample expression',
+    type: 'expr',
+    multiple_meanings: 'false',
+    categories: '',
+    translation_he: 'משמעות לדוגמה',
+    literal_he: 'תרגום מילולי לדוגמה',
+    explanation: 'What the expression means',
+    synonyms: '',
+    hints: 'A sentence that uses the sample expression.',
     status: 'published',
   },
   {

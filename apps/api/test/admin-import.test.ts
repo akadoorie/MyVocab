@@ -43,10 +43,10 @@ describe('GET /api/admin/import/template', () => {
     const bytes = new Uint8Array(await res.arrayBuffer());
     expect([...bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
     const text = new TextDecoder().decode(bytes);
-    expect(text.split(/\r?\n/)[0]).toContain('translation_en,translation_he');
+    expect(text.split(/\r?\n/)[0]).toContain('translation_en,translation_he,literal_en,literal_he');
     const report = await (await upload(bytes)).json<Report>();
     expect(report.errors).toEqual([]);
-    expect(report.totals?.newItems).toBe(2);
+    expect(report.totals).toMatchObject({ newItems: 3, newLiteralEntries: 1 });
   });
 });
 

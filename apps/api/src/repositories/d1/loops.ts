@@ -10,6 +10,7 @@ type Row = {
   type: ItemType;
   multiple_meanings: number;
   translation: string;
+  literal: string;
   explanation: string;
   synonyms: string;
   hints: string;
@@ -51,7 +52,8 @@ export class D1LoopRepository implements LoopRepository {
 
   async selectPlayable(s: LoopSelection, limit: number): Promise<ItemData[]> {
     const rows = await this.db.all<Row>(sql`
-      SELECT i.id, i.lang, i.text, i.type, i.multiple_meanings, i.translation, i.explanation,
+      SELECT i.id, i.lang, i.text, i.type, i.multiple_meanings, i.translation, i.literal,
+             i.explanation,
              i.synonyms, i.hints
       ${fromClause(s)}
       WHERE ${whereClause(s)}
@@ -65,6 +67,7 @@ export class D1LoopRepository implements LoopRepository {
       type: r.type,
       multipleMeanings: r.multiple_meanings === 1,
       translation: JSON.parse(r.translation) as Translations,
+      literal: JSON.parse(r.literal) as Translations,
       explanation: JSON.parse(r.explanation) as string[],
       synonyms: JSON.parse(r.synonyms) as string[],
       hints: JSON.parse(r.hints) as string[],

@@ -15,6 +15,7 @@ export function makeItem(overrides: Partial<ItemData> = {}): ItemData {
     type: 'word',
     multipleMeanings: true,
     translation: { he: ['תאריך', 'תמר'] },
+    literal: {},
     explanation: [
       'A particular day of the month or year',
       'The sweet brown fruit of the date palm',

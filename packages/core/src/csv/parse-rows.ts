@@ -5,6 +5,7 @@ import {
   CATEGORY_SLUG,
   CSV_COLUMNS,
   REQUIRED_COLUMNS,
+  LITERAL_PREFIX,
   splitList,
   TRANSLATION_PREFIX,
 } from './columns';
@@ -28,7 +29,7 @@ export type ParseRowsResult = {
 };
 
 export type ParseRowsOptions = {
-  /** Active languages: item languages and `translation_<code>` columns must be among them. */
+  /** Active languages: item languages and per-language columns must be among them. */
   languages: LanguageMap;
   /** Admin uploads are limited to 5,000 rows (PRD §8.3); seeding has no limit. */
   maxRows?: number;
@@ -43,6 +44,7 @@ function columnOf(path: string): string {
   const field = path.replace(/\[\d+\]$/, '');
   if (field.startsWith('translation.'))
     return `${TRANSLATION_PREFIX}${field.slice('translation.'.length)}`;
+  if (field.startsWith('literal.')) return `${LITERAL_PREFIX}${field.slice('literal.'.length)}`;
   return field === 'multipleMeanings' ? CSV_COLUMNS.multipleMeanings : field;
 }
 
@@ -78,14 +80,20 @@ export function parseImportCsv(text: string, opts: ParseRowsOptions): ParseRowsR
 
   const columns = header.map((h) => h.trim().toLowerCase());
   const translationLangs = new Map<number, LangCode>();
+  const literalLangs = new Map<number, LangCode>();
   const seen = new Set<string>();
   columns.forEach((col, i) => {
     if (seen.has(col)) {
       result.errors.push({ row: 1, column: col, message: `Duplicate column "${col}"` });
     }
     seen.add(col);
-    if (col.startsWith(TRANSLATION_PREFIX)) {
-      const code = col.slice(TRANSLATION_PREFIX.length);
+    const perLanguage = col.startsWith(TRANSLATION_PREFIX)
+      ? { prefix: TRANSLATION_PREFIX, map: translationLangs }
+      : col.startsWith(LITERAL_PREFIX)
+        ? { prefix: LITERAL_PREFIX, map: literalLangs }
+        : undefined;
+    if (perLanguage) {
+      const code = col.slice(perLanguage.prefix.length);
       if (!opts.languages[code]) {
         result.errors.push({
           row: 1,
@@ -93,7 +101,7 @@ export function parseImportCsv(text: string, opts: ParseRowsOptions): ParseRowsR
           message: `Unknown language "${code}" in column "${col}"`,
         });
       } else {
-        translationLangs.set(i, code);
+        perLanguage.map.set(i, code);
       }
     } else if (!KNOWN_COLUMNS.has(col)) {
       result.errors.push({ row: 1, column: col, message: `Unknown column "${col}"` });
@@ -157,11 +165,16 @@ export function parseImportCsv(text: string, opts: ParseRowsOptions): ParseRowsR
       }
     }
 
-    const translation: Record<string, string[]> = {};
-    for (const [i, code] of translationLangs) {
-      const entries = splitList((cells[i] ?? '').trim());
-      if (entries.length > 0) translation[code] = entries;
-    }
+    const perLanguageCells = (langs: Map<number, LangCode>) => {
+      const out: Record<string, string[]> = {};
+      for (const [i, code] of langs) {
+        const entries = splitList((cells[i] ?? '').trim());
+        if (entries.length > 0) out[code] = entries;
+      }
+      return out;
+    };
+    const translation = perLanguageCells(translationLangs);
+    const literal = perLanguageCells(literalLangs);
 
     const { value, errors } = validateItem(
       {
@@ -170,6 +183,7 @@ export function parseImportCsv(text: string, opts: ParseRowsOptions): ParseRowsR
         type: cell(CSV_COLUMNS.type),
         multipleMeanings: TRUE_VALUES.has(mm),
         translation,
+        literal,
         explanation: splitList(cell(CSV_COLUMNS.explanation)),
         synonyms: splitList(cell(CSV_COLUMNS.synonyms)),
         hints: splitList(cell(CSV_COLUMNS.hints)),
@@ -178,13 +192,19 @@ export function parseImportCsv(text: string, opts: ParseRowsOptions): ParseRowsR
     );
     rowErrors.push(
       ...errors.map((issue) =>
-        issue.code === 'SAME_LANGUAGE_TRANSLATION'
+        issue.code === 'SAME_LANGUAGE_TRANSLATION' && issue.path.startsWith('literal.')
           ? {
               row,
               column: columnOf(issue.path),
-              message: `An item in "${value.lang}" can't have a translation into "${value.lang}"; use explanation`,
+              message: `An item in "${value.lang}" can't have a literal meaning in "${value.lang}"`,
             }
-          : toCsvIssue(row, issue),
+          : issue.code === 'SAME_LANGUAGE_TRANSLATION'
+            ? {
+                row,
+                column: columnOf(issue.path),
+                message: `An item in "${value.lang}" can't have a translation into "${value.lang}"; use explanation`,
+              }
+            : toCsvIssue(row, issue),
       ),
     );
     if (rowErrors.length > 0) {

@@ -105,6 +105,9 @@ export const adminStrings = {
     headerSaved: 'Changes saved',
     translations: 'Translations',
     translationInto: (name: string) => `${name} translation`,
+    literalIn: (name: string) => `${name} literal meaning`,
+    literalHelp:
+      'Optional word-for-word translation, for expressions whose literal words differ from their meaning. Shown under the translation.',
     explanation: 'Explanation',
     explanationHelp: 'One entry per meaning, in the item’s language.',
     synonyms: 'Synonyms',
@@ -244,6 +247,7 @@ export const adminStrings = {
       newItems: 'New items',
       mergedItems: 'Merged into existing items',
       newTranslationEntries: 'New translation entries',
+      newLiteralEntries: 'New literal meanings',
       newExplanationEntries: 'New explanation entries',
       newSynonyms: 'New synonyms',
       newHints: 'New hints',

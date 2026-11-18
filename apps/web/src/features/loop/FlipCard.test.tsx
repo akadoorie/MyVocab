@@ -56,6 +56,19 @@ describe('FlipCard', () => {
     expect(screen.getByText('Translation')).toBeInTheDocument();
   });
 
+  it('shows the literal meaning under the translation, in the answer language', () => {
+    const base = makeCard(6);
+    const card = makeCard(6, { answer: { ...base.answer, literal: ['מילולי-6'] } });
+    render(<FlipCard card={card} side="back" hintsShown={false} onFlip={vi.fn()} />);
+    expect(screen.getByTestId('literal')).toHaveTextContent('Literal meaning: מילולי-6');
+    expect(screen.getByText('מילולי-6')).toHaveAttribute('dir', 'rtl');
+  });
+
+  it('shows no literal line when there is none', () => {
+    render(<FlipCard card={makeCard(7)} side="back" hintsShown={false} onFlip={vi.fn()} />);
+    expect(screen.queryByTestId('literal')).not.toBeInTheDocument();
+  });
+
   it('numbers explanation lines when there are two or more', () => {
     const card = makeCard(4, {
       direction: { source: 'en', target: 'en' },
@@ -63,6 +76,7 @@ describe('FlipCard', () => {
         kind: 'explanation',
         lines: ['First', 'Second'],
         numbered: true,
+        literal: [],
         lang: 'en',
         dir: 'ltr',
       },

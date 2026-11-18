@@ -40,6 +40,7 @@ export type ItemInput = {
   type: string;
   multipleMeanings?: boolean;
   translation?: Record<string, readonly string[]>;
+  literal?: Record<string, readonly string[]>;
   explanation?: readonly string[];
   synonyms?: readonly string[];
   hints?: readonly string[];
@@ -98,6 +99,39 @@ function cleanList(
   return cleaned;
 }
 
+/** A per-language list object (`translation`, `literal`): other active languages only. */
+function cleanPerLanguage(
+  input: Record<string, readonly string[]> | undefined,
+  list: 'translation' | 'literal',
+  lang: string,
+  ctx: ItemValidationContext,
+  errors: ItemIssue[],
+): Translations {
+  const out: Translations = {};
+  for (const [rawCode, entries] of Object.entries(input ?? {})) {
+    const code = rawCode.trim().toLowerCase();
+    const path = `${list}.${code}`;
+    if (code === lang) {
+      errors.push({
+        path,
+        code: 'SAME_LANGUAGE_TRANSLATION',
+        message:
+          list === 'translation'
+            ? 'An item cannot have a translation into its own language; use the explanation'
+            : 'An item cannot have a literal meaning in its own language',
+      });
+      continue;
+    }
+    if (!isValidLangCode(code) || !ctx.languages[code]) {
+      errors.push({ path, code: 'UNKNOWN_LANGUAGE', message: `Unknown language "${code}"` });
+      continue;
+    }
+    const cleaned = cleanList(entries, list, path, errors);
+    if (cleaned.length > 0) out[code] = cleaned;
+  }
+  return out;
+}
+
 function isItemType(value: string): value is ItemType {
   return (ITEM_TYPES as readonly string[]).includes(value);
 }
@@ -127,25 +161,8 @@ export function validateItem(input: ItemInput, ctx: ItemValidationContext): Item
     errors.push({ path: 'type', code: 'INVALID_TYPE', message: 'Type must be "word" or "expr"' });
   }
 
-  const translation: Translations = {};
-  for (const [rawCode, entries] of Object.entries(input.translation ?? {})) {
-    const code = rawCode.trim().toLowerCase();
-    const path = `translation.${code}`;
-    if (code === lang) {
-      errors.push({
-        path,
-        code: 'SAME_LANGUAGE_TRANSLATION',
-        message: 'An item cannot have a translation into its own language; use the explanation',
-      });
-      continue;
-    }
-    if (!isValidLangCode(code) || !ctx.languages[code]) {
-      errors.push({ path, code: 'UNKNOWN_LANGUAGE', message: `Unknown language "${code}"` });
-      continue;
-    }
-    const cleaned = cleanList(entries, 'translation', path, errors);
-    if (cleaned.length > 0) translation[code] = cleaned;
-  }
+  const translation = cleanPerLanguage(input.translation, 'translation', lang, ctx, errors);
+  const literal = cleanPerLanguage(input.literal, 'literal', lang, ctx, errors);
 
   const explanation = cleanList(input.explanation, 'explanation', 'explanation', errors);
   const synonyms = cleanList(input.synonyms, 'synonyms', 'synonyms', errors);
@@ -157,6 +174,7 @@ export function validateItem(input: ItemInput, ctx: ItemValidationContext): Item
     type: isItemType(type) ? type : 'word',
     multipleMeanings: input.multipleMeanings ?? false,
     translation,
+    literal,
     explanation,
     synonyms,
     hints,
@@ -202,11 +220,13 @@ export function mixedScriptWarnings(item: ItemContent, languages: LanguageMap): 
   for (const list of OWN_LANGUAGE_LISTS) {
     item[list].forEach((entry, i) => issues.push(...scriptIssue(`${list}[${i}]`, entry, own)));
   }
-  for (const [code, entries] of Object.entries(item.translation)) {
-    const script = languages[code as LangCode]?.script;
-    entries.forEach((entry, i) =>
-      issues.push(...scriptIssue(`translation.${code}[${i}]`, entry, script)),
-    );
+  for (const list of ['translation', 'literal'] as const) {
+    for (const [code, entries] of Object.entries(item[list])) {
+      const script = languages[code as LangCode]?.script;
+      entries.forEach((entry, i) =>
+        issues.push(...scriptIssue(`${list}.${code}[${i}]`, entry, script)),
+      );
+    }
   }
   return issues;
 }

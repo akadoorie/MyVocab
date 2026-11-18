@@ -52,6 +52,7 @@ export function itemSnapshot(rec: ItemRecord) {
     multipleMeanings: rec.multipleMeanings,
     categories: rec.categorySlugs,
     translation: rec.translation,
+    literal: rec.literal,
     explanation: rec.explanation,
     synonyms: rec.synonyms,
     hints: rec.hints,
@@ -149,6 +150,7 @@ export class ItemAdminService {
       categoryIds: rec.categoryIds,
       categories: rec.categorySlugs,
       translation: rec.translation,
+      literal: rec.literal,
       explanation: rec.explanation,
       synonyms: rec.synonyms,
       hints: rec.hints,
@@ -240,16 +242,19 @@ export class ItemAdminService {
     const [rec, ctx] = await Promise.all([this.live(id), this.languageContext()]);
     if (rec.version !== patch.version) throw staleError();
 
-    // New translations only into active languages; existing data of inactive ones is kept.
-    for (const code of Object.keys(patch.translation ?? {})) {
-      if (!ctx.activeCodes.includes(code) && !(code in rec.translation)) {
-        throw new ValidationError('Invalid item', [
-          {
-            path: `translation.${code}`,
-            code: 'UNKNOWN_LANGUAGE',
-            message: `Inactive or unknown language "${code}"`,
-          },
-        ]);
+    // New translations / literal meanings only into active languages; existing data of inactive
+    // ones is kept.
+    for (const list of ['translation', 'literal'] as const) {
+      for (const code of Object.keys(patch[list] ?? {})) {
+        if (!ctx.activeCodes.includes(code) && !(code in rec[list])) {
+          throw new ValidationError('Invalid item', [
+            {
+              path: `${list}.${code}`,
+              code: 'UNKNOWN_LANGUAGE',
+              message: `Inactive or unknown language "${code}"`,
+            },
+          ]);
+        }
       }
     }
     const { value, errors } = validateItem(
@@ -259,6 +264,7 @@ export class ItemAdminService {
         type: patch.type ?? rec.type,
         multipleMeanings: patch.multipleMeanings ?? rec.multipleMeanings,
         translation: patch.translation ?? rec.translation,
+        literal: patch.literal ?? rec.literal,
         explanation: patch.explanation ?? rec.explanation,
         synonyms: patch.synonyms ?? rec.synonyms,
         hints: patch.hints ?? rec.hints,
@@ -275,6 +281,7 @@ export class ItemAdminService {
       'type',
       'multipleMeanings',
       'translation',
+      'literal',
       'explanation',
       'synonyms',
       'hints',

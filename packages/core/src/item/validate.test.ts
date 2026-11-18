@@ -51,6 +51,14 @@ describe('validateItem: errors', () => {
     expect(r.value.translation).toEqual({ he: ['מהיר'] });
   });
 
+  it('rejects a literal meaning in the item own language and keeps the others', () => {
+    const r = validateItem({ ...base, literal: { en: ['fast'], he: ['מהיר'] } }, ctx);
+    expect(r.errors).toEqual([
+      expect.objectContaining({ path: 'literal.en', code: 'SAME_LANGUAGE_TRANSLATION' }),
+    ]);
+    expect(r.value.literal).toEqual({ he: ['מהיר'] });
+  });
+
   it('rejects unknown languages for the item and for translations', () => {
     expect(codes(validateItem({ ...base, lang: 'fr' }, ctx).errors)).toContain('UNKNOWN_LANGUAGE');
     expect(codes(validateItem({ ...base, translation: { de: ['x'] } }, ctx).errors)).toEqual([

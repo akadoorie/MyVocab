@@ -137,6 +137,11 @@ export const items = sqliteTable(
       .$type<Translations>()
       .notNull()
       .default(sql`'{}'`),
+    // Word-for-word meaning per other language, shown as "Literal meaning" (PRD §8.1).
+    literal: text('literal', { mode: 'json' })
+      .$type<Translations>()
+      .notNull()
+      .default(sql`'{}'`),
     explanation: text('explanation', { mode: 'json' })
       .$type<string[]>()
       .notNull()
@@ -170,6 +175,8 @@ export const items = sqliteTable(
       'ck_items_no_own_translation',
       sql`json_extract(translation, '$."' || lang || '"') IS NULL`,
     ),
+    check('ck_items_literal_object', sql`json_valid(literal) AND json_type(literal) = 'object'`),
+    check('ck_items_no_own_literal', sql`json_extract(literal, '$."' || lang || '"') IS NULL`),
     check(
       'ck_items_explanation_array',
       sql`json_valid(explanation) AND json_type(explanation) = 'array'`,

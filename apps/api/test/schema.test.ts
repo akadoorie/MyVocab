@@ -36,6 +36,22 @@ describe('schema', () => {
     await expect(insertItem('en', 'Swift', '{"he":["מהיר"]}')).resolves.toBeTruthy();
   });
 
+  it('defaults literal to {} and rejects a literal in the item own language or a non-object (CHECK)', async () => {
+    const withLiteral = (text: string, literal: string) =>
+      env.DB.prepare(
+        `INSERT INTO items (lang, text, normalized_text, type, literal, created_at, updated_at)
+         VALUES ('en', ?, ?, 'expr', ?, ?, ?)`,
+      )
+        .bind(text, text.toLowerCase(), literal, now, now)
+        .run();
+    await insertItem('en', 'Plain', '{"he":["פשוט"]}');
+    const row = await env.DB.prepare(`SELECT literal FROM items WHERE text = 'Plain'`).first();
+    expect(row).toEqual({ literal: '{}' });
+    await expect(withLiteral('L1', '{"en":["x"]}')).rejects.toThrow(/CHECK/);
+    await expect(withLiteral('L2', '["x"]')).rejects.toThrow(/CHECK/);
+    await expect(withLiteral('L3', '{"he":["מילולי-1"]}')).resolves.toBeTruthy();
+  });
+
   it('rejects invalid JSON shapes for the lists (CHECK)', async () => {
     await expect(insertItem('en', 'A', '[]')).rejects.toThrow(/CHECK/);
     await expect(insertItem('en', 'B', '{}', '{"not":"array"}')).rejects.toThrow(/CHECK/);

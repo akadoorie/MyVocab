@@ -33,6 +33,7 @@ export function buildCard(item: ItemData, target: LangCode, languages: LanguageM
       kind: strategy.kind,
       lines,
       numbered: strategy.numbered(lines),
+      literal: strategy.kind === 'translation' ? [...(item.literal[target] ?? [])] : [],
       ...langDir(target, languages),
     },
     hints: [...item.hints],

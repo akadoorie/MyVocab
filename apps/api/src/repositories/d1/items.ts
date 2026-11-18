@@ -10,6 +10,7 @@ type IdentityRow = {
   type: 'word' | 'expr';
   multiple_meanings: number;
   translation: string;
+  literal: string;
   explanation: string;
   synonyms: string;
   hints: string;
@@ -31,7 +32,8 @@ export class D1ItemRepository implements ItemRepository {
     if (keys.length === 0) return result;
     const json = JSON.stringify(keys.map((k) => [k.lang, k.type, k.normalizedText]));
     const rows = await this.db.all<IdentityRow>(sql`
-      SELECT i.id, i.lang, i.text, i.type, i.multiple_meanings, i.translation, i.explanation,
+      SELECT i.id, i.lang, i.text, i.type, i.multiple_meanings, i.translation, i.literal,
+             i.explanation,
              i.synonyms, i.hints, i.version,
              (SELECT group_concat(c.slug, ' ') FROM item_categories ic
                 JOIN categories c ON c.id = ic.category_id WHERE ic.item_id = i.id) AS categories
@@ -53,6 +55,7 @@ export class D1ItemRepository implements ItemRepository {
           type: r.type,
           multipleMeanings: r.multiple_meanings === 1,
           translation: JSON.parse(r.translation) as Translations,
+          literal: JSON.parse(r.literal) as Translations,
           explanation: JSON.parse(r.explanation) as string[],
           synonyms: JSON.parse(r.synonyms) as string[],
           hints: JSON.parse(r.hints) as string[],

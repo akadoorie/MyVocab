@@ -28,6 +28,7 @@ export const adminItemCreateSchema = z
     status: itemStatusSchema.optional(),
     categoryIds: z.array(itemIdSchema).max(100).optional(),
     translation: rawTranslation.optional(),
+    literal: rawTranslation.optional(),
     explanation: rawEntries.optional(),
     synonyms: rawEntries.optional(),
     hints: rawEntries.optional(),
@@ -37,7 +38,7 @@ export type AdminItemCreate = z.infer<typeof adminItemCreateSchema>;
 
 /**
  * PATCH /api/admin/items/:id. `lang` is not accepted (fixed after creation). A list field replaces
- * that whole list; `translation` replaces the whole object.
+ * that whole list; `translation` and `literal` replace the whole object.
  */
 export const adminItemPatchSchema = z
   .object({
@@ -48,6 +49,7 @@ export const adminItemPatchSchema = z
     status: itemStatusSchema.optional(),
     categoryIds: z.array(itemIdSchema).max(100).optional(),
     translation: rawTranslation.optional(),
+    literal: rawTranslation.optional(),
     explanation: rawEntries.optional(),
     synonyms: rawEntries.optional(),
     hints: rawEntries.optional(),
@@ -72,6 +74,7 @@ export const adminItemSchema = z.object({
   categoryIds: z.array(z.number().int()),
   categories: z.array(z.string()),
   translation: z.record(z.string(), z.array(z.string())),
+  literal: z.record(z.string(), z.array(z.string())),
   explanation: z.array(z.string()),
   synonyms: z.array(z.string()),
   hints: z.array(z.string()),
@@ -309,6 +312,7 @@ export const importReportSchema = z.object({
       newItems: z.number().int(),
       mergedItems: z.number().int(),
       newTranslationEntries: z.number().int(),
+      newLiteralEntries: z.number().int(),
       newExplanationEntries: z.number().int(),
       newSynonyms: z.number().int(),
       newHints: z.number().int(),

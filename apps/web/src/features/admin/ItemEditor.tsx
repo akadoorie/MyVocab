@@ -408,6 +408,23 @@ function Editor({
                 return save({ translation });
               }}
             />
+            <div className="mt-5 border-t border-border pt-5">
+              <ListEditor
+                label={s.editor.literalIn(target.name)}
+                help={s.editor.literalHelp}
+                entries={item.literal[target.code] ?? []}
+                lang={target.code}
+                dir={target.dir}
+                maxEntries={ITEM_LIMITS.literal.maxEntries}
+                maxLength={ITEM_LIMITS.literal.entryMax}
+                onSave={(next) => {
+                  const literal = { ...latest.current.literal };
+                  if (next.length > 0) literal[target.code] = next;
+                  else delete literal[target.code];
+                  return save({ literal });
+                }}
+              />
+            </div>
           </div>
         ))}
         <div className="rounded-[14px] border border-border bg-surface p-5">

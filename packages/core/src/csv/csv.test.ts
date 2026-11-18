@@ -145,6 +145,29 @@ describe('parseImportCsv', () => {
     expect(r.rows).toEqual([]);
   });
 
+  it('reads literal_<code> columns and rejects one in the row own language', () => {
+    const header = 'lang,text,type,translation_he,literal_he,literal_en';
+    const ok = parseImportCsv(
+      `${header}
+en,sample expression,expr,משמעות-1,מילולי-1,`,
+      opts,
+    );
+    expect(ok.errors).toEqual([]);
+    expect(ok.rows[0]?.content.literal).toEqual({ he: ['מילולי-1'] });
+    const bad = parseImportCsv(
+      `${header}
+en,sample expression,expr,משמעות-1,,literal-1`,
+      opts,
+    );
+    expect(bad.errors).toEqual([
+      {
+        row: 2,
+        column: 'literal_en',
+        message: `An item in "en" can't have a literal meaning in "en"`,
+      },
+    ]);
+  });
+
   it('reports invalid cell values with row and column', () => {
     const r = parseImportCsv(
       `${HEADER}\nen,Swift,phrase,maybe,Bad Slug,מהיר,,,,,live\nfr,x,word,,,y,,,,,\n,,word,,,y,,,,,`,
@@ -187,6 +210,7 @@ function existingSwift(over: Partial<ItemContent> = {}): ExistingItem {
       type: 'word',
       multipleMeanings: false,
       translation: { he: ['מהיר'] },
+      literal: {},
       explanation: ['Moving or able to move very fast'],
       synonyms: ['fast'],
       hints: [],
@@ -246,6 +270,17 @@ describe('planImport', () => {
     ]);
     const plan = planImport(parsed.rows, emptyCtx({ existing }));
     expect(plan.updates[0]).toMatchObject({ changed: false, content: { multipleMeanings: true } });
+  });
+
+  it('appends literal meanings to an existing item and counts them', () => {
+    const csv = `lang,text,type,translation_he,literal_he
+en,Swift,word,,זריז`;
+    const existing = new Map([[itemIdentityKey('en', 'swift', 'word'), existingSwift()]]);
+    const rows = parseImportCsv(csv, opts).rows;
+    const plan = planImport(rows, emptyCtx({ existing }));
+    expect(plan.updates[0]?.content.literal).toEqual({ he: ['זריז'] });
+    expect(plan.updates[0]?.changed).toBe(true);
+    expect(plan.totals).toMatchObject({ newLiteralEntries: 1 });
   });
 
   it('merges rows of the same item within one file (first status wins)', () => {
@@ -353,6 +388,7 @@ describe('serializeItemsCsv (round trip)', () => {
         type: 'word',
         multipleMeanings: true,
         translation: { he: ['מהיר', 'סנונית'] },
+        literal: {},
         explanation: ['Moving or able to move very fast', 'A small bird, "swift" in flight'],
         synonyms: ['fast', 'quick'],
         hints: ['He gave a swift reply.'],
@@ -367,6 +403,7 @@ describe('serializeItemsCsv (round trip)', () => {
         type: 'word',
         multipleMeanings: false,
         translation: { en: ['fast'] },
+        literal: { en: ['quick one'] },
         explanation: [],
         synonyms: [],
         hints: [],
@@ -376,7 +413,7 @@ describe('serializeItemsCsv (round trip)', () => {
     },
   ];
 
-  it('writes a header with a translation column per language', () => {
+  it('writes a header with a translation and a literal column per language', () => {
     expect(csvHeader(['en', 'he'])).toEqual([
       'lang',
       'text',
@@ -385,6 +422,8 @@ describe('serializeItemsCsv (round trip)', () => {
       'categories',
       'translation_en',
       'translation_he',
+      'literal_en',
+      'literal_he',
       'explanation',
       'synonyms',
       'hints',

@@ -24,6 +24,7 @@ type ItemRow = {
   type: ItemType;
   multiple_meanings: number;
   translation: string;
+  literal: string;
   explanation: string;
   synonyms: string;
   hints: string;
@@ -38,7 +39,7 @@ type ItemRow = {
 };
 
 const ITEM_COLUMNS = sql`
-  i.id, i.lang, i.text, i.normalized_text, i.type, i.multiple_meanings, i.translation,
+  i.id, i.lang, i.text, i.normalized_text, i.type, i.multiple_meanings, i.translation, i.literal,
   i.explanation, i.synonyms, i.hints, i.status, i.version, i.created_at, i.updated_at,
   i.deleted_at, i.deleted_by,
   (SELECT json_group_array(ic.category_id) FROM item_categories ic WHERE ic.item_id = i.id)
@@ -55,6 +56,7 @@ function toRecord(r: ItemRow): ItemRecord {
     type: r.type,
     multipleMeanings: r.multiple_meanings === 1,
     translation: JSON.parse(r.translation) as Translations,
+    literal: JSON.parse(r.literal) as Translations,
     explanation: JSON.parse(r.explanation) as string[],
     synonyms: JSON.parse(r.synonyms) as string[],
     hints: JSON.parse(r.hints) as string[],
@@ -209,6 +211,7 @@ export class D1AdminItemRepository implements AdminItemRepository {
         type: item.type,
         multipleMeanings: item.multipleMeanings,
         translation: item.translation,
+        literal: item.literal,
         explanation: item.explanation,
         synonyms: item.synonyms,
         hints: item.hints,
