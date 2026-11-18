@@ -132,6 +132,8 @@ export const adminStrings = {
     newEntry: 'New entry',
     empty: 'No entries yet.',
     editEntry: (entry: string) => `Edit “${entry}”`,
+    save: 'Save',
+    cancel: 'Cancel',
     deleteEntry: (entry: string) => `Delete “${entry}”`,
     moveUp: (entry: string) => `Move “${entry}” up`,
     moveDown: (entry: string) => `Move “${entry}” down`,

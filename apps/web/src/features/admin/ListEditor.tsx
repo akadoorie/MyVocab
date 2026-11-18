@@ -2,6 +2,9 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { useToast } from '../../components/Toast';
 import { adminStrings as s } from '../../strings-admin';
 
+/** Focuses the in-place edit input once, when it appears (a stable ref, so typing doesn't refocus). */
+const focusOnMount = (el: HTMLInputElement | null) => el?.focus();
+
 /**
  * The inline list editor (PRD FR-A12), used for translations, explanation, synonyms and hints.
  * Every change saves the whole list right away through `onSave` (PATCH with the item version);
@@ -146,18 +149,35 @@ export function ListEditor({
               </button>
               {numbered && <span className="w-6 shrink-0 text-sm text-muted">{index + 1}.</span>}
               {editing?.index === index ? (
-                <input
-                  value={editing.value}
-                  onChange={(e) => setEditing({ index, value: e.target.value })}
-                  onKeyDown={onEditKey}
-                  onBlur={() => setEditing(null)}
-                  maxLength={maxLength}
-                  lang={lang}
-                  dir="auto"
-                  aria-label={s.list.editEntry(entry)}
-                  ref={(el) => el?.focus()}
-                  className="min-h-10 flex-1 rounded-[8px] border border-accent bg-surface px-2 outline-none"
-                />
+                <>
+                  <input
+                    value={editing.value}
+                    onChange={(e) => setEditing({ index, value: e.target.value })}
+                    onKeyDown={onEditKey}
+                    maxLength={maxLength}
+                    lang={lang}
+                    dir="auto"
+                    aria-label={s.list.editEntry(entry)}
+                    ref={focusOnMount}
+                    className="min-h-10 min-w-0 flex-1 rounded-[8px] border border-accent bg-surface px-2 outline-none"
+                  />
+                  <button
+                    type="button"
+                    disabled={busy || !editing.value.trim()}
+                    onClick={() => void commitEdit()}
+                    className="min-h-10 rounded-[8px] border border-accent px-3 text-sm font-semibold text-accent hover:bg-surface disabled:opacity-40"
+                  >
+                    {s.list.save}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => setEditing(null)}
+                    className="min-h-10 rounded-[8px] border border-border px-3 text-sm hover:border-accent disabled:opacity-40"
+                  >
+                    {s.list.cancel}
+                  </button>
+                </>
               ) : (
                 <button
                   type="button"
@@ -171,33 +191,37 @@ export function ListEditor({
                   {entry}
                 </button>
               )}
-              <button
-                type="button"
-                disabled={busy || index === 0}
-                onClick={() => void move(index, index - 1)}
-                aria-label={s.list.moveUp(entry)}
-                className={iconButton}
-              >
-                <span aria-hidden="true">↑</span>
-              </button>
-              <button
-                type="button"
-                disabled={busy || index === entries.length - 1}
-                onClick={() => void move(index, index + 1)}
-                aria-label={s.list.moveDown(entry)}
-                className={iconButton}
-              >
-                <span aria-hidden="true">↓</span>
-              </button>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void remove(index)}
-                aria-label={s.list.deleteEntry(entry)}
-                className={`${iconButton} hover:text-dontknow`}
-              >
-                <span aria-hidden="true">✕</span>
-              </button>
+              {editing?.index !== index && (
+                <>
+                  <button
+                    type="button"
+                    disabled={busy || index === 0}
+                    onClick={() => void move(index, index - 1)}
+                    aria-label={s.list.moveUp(entry)}
+                    className={iconButton}
+                  >
+                    <span aria-hidden="true">↑</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy || index === entries.length - 1}
+                    onClick={() => void move(index, index + 1)}
+                    aria-label={s.list.moveDown(entry)}
+                    className={iconButton}
+                  >
+                    <span aria-hidden="true">↓</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void remove(index)}
+                    aria-label={s.list.deleteEntry(entry)}
+                    className={`${iconButton} hover:text-dontknow`}
+                  >
+                    <span aria-hidden="true">✕</span>
+                  </button>
+                </>
+              )}
             </li>
           ))}
         </ol>

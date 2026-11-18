@@ -390,7 +390,8 @@ so learners never download it. All admin pages work on mobile (tables collapse i
       item's language) and for each translation entry (against that translation's language), using
       `languages.script` (§11).
 - **FR-A12** **Inline list editor** (one reusable component for translations, explanation, synonyms, hints): shows
-  entries in order; **Add** (input + Enter); **Edit** in place (click/tap → input; Enter saves, Esc cancels); **Delete**
+  entries in order; **Add** (input + Enter); **Edit** in place (click/tap → input with **Save** and **Cancel** buttons;
+  Enter also saves, Esc also cancels; clicking elsewhere keeps the edit open, never discards it silently); **Delete**
   (immediate, with a 5-second "Undo" toast that re-adds the entry); **Reorder** (drag handle on desktop, ↑/↓ buttons
   on mobile and for keyboard users). Every change saves that list right away (`PATCH /admin/items/:id` with the item's
   `version`) and is audit-logged with the list before and after.

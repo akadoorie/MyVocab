@@ -64,6 +64,27 @@ describe('ListEditor (FR-A12)', () => {
     await waitFor(() => expect(save).toHaveBeenCalledWith(['gamma', 'beta']));
   });
 
+  it('edits in place with the Save and Cancel buttons; clicking away keeps the edit', async () => {
+    const save = setup(['alpha', 'beta']);
+    fireEvent.click(screen.getByRole('button', { name: 'Edit “alpha”' }));
+    const editor = screen.getByRole('textbox', { name: 'Edit “alpha”' });
+    fireEvent.change(editor, { target: { value: 'gamma' } });
+    fireEvent.blur(editor);
+    expect(screen.getByRole('textbox', { name: 'Edit “alpha”' })).toHaveValue('gamma');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('textbox', { name: 'Edit “alpha”' })).toBeNull();
+    expect(save).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit “alpha”' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Edit “alpha”' }), {
+      target: { value: 'delta' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(save).toHaveBeenCalledWith(['delta', 'beta']));
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Save' })).toBeNull());
+  });
+
   it('deletes at once and Undo re-adds the entry at its place', async () => {
     const save = setup(['alpha', 'beta', 'gamma']);
     fireEvent.click(screen.getByRole('button', { name: 'Delete “beta”' }));
