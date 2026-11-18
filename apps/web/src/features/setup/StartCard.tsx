@@ -308,8 +308,12 @@ export function StartCard({
           </Button3D>
         ) : nothingLeft ? (
           <div className="rounded-[10px] border border-border bg-surface-2 p-4 text-center">
-            <p className="font-semibold">{strings.setup.emptyTitle}</p>
-            <p className="mt-1 text-sm text-muted">{strings.setup.emptyBody}</p>
+            <p className="font-semibold">
+              {isGuest ? strings.setup.emptyGuestTitle : strings.setup.emptyTitle}
+            </p>
+            <p className="mt-1 text-sm text-muted">
+              {isGuest ? strings.setup.emptyGuestBody : strings.setup.emptyBody}
+            </p>
             {!isGuest && (
               <Link to="/known" className="mt-3 inline-block text-sm text-accent hover:underline">
                 {strings.setup.emptyKnownLink}

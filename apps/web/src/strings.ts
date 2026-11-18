@@ -52,6 +52,8 @@ export const strings = {
     emptyTitle: 'You know every card in this selection 🎉',
     emptyBody: 'Change the selection, or open My known words to bring some back.',
     emptyKnownLink: 'My known words',
+    emptyGuestTitle: 'No cards for this selection yet',
+    emptyGuestBody: 'Try a different language, type or category.',
     botCheck: 'Checking that you’re human…',
     botCheckFailed: 'The security check didn’t pass. Please try again.',
     genericError: 'Something went wrong. Please try again.',
