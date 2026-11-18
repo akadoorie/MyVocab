@@ -6,3 +6,9 @@ packages:
 allowBuilds:
   esbuild: true
   workerd: true
+
+# Security pins for transitive deps whose parents haven't caught up (Dependabot alerts #1, #2).
+# Remove once eslint-plugin-jsx-a11y-x and drizzle-kit ship fixed versions.
+overrides:
+  eslint-plugin-jsx-a11y-x>minimatch: ^11.0.1
+  "@esbuild-kit/core-utils>esbuild": ^0.25.12
