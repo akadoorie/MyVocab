@@ -48,6 +48,7 @@ export function AuditPage() {
       <div className="grid grid-cols-2 gap-3 rounded-[14px] border border-border bg-surface p-4 lg:grid-cols-5">
         <Field id={ids.actor} label={s.audit.actor} className="col-span-2 lg:col-span-1">
           <input
+            autoComplete="off"
             id={ids.actor}
             value={actor}
             maxLength={200}
@@ -57,6 +58,7 @@ export function AuditPage() {
         </Field>
         <Field id={ids.action} label={s.audit.action}>
           <input
+            autoComplete="off"
             id={ids.action}
             value={action}
             maxLength={60}
@@ -67,6 +69,7 @@ export function AuditPage() {
         </Field>
         <Field id={ids.type} label={s.audit.entityType}>
           <input
+            autoComplete="off"
             id={ids.type}
             value={entityType}
             maxLength={40}

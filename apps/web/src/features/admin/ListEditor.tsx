@@ -151,6 +151,7 @@ export function ListEditor({
               {editing?.index === index ? (
                 <>
                   <input
+                    autoComplete="off"
                     value={editing.value}
                     onChange={(e) => setEditing({ index, value: e.target.value })}
                     onKeyDown={onEditKey}
@@ -233,6 +234,7 @@ export function ListEditor({
             {s.list.addPlaceholder(label)}
           </label>
           <input
+            autoComplete="off"
             id={addId}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}

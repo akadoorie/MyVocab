@@ -58,6 +58,7 @@ export function UsersPage() {
       <PageTitle>{s.users.title}</PageTitle>
       <Field id={searchId} label={s.common.search} className="max-w-md">
         <input
+          autoComplete="off"
           id={searchId}
           type="search"
           value={search}
@@ -168,6 +169,7 @@ export function UsersPage() {
               {s.users.banReason}
             </label>
             <input
+              autoComplete="off"
               id={reasonId}
               value={reason}
               maxLength={200}

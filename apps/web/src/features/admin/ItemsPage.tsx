@@ -86,6 +86,7 @@ export function ItemsPage() {
       <div className="grid grid-cols-2 gap-3 rounded-[14px] border border-border bg-surface p-4 lg:grid-cols-4">
         <Field id={ids.q} label={s.common.search} className="col-span-2">
           <input
+            autoComplete="off"
             id={ids.q}
             type="search"
             value={search}

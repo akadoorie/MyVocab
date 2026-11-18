@@ -53,6 +53,7 @@ function HeaderFields({
           {s.editor.text}
         </label>
         <input
+          autoComplete="off"
           id={ids.text}
           value={value.text}
           maxLength={ITEM_LIMITS.textMax}

@@ -220,6 +220,7 @@ function NumberField({
         {label}
       </label>
       <input
+        autoComplete="off"
         id={fieldId}
         type="number"
         inputMode="numeric"
@@ -255,6 +256,7 @@ function TextField({
         {label}
       </label>
       <input
+        autoComplete="off"
         id={fieldId}
         value={value}
         maxLength={maxLength}

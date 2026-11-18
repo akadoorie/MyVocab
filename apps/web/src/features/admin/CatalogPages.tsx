@@ -111,6 +111,7 @@ export function CategoriesPage() {
       >
         <Field id={ids.name} label={s.categories.name}>
           <input
+            autoComplete="off"
             id={ids.name}
             value={name}
             maxLength={60}
@@ -123,6 +124,7 @@ export function CategoriesPage() {
         </Field>
         <Field id={ids.slug} label={s.categories.slug}>
           <input
+            autoComplete="off"
             id={ids.slug}
             value={slug}
             maxLength={50}
@@ -175,6 +177,7 @@ export function CategoriesPage() {
                   }}
                 >
                   <input
+                    autoComplete="off"
                     aria-label={s.categories.name}
                     value={editing.name}
                     maxLength={60}
@@ -182,6 +185,7 @@ export function CategoriesPage() {
                     className={`${inputClass} md:w-56`}
                   />
                   <input
+                    autoComplete="off"
                     aria-label={s.categories.slug}
                     value={editing.slug}
                     maxLength={50}
