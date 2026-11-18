@@ -86,20 +86,23 @@ export function Summary({
   );
 }
 
-/** The Undo bar after Know (PRD FR-L27): "Date → תאריך, תמר ✓ Undo". */
+/**
+ * The Undo bar after Know (PRD FR-L27): "Date → תאריך, תמר ✓ [Undo]". Compact (as wide as its
+ * text), with a small 3D yellow Undo button.
+ */
 export function UndoBar({ label, onUndo }: { label: string; onUndo: () => void }) {
   const [front, answer] = label.split(' → ');
   return (
     <div
       role="status"
-      className="mx-auto flex w-full max-w-[640px] items-center justify-between gap-3 rounded-full border border-[rgba(139,108,255,0.35)] bg-surface-2 px-5 py-2.5 text-sm shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+      className="inline-flex max-w-full items-center gap-3 rounded-full border border-[rgba(139,108,255,0.35)] bg-surface-2 py-1.5 pr-1.5 pl-4 text-sm shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
     >
-      <span className="truncate" data-testid="undo-label">
+      <span className="min-w-0 truncate" data-testid="undo-label">
         <bdi>{front}</bdi> → <bdi>{answer}</bdi> <span aria-hidden="true">✓</span>
       </span>
-      <button type="button" className="shrink-0 font-semibold text-accent" onClick={onUndo}>
+      <Button3D variant="hint" size="sm" className="shrink-0" onClick={onUndo}>
         {strings.loop.undo}
-      </button>
+      </Button3D>
     </div>
   );
 }

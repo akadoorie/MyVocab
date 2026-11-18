@@ -4,7 +4,7 @@ export type Button3DVariant = 'accent' | 'know' | 'dontknow' | 'hint' | 'stop';
 
 export type Button3DProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Button3DVariant;
-  size?: 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg';
   ref?: Ref<HTMLButtonElement>;
 };
 
@@ -19,6 +19,7 @@ export function Button3D({
   const classes = ['btn3d'];
   if (variant !== 'accent') classes.push(`btn3d--${variant}`);
   if (size === 'lg') classes.push('btn3d--lg');
+  if (size === 'sm') classes.push('btn3d--sm');
   if (className) classes.push(className);
   return <button type={type} className={classes.join(' ')} {...rest} />;
 }

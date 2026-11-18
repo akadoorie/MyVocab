@@ -175,7 +175,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           remaining={progress.remaining}
           onContinue={() => act('CONTINUE')}
         />
-        <div className="sticky bottom-4">{undoBar}</div>
+        <div className="sticky bottom-4 flex justify-center">{undoBar}</div>
         {ghost}
       </main>
     );
@@ -189,7 +189,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           onHome={() => navigate('/')}
           onNewLoop={() => navigate('/', { state: { selection: stored.selection } })}
         />
-        <div className="sticky bottom-4">{undoBar}</div>
+        <div className="sticky bottom-4 flex justify-center">{undoBar}</div>
         {ghost}
       </main>
     );
@@ -260,8 +260,14 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
         {announcement}
       </p>
 
-      <div className="sticky bottom-0 -mx-4 flex flex-col gap-4 bg-gradient-to-t from-bg via-bg to-transparent px-4 pt-4 pb-4 md:static md:mx-0 md:bg-none md:px-0 md:pt-0 md:pb-8">
-        {undoBar}
+      <div className="sticky bottom-0 -mx-4 flex flex-col gap-4 bg-gradient-to-t from-bg via-bg to-transparent px-4 pt-4 pb-4 md:relative md:mx-0 md:bg-none md:px-0 md:pt-0 md:pb-8">
+        {/* The Undo bar floats over the bottom of the card, left of its Flip button, and takes no
+            space: the card never changes size when it comes and goes (PRD §9.7). */}
+        {undoBar && (
+          <div className="undo-float absolute right-[100px] bottom-[calc(100%+32px)] left-7 z-30 md:right-[112px] md:bottom-[calc(100%+56px)] md:left-6">
+            {undoBar}
+          </div>
+        )}
         <ButtonBar state={state} onAction={act} nextRef={nextRef} />
       </div>
       {ghost}
