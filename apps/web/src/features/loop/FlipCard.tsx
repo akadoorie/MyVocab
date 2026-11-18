@@ -9,11 +9,7 @@ function Extras({ card }: { card: CardView }) {
     return <p className="text-muted">{strings.card.noHints}</p>;
   }
   return (
-    <div
-      lang={extrasLang.lang}
-      dir={extrasLang.dir}
-      className="space-y-2 text-base text-muted md:text-lg"
-    >
+    <div lang={extrasLang.lang} dir={extrasLang.dir} className="space-y-2 text-lg text-muted">
       {hints.length > 0 && (
         <ul className="space-y-1" aria-label={strings.card.hints}>
           {hints.map((h) => (
@@ -122,7 +118,7 @@ export function FlipCard({
               ))}
             </Answer>
             {card.answer.literal.length > 0 && (
-              <p className="mt-3 text-base text-muted md:text-lg" data-testid="literal">
+              <p className="mt-3 text-lg text-muted" data-testid="literal">
                 <span className="font-medium">{strings.card.literal}</span>{' '}
                 <span lang={card.answer.lang} dir={card.answer.dir}>
                   {card.answer.literal.join(', ')}

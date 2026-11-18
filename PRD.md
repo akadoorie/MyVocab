@@ -753,7 +753,7 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
 ### 9.6 Typography
 - **Rubik** (Latin + Hebrew), self-hosted via `@fontsource/rubik` (no external font requests; keeps the CSP strict).
 - Item text (front): `clamp(2rem, 6vw, 3.5rem)`, weight 600. Answer lines (back): `clamp(1.5rem, 4.5vw, 2.25rem)`;
-  long explanation lines step down to `1.125rem–1.25rem`. Hints and synonyms: 1rem–1.125rem, `--text-muted`.
+  long explanation lines step down to `1.125rem–1.25rem`. Hints, synonyms and the literal meaning: 1.125rem on every screen (raised from 1rem on phones at the owner's request), `--text-muted`.
 - Every piece of content text gets `dir` and `lang` from its language (`he` → `rtl`). The UI chrome stays LTR English.
 
 ### 9.7 Layouts
