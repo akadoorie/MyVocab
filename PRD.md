@@ -662,8 +662,7 @@ glossy, glowing pressable buttons.
 ### 9.2 Pressable-ledge 3D buttons
 Buttons keep the pressable ledge, now glossy: a top-to-bottom gradient, a thin light top edge, the ledge underneath
 and a colored glow around. The loop uses two shapes:
-- **Pills** (Know, Don't know): icon (✓ / ✕) + label inside, on desktop; on phones the label moves under the pill as a
-  caption so all five buttons fit in one row.
+- **Pills** (Know, Don't know): icon (✓ / ✕) + label inside, on every screen size.
 - **Round buttons** (Stop, Hints, Next; Flip on the card): an icon in a circle (56px mobile, 64px desktop) with an
   italic muted caption underneath ("Stop", "Hints", "Next").
 Disabled buttons lose glow and ledge and look muted. Base mechanics:
@@ -760,10 +759,11 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   GitHub). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
 - **Loop header**: the MyVocab logo mark (two stacked cards) and the progress `Cycle 1 • Card 2/10 • 1 known` on the
   left; on desktop, a "⌨ Keyboard shortcuts" link on the right that opens a small popover listing the shortcuts.
-- **Loop buttons**: one row under the card, in this order: `Stop · Hints · Know · Don't know · Next` (round, round,
-  pill, pill, round). Flip is on the card itself.
-- **Loop (mobile, 360–767px)**: the flip card fills the space above; the button row is a **sticky bottom bar** in the
-  thumb zone, compact: the pills show only their icon, with captions under every button. The Undo bar floats above it.
+- **Loop buttons**: on desktop, one row under the card, in this order: `Stop · Hints · Know · Don't know · Next`
+  (round, round, pill, pill, round). Flip is on the card itself.
+- **Loop (mobile, 360–767px)**: the flip card fills the space above; the buttons form a **sticky bottom bar** in the
+  thumb zone, in two rows: the wide **Know** and **Don't know** pills (with their labels) on top, and the round
+  `Stop · Hints · Next` (with captions) below, so the two main actions stay big. The Undo bar floats above it.
 - **Loop (desktop ≥ 768px)**: a centered column of about 1100px; the card is wide (≈ 2.3 : 1) and the pills carry
   their labels.
 - **Cycle break / Summary**: a glassy card with large numbers and the 3D buttons.

@@ -42,8 +42,8 @@ export function LoopButton({
 }
 
 /**
- * Loop buttons (PRD FR-L24, §9.7): one row `Stop · Hints · Know · Don't know · Next`. Flip is on
- * the card. On phones the pills show only their icon, with captions under every button.
+ * Loop buttons (PRD FR-L24, §9.7). Desktop: one row `Stop · Hints · Know · Don't know · Next`.
+ * Phones: the wide Know / Don't know pills on top, `Stop · Hints · Next` below. Flip is on the card.
  */
 export function ButtonBar({
   state,
@@ -59,17 +59,37 @@ export function ButtonBar({
     onClick: () => onAction(type),
   });
   return (
-    <div className="grid grid-cols-[auto_auto_1fr_1fr_auto] items-start gap-x-3 pb-1 md:grid-cols-[auto_auto_1fr_1.2fr_auto] md:gap-x-6">
-      <LoopButton kind="round" icon={<StopIcon />} label={strings.loop.stop} {...btn('STOP')} />
+    <div
+      className={[
+        'grid items-start gap-x-3 gap-y-5 pb-1',
+        "grid-cols-6 [grid-template-areas:'know_know_know_dk_dk_dk'_'stop_stop_hints_hints_next_next']",
+        "md:grid-cols-[auto_auto_1fr_1.2fr_auto] md:gap-x-6 md:[grid-template-areas:'stop_hints_know_dk_next']",
+      ].join(' ')}
+    >
+      <LoopButton
+        kind="round"
+        icon={<StopIcon />}
+        label={strings.loop.stop}
+        className="[grid-area:stop]"
+        {...btn('STOP')}
+      />
       <LoopButton
         kind="hint"
+        className="[grid-area:hints]"
         icon={<BulbIcon />}
         label={strings.loop.hints}
         {...btn('SHOW_HINTS')}
       />
-      <LoopButton kind="know" icon={<CheckIcon />} label={strings.loop.know} {...btn('KNOW')} />
+      <LoopButton
+        kind="know"
+        icon={<CheckIcon />}
+        label={strings.loop.know}
+        className="[grid-area:know]"
+        {...btn('KNOW')}
+      />
       <LoopButton
         kind="dontknow"
+        className="[grid-area:dk]"
         icon={<CrossIcon />}
         label={strings.loop.dontKnow}
         {...btn('DONT_KNOW')}
@@ -77,6 +97,7 @@ export function ButtonBar({
       <LoopButton
         ref={nextRef}
         kind="round"
+        className="[grid-area:next]"
         icon={<ChevronIcon />}
         label={strings.loop.next}
         {...btn('NEXT')}

@@ -272,5 +272,6 @@ Format: date · context · decision · consequences.
   "on the back side of the card, I would also want to see the Flip button"). The bar no longer has
   a Flip button; tap-on-card and Space/F stay. The card itself is no longer a focusable button, to
   avoid a button nested in a button; the Flip button is the keyboard control.
-- **Mobile:** one compact row (owner's choice); pills show only their icon, captions under all
-  buttons. Admin pages only get the new colors.
+- **Mobile:** first shipped as one compact row; on the phone the five buttons looked almost the
+  same size, so (owner request, same day) it is two rows: wide Know / Don't know pills with labels
+  on top, round Stop · Hints · Next below. Admin pages only get the new colors.
