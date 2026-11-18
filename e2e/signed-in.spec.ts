@@ -47,7 +47,7 @@ test('Know → My known words → hidden in every direction → Return to loops'
   await expect(page.getByText('Sign in with Google to remember')).toHaveCount(0);
 
   // Signed-in learners choose the amount: 20 (more than the synthetic set has).
-  const startCard = page.getByRole('region', { name: 'Start a loop' });
+  const startCard = page.getByRole('region', { name: 'Start a session' });
   const amount20 = startCard.getByRole('radio', { name: '20' });
   await amount20.click();
   await expect(amount20).toHaveAttribute('aria-checked', 'true');
@@ -77,8 +77,8 @@ test('Know → My known words → hidden in every direction → Return to loops'
   expect(await available(page.request, 'en', 'en')).toBe(enEn - 1);
 
   // Return to loops: available again everywhere.
-  await row.getByRole('button', { name: 'Return to loops' }).click();
-  await expect(page.getByText('1 word is back in your loops')).toBeVisible();
+  await row.getByRole('button', { name: 'Return to practice' }).click();
+  await expect(page.getByText('1 word is back in practice')).toBeVisible();
   await expect(page.getByText('No known words yet')).toBeVisible();
   expect(await available(page.request, 'en', 'he')).toBe(enHe);
   expect(await available(page.request, 'en', 'en')).toBe(enEn);

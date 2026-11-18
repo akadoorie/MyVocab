@@ -116,7 +116,7 @@ describe('LoopPage', () => {
     expect(progress()).toBe('Cycle 2 · Card 1/1 · 2 known');
     fireEvent.click(btn('Know'));
     const summary = screen
-      .getByRole('heading', { name: 'Loop complete' })
+      .getByRole('heading', { name: 'Session complete' })
       .closest('section') as HTMLElement;
     expect(within(summary).getByText('Already knew').nextSibling).toHaveTextContent('2');
     expect(within(summary).getByText('Learned here').nextSibling).toHaveTextContent('1');
@@ -147,7 +147,7 @@ describe('LoopPage', () => {
     const router = setup();
     fireEvent.click(screen.getByRole('button', { name: /Home/ }));
     const dialog = screen.getByRole('dialog', { name: 'Back to Home?' });
-    expect(dialog).toHaveTextContent('This will stop the loop. Are you sure?');
+    expect(dialog).toHaveTextContent('This will stop the session. Are you sure?');
     fireEvent.keyDown(window, { key: 'k' }); // ignored while the question is open
     expect(progress()).toBe('Cycle 1 · Card 1/3 · 0 known');
     fireEvent.click(within(dialog).getByRole('button', { name: 'No' }));

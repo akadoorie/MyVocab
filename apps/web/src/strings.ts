@@ -5,7 +5,7 @@
 export const strings = {
   app: {
     name: 'MyVocab',
-    tagline: 'Learn words that stick: one loop at a time',
+    tagline: 'Learn words that stick: one session at a time',
   },
   nav: {
     home: 'Home',
@@ -20,7 +20,7 @@ export const strings = {
     skipToContent: 'Skip to content',
   },
   landing: {
-    heroTitle: 'Learn words that stick: one loop at a time',
+    heroTitle: 'Learn words that stick: one session at a time',
     heroBody:
       'Pick a set of words or expressions. Each round shows only the ones you still don’t know, until nothing is left.',
     howItWorks: 'How it works',
@@ -29,10 +29,10 @@ export const strings = {
       'Use Hints or Flip, then mark what you know',
       'Repeat until nothing is left',
     ],
-    guestBanner: 'Sign in with Google to remember the words you know and choose bigger loops.',
+    guestBanner: 'Sign in with Google to remember the words you know and choose bigger sessions.',
   },
   setup: {
-    title: 'Start a loop',
+    title: 'Start a session',
     source: 'From',
     target: 'To',
     category: 'Topic',
@@ -86,16 +86,16 @@ export const strings = {
     multipleMeanings: 'Multiple meanings',
     knownOn: (date: string) => `Known ${date}`,
     noAnswer: '—',
-    returnOne: 'Return to loops',
+    returnOne: 'Return to practice',
     returnSelected: (n: number) => `Return ${n} selected`,
     returnAllFiltered: (n: number) => `Return all ${n}`,
     selectRow: (text: string) => `Select ${text}`,
     clearSelection: 'Clear selection',
-    confirmTitle: (n: number) => `Return ${n} ${n === 1 ? 'word' : 'words'} to your loops?`,
-    confirmBody: 'They will show up in your future loops again, in every direction.',
+    confirmTitle: (n: number) => `Return ${n} ${n === 1 ? 'word' : 'words'} to practice?`,
+    confirmBody: 'They will show up in your future sessions again, in every direction.',
     confirm: 'Return them',
     cancel: 'Cancel',
-    returned: (n: number) => `${n} ${n === 1 ? 'word is' : 'words are'} back in your loops`,
+    returned: (n: number) => `${n} ${n === 1 ? 'word is' : 'words are'} back in practice`,
     returnFailed: 'Couldn’t return the words. Please try again.',
     loadMore: 'Load more',
     loading: 'Loading…',
@@ -103,7 +103,7 @@ export const strings = {
     retry: 'Try again',
     emptyTitle: 'No known words yet',
     emptyBody:
-      'When you press Know on a card, the word lands here and stops appearing in your loops. You can bring it back at any time.',
+      'When you press Know on a card, the word lands here and stops appearing in your sessions. You can bring it back at any time.',
     noMatches: 'Nothing matches these filters.',
   },
   account: {
@@ -129,7 +129,7 @@ export const strings = {
       'Your Google account id, email address, name and profile picture link, when you sign in with Google.',
       'The words you marked as known (item, the direction you were learning, the round and the date).',
       'A daily counter of the cards you were served, to keep the service fair for everyone.',
-      'For guests: an hourly counter of loops per network address. The address itself is never stored, only a one-way keyed hash of it.',
+      'For guests: an hourly counter of sessions per network address. The address itself is never stored, only a one-way keyed hash of it.',
       'A sign-in session cookie (HttpOnly). It holds no personal data.',
     ],
     whyTitle: 'Why',
@@ -158,7 +158,7 @@ export const strings = {
     insufficient: (n: number, topic: string) =>
       `Only ${n} new ${n === 1 ? 'card' : 'cards'} in ${topic}, starting with ${n}`,
     homeConfirmTitle: 'Back to Home?',
-    homeConfirmBody: 'This will stop the loop. Are you sure?',
+    homeConfirmBody: 'This will stop the session. Are you sure?',
     yes: 'Yes',
     no: 'No',
     shortcutsTitle: 'Keyboard shortcuts',
@@ -184,12 +184,12 @@ export const strings = {
     hintsShown: 'Hints shown',
   },
   summary: {
-    title: 'Loop complete',
+    title: 'Session complete',
     cards: 'Cards',
     cycles: 'Cycles',
     alreadyKnew: 'Already knew',
     learnedHere: 'Learned here',
-    newLoop: 'New loop',
+    newLoop: 'New session',
     home: 'Home',
     guestNote: 'Sign in to remember these words',
   },

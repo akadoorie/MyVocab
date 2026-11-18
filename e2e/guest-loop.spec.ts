@@ -10,7 +10,7 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   await page.goto('/');
 
   // Defaults: EN → HE, General, Words, amount locked at 5, all in the "default" style.
-  const startCard = page.getByRole('region', { name: 'Start a loop' });
+  const startCard = page.getByRole('region', { name: 'Start a session' });
   await expect(startCard.getByLabel('From', { exact: true })).toHaveValue('en');
   await expect(startCard.getByLabel('To', { exact: true })).toHaveValue('he');
   await expect(startCard.getByText('Default')).toHaveCount(5);
@@ -60,23 +60,23 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
 
   // Know everything else; continue through cycle breaks until the summary.
   for (let i = 0; i < 20; i++) {
-    if (await page.getByRole('heading', { name: 'Loop complete' }).isVisible()) break;
+    if (await page.getByRole('heading', { name: 'Session complete' }).isVisible()) break;
     const cont = page.getByRole('button', { name: 'Continue' });
     if (await cont.isVisible()) await cont.click();
     else await button(page, 'Know').click();
   }
-  await expect(page.getByRole('heading', { name: 'Loop complete' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Session complete' })).toBeVisible();
   await expect(page.getByText('Sign in to remember these words')).toBeVisible();
 
   // New loop keeps the selection.
-  await page.getByRole('button', { name: 'New loop' }).click();
+  await page.getByRole('button', { name: 'New session' }).click();
   await expect(page).toHaveURL(/\/$/);
 });
 
 test('Stop ends the loop immediately and returns home', async ({ page }) => {
   await page.goto('/');
   await page
-    .getByRole('region', { name: 'Start a loop' })
+    .getByRole('region', { name: 'Start a session' })
     .getByRole('button', { name: 'Start' })
     .click();
   await expect(page).toHaveURL(/\/loop$/);

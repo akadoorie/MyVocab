@@ -117,7 +117,7 @@ private content repository. It never appears in the public code repo or any publ
 | **Hints (button)** | Reveals the hints and synonyms on the front of the card. |
 | **Flip** | Turning the on-screen card over (front ↔ back). It can be done any number of times and **has no effect on grading**. |
 | **Amount** | The number of cards in a loop (learners: 10/20/30/40/50; guests: always 5). |
-| **Loop** | One learning session over a group of cards. |
+| **Loop** | One learning session over a group of cards. **In the UI it is called a "Session"** ("Start a session", "Session complete", "New session"); "loop" stays the technical term in this spec and in the code (D-018). |
 | **Cycle** | One pass over the loop's remaining cards. |
 | **Known item** | An item a signed-in learner marked "Know" (in any direction). It is excluded from all their future loops, **in every direction**, until returned. |
 | **Category** | A topic (Home, Nature, …). An item can have many, or none. **General** is virtual: random across all items, including items without a category. |
@@ -195,7 +195,7 @@ private content repository. It never appears in the public code repo or any publ
   `--accent` outline and the tag disappears (owner feedback, 2026-11-18: the muted look made defaults seem unset).
   When any field differs from its default, a **"Reset to defaults"** link appears. The user can press **Start**
   immediately without touching anything.
-- **FR-L4** "New loop" from the summary keeps the previous selection (fields that differ from the defaults show the
+- **FR-L4** "New session" from the summary keeps the previous selection (fields that differ from the defaults show the
   selected style). A fresh visit to `/` always starts from the defaults (nothing is remembered between visits).
 - **FR-L5 Same language**: choosing source = target is allowed. The back of the card then shows the item's
   **explanation** instead of a translation. While the two languages are the same, a short muted note under the
@@ -277,7 +277,7 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L31 Cycle break**: when a cycle ends and "Don't know" cards remain, an interstitial shows
   "Cycle 3 · 2 cards left" with a **Continue** button (Enter also continues).
 - **FR-L32 End of loop**: when a cycle ends with no "Don't know" cards, a summary shows the total cards, the number of
-  cycles, **Already knew** (known in cycle 1) vs **Learned here** (known in cycle ≥ 2), and buttons **New loop**
+  cycles, **Already knew** (known in cycle 1) vs **Learned here** (known in cycle ≥ 2), and buttons **New session**
   (back to the start card with the same selection) and **Home**. Guests also see "Sign in to remember these words".
 - **FR-L33** The loop state (including the current card's side and whether its hints are shown) is saved in
   `sessionStorage`, so a page refresh resumes the same loop. Stop or finishing clears it.
@@ -769,7 +769,7 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
 
 ### 9.7 Layouts
 - **Landing**: header (logo "MyVocab", sign-in / avatar, an "Admin" link for admins as a full-page navigation); hero
-  ("Learn words that stick: one loop at a time"); How it works (1. Pick languages and a topic, or just press Start ·
+  ("Learn words that stick: one session at a time"); How it works (1. Pick languages and a topic, or just press Start ·
   2. Use Hints or Flip, then mark what you know · 3. Repeat until nothing is left); Start card; footer (Privacy,
   GitHub). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
 - **Loop header**: the MyVocab logo mark (two stacked cards) and the progress `Cycle 1 • Card 2/10 • 1 known` on the

@@ -39,7 +39,7 @@ test('guest pages: no accessibility violations and no CSP violations', async ({ 
   await expectNoViolations(page, 'landing');
 
   await page
-    .getByRole('region', { name: 'Start a loop' })
+    .getByRole('region', { name: 'Start a session' })
     .getByRole('button', { name: 'Start' })
     .click();
   await expect(page).toHaveURL(/\/loop$/);
@@ -79,7 +79,7 @@ test('signed-in and admin pages: no accessibility violations', async ({
 test('the loop works with the keyboard only', async ({ page }) => {
   await page.goto('/');
   const start = page
-    .getByRole('region', { name: 'Start a loop' })
+    .getByRole('region', { name: 'Start a session' })
     .getByRole('button', { name: 'Start' });
   await start.focus();
   await page.keyboard.press('Enter');

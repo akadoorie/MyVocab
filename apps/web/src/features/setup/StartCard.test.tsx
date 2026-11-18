@@ -149,12 +149,12 @@ describe('StartCard', () => {
       String(input).startsWith('/api/loops/available')
         ? Response.json({ available: 6 })
         : Response.json(
-            { error: { code: 'RATE_LIMITED', message: 'Too many loops for now.' } },
+            { error: { code: 'RATE_LIMITED', message: 'Too many sessions for now.' } },
             { status: 429 },
           ),
     );
     setup();
     fireEvent.click(screen.getByRole('button', { name: 'Start' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Too many loops for now.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Too many sessions for now.');
   });
 });

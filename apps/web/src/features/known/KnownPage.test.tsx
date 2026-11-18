@@ -86,10 +86,10 @@ describe('KnownPage', () => {
     const restore = vi.fn((_init: RequestInit | undefined) => Response.json({ restored: 1 }));
     setup({ 'GET /api/me/known': () => page(), 'POST /api/me/known/restore': restore });
     const rows = await screen.findAllByRole('listitem');
-    fireEvent.click(within(rows[0]!).getByRole('button', { name: 'Return to loops' }));
+    fireEvent.click(within(rows[0]!).getByRole('button', { name: 'Return to practice' }));
     await waitFor(() => expect(restore).toHaveBeenCalled());
     expect(JSON.parse(String(restore.mock.calls[0]![0]!.body))).toEqual({ itemIds: [11] });
-    expect(await screen.findByText('1 word is back in your loops')).toBeVisible();
+    expect(await screen.findByText('1 word is back in practice')).toBeVisible();
   });
 
   it('returns selected rows', async () => {
@@ -114,7 +114,7 @@ describe('KnownPage', () => {
     expect(fetchSpy.mock.calls.some(([u]) => String(u).includes('type=expr'))).toBe(true);
 
     fireEvent.click(screen.getByRole('button', { name: 'Return all 1' }));
-    const dialog = screen.getByRole('dialog', { name: 'Return 1 word to your loops?' });
+    const dialog = screen.getByRole('dialog', { name: 'Return 1 word to practice?' });
     expect(within(dialog).getByRole('button', { name: 'Cancel' })).toHaveFocus();
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(screen.queryByRole('dialog')).toBeNull();

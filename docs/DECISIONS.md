@@ -275,3 +275,13 @@ Format: date · context · decision · consequences.
 - **Mobile:** first shipped as one compact row; on the phone the five buttons looked almost the
   same size, so (owner request, same day) it is two rows: wide Know / Don't know pills with labels
   on top, round Stop · Hints · Next below. Admin pages only get the new colors.
+
+## D-018 · 2026-11-18 · "Session" in the UI instead of "Loop" (owner request)
+
+- **Why:** "loop" explains the mechanism but reads oddly to learners; "Start a session" is clearer.
+- **Change:** every learner- and admin-facing text says session ("Start a session", "Session
+  complete", "New session", "This will stop the session", "Too many sessions for now", the hero
+  "one session at a time"). On My known words, "Return to loops" became **"Return to practice"**
+  ("Return 2 words to practice?", "… back in practice"), which reads better than "to sessions".
+- **Unchanged:** "loop" stays the technical term in the PRD, the code, the API paths (`/api/loops`)
+  and the `/loop` page address, so nothing breaks and no links change.
