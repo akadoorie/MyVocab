@@ -2,8 +2,9 @@ import { useId, type ReactNode } from 'react';
 import { strings } from '../strings';
 
 /**
- * A labeled start-card field with the default/selected styling (PRD FR-L3, §9.5): a field that
- * still holds its default value is muted with a dashed outline and a "Default" tag.
+ * A labeled start-card field with the default/selected styling (PRD FR-L3, §9.5): a default value
+ * looks chosen (same background and bright text) with a subtle outline and a "Default" tag; a value
+ * the user changed gets the violet outline.
  */
 export function Field({
   label,
@@ -18,7 +19,8 @@ export function Field({
   const className = [
     'w-full rounded-[10px] bg-surface-2 px-3 py-3 text-base outline-none transition-colors',
     'focus-visible:ring-2 focus-visible:ring-accent',
-    isDefault ? 'border border-dashed border-border text-muted' : 'border border-accent text-text',
+    'text-text',
+    isDefault ? 'border border-border' : 'border border-accent',
   ].join(' ');
   return (
     <div className="flex flex-col gap-1.5" data-default={isDefault ? 'true' : 'false'}>
@@ -27,7 +29,7 @@ export function Field({
           {label}
         </label>
         {isDefault && (
-          <span className="rounded-full border border-border px-2 py-0.5 text-[11px] uppercase tracking-wide text-muted">
+          <span className="rounded-full bg-[rgba(155,130,255,0.16)] px-2 py-0.5 text-[11px] font-semibold tracking-wide text-[#c4b5ff] uppercase">
             {strings.setup.defaultTag}
           </span>
         )}
@@ -60,7 +62,7 @@ export function Segmented<T extends string | number>({
       aria-label={label}
       className={[
         'grid gap-1 rounded-[10px] bg-surface-2 p-1',
-        isDefault ? 'border border-dashed border-border' : 'border border-accent',
+        isDefault ? 'border border-border' : 'border border-accent',
       ].join(' ')}
       style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
     >
@@ -75,11 +77,7 @@ export function Segmented<T extends string | number>({
             onClick={() => onChange(o.value)}
             className={[
               'min-h-11 rounded-[8px] px-2 text-sm font-medium transition-colors',
-              checked
-                ? isDefault
-                  ? 'bg-surface text-muted'
-                  : 'bg-accent-strong text-[var(--on-color)]'
-                : 'text-muted hover:text-text',
+              checked ? 'bg-accent-strong text-[var(--on-color)]' : 'text-muted hover:text-text',
             ].join(' ')}
           >
             {o.label}

@@ -189,9 +189,10 @@ private content repository. It never appears in the public code repo or any publ
 | Amount (signed-in) | **10 / 20 / 30 / 40 / 50** (segmented control) | **10** |
 | Amount (guest) | **5**, fixed and locked | **5** |
 
-- **FR-L3 Default styling**: while a field still holds its default value, its value is shown in the muted
-  "default" style (`--text-muted` text, a dashed `--border` outline, a small **"Default"** tag). As soon as the user
-  changes it, the field switches to the normal "selected" style (`--text` text, a solid `--accent` outline, no tag).
+- **FR-L3 Default styling**: a default value must still read as **chosen**: same background and bright `--text`
+  value as a selected one (the selected option of a segmented control is filled the same way), with a subtle solid
+  `--border` outline and a small violet **"Default"** tag. As soon as the user changes it, the field gets a solid
+  `--accent` outline and the tag disappears (owner feedback, 2026-11-18: the muted look made defaults seem unset).
   When any field differs from its default, a **"Reset to defaults"** link appears. The user can press **Start**
   immediately without touching anything.
 - **FR-L4** "New loop" from the summary keeps the previous selection (fields that differ from the defaults show the
@@ -642,7 +643,7 @@ glossy, glowing pressable buttons.
 | `--surface-2` | `#241D40` | Inputs, secondary panels, chips, the multiple-meanings badge |
 | `--border` | `#3A2F63` | Borders, dividers |
 | `--text` | `#F1EEFB` | Primary text, user-selected values |
-| `--text-muted` | `#A79FC6` | Secondary text, button captions, hints and synonyms, **default-valued fields** |
+| `--text-muted` | `#A79FC6` | Secondary text, button captions, hints and synonyms |
 | `--accent` | `#9B82FF` (button gradient `#8B6CFF → #6A3EF5`) | Primary actions, links, focus ring, selected-field outline, the card glow |
 | `--know` | `#2BD46A → #16A34A` | Know pill (white text) |
 | `--dontknow` | `#FB4D6D → #E11D48` | Don't know pill (white text), destructive actions |
@@ -738,9 +739,10 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
 ### 9.5 Start card (look)
 - Five fields stacked on mobile (2-column grid on desktop), each with a label and either a select (languages,
   category) or a segmented control (type: 2 options; amount).
-- **Default style** (value unchanged): muted value text, dashed outline, a small "Default" tag on the right.
-  **Selected style** (user changed it): bright value text, solid `--accent` outline.
-- **Guest amount**: a single "5" pill with a lock icon, muted; tapping it shows the "please register" toast (FR-L6).
+- **Default style** (value unchanged): looks chosen (bright value text, filled selected option), subtle solid
+  outline, a small violet "Default" tag on the right. **Selected style** (user changed it): the same, with a solid
+  `--accent` outline and no tag.
+- **Guest amount**: a single "5" pill with a lock icon; tapping it shows the "please register" toast (FR-L6).
 - The "Same language: the back shows an explanation" note (FR-L5) appears under the language fields when they match.
 - The large **Start** button (accent color, pressable ledge) sits under the fields, with the "N new cards available"
   line just above it.

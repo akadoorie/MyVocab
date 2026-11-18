@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, NavLink, Outlet } from 'react-router';
+import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { LogoMark } from '../components/Icons';
 import { UserMenu } from '../components/UserMenu';
 import { api } from '../lib/api';
@@ -9,6 +9,7 @@ import { strings } from '../strings';
 /** Header, maintenance banner and footer around the regular pages (PRD §9.7). */
 export function Layout() {
   const session = useSession();
+  const onHome = useLocation().pathname === '/';
   const meta = useQuery({ queryKey: ['meta'], queryFn: api.meta, staleTime: 60_000 });
   const maintenance = meta.data?.maintenance;
 
@@ -33,6 +34,15 @@ export function Layout() {
           </span>
         </Link>
         <nav className="flex items-center gap-3 text-sm">
+          {!onHome && (
+            // Every page other than the start page offers a way back to it.
+            <Link
+              to="/"
+              className="flex min-h-11 items-center gap-1.5 rounded-[10px] px-3 text-muted hover:text-text"
+            >
+              <span aria-hidden="true">←</span> {strings.nav.home}
+            </Link>
+          )}
           {session.user ? (
             <>
               {session.user.role === 'admin' && (

@@ -85,6 +85,9 @@ export function UserMenu({ user }: { user: SessionUser }) {
             <p className="truncate text-sm text-muted">{user.email}</p>
           </div>
           <nav aria-label={strings.nav.accountMenu} className="flex flex-col pt-2">
+            <Link to="/" className={itemClass} onClick={close}>
+              {strings.nav.home}
+            </Link>
             <Link to="/known" className={itemClass} onClick={close}>
               {strings.nav.knownWords}
             </Link>

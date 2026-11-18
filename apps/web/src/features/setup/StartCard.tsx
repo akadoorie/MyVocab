@@ -248,7 +248,7 @@ export function StartCard({
                   type="button"
                   aria-label={`${strings.setup.amount}: ${meta.guest.loopSize}. ${strings.setup.guestAmountLocked}`}
                   onClick={() => toast.show(guestToast)}
-                  className="flex min-h-12 w-full items-center gap-2 rounded-[10px] border border-dashed border-border bg-surface-2 px-3 text-muted"
+                  className="flex min-h-12 w-full items-center gap-2 rounded-[10px] border border-border bg-surface-2 px-3 text-text"
                 >
                   <span aria-hidden="true">🔒</span>
                   <span className="font-semibold">{meta.guest.loopSize}</span>
