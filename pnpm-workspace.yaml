@@ -11,4 +11,4 @@ allowBuilds:
 # Remove once eslint-plugin-jsx-a11y-x and drizzle-kit ship fixed versions.
 overrides:
   eslint-plugin-jsx-a11y-x>minimatch: ^11.0.1
-  "@esbuild-kit/core-utils>esbuild": ^0.25.12
+  '@esbuild-kit/core-utils>esbuild': ^0.25.12
