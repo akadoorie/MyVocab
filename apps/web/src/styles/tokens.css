@@ -1,32 +1,58 @@
-/* Design tokens: dark theme only (PRD §9.1). */
+/* Design tokens: dark theme only (PRD §9.1, D-017). */
 :root {
-  --bg: #111014;
-  --surface: #1b1a21;
-  --surface-2: #24232c;
-  --border: #33313d;
-  --text: #edebf5;
-  --text-muted: #a09cb3;
-  --on-color: #111014; /* text on colored buttons (contrast >= 4.5:1 on every button color) */
+  --bg: #0e0b1a;
+  --bg-glow: radial-gradient(1200px 600px at 50% -10%, rgba(109, 76, 255, 0.22), transparent 70%);
+  --surface: #19142e;
+  --surface-2: #241d40;
+  --border: #3a2f63;
+  --text: #f1eefb;
+  --text-muted: #a79fc6;
+  --on-color: #ffffff; /* text on colored buttons */
 
-  --accent: #8b7cf6;
-  --accent-ledge: #685db9;
-  --know: #5bbf85;
-  --know-ledge: #448f64;
-  --dontknow: #e0605e;
-  --dontknow-ledge: #a84846;
-  --hint: #edbe57;
-  --hint-ledge: #b28e41;
-  --flip: #5b9fe3;
-  --flip-ledge: #4477aa;
-  --stop: #6a6678;
-  --stop-ledge: #504c5a;
+  --accent: #9b82ff; /* text/links/focus; buttons use the gradient below */
+  --accent-top: #8b6cff;
+  --accent-bottom: #6a3ef5;
+  --accent-ledge: #4320b8;
+  --accent-glow: rgba(124, 92, 255, 0.45);
 
-  --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.35);
+  --know: #22c55e;
+  --know-top: #2bd46a;
+  --know-bottom: #16a34a;
+  --know-ledge: #0e6e31;
+  --know-glow: rgba(34, 197, 94, 0.5);
 
-  --radius-flip-card: 18px;
-  --radius-card: 14px;
-  --radius-button: 12px;
-  --radius-input: 10px;
+  --dontknow: #fb4d6d;
+  --dontknow-top: #fb4d6d;
+  --dontknow-bottom: #e11d48;
+  --dontknow-ledge: #8f1030;
+  --dontknow-glow: rgba(244, 63, 94, 0.5);
+
+  --hint: #facc15;
+  --hint-top: #4a3718;
+  --hint-bottom: #30230e;
+  --hint-ledge: #1c1407;
+  --hint-glow: rgba(250, 204, 21, 0.28);
+
+  --round-top: #3e2d7e;
+  --round-bottom: #251a50;
+  --round-ledge: #150e33;
+  --round-glow: rgba(109, 76, 255, 0.3);
+
+  --stop: #2e2650;
+  --stop-top: #352c5c;
+  --stop-bottom: #2a2249;
+  --stop-ledge: #18122f;
+  --stop-glow: transparent;
+
+  --card-glow:
+    0 0 0 1px rgba(109, 76, 255, 0.4), 0 0 32px rgba(109, 76, 255, 0.25),
+    0 20px 50px rgba(0, 0, 0, 0.6);
+  --card-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(109, 76, 255, 0.18);
+
+  --radius-flip-card: 28px;
+  --radius-card: 18px;
+  --radius-button: 14px;
+  --radius-input: 12px;
 
   --font-sans: 'Rubik', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }

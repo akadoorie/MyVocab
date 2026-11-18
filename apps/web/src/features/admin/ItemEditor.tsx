@@ -118,7 +118,7 @@ function HeaderFields({
                       : [...value.categoryIds, c.id].sort((a, b) => a - b),
                   )
                 }
-                className={`min-h-10 rounded-full border px-3 text-sm ${on ? 'border-accent bg-accent text-[var(--on-color)]' : 'border-border text-muted hover:text-text'} ${c.isActive ? '' : 'opacity-60'}`}
+                className={`min-h-10 rounded-full border px-3 text-sm ${on ? 'border-accent bg-accent-strong text-[var(--on-color)]' : 'border-border text-muted hover:text-text'} ${c.isActive ? '' : 'opacity-60'}`}
               >
                 {c.name}
               </button>
@@ -535,9 +535,6 @@ function PreviewCard({ card }: { card: CardView }) {
           onClick={() => setHintsShown(true)}
         >
           {strings.loop.hints}
-        </Button3D>
-        <Button3D variant="flip" onClick={() => setSide((v) => (v === 'front' ? 'back' : 'front'))}>
-          {strings.loop.flip}
         </Button3D>
       </div>
     </div>

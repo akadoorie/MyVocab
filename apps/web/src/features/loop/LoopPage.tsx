@@ -14,10 +14,11 @@ import { useToast } from '../../components/Toast';
 import { strings } from '../../strings';
 import { useKnownQueue } from '../known/KnownQueueProvider';
 import type { LoopStartNotice } from '../setup/StartCard';
+import { LogoMark } from '../../components/Icons';
 import { ButtonBar } from './ButtonBar';
 import { FlipCard } from './FlipCard';
 import { clearLoop, loadLoop, saveLoop, type StoredLoop } from './loop-storage';
-import { CycleBreak, Summary, UndoBar } from './LoopScreens';
+import { CycleBreak, ShortcutsMenu, Summary, UndoBar } from './LoopScreens';
 import { useLoopShortcuts } from './useLoopShortcuts';
 
 export type KnownSink = {
@@ -161,30 +162,30 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   return (
     <main
       id="main"
-      className="mx-auto flex min-h-dvh w-full max-w-[640px] flex-col gap-4 px-4 pt-4"
+      className="mx-auto flex min-h-dvh w-full max-w-[1100px] flex-col gap-5 px-4 pt-4 md:gap-10 md:px-8 md:pt-8"
     >
       <header className="flex items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={() => act('STOP')}
-          className="flex min-h-11 items-center gap-1 rounded-[10px] px-2 text-muted hover:text-text md:hidden"
+        <p
+          className="flex items-center gap-3 text-base font-medium md:text-xl"
+          data-testid="progress"
         >
-          <span aria-hidden="true">✕</span> {strings.loop.stop}
-        </button>
-        <p className="text-sm text-muted" data-testid="progress">
-          {strings.loop.progress(
-            progress.cycle,
-            progress.cardNumber,
-            progress.cycleSize,
-            progress.knownCount,
-          )}
+          <LogoMark className="h-8 w-8 shrink-0 md:h-10 md:w-10" />
+          <span>
+            {strings.loop.progress(
+              progress.cycle,
+              progress.cardNumber,
+              progress.cycleSize,
+              progress.knownCount,
+            )}
+          </span>
         </p>
-        <span className="hidden text-xs text-muted md:inline" title={strings.loop.shortcuts}>
-          ? {strings.loop.shortcutsTitle}
-        </span>
+        <ShortcutsMenu />
       </header>
 
-      <div key={`${state.cycle}-${state.index}`} className="card-enter flex-1 md:flex-none">
+      <div
+        key={`${state.cycle}-${state.index}`}
+        className="card-enter flex flex-1 flex-col md:flex-none"
+      >
         <FlipCard
           card={card}
           side={state.side}
@@ -197,7 +198,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
         {announcement}
       </p>
 
-      <div className="sticky bottom-0 -mx-4 flex flex-col gap-3 bg-gradient-to-t from-bg via-bg to-transparent px-4 pt-3 pb-4 md:static md:mx-0 md:bg-none md:px-0 md:pt-4">
+      <div className="sticky bottom-0 -mx-4 flex flex-col gap-4 bg-gradient-to-t from-bg via-bg to-transparent px-4 pt-4 pb-4 md:static md:mx-0 md:bg-none md:px-0 md:pt-0 md:pb-8">
         {undoBar}
         <ButtonBar state={state} onAction={act} nextRef={nextRef} />
       </div>

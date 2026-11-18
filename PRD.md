@@ -159,9 +159,9 @@ private content repository. It never appears in the public code repo or any publ
 | Types | Two: `word` / `expr` (Words / Expressions) |
 | Back of card | Different languages → **translation** (+ **literal meaning** if any); same language → **explanation**. Hints + synonyms always below |
 | Multiple meanings | Admin-set flag. Shown as a "◆ Multiple meanings" badge on the front |
-| Card UI | A raised **flip card** with a soft shadow and a 3D flip animation |
+| Card UI | A glassy, violet-glowing **flip card** with a 3D flip animation and a round **Flip** button on both sides |
 | Hints | A **Hints** button reveals hints + synonyms on the front (one-way for that card). Flipping always shows them on the back |
-| Flip | A **Flip** button, a tap/click on the card, or Space/F. It toggles front ↔ back any number of times and never affects grading |
+| Flip | The round **Flip** button on the card (front and back), a tap/click on the card, or Space/F. It toggles front ↔ back any number of times and never affects grading |
 | Known memory | **Any** "Know" (any cycle) is remembered per **item** and hides the item in **every** direction |
 | Known list | "My known words": search/filter/sort; return items to loops (single, selected, all filtered) |
 | Know tap | Advances immediately + an Undo bar for ~4 s showing `item → answer ✓ Undo` |
@@ -249,7 +249,8 @@ private content repository. It never appears in the public code repo or any publ
   disables. If the learner never presses Hints, the front shows no hints, even after the back has been seen. **Hints
   has no effect on grading** and is not recorded.
 - **FR-L26 Flip**: turns the card over (front ↔ back) with a 3D flip animation (§9.4). It can be triggered by the
-  **Flip** button, by **tapping/clicking the card**, or by the **Space**/**F** keys. The learner can flip back and forth
+  round **Flip** button in the card's corner (shown on **both** faces), by **tapping/clicking the card**, or by the
+  **Space**/**F** keys. The learner can flip back and forth
   **any number of times**, in both phases. **Flipping has no effect on grading** and is not recorded.
 - **FR-L27 Know** (available on either side while Deciding): removes the card from the loop (it won't appear in the
   next cycle), records it as known in this cycle, and **immediately** shows the next card (front side up). An **Undo
@@ -272,7 +273,7 @@ private content repository. It never appears in the public code repo or any publ
   (back to the start card with the same selection) and **Home**. Guests also see "Sign in to remember these words".
 - **FR-L33** The loop state (including the current card's side and whether its hints are shown) is saved in
   `sessionStorage`, so a page refresh resumes the same loop. Stop or finishing clears it.
-- **FR-L34** Desktop keyboard shortcuts (shown in a small "?" tooltip): **K** Know, **D** Don't know, **H** Hints,
+- **FR-L34** Desktop keyboard shortcuts (listed in a "Keyboard shortcuts" popover in the loop header): **K** Know, **D** Don't know, **H** Hints,
   **Space/F** Flip, **Enter** Next or Continue, **Esc** Stop. Shortcuts respect the enabled/disabled state.
 
 ### 6.3 What the back of the card shows
@@ -631,26 +632,40 @@ myvocab-export-2026-11-16-1430/
 ### 9.1 Design tokens (dark theme only)
 | Token | Value | Use |
 |---|---|---|
-| `--bg` | `#111014` | Page background |
-| `--surface` | `#1B1A21` | Cards, panels |
-| `--surface-2` | `#24232C` | Inputs, secondary panels, the multiple-meanings badge |
-| `--border` | `#33313D` | Borders, dividers |
-| `--text` | `#EDEBF5` | Primary text, user-selected values |
-| `--text-muted` | `#A09CB3` | Secondary text, hints and synonyms on the card, **default-valued fields** |
-| `--accent` | `#8B7CF6` | Next button, links, focus ring, selected-field outline, primary actions, badge text |
-| `--know` | `#5BBF85` | Know button |
-| `--dontknow` | `#E0605E` | Don't know button, destructive actions |
-| `--hint` | `#EDBE57` | Hints button (dark text on it) |
-| `--flip` | `#5B9FE3` | Flip button (dark text on it) |
-| `--stop` | `#6A6678` | Stop button, secondary actions |
-| `--card-shadow` | `0 10px 30px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.35)` | Flip card elevation |
+The look follows the owner's mockup (D-017): a deep navy-violet night, glassy cards with a violet glow, and
+glossy, glowing pressable buttons.
 
-- Every button color has a `--*-ledge` variant, about 25% darker (computed once and stored as tokens).
-- Text/background combinations must meet **WCAG AA** contrast (`--text-muted` on `--surface` included). Use dark text
-  on Hints and Flip, and check contrast on the others.
-- Radius 18px (flip card), 14px (other cards), 12px (buttons), 10px (inputs). Spacing on a 4px scale.
+| Token | Value | Use |
+|---|---|---|
+| `--bg` | `#0E0B1A` | Page background, with a soft violet radial glow at the top |
+| `--surface` | `#19142E` | Cards, panels |
+| `--surface-2` | `#241D40` | Inputs, secondary panels, chips, the multiple-meanings badge |
+| `--border` | `#3A2F63` | Borders, dividers |
+| `--text` | `#F1EEFB` | Primary text, user-selected values |
+| `--text-muted` | `#A79FC6` | Secondary text, button captions, hints and synonyms, **default-valued fields** |
+| `--accent` | `#9B82FF` (button gradient `#8B6CFF → #6A3EF5`) | Primary actions, links, focus ring, selected-field outline, the card glow |
+| `--know` | `#2BD46A → #16A34A` | Know pill (white text) |
+| `--dontknow` | `#FB4D6D → #E11D48` | Don't know pill (white text), destructive actions |
+| `--hint` | `#FACC15` icon on `#4A3718 → #30230E` | Hints round button |
+| `--round` | `#3E2D7E → #251A50` | Stop, Next and Flip round buttons (white icon) |
+| `--stop` | `#2E2650` | Secondary actions (e.g. Home) |
+| `--card-glow` | `0 0 0 1px #6D4CFF66, 0 0 32px #6D4CFF40, 0 20px 50px #0009` | Flip card edge glow + elevation |
+
+- Every button color has a `--*-ledge` variant (a darker shade for the 3D ledge) and a `--*-glow` (a soft colored
+  halo, about 45% opacity).
+- Text/background combinations must meet **WCAG AA** contrast. White on the Know pill is used only as large bold text
+  (≥ 20px bold); icons meet 3:1.
+- Radius 28px (flip card), 18px (other cards), pill/circle for loop buttons, 14px for other buttons, 12px (inputs).
+  Spacing on a 4px scale.
 
 ### 9.2 Pressable-ledge 3D buttons
+Buttons keep the pressable ledge, now glossy: a top-to-bottom gradient, a thin light top edge, the ledge underneath
+and a colored glow around. The loop uses two shapes:
+- **Pills** (Know, Don't know): icon (✓ / ✕) + label inside, on desktop; on phones the label moves under the pill as a
+  caption so all five buttons fit in one row.
+- **Round buttons** (Stop, Hints, Next; Flip on the card): an icon in a circle (56px mobile, 64px desktop) with an
+  italic muted caption underneath ("Stop", "Hints", "Next").
+Disabled buttons lose glow and ledge and look muted. Base mechanics:
 ```css
 .btn3d {
   background: var(--c);
@@ -668,18 +683,20 @@ myvocab-export-2026-11-16-1430/
 - Keyboard focus: a 2px `--accent` outline with offset. Minimum touch target 48×48px.
 
 ### 9.3 The flip card (look)
-- A raised card: background `--surface`, 1px `--border`, radius 18px, `box-shadow: var(--card-shadow)`, and a very
-  subtle top highlight (`inset 0 1px 0 rgba(255,255,255,.04)`). Generous padding (24px mobile, 40px desktop).
-- **Front**: a small muted label at the top ("EN → HE · Words"); the item text centered; under it, when applicable, a
+- A glassy card: a translucent violet gradient over `--surface`, a 1px violet border with `--card-glow`, radius 28px,
+  and a subtle top highlight. Generous padding (24px mobile, 40px desktop).
+- **Front**: a pill chip at the top left ("EN → HE · WORDS", uppercase, violet text on `--surface-2`); the item text
+  centered, large and bold; under it, when applicable, a
   small pill badge "◆ Multiple meanings" (`--surface-2` background, `--accent` text). After Hints: a thin divider,
   then the hints as a muted list and a "Synonyms: …" line (or "Hint is not available").
 - **Back**: a small muted label ("Translation" / "Explanation"); the answer lines large and centered (one per line;
   explanation lines numbered when there are two or more, and set in a smaller size when long); under them, when
   present, "Literal meaning: …" in `--text-muted` at the hints' size; a thin divider; then
   **Hints** as a muted list and a "Synonyms: …" line (or "Hint is not available").
-- A small flip icon (↻) in a corner signals that the card can be turned over.
+- A round **Flip** button (↻) sits in the bottom-right corner of **both** faces, so the card can be turned back from
+  the answer side too.
 - **Size**: both faces share one grid cell (`display:grid` with both faces at `grid-area: 1 / 1`), so the card takes the
-  height of the taller face and doesn't jump when flipped. Minimum height about 260px on mobile, 320px on desktop. On
+  height of the taller face and doesn't jump when flipped. Minimum height about 300px on mobile, 420px on desktop. On
   small phones, if a face is very long it scrolls inside the card (max height ≈ 60vh).
 
 ```
@@ -706,12 +723,14 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   .flip-card__inner { transition: none; }      /* swap faces with a 150ms opacity crossfade instead */
 }
 ```
-- Triggers: the **Flip** button, a **tap/click on the card**, the **Space**/**F** keys. It toggles both ways without limit.
+- Triggers: the round **Flip** button on the card, a **tap/click on the card**, the **Space**/**F** keys. It toggles
+  both ways without limit.
 - Rapid repeated flips simply reverse the animation (no queued spins).
 - RTL: the rotation direction stays the same; only text direction changes per face.
 - **Hints** expands the front's hints section with a short height/opacity transition (none with reduced motion).
-- **Accessibility**: the card is a focusable `button`-like element with `aria-label` "Card: <item text>. Showing front.
-  Press to flip." The hidden face gets `inert` + `aria-hidden="true"`. An `aria-live="polite"` region announces
+- **Accessibility**: the round Flip button on the visible face is the keyboard control (a real `button` named
+  "Flip"); tapping the card is a pointer shortcut for the same action. The hidden face gets `inert` +
+  `aria-hidden="true"`, so only the visible face's Flip button is focusable. An `aria-live="polite"` region announces
   "Showing answer" / "Showing front" / "Hints shown".
 - After **Don't know** on the front, the same flip animation plays automatically.
 - **Next** / **Know**: the next card enters front side up with a short slide-in (200ms; none with reduced motion).
@@ -737,13 +756,17 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   ("Learn words that stick: one loop at a time"); How it works (1. Pick languages and a topic, or just press Start ·
   2. Use Hints or Flip, then mark what you know · 3. Repeat until nothing is left); Start card; footer (Privacy,
   GitHub). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
-- **Loop (mobile, 360–767px)**: progress header (with Stop on the left as an icon+label button); the flip card fills the
-  space above; a **sticky bottom button bar** in the thumb zone: row 1 `Don't know · Flip · Know` (Know largest),
-  row 2 `Hints · Next`. The Undo bar floats above the button bar.
-- **Loop (desktop ≥ 768px)**: a centered column of about 640px; buttons in one row under the card:
-  `Stop | Don't know | Hints | Flip | Know | Next`.
-- **Cycle break / Summary**: centered card with large numbers and the 3D buttons.
-- **Toasts**: bottom-center on mobile (above the button bar), bottom-right on desktop; auto-dismiss; `aria-live="polite"`.
+- **Loop header**: the MyVocab logo mark (two stacked cards) and the progress `Cycle 1 • Card 2/10 • 1 known` on the
+  left; on desktop, a "⌨ Keyboard shortcuts" link on the right that opens a small popover listing the shortcuts.
+- **Loop buttons**: one row under the card, in this order: `Stop · Hints · Know · Don't know · Next` (round, round,
+  pill, pill, round). Flip is on the card itself.
+- **Loop (mobile, 360–767px)**: the flip card fills the space above; the button row is a **sticky bottom bar** in the
+  thumb zone, compact: the pills show only their icon, with captions under every button. The Undo bar floats above it.
+- **Loop (desktop ≥ 768px)**: a centered column of about 1100px; the card is wide (≈ 2.3 : 1) and the pills carry
+  their labels.
+- **Cycle break / Summary**: a glassy card with large numbers and the 3D buttons.
+- **Toasts**: bottom-center on mobile (above the button bar), top-right on desktop (below the header, clear of the
+  loop buttons); auto-dismiss; `aria-live="polite"`.
 - **Admin**: a left sidebar (collapses into a top menu on mobile); content max width about 1100px.
 
 ### 9.8 Microcopy (centralized in `apps/web/src/strings.ts`)

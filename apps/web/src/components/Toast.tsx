@@ -16,7 +16,7 @@ type ToastApi = { show: (toast: ToastInput) => void; dismiss: (id: number) => vo
 
 const ToastContext = createContext<ToastApi | null>(null);
 
-/** Toasts: bottom-center on mobile, bottom-right on desktop, auto-dismiss, aria-live (PRD §9.7). */
+/** Toasts: bottom-center on mobile (above the loop buttons), top-right on desktop (clear of them), auto-dismiss, aria-live (PRD §9.7). */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const nextId = useRef(1);
@@ -42,13 +42,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div
         aria-live="polite"
-        className="pointer-events-none fixed inset-x-0 bottom-44 z-50 flex flex-col items-center gap-2 px-4 md:inset-x-auto md:right-6 md:bottom-28 md:max-w-sm md:items-end"
+        className="pointer-events-none fixed inset-x-0 bottom-44 z-50 flex flex-col items-center gap-2 px-4 md:inset-x-auto md:top-24 md:right-6 md:bottom-auto md:max-w-sm md:items-end"
       >
         {toasts.map((t) => (
           <div
             key={t.id}
             role="status"
-            className="pointer-events-auto flex max-w-md items-center gap-3 rounded-[14px] border border-border bg-surface-2 px-4 py-3 text-sm shadow-lg"
+            className="pointer-events-auto flex max-w-md items-center gap-3 rounded-[14px] border border-[rgba(139,108,255,0.35)] bg-surface-2 px-4 py-3 text-sm shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
           >
             <span>{t.message}</span>
             {t.action && (

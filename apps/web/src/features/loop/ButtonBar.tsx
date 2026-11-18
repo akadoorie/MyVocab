@@ -1,12 +1,49 @@
 import { canDispatch, type LoopActionType, type LoopState } from '@myvocab/core';
-import type { Ref } from 'react';
-import { Button3D } from '../../components/Button3D';
+import type { MouseEvent, ReactNode, Ref } from 'react';
+import { BulbIcon, CheckIcon, ChevronIcon, CrossIcon, StopIcon } from '../../components/Icons';
 import { strings } from '../../strings';
 
+type Kind = 'round' | 'hint' | 'know' | 'dontknow';
+
+/** A loop button: a 3D circle or pill with an icon, and its caption (PRD §9.2). */
+export function LoopButton({
+  kind,
+  icon,
+  label,
+  className = '',
+  hideLabel = false,
+  ref,
+  ...rest
+}: {
+  kind: Kind;
+  icon: ReactNode;
+  label: string;
+  className?: string;
+  /** Keep the name for screen readers but show only the icon. */
+  hideLabel?: boolean;
+  ref?: Ref<HTMLButtonElement>;
+  disabled?: boolean;
+  onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
+  title?: string;
+}) {
+  const shape = kind === 'know' || kind === 'dontknow' ? 'lbtn--pill' : 'lbtn--round';
+  return (
+    <button
+      ref={ref}
+      type="button"
+      className={`lbtn ${shape} lbtn--${kind} ${className}`}
+      {...rest}
+    >
+      <span className="lbtn__shape" aria-hidden="true" />
+      <span className="lbtn__icon">{icon}</span>
+      <span className={hideLabel ? 'sr-only' : 'lbtn__label'}>{label}</span>
+    </button>
+  );
+}
+
 /**
- * Loop buttons (PRD FR-L24, §9.7). One set of buttons, placed by CSS grid areas:
- * mobile: [Don't know · Flip · Know] / [Hints · Next] (Stop is in the header);
- * desktop: Stop | Don't know | Hints | Flip | Know | Next.
+ * Loop buttons (PRD FR-L24, §9.7): one row `Stop · Hints · Know · Don't know · Next`. Flip is on
+ * the card. On phones the pills show only their icon, with captions under every button.
  */
 export function ButtonBar({
   state,
@@ -22,31 +59,28 @@ export function ButtonBar({
     onClick: () => onAction(type),
   });
   return (
-    <div
-      className={[
-        'grid gap-x-2 gap-y-4 pb-2',
-        "grid-cols-[1fr_1fr_1.3fr] [grid-template-areas:'dk_flip_know'_'hints_next_next']",
-        "md:grid-cols-[auto_1fr_1fr_1fr_1fr_1fr] md:[grid-template-areas:'stop_dk_hints_flip_know_next']",
-      ].join(' ')}
-    >
-      <Button3D variant="stop" className="hidden [grid-area:stop] md:inline-flex" {...btn('STOP')}>
-        {strings.loop.stop}
-      </Button3D>
-      <Button3D variant="dontknow" className="[grid-area:dk]" {...btn('DONT_KNOW')}>
-        {strings.loop.dontKnow}
-      </Button3D>
-      <Button3D variant="hint" className="[grid-area:hints]" {...btn('SHOW_HINTS')}>
-        {strings.loop.hints}
-      </Button3D>
-      <Button3D variant="flip" className="[grid-area:flip]" {...btn('FLIP')}>
-        {strings.loop.flip}
-      </Button3D>
-      <Button3D variant="know" className="[grid-area:know]" {...btn('KNOW')}>
-        {strings.loop.know}
-      </Button3D>
-      <Button3D ref={nextRef} className="[grid-area:next]" {...btn('NEXT')}>
-        {strings.loop.next}
-      </Button3D>
+    <div className="grid grid-cols-[auto_auto_1fr_1fr_auto] items-start gap-x-3 pb-1 md:grid-cols-[auto_auto_1fr_1.2fr_auto] md:gap-x-6">
+      <LoopButton kind="round" icon={<StopIcon />} label={strings.loop.stop} {...btn('STOP')} />
+      <LoopButton
+        kind="hint"
+        icon={<BulbIcon />}
+        label={strings.loop.hints}
+        {...btn('SHOW_HINTS')}
+      />
+      <LoopButton kind="know" icon={<CheckIcon />} label={strings.loop.know} {...btn('KNOW')} />
+      <LoopButton
+        kind="dontknow"
+        icon={<CrossIcon />}
+        label={strings.loop.dontKnow}
+        {...btn('DONT_KNOW')}
+      />
+      <LoopButton
+        ref={nextRef}
+        kind="round"
+        icon={<ChevronIcon />}
+        label={strings.loop.next}
+        {...btn('NEXT')}
+      />
     </div>
   );
 }

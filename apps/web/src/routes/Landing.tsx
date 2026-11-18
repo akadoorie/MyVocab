@@ -34,14 +34,12 @@ export function Landing() {
       className="mx-auto grid w-full max-w-6xl flex-1 gap-8 px-4 pb-10 md:grid-cols-2 md:items-start md:gap-12 md:pt-8"
     >
       <div className="flex flex-col gap-6">
-        <h1 className="text-3xl leading-tight font-semibold tracking-tight md:text-5xl">
+        <h1 className="bg-gradient-to-br from-text to-[#b9a6ff] bg-clip-text text-3xl leading-tight font-bold tracking-tight text-transparent md:text-5xl">
           {strings.landing.heroTitle}
         </h1>
         <p className="text-lg text-muted">{strings.landing.heroBody}</p>
         {session.isGuest && !session.loading && (
-          <p className="rounded-[10px] border border-border bg-surface px-4 py-3 text-sm text-muted">
-            {strings.landing.guestBanner}
-          </p>
+          <p className="glass px-4 py-3 text-sm text-muted">{strings.landing.guestBanner}</p>
         )}
         <section aria-labelledby="how-title" className="hidden md:block">
           <h2 id="how-title" className="mb-3 text-lg font-semibold">
@@ -50,7 +48,7 @@ export function Landing() {
           <ol className="space-y-3">
             {strings.landing.steps.map((step, i) => (
               <li key={step} className="flex items-start gap-3">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-2 text-sm font-semibold text-accent">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#3e2d7e] to-[#251a50] text-sm font-bold text-[#c4b5ff] shadow-[0_0_16px_rgba(109,76,255,0.35)]">
                   {i + 1}
                 </span>
                 <span className="pt-0.5">{step}</span>
@@ -73,10 +71,7 @@ export function Landing() {
             {strings.setup.genericError}
           </p>
         ) : (
-          <div
-            className="h-96 animate-pulse rounded-[14px] border border-border bg-surface"
-            aria-busy="true"
-          />
+          <div className="glass h-96 animate-pulse" aria-busy="true" />
         )}
       </div>
 

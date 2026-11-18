@@ -146,6 +146,7 @@ export const strings = {
     dontKnow: 'Don’t know',
     hints: 'Hints',
     flip: 'Flip',
+    flipTitle: 'Flip the card (F or Space)',
     next: 'Next',
     stop: 'Stop',
     continue: 'Continue',
@@ -157,7 +158,14 @@ export const strings = {
     insufficient: (n: number, topic: string) =>
       `Only ${n} new ${n === 1 ? 'card' : 'cards'} in ${topic}, starting with ${n}`,
     shortcutsTitle: 'Keyboard shortcuts',
-    shortcuts: 'K Know · D Don’t know · H Hints · Space/F Flip · Enter Next · Esc Stop',
+    shortcuts: [
+      ['K', 'Know'],
+      ['D', 'Don’t know'],
+      ['H', 'Hints'],
+      ['F / Space', 'Flip'],
+      ['Enter', 'Next / Continue'],
+      ['Esc', 'Stop'],
+    ] as const,
   },
   card: {
     translation: 'Translation',
@@ -167,8 +175,6 @@ export const strings = {
     synonyms: 'Synonyms:',
     noHints: 'Hint is not available',
     multipleMeanings: 'Multiple meanings',
-    flipHint: (side: 'front' | 'back') =>
-      `Showing ${side === 'front' ? 'the front' : 'the answer'}. Press to flip.`,
     showingFront: 'Showing front',
     showingAnswer: 'Showing answer',
     hintsShown: 'Hints shown',

@@ -78,7 +78,7 @@ export function Segmented<T extends string | number>({
               checked
                 ? isDefault
                   ? 'bg-surface text-muted'
-                  : 'bg-accent text-[var(--on-color)]'
+                  : 'bg-accent-strong text-[var(--on-color)]'
                 : 'text-muted hover:text-text',
             ].join(' ')}
           >

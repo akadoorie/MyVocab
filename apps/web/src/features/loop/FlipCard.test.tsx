@@ -98,14 +98,22 @@ describe('FlipCard', () => {
     expect(screen.getByText(/Multiple meanings/)).toBeInTheDocument();
   });
 
-  it('flips on click and on Enter; its name is the visible face, the instruction a description', () => {
+  it('has a Flip button on both faces (only the visible one is reachable); a card tap also flips', () => {
     const onFlip = vi.fn();
-    render(<FlipCard card={makeCard(6)} side="front" hintsShown={false} onFlip={onFlip} />);
-    const el = screen.getByRole('button', { name: /sample-6/ });
-    expect(el).toHaveAccessibleName(expect.not.stringContaining('מילה-6') as unknown as string);
-    expect(el).toHaveAccessibleDescription('Showing the front. Press to flip.');
-    fireEvent.click(el);
-    fireEvent.keyDown(el, { key: 'Enter' });
-    expect(onFlip).toHaveBeenCalledTimes(2);
+    const { rerender } = render(
+      <FlipCard card={makeCard(6)} side="front" hintsShown={false} onFlip={onFlip} />,
+    );
+    const flipButtons = () => screen.getAllByRole('button', { name: 'Flip' });
+    expect(flipButtons()).toHaveLength(1);
+    expect(face('front')).toContainElement(flipButtons()[0] as HTMLElement);
+    fireEvent.click(flipButtons()[0] as HTMLElement);
+    expect(onFlip).toHaveBeenCalledTimes(1); // the button doesn't also trigger the card tap
+
+    rerender(<FlipCard card={makeCard(6)} side="back" hintsShown={false} onFlip={onFlip} />);
+    expect(flipButtons()).toHaveLength(1);
+    expect(face('back')).toContainElement(flipButtons()[0] as HTMLElement);
+    fireEvent.click(flipButtons()[0] as HTMLElement);
+    fireEvent.click(screen.getByTestId('flip-card'));
+    expect(onFlip).toHaveBeenCalledTimes(3);
   });
 });

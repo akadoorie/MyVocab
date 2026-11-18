@@ -165,10 +165,7 @@ export function StartCard({
   const languageOptions = meta.languages.map((l) => ({ value: l.code, label: l.name }));
 
   return (
-    <section
-      aria-labelledby="start-title"
-      className="rounded-[14px] border border-border bg-surface p-5 shadow-[var(--card-shadow)] md:p-6"
-    >
+    <section aria-labelledby="start-title" className="glass p-5 md:p-7">
       <h2 id="start-title" className="mb-4 text-xl font-semibold">
         {strings.setup.title}
       </h2>

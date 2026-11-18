@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, NavLink, Outlet } from 'react-router';
+import { LogoMark } from '../components/Icons';
 import { UserMenu } from '../components/UserMenu';
 import { api } from '../lib/api';
 import { startGoogleSignIn, useSession } from '../lib/session';
@@ -20,13 +21,16 @@ export function Layout() {
         {strings.nav.skipToContent}
       </a>
       {maintenance?.enabled && (
-        <div role="status" className="bg-hint px-4 py-2 text-center text-sm text-[var(--on-color)]">
+        <div role="status" className="bg-hint px-4 py-2 text-center text-sm text-[#1c1407]">
           {maintenance.message || 'MyVocab is under maintenance.'}
         </div>
       )}
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
-        <Link to="/" className="text-xl font-semibold tracking-tight">
-          My<span className="text-accent">Vocab</span>
+        <Link to="/" className="flex items-center gap-2.5 text-xl font-bold tracking-tight">
+          <LogoMark className="h-8 w-8" />
+          <span>
+            My<span className="text-accent">Vocab</span>
+          </span>
         </Link>
         <nav className="flex items-center gap-3 text-sm">
           {session.user ? (

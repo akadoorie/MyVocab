@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, Ref } from 'react';
 
-export type Button3DVariant = 'accent' | 'know' | 'dontknow' | 'hint' | 'flip' | 'stop';
+export type Button3DVariant = 'accent' | 'know' | 'dontknow' | 'hint' | 'stop';
 
 export type Button3DProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Button3DVariant;

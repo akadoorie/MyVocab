@@ -129,6 +129,17 @@ describe('LoopPage', () => {
     expect(loadLoop()).toBeNull();
   });
 
+  it('the Keyboard shortcuts popover lists the keys, and Esc closes it without stopping', () => {
+    setup();
+    const toggle = screen.getByRole('button', { name: 'Keyboard shortcuts' });
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Next / Continue')).toBeInTheDocument();
+    fireEvent.keyDown(toggle, { key: 'Escape' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(loadLoop()).not.toBeNull(); // still in the loop
+  });
+
   it('redirects home when there is no loop to resume', async () => {
     const router = createMemoryRouter(
       [

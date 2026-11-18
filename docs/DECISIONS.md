@@ -259,3 +259,18 @@ Format: date · context · decision · consequences.
   drizzle-kit generated a table rebuild, and on D1 (foreign keys always enforced) dropping the old
   `items` table would cascade-delete known marks and category links. The drizzle snapshot is
   still updated, so `db:generate` reports no drift. Future column additions follow the same rule.
+
+## D-017 · 2026-11-18 · New look from the owner's mockup
+
+- **Why:** the owner found the first design too basic and supplied a mockup of the loop screen
+  (kept outside the repo).
+- **Change:** new tokens (deep navy-violet background with a glow, glassy violet-glowing cards,
+  glossy glowing buttons) applied app-wide; the loop screen follows the mockup: logo + progress
+  header with a "Keyboard shortcuts" popover, a wide card with a direction chip, and one button row
+  `Stop · Hints · Know · Don't know · Next` (round and pill buttons with captions).
+- **Flip moved onto the card**: a round Flip button in the corner of **both** faces (owner request:
+  "on the back side of the card, I would also want to see the Flip button"). The bar no longer has
+  a Flip button; tap-on-card and Space/F stay. The card itself is no longer a focusable button, to
+  avoid a button nested in a button; the Flip button is the keyboard control.
+- **Mobile:** one compact row (owner's choice); pills show only their icon, captions under all
+  buttons. Admin pages only get the new colors.
