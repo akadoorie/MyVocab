@@ -262,7 +262,10 @@ private content repository. It never appears in the public code repo or any publ
   - Only the **most recent** Know can be undone. A new Know finalizes the previous one.
 - **FR-L28 Don't know** (available on either side while Deciding): adds the card to the next cycle. If the card is
   showing its front, it **flips automatically** to the back (answer + hints + synonyms). The phase becomes
-  **Revealed**: Know and Don't know disable, **Next** enables and receives focus, and Flip stays available.
+  **Revealed**: Know and Don't know disable, **Next** enables and receives focus, and Flip stays available. In this
+  phase the Know / Don't know pills are **replaced by one wide violet "Next ›" pill** in the same place (and the small
+  round Next is hidden), so the only way on is the biggest button on screen (owner request, 2026-11-18: the small
+  Next was easy to miss).
 - **FR-L29 Next**: moves to the next card (only enabled in the Revealed phase). The next card enters front side up with
   a short slide-in (no reverse-flip animation).
 - **FR-L30 Stop**: ends the loop immediately and returns to `/` with no confirmation dialog. Already-made Know marks are
@@ -768,7 +771,8 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   (round, round, pill, pill, round). Flip is on the card itself.
 - **Loop (mobile, 360–767px)**: the flip card fills the space above; the buttons form a **sticky bottom bar** in the
   thumb zone, in two rows: the wide **Know** and **Don't know** pills (with their labels) on top, and the round
-  `Stop · Hints · Next` (with captions) below, so the two main actions stay big. The Undo bar floats above it.
+  `Stop · Hints · Next` (with captions) below, so the two main actions stay big. After Don't know, one wide
+  "Next ›" pill replaces Know / Don't know, with `Stop · Hints` below (FR-L28). The Undo bar floats above it.
 - **Loop (desktop ≥ 768px)**: a centered column of about 1100px; the card is wide (≈ 2.3 : 1) and the pills carry
   their labels.
 - **Cycle break / Summary**: a glassy card with large numbers and the 3D buttons.

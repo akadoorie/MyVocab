@@ -46,10 +46,11 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   await page.getByRole('button', { name: 'Undo' }).click();
   await expect(progress(page)).toHaveText('Cycle 1 · Card 2/5 · 0 known');
 
-  // Don't know → auto-flip → Next.
+  // Don't know → auto-flip → one big Next in place of Know / Don't know.
   await button(page, 'Don’t know').click();
   await expect(card(page)).toHaveAttribute('data-side', 'back');
-  await expect(button(page, 'Know')).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Know', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Next', exact: true })).toHaveCount(1);
   await button(page, 'Next').click();
   await expect(progress(page)).toHaveText('Cycle 1 · Card 3/5 · 0 known');
 

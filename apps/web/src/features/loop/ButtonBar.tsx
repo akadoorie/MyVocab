@@ -3,7 +3,7 @@ import type { MouseEvent, ReactNode, Ref } from 'react';
 import { BulbIcon, CheckIcon, ChevronIcon, CrossIcon, StopIcon } from '../../components/Icons';
 import { strings } from '../../strings';
 
-type Kind = 'round' | 'hint' | 'know' | 'dontknow';
+type Kind = 'round' | 'hint' | 'know' | 'dontknow' | 'next';
 
 /** A loop button: a 3D circle or pill with an icon, and its caption (PRD §9.2). */
 export function LoopButton({
@@ -26,7 +26,7 @@ export function LoopButton({
   onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   title?: string;
 }) {
-  const shape = kind === 'know' || kind === 'dontknow' ? 'lbtn--pill' : 'lbtn--round';
+  const shape = kind === 'round' || kind === 'hint' ? 'lbtn--round' : 'lbtn--pill';
   return (
     <button
       ref={ref}
@@ -43,7 +43,8 @@ export function LoopButton({
 
 /**
  * Loop buttons (PRD FR-L24, §9.7). Desktop: one row `Stop · Hints · Know · Don't know · Next`.
- * Phones: the wide Know / Don't know pills on top, `Stop · Hints · Next` below. Flip is on the card.
+ * Phones: the wide Know / Don't know pills on top, `Stop · Hints · Next` below. After Don't know,
+ * one wide Next pill takes the place of Know / Don't know. Flip is on the card.
  */
 export function ButtonBar({
   state,
@@ -58,12 +59,19 @@ export function ButtonBar({
     disabled: !canDispatch(state, type),
     onClick: () => onAction(type),
   });
+  // Revealed (after Don't know): Know and Don't know are off, so their place becomes one wide
+  // Next pill, the only way on (PRD FR-L28, §9.7).
+  const revealed = canDispatch(state, 'NEXT');
   return (
     <div
       className={[
         'grid items-start gap-x-3 gap-y-5 pb-1',
-        "grid-cols-6 [grid-template-areas:'know_know_know_dk_dk_dk'_'stop_stop_hints_hints_next_next']",
-        "md:grid-cols-[auto_auto_1fr_1.2fr_auto] md:gap-x-6 md:[grid-template-areas:'stop_hints_know_dk_next']",
+        revealed
+          ? "grid-cols-6 [grid-template-areas:'pills_pills_pills_pills_pills_pills'_'stop_stop_stop_hints_hints_hints']"
+          : "grid-cols-6 [grid-template-areas:'know_know_know_dk_dk_dk'_'stop_stop_hints_hints_next_next']",
+        revealed
+          ? "md:grid-cols-[auto_auto_1fr] md:gap-x-6 md:[grid-template-areas:'stop_hints_pills']"
+          : "md:grid-cols-[auto_auto_1fr_1.2fr_auto] md:gap-x-6 md:[grid-template-areas:'stop_hints_know_dk_next']",
       ].join(' ')}
     >
       <LoopButton
@@ -80,28 +88,40 @@ export function ButtonBar({
         label={strings.loop.hints}
         {...btn('SHOW_HINTS')}
       />
-      <LoopButton
-        kind="know"
-        icon={<CheckIcon />}
-        label={strings.loop.know}
-        className="[grid-area:know]"
-        {...btn('KNOW')}
-      />
-      <LoopButton
-        kind="dontknow"
-        className="[grid-area:dk]"
-        icon={<CrossIcon />}
-        label={strings.loop.dontKnow}
-        {...btn('DONT_KNOW')}
-      />
-      <LoopButton
-        ref={nextRef}
-        kind="round"
-        className="[grid-area:next]"
-        icon={<ChevronIcon />}
-        label={strings.loop.next}
-        {...btn('NEXT')}
-      />
+      {revealed ? (
+        <LoopButton
+          ref={nextRef}
+          kind="next"
+          className="[grid-area:pills]"
+          icon={<ChevronIcon />}
+          label={strings.loop.next}
+          {...btn('NEXT')}
+        />
+      ) : (
+        <>
+          <LoopButton
+            kind="know"
+            icon={<CheckIcon />}
+            label={strings.loop.know}
+            className="[grid-area:know]"
+            {...btn('KNOW')}
+          />
+          <LoopButton
+            kind="dontknow"
+            className="[grid-area:dk]"
+            icon={<CrossIcon />}
+            label={strings.loop.dontKnow}
+            {...btn('DONT_KNOW')}
+          />
+          <LoopButton
+            kind="round"
+            className="[grid-area:next]"
+            icon={<ChevronIcon />}
+            label={strings.loop.next}
+            {...btn('NEXT')}
+          />
+        </>
+      )}
     </div>
   );
 }

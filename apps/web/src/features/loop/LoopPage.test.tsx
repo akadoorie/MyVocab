@@ -51,12 +51,15 @@ describe('LoopPage', () => {
     for (const name of ['Know', 'Don’t know', 'Hints', 'Flip']) expect(btn(name)).toBeEnabled();
   });
 
-  it('Don’t know flips to the back, disables Know/Don’t know and focuses Next', () => {
+  it('Don’t know flips to the back, swaps Know/Don’t know for a big Next and focuses it', () => {
     setup();
     fireEvent.click(btn('Don’t know'));
     expect(side()).toBe('back');
-    expect(btn('Know')).toBeDisabled();
-    expect(btn('Don’t know')).toBeDisabled();
+    // Know / Don't know give way to one wide Next pill.
+    expect(screen.queryByRole('button', { name: 'Know' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Don’t know' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Next' })).toHaveLength(1);
+    expect(btn('Next')).toHaveClass('lbtn--next');
     expect(btn('Next')).toBeEnabled();
     expect(document.activeElement).toBe(btn('Next'));
     expect(btn('Hints')).toBeDisabled(); // only on an unrevealed front
