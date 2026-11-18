@@ -67,7 +67,7 @@ describe('LoopPage', () => {
     expect(btn('Hints')).toBeEnabled();
   });
 
-  it('Know shows the Undo bar, which disappears after the undo window', () => {
+  it('Know shows the Undo bar with a countdown; it disappears after the undo window', () => {
     vi.useFakeTimers();
     const sink = { onKnow: vi.fn(), onUndo: vi.fn() };
     setup(sink);
@@ -75,7 +75,12 @@ describe('LoopPage', () => {
     expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known');
     expect(screen.getByTestId('undo-label')).toHaveTextContent(/→ מילה-/);
     expect(sink.onKnow).toHaveBeenCalledWith(expect.objectContaining({ cycle: 1 }), 'he');
-    act(() => vi.advanceTimersByTime(4100));
+    // The countdown on the Undo button shows the seconds left (the window is 4s in this setup).
+    expect(screen.getByTestId('undo-timer')).toHaveTextContent('4');
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
+    act(() => vi.advanceTimersByTime(1000));
+    expect(screen.getByTestId('undo-timer')).toHaveTextContent('3');
+    act(() => vi.advanceTimersByTime(3100));
     expect(screen.queryByTestId('undo-label')).not.toBeInTheDocument();
   });
 

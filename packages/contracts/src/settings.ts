@@ -18,7 +18,7 @@ export const settingsSchema = z.object({
   'guests.loopSize': z.number().int().min(1).max(50).default(5),
   'guests.loopsPerHour': z.number().int().min(1).max(1000).default(10),
   'users.cardsPerDay': z.number().int().min(1).max(100000).default(500),
-  'undo.windowSeconds': z.number().int().min(1).max(15).default(4),
+  'undo.windowSeconds': z.number().int().min(1).max(15).default(5),
   'maintenance.enabled': z.boolean().default(false),
   'maintenance.message': z.string().max(280).default(''),
   'trash.retentionHours': z.number().int().min(1).max(720).default(24),

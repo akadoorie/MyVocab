@@ -1,5 +1,5 @@
 import type { loopSummary } from '@myvocab/core';
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { Button3D } from '../../components/Button3D';
 import { KeyboardIcon } from '../../components/Icons';
 import { startGoogleSignIn } from '../../lib/session';
@@ -90,8 +90,22 @@ export function Summary({
  * The Undo bar after Know (PRD FR-L27): "Date → תאריך, תמר ✓ [Undo]". Compact (as wide as its
  * text), with a small 3D yellow Undo button.
  */
-export function UndoBar({ label, onUndo }: { label: string; onUndo: () => void }) {
+export function UndoBar({
+  label,
+  seconds,
+  onUndo,
+}: {
+  label: string;
+  /** How long the bar stays (undo.windowSeconds); the countdown ring runs for this long. */
+  seconds: number;
+  onUndo: () => void;
+}) {
   const [front, answer] = label.split(' → ');
+  const [left, setLeft] = useState(seconds);
+  useEffect(() => {
+    const id = window.setInterval(() => setLeft((n) => Math.max(1, n - 1)), 1000);
+    return () => window.clearInterval(id);
+  }, []);
   return (
     <div
       role="status"
@@ -100,7 +114,8 @@ export function UndoBar({ label, onUndo }: { label: string; onUndo: () => void }
       <span className="min-w-0 truncate" data-testid="undo-label">
         <bdi>{front}</bdi> → <bdi>{answer}</bdi> <span aria-hidden="true">✓</span>
       </span>
-      <Button3D variant="hint" size="sm" className="shrink-0" onClick={onUndo}>
+      <Button3D variant="hint" size="sm" className="shrink-0 pl-1.5" onClick={onUndo}>
+        <UndoTimer seconds={seconds} left={left} />
         {strings.loop.undo}
       </Button3D>
     </div>
@@ -151,5 +166,27 @@ export function ShortcutsMenu() {
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * A small countdown on the Undo button: a yellow ring that empties over the undo window, with the
+ * seconds left inside, so it's clear the bar is about to vanish (PRD FR-L27). Decorative for
+ * assistive tech: the button's name stays "Undo".
+ */
+function UndoTimer({ seconds, left }: { seconds: number; left: number }) {
+  return (
+    <span
+      className="undo-timer"
+      style={{ '--undo-s': `${seconds}s` } as CSSProperties}
+      aria-hidden="true"
+      data-testid="undo-timer"
+    >
+      <svg viewBox="0 0 24 24" focusable="false">
+        <circle className="undo-timer__track" cx="12" cy="12" r="10" />
+        <circle className="undo-timer__ring" cx="12" cy="12" r="10" />
+      </svg>
+      <span className="undo-timer__n">{left}</span>
+    </span>
   );
 }

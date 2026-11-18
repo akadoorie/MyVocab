@@ -164,7 +164,12 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
 
   const undoBar =
     undoVisible && lastKnownCard ? (
-      <UndoBar label={undoBarLabel(lastKnownCard)} onUndo={() => act('UNDO_KNOW')} />
+      <UndoBar
+        key={`${state.lastKnow?.id}-${state.lastKnow?.cycle}`}
+        label={undoBarLabel(lastKnownCard)}
+        seconds={stored.undoWindowSeconds}
+        onUndo={() => act('UNDO_KNOW')}
+      />
     ) : null;
 
   if (state.phase === 'cycleBreak') {

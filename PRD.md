@@ -255,7 +255,8 @@ private content repository. It never appears in the public code repo or any publ
   **any number of times**, in both phases. **Flipping has no effect on grading** and is not recorded.
 - **FR-L27 Know** (available on either side while Deciding): removes the card from the loop (it won't appear in the
   next cycle), records it as known in this cycle, and **immediately** shows the next card (front side up). An **Undo
-  bar** appears at the bottom for `undo.windowSeconds` (default 4): `Date → תאריך, תמר ✓  [Undo]` (the item text →
+  bar** appears for `undo.windowSeconds` (default 5) with a small **countdown** on the Undo button (a yellow ring that
+  empties, with the seconds left inside, so it is clear the bar will vanish soon): `Date → תאריך, תמר ✓  [Undo]` (the item text →
   the answer lines joined with ", ", cut at about 40 characters with "…").
   - **Undo** turns that card into "Don't know": it goes back into the next cycle's set. This works even if the Know
     ended a cycle (the interstitial updates) or ended the loop (the summary turns back into a cycle break with that card).
@@ -426,7 +427,7 @@ so learners never download it. All admin pages work on mobile (tables collapse i
 | `guests.loopSize` | int | `5` | Fixed guest amount (server-enforced) |
 | `guests.loopsPerHour` | int | `10` | Guest loops per hour per IP |
 | `users.cardsPerDay` | int | `500` | Cards served per learner per UTC day (admins exempt) |
-| `undo.windowSeconds` | int | `4` | Undo bar duration (1–15) |
+| `undo.windowSeconds` | int | `5` | Undo bar duration (1–15) |
 | `maintenance.enabled` | bool | `false` | Show banner + block loops for non-admins |
 | `maintenance.message` | string | `""` | Banner text (≤ 280 chars) |
 | `trash.retentionHours` | int | `24` | Hours before auto-purge (1–720) |
