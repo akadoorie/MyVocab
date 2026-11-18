@@ -391,7 +391,8 @@ so learners never download it. All admin pages work on mobile (tables collapse i
       an English item: "A מeedle in a haystack"). Checked for the text, explanation, synonyms and hints (against the
       item's language) and for each translation entry (against that translation's language), using
       `languages.script` (§11).
-- **FR-A12** **Inline list editor** (one reusable component for translations, explanation, synonyms, hints): shows
+- **FR-A12** **Inline list editor** (one reusable component for translations, explanation, synonyms, hints; in the item
+  editor the lists are stacked one under the other at full width, also on desktop): shows
   entries in order; **Add** (input + Enter); **Edit** in place (click/tap → input with **Save** and **Cancel** buttons;
   Enter also saves, Esc also cancels; clicking elsewhere keeps the edit open, never discards it silently); **Delete**
   (immediate, with a 5-second "Undo" toast that re-adds the entry); **Reorder** (drag handle on desktop, ↑/↓ buttons

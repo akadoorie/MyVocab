@@ -394,7 +394,8 @@ function Editor({
         )}
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* One list under the other, full width, so long entries have room to be read and edited. */}
+      <div className="flex flex-col gap-6">
         {targets.map((target) => (
           <div key={target.code} className="rounded-[14px] border border-border bg-surface p-5">
             <ListEditor
