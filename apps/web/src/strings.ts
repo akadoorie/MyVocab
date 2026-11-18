@@ -182,6 +182,7 @@ export const strings = {
     showingFront: 'Showing front',
     showingAnswer: 'Showing answer',
     hintsShown: 'Hints shown',
+    hintsHidden: 'Hints hidden',
   },
   summary: {
     title: 'Session complete',

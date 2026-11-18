@@ -11,7 +11,7 @@ export function actionForKey(key: string): LoopActionType | 'ENTER' | null {
     case 'd':
       return 'DONT_KNOW';
     case 'h':
-      return 'SHOW_HINTS';
+      return 'TOGGLE_HINTS';
     case 'f':
     case ' ':
       return 'FLIP';

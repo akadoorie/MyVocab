@@ -12,6 +12,7 @@ export function LoopButton({
   label,
   className = '',
   hideLabel = false,
+  pressed,
   ref,
   ...rest
 }: {
@@ -23,6 +24,8 @@ export function LoopButton({
   hideLabel?: boolean;
   ref?: Ref<HTMLButtonElement>;
   disabled?: boolean;
+  /** A toggle button's state (Hints): announced and styled as pressed. */
+  pressed?: boolean;
   onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   title?: string;
 }) {
@@ -31,7 +34,8 @@ export function LoopButton({
     <button
       ref={ref}
       type="button"
-      className={`lbtn ${shape} lbtn--${kind} ${className}`}
+      className={`lbtn ${shape} lbtn--${kind} ${pressed ? 'is-pressed' : ''} ${className}`}
+      aria-pressed={pressed}
       {...rest}
     >
       <span className="lbtn__shape" aria-hidden="true" />
@@ -86,7 +90,8 @@ export function ButtonBar({
         className="[grid-area:hints]"
         icon={<BulbIcon />}
         label={strings.loop.hints}
-        {...btn('SHOW_HINTS')}
+        pressed={state.hintsShown && state.side === 'front'}
+        {...btn('TOGGLE_HINTS')}
       />
       {revealed ? (
         <LoopButton

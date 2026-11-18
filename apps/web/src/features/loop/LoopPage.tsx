@@ -129,7 +129,8 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
       }
       if (type === 'DONT_KNOW' && state.side === 'front')
         setAnnouncement(strings.card.showingAnswer);
-      if (type === 'SHOW_HINTS') setAnnouncement(strings.card.hintsShown);
+      if (type === 'TOGGLE_HINTS')
+        setAnnouncement(state.hintsShown ? strings.card.hintsHidden : strings.card.hintsShown);
       dispatch({ type });
     },
     [state, cards, knownSink],

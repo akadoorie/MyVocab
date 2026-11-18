@@ -30,7 +30,12 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   // Hints on the front, then Flip shows hints on the back; flip back and forth by button and tap.
   await button(page, 'Hints').click();
   await expect(page.getByTestId('front-hints')).toBeVisible();
-  await expect(button(page, 'Hints')).toBeDisabled();
+  await expect(button(page, 'Hints')).toHaveAttribute('aria-pressed', 'true');
+  // Hints is a toggle: a second press hides them, a third shows them again.
+  await button(page, 'Hints').click();
+  await expect(page.getByTestId('front-hints')).toHaveCount(0);
+  await button(page, 'Hints').click();
+  await expect(page.getByTestId('front-hints')).toBeVisible();
   await button(page, 'Flip').click();
   await expect(card(page)).toHaveAttribute('data-side', 'back');
   await expect(page.getByTestId('back-hints')).toBeVisible();

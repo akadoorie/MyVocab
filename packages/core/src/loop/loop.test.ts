@@ -103,7 +103,7 @@ describe('Know and Don’t know', () => {
   it('Know records the card in this cycle and shows the next card immediately', () => {
     const s0 = createLoop([1, 2, 3], 9);
     const first = currentCardId(s0);
-    const s1 = run(s0, 'FLIP', 'SHOW_HINTS', 'KNOW');
+    const s1 = run(s0, 'FLIP', 'TOGGLE_HINTS', 'KNOW');
     expect(s1.known).toEqual([{ id: first, cycle: 1 }]);
     expect(s1.lastKnow).toEqual({ id: first, cycle: 1 });
     expect(s1).toMatchObject({ index: 1, phase: 'deciding', side: 'front', hintsShown: false });
@@ -148,13 +148,16 @@ describe('Flip and Hints never affect grading', () => {
     expect(flipped.phase).toBe('deciding');
   });
 
-  it('Hints works only on the front, is one-way, survives flips and resets on the next card', () => {
+  it('Hints toggles on the front only, survives flips and resets on the next card', () => {
     const s0 = createLoop([1, 2], 5);
-    expect(canDispatch(run(s0, 'FLIP'), 'SHOW_HINTS')).toBe(false);
-    expect(run(s0, 'FLIP', 'SHOW_HINTS').hintsShown).toBe(false);
-    const shown = run(s0, 'SHOW_HINTS');
+    expect(canDispatch(run(s0, 'FLIP'), 'TOGGLE_HINTS')).toBe(false);
+    expect(run(s0, 'FLIP', 'TOGGLE_HINTS').hintsShown).toBe(false);
+    const shown = run(s0, 'TOGGLE_HINTS');
     expect(shown.hintsShown).toBe(true);
-    expect(canDispatch(shown, 'SHOW_HINTS')).toBe(false);
+    expect(canDispatch(shown, 'TOGGLE_HINTS')).toBe(true);
+    const hidden = run(shown, 'TOGGLE_HINTS');
+    expect(hidden.hintsShown).toBe(false); // back to exactly as before
+    expect(hidden).toEqual(s0);
     expect(run(shown, 'FLIP', 'FLIP').hintsShown).toBe(true);
     expect(shown.known).toEqual([]);
     expect(shown.phase).toBe('deciding');
@@ -163,8 +166,8 @@ describe('Flip and Hints never affect grading', () => {
 
   it('Hints is still available on the front after Don’t know', () => {
     const s = run(createLoop([1, 2], 5), 'DONT_KNOW', 'FLIP');
-    expect(canDispatch(s, 'SHOW_HINTS')).toBe(true);
-    expect(run(s, 'SHOW_HINTS').hintsShown).toBe(true);
+    expect(canDispatch(s, 'TOGGLE_HINTS')).toBe(true);
+    expect(run(s, 'TOGGLE_HINTS').hintsShown).toBe(true);
   });
 });
 

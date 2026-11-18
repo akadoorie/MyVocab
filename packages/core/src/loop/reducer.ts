@@ -34,7 +34,7 @@ export type LoopState = {
 export type LoopAction =
   | { type: 'KNOW' }
   | { type: 'DONT_KNOW' }
-  | { type: 'SHOW_HINTS' }
+  | { type: 'TOGGLE_HINTS' }
   | { type: 'FLIP' }
   | { type: 'NEXT' }
   | { type: 'CONTINUE' }
@@ -85,8 +85,9 @@ export function canDispatch(state: LoopState, type: LoopActionType): boolean {
     case 'KNOW':
     case 'DONT_KNOW':
       return state.phase === 'deciding';
-    case 'SHOW_HINTS':
-      return onCard && state.side === 'front' && !state.hintsShown;
+    case 'TOGGLE_HINTS':
+      // A toggle while the front is showing (the back always shows the hints).
+      return onCard && state.side === 'front';
     case 'FLIP':
       return onCard;
     case 'NEXT':
@@ -114,8 +115,8 @@ export function loopReducer(state: LoopState, action: LoopAction): LoopState {
         phase: 'revealed',
         side: 'back',
       };
-    case 'SHOW_HINTS':
-      return { ...state, hintsShown: true };
+    case 'TOGGLE_HINTS':
+      return { ...state, hintsShown: !state.hintsShown };
     case 'FLIP':
       return { ...state, side: state.side === 'front' ? 'back' : 'front' };
     case 'NEXT':

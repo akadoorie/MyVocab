@@ -160,7 +160,7 @@ private content repository. It never appears in the public code repo or any publ
 | Back of card | Different languages → **translation** (+ **literal meaning** if any); same language → **explanation**. Hints + synonyms always below |
 | Multiple meanings | Admin-set flag. Shown as a "◆ Multiple meanings" badge on the front |
 | Card UI | A glassy, violet-glowing **flip card** with a 3D flip animation and a round **Flip** button on both sides |
-| Hints | A **Hints** button reveals hints + synonyms on the front (one-way for that card). Flipping always shows them on the back |
+| Hints | A **Hints** toggle button shows or hides hints + synonyms on the front. Flipping always shows them on the back |
 | Flip | The round **Flip** button on the card (front and back), a tap/click on the card, or Space/F. It toggles front ↔ back any number of times and never affects grading |
 | Known memory | **Any** "Know" (any cycle) is remembered per **item** and hides the item in **every** direction |
 | Known list | "My known words": search/filter/sort; return items to loops (single, selected, all filtered) |
@@ -243,11 +243,13 @@ private content repository. It never appears in the public code repo or any publ
 | **Deciding** (front or back side) | enabled | enabled\* | enabled | enabled | **disabled** | enabled |
 | **Revealed** (after Don't know) | disabled | enabled\* | enabled | disabled | **enabled + focused** | enabled |
 
-\* Hints is enabled only while the **front** is showing and the current card's hints are not shown yet.
+\* Hints is enabled whenever the **front** is showing (it is a toggle: on, then off again).
 
-- **FR-L25 Hints**: reveals the hints and synonyms on the **front** of the current card (the **Hints** button or the
-  **H** key). They stay shown on the front for that card, including after flipping back and forth, and the button then
-  disables. If the learner never presses Hints, the front shows no hints, even after the back has been seen. **Hints
+- **FR-L25 Hints**: a **toggle** (the **Hints** button or the **H** key) that shows the hints and synonyms on the
+  **front** of the current card, and on a second press hides them again, so the card is exactly as before. While on,
+  the button looks pressed (`aria-pressed="true"`) and stays enabled (owner request, 2026-11-18; it used to be
+  one-way). The state survives flipping back and forth; the next card starts with hints hidden. If the learner never
+  presses Hints, the front shows no hints, even after the back has been seen. **Hints
   has no effect on grading** and is not recorded.
 - **FR-L26 Flip**: turns the card over (front ↔ back) with a 3D flip animation (§9.4). It can be triggered by the
   round **Flip** button in the card's corner (shown on **both** faces), by **tapping/clicking the card**, or by the
@@ -917,9 +919,9 @@ MyVocab/
   limits, duplicates, required fields) run in the admin editor, the API (Zod schemas built from them) and the CSV
   importer.
 - **Pure loop engine**: `loopReducer(state, action)` in `packages/core` with actions
-  `KNOW | DONT_KNOW | SHOW_HINTS | FLIP | NEXT | CONTINUE | UNDO_KNOW | STOP`. State includes `phase` (`deciding |
+  `KNOW | DONT_KNOW | TOGGLE_HINTS | FLIP | NEXT | CONTINUE | UNDO_KNOW | STOP`. State includes `phase` (`deciding |
   revealed | cycleBreak | finished | stopped`), `side` (`front | back`) and `hintsShown` (boolean, current card).
-  `FLIP` only toggles `side`; `SHOW_HINTS` only sets `hintsShown` and is ignored unless `side = front`; neither changes
+  `FLIP` only toggles `side`; `TOGGLE_HINTS` only flips `hintsShown` and is ignored unless `side = front`; neither changes
   grading. `DONT_KNOW` sets `side = back`. A new card always starts with `side = front` and `hintsShown = false`. An
   injected `rng` (seedable) is used for shuffles. The web app uses it via `useReducer`. It is fully unit-tested
   without a DOM.
@@ -1377,11 +1379,11 @@ Cloudflare Access: free for ≤ 50 users. Turnstile: free.
 ## 17. Testing strategy
 | Level | Tooling | Must cover |
 |---|---|---|
-| Unit | Vitest | Every `loopReducer` transition: Know/Don't know/Show hints/Flip/Next/Continue/Stop; `FLIP` toggles `side` any number of times in both phases and never changes grading; `SHOW_HINTS` works only on the front, is one-way for the card, resets on the next card and never changes grading; `DONT_KNOW` on the front sets `side = back`; new cards start on the front with hints hidden; cycle building; the **order differs** rule (seeded RNG); Undo during a cycle, at a cycle break, and after finishing; only the latest Know is undoable. Answer strategies (translation vs explanation chosen by same/different languages, playability, line order, numbering); `buildCard` output; item validation (no same-language translation, list limits, duplicates, `lang` absent from the update schema); multiple-meanings warnings; the mixed-script check; `normalize`; CSV row validation (incl. `translation_<code>` columns and the own-language column rule), merge planning (incl. the `multiple_meanings` OR rule), **CSV serializer**; start-card defaults resolution (settings → defaults; guest size = 5) |
+| Unit | Vitest | Every `loopReducer` transition: Know/Don't know/Show hints/Flip/Next/Continue/Stop; `FLIP` toggles `side` any number of times in both phases and never changes grading; `TOGGLE_HINTS` works only on the front, toggles on and off, resets on the next card and never changes grading; `DONT_KNOW` on the front sets `side = back`; new cards start on the front with hints hidden; cycle building; the **order differs** rule (seeded RNG); Undo during a cycle, at a cycle break, and after finishing; only the latest Know is undoable. Answer strategies (translation vs explanation chosen by same/different languages, playability, line order, numbering); `buildCard` output; item validation (no same-language translation, list limits, duplicates, `lang` absent from the update schema); multiple-meanings warnings; the mixed-script check; `normalize`; CSV row validation (incl. `translation_<code>` columns and the own-language column rule), merge planning (incl. the `multiple_meanings` OR rule), **CSV serializer**; start-card defaults resolution (settings → defaults; guest size = 5) |
 | Integration | Vitest + `@cloudflare/vitest-pool-workers` (local D1, migrations applied) | Loop selection by type/category/direction (translation vs explanation playability; the SQL rule agrees with `isPlayable` on fixtures); known items excluded **in every direction**; the DB CHECK rejects a same-language translation even through a direct repository write; item PATCH with a stale `version` → 409 and **no** audit row; **guest size forced to 5 even if a larger size is sent**; **guest without/with an invalid Turnstile token → 403 and zero D1 writes**; guest hourly cap → 429 with zero writes after the first `limit.exceeded` entry; learner daily cap → 429 with remaining allowance; admin exempt from caps; learner size must be in `sizeOptions`; admin endpoints → 401 guest / 403 user / 403 admin without an Access JWT in production mode / 403 on an email mismatch; item create/update + audit rows (before/after of changed lists); Trash: delete hides from loops and known lists, restore brings known marks back, restore blocked on a duplicate, purge cascades + snapshot; CSV dry run vs commit, merge rules, error and warning rows; idempotent `POST /me/known`; user A can't touch user B's known rows; `/api/*` responses carry `noindex` + `no-store` headers; settings validation (defaults must be active languages, etc.) |
 | Scripts | Vitest (Node) against a local D1 | `db:seed` falls back to `seed/sample.csv` when `CONTENT_DIR` is missing; **export round-trip**: seed → `db:export --local --content-only` → import into an empty D1 → identical content; full export produces `manifest.json` row counts that match the tables, valid JSON per table (item lists as real arrays/objects), and a `schema.sql` that recreates the schema in a fresh SQLite |
 | Guard | CI | `check:no-vocabulary` fails on a committed non-fixture `.csv`/`.sql`/export, or a `seed/sample.csv` over 20 rows |
-| Component | Vitest + Testing Library | Button states per phase (incl. Hints only on an unrevealed front); FlipCard (button/tap/keyboard toggling, hints section on the front after Hints and always on the back, multiple-meanings badge, numbered explanation lines, hidden face `inert`, live-region text, reduced-motion path); start card default vs selected styling + "Reset to defaults" + same-language note; guest locked amount + toast (auto once per session, on tap); Undo bar timing and truncation; ListEditor add/edit/delete/reorder + 409 handling; RTL rendering on both faces |
+| Component | Vitest + Testing Library | Button states per phase (incl. Hints only while the front shows, and its pressed state); FlipCard (button/tap/keyboard toggling, hints section on the front after Hints and always on the back, multiple-meanings badge, numbered explanation lines, hidden face `inert`, live-region text, reduced-motion path); start card default vs selected styling + "Reset to defaults" + same-language note; guest locked amount + toast (auto once per session, on tap); Undo bar timing and truncation; ListEditor add/edit/delete/reorder + 409 handling; RTL rendering on both faces |
 | E2E | Playwright (mobile 390×844 + desktop 1280×800) | Guest: landing → press Start without changing anything (defaults EN→HE, General, Words) → 5-card loop to the summary (incl. Hints on the front, then Flip showing hints on the back, Flip back and forth by button and by tapping the card, Know from the back side, Don't know → auto-flip → Next, Know → Undo); guest sees the register toast and can't change the amount. Signed-in (test session): choose 20 → loop; Know → appears in My known words → no longer offered in the other direction → Return to loops → available again. Admin: create an item with translations, explanation, synonyms, hints and multiple meanings; preview both directions; delete to Trash; restore. CSV: dry run with errors and warnings, then commit |
 | Manual (post-deploy) | Phone + desktop | Play a loop (check the flip and hints feel on a real phone); guest Turnstile works invisibly; sign in; known list; `/admin` → Cloudflare Access asks for a one-time code; a non-admin email is refused by Access; a normal user calling `/api/admin/*` → 403; `pnpm db:export` and `--content-only` work from the owner's machine; the D1 dashboard shows rows read/written well within the free tier |
 
@@ -1393,7 +1395,7 @@ CI fails on lint, type or test errors, a guard failure, or if `packages/core` co
 | # | Milestone | Key deliverables |
 |---|---|---|
 | M0 | Scaffold | Monorepo, strict TS, ESLint/Prettier, Vitest, CI (+ `check:no-vocabulary`), Worker serving the SPA shell + `/api/health`, tokens + Button3D |
-| M1 | Core domain | Loop reducer (`FLIP`/`side`, `SHOW_HINTS`/`hintsShown`), shuffle, answer strategies + `buildCard`, item validation rules, normalization + mixed-script check, CSV row schema + merge planner + serializer, setup defaults resolution, ≥ 90% coverage |
+| M1 | Core domain | Loop reducer (`FLIP`/`side`, `TOGGLE_HINTS`/`hintsShown`), shuffle, answer strategies + `buildCard`, item validation rules, normalization + mixed-script check, CSV row schema + merge planner + serializer, setup defaults resolution, ≥ 90% coverage |
 | M2 | Database & content | Drizzle schema + migrations per §11 (JSON list columns + CHECKs, partial indexes, `WITHOUT ROWID` where supported, cascade indexes), repositories, `CsvImportService`, `seed/sample.csv` (synthetic), `pnpm db:seed` (`CONTENT_DIR` + fallback), the starter set + README written to `../MyVocab-Content/` (private, outside the public repo) |
 | M3 | Learning experience | `/meta`, `/loops/available`, `/loops` (guest rules, Turnstile before writes, usage limits); landing, start card (defaults, default/selected styling, same-language note, guest lock + toast), **FlipCard** with Hints + loop screen, cycle break, summary; guest E2E |
 | M4 | Auth & known items | Better Auth Google, `/me`, known endpoints (per item), known queue + Undo, My known words, account deletion, privacy page, learner amounts + daily cap |

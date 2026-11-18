@@ -62,9 +62,24 @@ describe('LoopPage', () => {
     expect(btn('Next')).toHaveClass('lbtn--next');
     expect(btn('Next')).toBeEnabled();
     expect(document.activeElement).toBe(btn('Next'));
-    expect(btn('Hints')).toBeDisabled(); // only on an unrevealed front
+    expect(btn('Hints')).toBeDisabled(); // only while the front shows
     fireEvent.click(btn('Flip'));
     expect(btn('Hints')).toBeEnabled();
+  });
+
+  it('Hints is a toggle: on (pressed, hints shown), then off (back to before)', () => {
+    setup();
+    const front = () => screen.queryByTestId('front-hints');
+    expect(front()).toBeNull();
+    fireEvent.click(btn('Hints'));
+    expect(btn('Hints')).toHaveAttribute('aria-pressed', 'true');
+    expect(btn('Hints')).toBeEnabled();
+    expect(front()).not.toBeNull();
+    fireEvent.click(btn('Hints'));
+    expect(btn('Hints')).toHaveAttribute('aria-pressed', 'false');
+    expect(front()).toBeNull();
+    fireEvent.keyDown(window, { key: 'h' });
+    expect(front()).not.toBeNull();
   });
 
   it('Know shows the Undo bar with a countdown; it disappears after the undo window', () => {
