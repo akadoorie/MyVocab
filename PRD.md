@@ -162,7 +162,7 @@ private content repository. It never appears in the public code repo or any publ
 | Card UI | A glassy, violet-glowing **flip card** with a 3D flip animation and a round **Flip** button on both sides |
 | Hints | A **Hints** toggle button shows or hides hints + synonyms on the front. Flipping always shows them on the back |
 | Flip | The round **Flip** button on the card (front and back), a tap/click on the card, or Space/F. It toggles front ↔ back any number of times and never affects grading |
-| Known memory | **Any** "Know" (any cycle) is remembered per **item** and hides the item in **every** direction |
+| Known memory | **Any** "Know" (any cycle) is remembered per **item** and hides the item in **every** direction. **Know · ask again** (amber, signed-in learners) is not remembered: the word stays in the pool (FR-L27a) |
 | Known list | "My known words": search/filter/sort; return items to loops (single, selected, all filtered) |
 | Know tap | Advances immediately; Back (or swipe right) returns to the card, and its answer can be changed (FR-L29a) |
 | Categories | Many-to-many. "General" = all items |
@@ -247,6 +247,7 @@ private content repository. It never appears in the public code repo or any publ
 
 \* Hints is enabled whenever the **front** is showing (it is a toggle: on, then off again).
 \*\* Back is disabled on the first card of a cycle (FR-L29a).
+**Know · ask again** (signed-in learners, FR-L27a) is enabled and disabled exactly like Know.
 
 - **FR-L25 Hints**: a **toggle** (the **Hints** button or the **H** key) that shows the hints and synonyms on the
   **front** of the current card, and on a second press hides them again, so the card is exactly as before. While on,
@@ -262,6 +263,13 @@ private content repository. It never appears in the public code repo or any publ
   next cycle), records it as known in this cycle, and **immediately** shows the next card (front side up). A Know made
   by mistake is fixed with **Back** and then **Don't know** (FR-L29a). The earlier **Undo bar** (with its countdown)
   was removed on 2026-11-19 at the owner's request (D-019): Back covers it and works for any card of the cycle.
+- **FR-L27a Know · ask again** (signed-in learners; owner request, 2026-11-19, D-023): a second, **amber** Know
+  button between Know and Don't know. Inside the session it is exactly Know: the card leaves the loop, counts in
+  "N known" and in the summary, plays the Know animation, and the next card shows. The difference: it is **not
+  recorded** in the learner's known items (FR-L50), so the word stays in the pool and may be drawn again in any later
+  session, at random (no schedule or waiting time). Under the green Know a small caption reads **"forever"**, under
+  the amber one **"ask again"**. Guests see only the single Know, without a caption (their Knows are never stored,
+  FR-L55).
 - **FR-L28 Don't know** (available on either side while Deciding): adds the card to the next cycle. If the card is
   showing its front, it **flips automatically** to the back (answer + hints + synonyms). The phase becomes
   **Revealed**: Know and Don't know disable, **Next** enables and receives focus, and Flip stays available. In this
@@ -274,13 +282,16 @@ private content repository. It never appears in the public code repo or any publ
   previous card of the current cycle, card by card, down to the first card of the cycle (earlier cycles are out of
   reach). On the cycle break and the summary, **"← Back to the last card"** returns to the cycle's last card. A card
   reached with Back (or Next) **always shows its front**, hints hidden, even if it was showing its back when left.
-  - A card that already has an answer shows a chip **"Your answer: Know ✓"** (green) or **"Your answer: Don't know ✗"**
-    (red), and **Next** steps forward without answering again, up to the first unanswered card.
+  - A card that already has an answer shows a chip **"Your answer: Know ✓"** (green), **"Your answer: Know (ask
+    again) ✓"** (amber) or **"Your answer: Don't know ✗"** (red), and **Next** steps forward without answering again,
+    up to the first unanswered card.
   - **The answer can be changed.** **Know** on a Don't know card takes it out of the next cycle, records it as known
     and moves on. **Don't know** on a Know card removes the Know, adds the card to the next cycle (never twice) and
-    reveals the answer as in FR-L28. Choosing the same answer again changes nothing. A change on the last card can
+    reveals the answer as in FR-L28. Switching between the two Knows only changes whether the word is recorded
+    (FR-L53). Choosing the same answer again changes nothing. A change on the last card can
     turn the summary into a cycle break, or the reverse.
-  - Answers are derived from the loop state (`known` for this cycle, `nextCycle`), so there is no separate store.
+  - Answers are derived from the loop state (`known` for this cycle, with an "ask again" flag, and `nextCycle`), so
+    there is no separate store.
 - **FR-L29b Swipe** (phones, touch only; owner request, 2026-11-19): **swipe left = Next**, **swipe right = Back**,
   only when that action is allowed. The card follows the finger with a slight tilt; past about 70 px (or a quick flick)
   it slides out and the action runs, otherwise it springs back. When the action isn't allowed it moves only a little,
@@ -315,7 +326,7 @@ private content repository. It never appears in the public code repo or any publ
     it is simply there from the start.
 - **FR-L33** The loop state (including the current card's side and whether its hints are shown) is saved in
   `sessionStorage`, so a page refresh resumes the same loop. Stop or finishing clears it.
-- **FR-L34** Desktop keyboard shortcuts (listed in a "Keyboard shortcuts" popover in the loop header): **K** Know, **D** Don't know, **H** Hints,
+- **FR-L34** Desktop keyboard shortcuts (listed in a "Keyboard shortcuts" popover in the loop header): **K** Know, **A** Know · ask again (signed-in learners), **D** Don't know, **H** Hints,
   **Space/F** Flip, **←** Back, **→** Next, **Enter** Next or Continue, **Esc** Stop (asks first, FR-L30). Shortcuts respect the enabled/disabled state.
 
 ### 6.3 What the back of the card shows
@@ -339,7 +350,7 @@ different**:
 
 ### 6.4 Known items (signed-in learners only)
 - **FR-L50** Every Know (in any cycle) is recorded as `{itemId, target, cycle}` in a client-side **pending queue**
-  (`target` is kept for display only, FR-L60).
+  (`target` is kept for display only, FR-L60). **Know · ask again** (FR-L27a) is never queued or sent.
 - **FR-L51** An entry becomes **final** when its short waiting period expires (`undo.windowSeconds`, default 5, so a
   quick change of answer costs no request) or a newer Know happens. Final entries are sent in batches
   (`POST /api/me/known`, debounced ~2 s). On `pagehide`/`visibilitychange=hidden`, **all** entries (including ones
@@ -347,8 +358,9 @@ different**:
 - **FR-L52** The queue is mirrored to `localStorage` (keyed by user id; item ids only, never item text) so unsent
   entries survive a closed tab and are sent on the next app load. Sends retry with exponential backoff. The server
   upsert is **idempotent** (it keeps the earliest `known_at`).
-- **FR-L53** Changing a Know to Don't know (FR-L29a) removes the entry from the queue. If it was already sent, the
-  client calls `DELETE /api/me/known/:itemId`. Changing Don't know to Know queues a new entry.
+- **FR-L53** Changing a Know to Don't know or to Know · ask again (FR-L29a) removes the entry from the queue. If it
+  was already sent, the client calls `DELETE /api/me/known/:itemId`. Changing Don't know or Know · ask again to Know
+  queues a new entry.
 - **FR-L54** `POST /api/loops` for a signed-in user **excludes** all their known items, **in every direction**. Knowing
   "Swift" in EN → HE also hides it from EN → EN. Separate items are not affected: the Hebrew item "מהיר" still appears
   in HE → EN loops.
@@ -704,6 +716,7 @@ glossy, glowing pressable buttons.
 | `--text-muted` | `#A79FC6` | Secondary text, button captions, hints and synonyms |
 | `--accent` | `#9B82FF` (button gradient `#8B6CFF → #6A3EF5`) | Primary actions, links, focus ring, selected-field outline, the card glow |
 | `--know` | `#2BD46A → #16A34A` | Know pill (white text) |
+| `--again` | `#F8A920 → #C96A05` | Know · ask again pill (amber, white text; FR-L27a) |
 | `--dontknow` | `#FB4D6D → #E11D48` | Don't know pill (white text), destructive actions |
 | `--hint` | `#FACC15` icon on `#4A3718 → #30230E` | Hints round button |
 | `--round` | `#3E2D7E → #251A50` | Stop, Next and Flip round buttons (white icon) |
@@ -720,7 +733,9 @@ glossy, glowing pressable buttons.
 ### 9.2 Pressable-ledge 3D buttons
 Buttons keep the pressable ledge, now glossy: a top-to-bottom gradient, a thin light top edge, the ledge underneath
 and a colored glow around. The loop uses two shapes:
-- **Pills** (Know, Don't know): icon (✓ / ✕) + label inside, on every screen size.
+- **Pills** (Know, Know · ask again, Don't know): icon (✓ / ✕) + label inside. On phones, when all three pills
+  share the row (signed-in learners), they carry the label only. Signed-in learners also see a small italic muted
+  caption under the two Knows: "forever" and "ask again" (FR-L27a).
 - **Round buttons** (Stop, Hints, Next; Flip on the card): an icon in a circle (56px mobile, 64px desktop) with an
   italic muted caption underneath ("Stop", "Hints", "Next").
 Disabled buttons lose glow and ledge and look muted. Base mechanics:
@@ -802,7 +817,8 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   green ✓ glow the card folds into ~10 triangular facets, each tilting its own way in 3D with its own light or shadow,
   like real crumpled paper; the wad shrinks and turns as it flies. About 0.8s in total, and the next card rises in at
   the same time, so Know never feels slow. Reduced motion: no crumple. (A first, simpler "squash into a ball"
-  version was tried and dropped in favour of this one.) Back has no reverse crumple: the earlier card simply rises in,
+  version was tried and dropped in favour of this one.) Know · ask again plays the same animation, with an amber
+  glow. Back has no reverse crumple: the earlier card simply rises in,
   front side up. Don't know keeps the flip. A swipe slides the card out sideways (FR-L29b).
 
 ### 9.5 Start card (look)
@@ -833,10 +849,11 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   left; on the right, on desktop a "⌨ Keyboard shortcuts" link that opens a small popover listing the shortcuts, and
   "← Home" (asks before stopping the loop, FR-L30a).
 - **Loop buttons**: on desktop, one row under the card, in this order: `Stop · Hints · Back · Know · Don't know ·
-  Next` (round, round, round, pill, pill, round); after Don't know, `Stop · Hints · Back · [Next ›]`. Flip is on the
-  card itself.
+  Next` (round, round, round, pill, pill, round), and for signed-in learners `Stop · Hints · Back · Know · Know (ask
+  again) · Don't know · Next`; after Don't know, `Stop · Hints · Back · [Next ›]`. Flip is on the card itself.
 - **Loop (mobile, 360–767px)**: the flip card fills the space above; the buttons form a **sticky bottom bar** in the
-  thumb zone, in two rows: the wide **Know** and **Don't know** pills (with their labels) on top, and the round
+  thumb zone, in two rows: the wide **Know** and **Don't know** pills (with their labels) on top (signed-in learners:
+  **Know · Know (ask again) · Don't know**, three equal pills), and the round
   `Stop · Hints · Back · Next` (with captions) below, so the two main actions stay big. After Don't know, one wide
   "Next ›" pill replaces Know / Don't know, with `Stop · Hints · Back` below (FR-L28, FR-L29a).
 - **Loop (desktop ≥ 768px)**: a centered column of about 1100px; the card is wide (≈ 2.3 : 1) and the pills carry

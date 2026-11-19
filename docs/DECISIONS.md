@@ -329,3 +329,22 @@ Format: date · context · decision · consequences.
 - **Change:** the landing headline is now **"Learn words until they stick"** (was "Learn words
   that stick: one session at a time"). It is shorter and says how the app works: cards come back
   until you know them.
+
+## D-023 · 2026-11-19 · "Know · ask again" (owner request)
+
+- **Why:** some words are known today, thanks to the session's repetition, but may be forgotten
+  later. The learner wants to finish them for this session without hiding them for good.
+- **Change:** signed-in learners get a second, amber **Know** between Know and Don't know (PRD
+  FR-L27a). Inside the session it is exactly Know (the card leaves the loop, counts as known,
+  plays the Know animation, with an amber glow). It is not recorded in the learner's known items,
+  so the word stays in the pool and may be drawn again in any later session. Small captions
+  under the two Knows read "forever" and "ask again". Keyboard: **A**. Guests keep the single
+  Know (their Knows are never stored anyway).
+- **How:** the loop's Know mark gets an optional `again` flag, so the answer is still derived
+  from the loop state, and the "Your answer" chip on a card reached with Back shows which Know it
+  was. Only Know (forever) reaches the Know queue; switching from Know to "ask again" removes the
+  queued entry, or deletes it on the server if it was already sent (the same path as Don't
+  know). No API or database change.
+- **Considered:** a spaced-review schedule (words come back after 3 days, 1 week, 1 month…) and
+  mixing due words into sessions. Rejected in favour of this simpler, learner-controlled choice:
+  no schedule, the word just returns to the pool.

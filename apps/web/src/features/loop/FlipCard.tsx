@@ -1,7 +1,14 @@
-import type { CardSide, CardView } from '@myvocab/core';
+import type { CardAnswer, CardSide, CardView } from '@myvocab/core';
 import { FlipIcon } from '../../components/Icons';
 import { LoopButton } from './ButtonBar';
 import { strings } from '../../strings';
+
+/** The "Your answer" chip on a card reached with Back (FR-L29a, FR-L27a). */
+const CHIP: Record<CardAnswer, { color: string; text: string; mark: string }> = {
+  know: { color: 'text-know', text: strings.card.answeredKnow, mark: '✓' },
+  knowAgain: { color: 'text-again', text: strings.card.answeredKnowAgain, mark: '✓' },
+  dontKnow: { color: 'text-dontknow', text: strings.card.answeredDontKnow, mark: '✗' },
+};
 
 function Extras({ card }: { card: CardView }) {
   const { hints, synonyms, extrasLang } = card;
@@ -49,7 +56,7 @@ export function FlipCard({
   /** A purely visual copy (the Know animation): no test ids. */
   decorative?: boolean;
   /** The answer already given, on a card reached with Back (FR-L29a): shown as a chip. */
-  answer?: 'know' | 'dontKnow' | null;
+  answer?: CardAnswer | null;
 }) {
   const tid = (id: string) => (decorative ? undefined : id);
   const label = `${card.direction.source.toUpperCase()} → ${card.direction.target.toUpperCase()} · ${strings.types[card.type]}`;
@@ -59,11 +66,10 @@ export function FlipCard({
   const answerChip = (face: 'front' | 'back') =>
     answer && (
       <p
-        className={`chip ${answer === 'know' ? 'text-know' : 'text-dontknow'}`}
+        className={`chip ${CHIP[answer].color}`}
         data-testid={face === 'front' ? tid('answer-chip') : undefined}
       >
-        {answer === 'know' ? strings.card.answeredKnow : strings.card.answeredDontKnow}{' '}
-        <span aria-hidden="true">{answer === 'know' ? '✓' : '✗'}</span>
+        {CHIP[answer].text} <span aria-hidden="true">{CHIP[answer].mark}</span>
       </p>
     );
   // The Flip button is the keyboard control; a tap anywhere else on the card is a pointer shortcut.

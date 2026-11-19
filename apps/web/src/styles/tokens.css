@@ -21,6 +21,13 @@
   --know-ledge: #0e6e31;
   --know-glow: rgba(34, 197, 94, 0.5);
 
+  /* Know · ask again (FR-L27a): amber, red and green mixed. */
+  --again: #e08a12;
+  --again-top: #f8a920;
+  --again-bottom: #c96a05;
+  --again-ledge: #7f4103;
+  --again-glow: rgba(245, 158, 11, 0.45);
+
   --dontknow: #fb4d6d;
   --dontknow-top: #fb4d6d;
   --dontknow-bottom: #e11d48;

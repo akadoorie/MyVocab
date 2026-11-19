@@ -8,7 +8,14 @@ import { shuffle, type RngState } from './random';
 
 export type LoopPhase = 'deciding' | 'revealed' | 'cycleBreak' | 'finished' | 'stopped';
 export type CardSide = 'front' | 'back';
-export type KnownMark = { id: number; cycle: number };
+/**
+ * A Know in this loop. `again`: "Know · ask again" (FR-L27a): a Know for this session that is not
+ * recorded in the learner's known items, so the word stays in the pool.
+ */
+export type KnownMark = { id: number; cycle: number; again?: true };
+
+/** An answer given to a card in the current cycle (FR-L29a). */
+export type CardAnswer = 'know' | 'knowAgain' | 'dontKnow';
 
 export type LoopState = {
   phase: LoopPhase;
@@ -31,6 +38,7 @@ export type LoopState = {
 
 export type LoopAction =
   | { type: 'KNOW' }
+  | { type: 'KNOW_AGAIN' }
   | { type: 'DONT_KNOW' }
   | { type: 'TOGGLE_HINTS' }
   | { type: 'FLIP' }
@@ -79,8 +87,9 @@ function advance(state: LoopState): LoopState {
  * The answer already given to a card in the current cycle (PRD FR-L29a): Know, Don't know, or null
  * when it hasn't been answered yet. Derived from `known` and `nextCycle`, so it can't drift.
  */
-export function answerOf(state: LoopState, id: number): 'know' | 'dontKnow' | null {
-  if (state.known.some((k) => k.id === id && k.cycle === state.cycle)) return 'know';
+export function answerOf(state: LoopState, id: number): CardAnswer | null {
+  const mark = state.known.find((k) => k.id === id && k.cycle === state.cycle);
+  if (mark) return mark.again ? 'knowAgain' : 'know';
   if (state.nextCycle.includes(id)) return 'dontKnow';
   return null;
 }
@@ -90,6 +99,7 @@ export function canDispatch(state: LoopState, type: LoopActionType): boolean {
   const onCard = state.phase === 'deciding' || state.phase === 'revealed';
   switch (type) {
     case 'KNOW':
+    case 'KNOW_AGAIN':
     case 'DONT_KNOW':
       return state.phase === 'deciding';
     case 'TOGGLE_HINTS':
@@ -119,13 +129,19 @@ export function canDispatch(state: LoopState, type: LoopActionType): boolean {
 export function loopReducer(state: LoopState, action: LoopAction): LoopState {
   if (!canDispatch(state, action.type)) return state;
   switch (action.type) {
-    case 'KNOW': {
-      // A first answer, or a change from Don't know on a card reached with Back (FR-L29a).
+    case 'KNOW':
+    case 'KNOW_AGAIN': {
+      // A first answer, or a change on a card reached with Back (FR-L29a): from Don't know, or
+      // between the two Knows (FR-L27a).
       const id = currentId(state);
-      if (answerOf(state, id) === 'know') return advance(state);
+      const again = action.type === 'KNOW_AGAIN';
+      if (answerOf(state, id) === (again ? 'knowAgain' : 'know')) return advance(state);
+      const mark: KnownMark = again
+        ? { id, cycle: state.cycle, again }
+        : { id, cycle: state.cycle };
       return advance({
         ...state,
-        known: [...state.known, { id, cycle: state.cycle }],
+        known: [...state.known.filter((k) => !(k.id === id && k.cycle === state.cycle)), mark],
         nextCycle: state.nextCycle.filter((n) => n !== id),
       });
     }
@@ -135,7 +151,7 @@ export function loopReducer(state: LoopState, action: LoopAction): LoopState {
       return {
         ...state,
         known:
-          answer === 'know'
+          answer === 'know' || answer === 'knowAgain'
             ? state.known.filter((k) => !(k.id === id && k.cycle === state.cycle))
             : state.known,
         nextCycle: answer === 'dontKnow' ? state.nextCycle : [...state.nextCycle, id],

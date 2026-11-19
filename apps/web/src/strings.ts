@@ -106,7 +106,7 @@ export const strings = {
     retry: 'Try again',
     emptyTitle: 'No known words yet',
     emptyBody:
-      'When you press Know on a card, the word lands here and stops appearing in your sessions. You can bring it back at any time.',
+      'When you press the green Know on a card, the word lands here and stops appearing in your sessions. You can bring it back at any time.',
     noMatches: 'Nothing matches these filters.',
   },
   account: {
@@ -147,6 +147,12 @@ export const strings = {
   loop: {
     know: 'Know',
     dontKnow: 'Don’t know',
+    /** The captions under the two Knows, for signed-in learners (FR-L27a). */
+    knowForever: 'forever',
+    knowAskAgain: 'ask again',
+    /** Their accessible names. */
+    knowForeverName: 'Know, forever',
+    knowAskAgainName: 'Know, ask again',
     hints: 'Hints',
     flip: 'Flip',
     flipTitle: 'Flip the card (F or Space)',
@@ -169,6 +175,7 @@ export const strings = {
     shortcutsTitle: 'Keyboard shortcuts',
     shortcuts: [
       ['K', 'Know'],
+      ['A', 'Know (ask again)'],
       ['D', 'Don’t know'],
       ['H', 'Hints'],
       ['F / Space', 'Flip'],
@@ -191,6 +198,7 @@ export const strings = {
     hintsShown: 'Hints shown',
     hintsHidden: 'Hints hidden',
     answeredKnow: 'Your answer: Know',
+    answeredKnowAgain: 'Your answer: Know (ask again)',
     answeredDontKnow: 'Your answer: Don’t know',
     /** Announced when Back lands on a card (screen readers). */
     backTo: (card: number, size: number, answer: string | null) =>

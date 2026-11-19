@@ -9,6 +9,8 @@ export type Crumple = {
   hintsShown: boolean;
   /** Where the card was on screen. */
   rect: { top: number; left: number; width: number; height: number };
+  /** Know · ask again: an amber glow instead of green (FR-L27a). */
+  again?: boolean;
   /** From the card's center to the "known" counter's center. */
   dx: number;
   dy: number;
@@ -82,7 +84,12 @@ export function CrumpleGhost({ crumple, onDone }: { crumple: Crumple; onDone: ()
   } as CSSProperties;
 
   return (
-    <div className="crumple" style={style} aria-hidden="true" inert>
+    <div
+      className={`crumple ${crumple.again ? 'crumple--again' : ''}`}
+      style={style}
+      aria-hidden="true"
+      inert
+    >
       <div className="crumple__x">
         <div className="crumple__y">
           <div className="paper">

@@ -34,7 +34,7 @@ async function openKnownWords(page: Page) {
   await expect(page).toHaveURL(/\/known$/);
 }
 
-test('Know → My known words → hidden in every direction → Return to loops', async ({
+test('Know → My known words (ask again is not kept) → hidden in every direction → Return to loops', async ({
   page,
   baseURL,
 }, testInfo) => {
@@ -60,8 +60,12 @@ test('Know → My known words → hidden in every direction → Return to loops'
   const known = ((await page.getByTestId('front-text').textContent()) ?? '').trim();
   // Any English word: other specs (admin) may have added synthetic items to the same database.
   expect(known.length).toBeGreaterThan(0);
-  await button(page, 'Know').click();
+  await button(page, 'Know, forever').click();
   await expect(page.getByTestId('progress')).toContainText('1 known');
+  // The second card: Know · ask again (FR-L27a) counts in the session but is never recorded.
+  const askAgain = ((await page.getByTestId('front-text').textContent()) ?? '').trim();
+  await button(page, 'Know, ask again').click();
+  await expect(page.getByTestId('progress')).toContainText('2 known');
   await button(page, 'Stop').click();
   await page.getByRole('dialog').getByRole('button', { name: 'Yes' }).click();
   await expect(page).toHaveURL(/\/$/);
@@ -72,6 +76,7 @@ test('Know → My known words → hidden in every direction → Return to loops'
   await expect(row).toBeVisible();
   await expect(row.getByText('Already knew')).toBeVisible();
   await expect(row.getByText('EN → HE:', { exact: false })).toBeVisible();
+  await expect(page.getByRole('main').getByText(askAgain, { exact: true })).toHaveCount(0);
 
   // …and is no longer offered in either direction (EN → HE and EN → EN).
   await expect.poll(() => available(page.request, 'en', 'he')).toBe(enHe - 1);

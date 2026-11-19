@@ -144,8 +144,11 @@ function BackToLastCard({ onBack }: { onBack: () => void }) {
   );
 }
 
-/** "⌨ Keyboard shortcuts" in the loop header (PRD FR-L34): a small popover, desktop only. */
-export function ShortcutsMenu() {
+/**
+ * "⌨ Keyboard shortcuts" in the loop header (PRD FR-L34): a small popover, desktop only. `A` (Know ·
+ * ask again) is listed only with `askAgain` (signed-in learners, FR-L27a).
+ */
+export function ShortcutsMenu({ askAgain = false }: { askAgain?: boolean }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   // Esc closes the popover first; otherwise it would stop the loop.
@@ -174,16 +177,18 @@ export function ShortcutsMenu() {
       {open && (
         <div id={panelId} className="glass absolute right-0 z-30 mt-2 w-64 p-4">
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-            {strings.loop.shortcuts.map(([key, action]) => (
-              <div key={key} className="contents">
-                <dt>
-                  <kbd className="rounded-md bg-white/10 px-2 py-0.5 font-sans text-xs font-semibold">
-                    {key}
-                  </kbd>
-                </dt>
-                <dd className="text-muted">{action}</dd>
-              </div>
-            ))}
+            {strings.loop.shortcuts
+              .filter(([key]) => askAgain || key !== 'A')
+              .map(([key, action]) => (
+                <div key={key} className="contents">
+                  <dt>
+                    <kbd className="rounded-md bg-white/10 px-2 py-0.5 font-sans text-xs font-semibold">
+                      {key}
+                    </kbd>
+                  </dt>
+                  <dd className="text-muted">{action}</dd>
+                </div>
+              ))}
           </dl>
         </div>
       )}

@@ -8,6 +8,8 @@ export function actionForKey(key: string): LoopActionType | 'ENTER' | null {
   switch (key.toLowerCase()) {
     case 'k':
       return 'KNOW';
+    case 'a':
+      return 'KNOW_AGAIN';
     case 'd':
       return 'DONT_KNOW';
     case 'h':

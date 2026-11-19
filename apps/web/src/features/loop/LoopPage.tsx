@@ -102,10 +102,13 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
       const id = currentCardId(state);
       // On a card reached with Back the answer can change (FR-L29a); only changes reach the queue.
       const before = id === null ? null : answerOf(state, id);
-      if (type === 'DONT_KNOW' && id !== null && before === 'know') knownSink.onUnknow(id);
-      if (type === 'KNOW' && id !== null) {
+      // Know · ask again is never recorded (FR-L27a): leaving a Know for it drops the Know.
+      if ((type === 'DONT_KNOW' || type === 'KNOW_AGAIN') && id !== null && before === 'know')
+        knownSink.onUnknow(id);
+      if ((type === 'KNOW' || type === 'KNOW_AGAIN') && id !== null) {
         const mark = { id, cycle: state.cycle };
-        if (before !== 'know') knownSink.onKnow(mark, cards.get(id)?.direction.target ?? '');
+        if (type === 'KNOW' && before !== 'know')
+          knownSink.onKnow(mark, cards.get(id)?.direction.target ?? '');
         // The known card crumples and flies into the "known" counter (PRD §9.4).
         const known = cards.get(id);
         const from = cardRef.current?.getBoundingClientRect();
@@ -116,6 +119,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
             card: known,
             side: state.side,
             hintsShown: state.hintsShown,
+            again: type === 'KNOW_AGAIN',
             rect: { top: from.top, left: from.left, width: from.width, height: from.height },
             dx: to.left + to.width / 2 - (from.left + from.width / 2),
             dy: to.top + to.height / 2 - (from.top + from.height / 2),
@@ -132,9 +136,11 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
             state.order.length,
             answer === 'know'
               ? strings.card.answeredKnow
-              : answer === 'dontKnow'
-                ? strings.card.answeredDontKnow
-                : null,
+              : answer === 'knowAgain'
+                ? strings.card.answeredKnowAgain
+                : answer === 'dontKnow'
+                  ? strings.card.answeredDontKnow
+                  : null,
           ),
         );
       }
@@ -158,11 +164,12 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   const onShortcut = useCallback(
     (action: LoopActionType | 'ENTER') => {
       if (confirmLeave) return; // the "are you sure?" question is open
+      if (action === 'KNOW_AGAIN' && stored.isGuest) return; // signed-in learners only (FR-L27a)
       if (action === 'ENTER') act(state.phase === 'cycleBreak' ? 'CONTINUE' : 'NEXT');
       else if (action === 'STOP') setConfirmLeave('stop');
       else act(action);
     },
-    [act, state.phase, confirmLeave],
+    [act, state.phase, confirmLeave, stored.isGuest],
   );
   useLoopShortcuts(onShortcut);
 
@@ -239,14 +246,14 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
             <span
               ref={counterRef}
               key={progress.knownCount}
-              className={`inline-block ${crumple ? 'count-pop' : ''}`}
+              className={`inline-block ${crumple ? `count-pop ${crumple.again ? 'count-pop--again' : ''}` : ''}`}
             >
               {progressKnown}
             </span>
           </span>
         </p>
         <div className="flex items-center gap-2 md:gap-4">
-          <ShortcutsMenu />
+          <ShortcutsMenu askAgain={!stored.isGuest} />
           <button
             type="button"
             onClick={() => setConfirmLeave('home')}
@@ -301,6 +308,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           state={state}
           onAction={(type) => (type === 'STOP' ? setConfirmLeave('stop') : act(type))}
           nextRef={nextRef}
+          askAgain={!stored.isGuest}
         />
       </div>
       {ghost}

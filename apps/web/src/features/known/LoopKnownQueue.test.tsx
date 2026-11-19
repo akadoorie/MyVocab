@@ -56,11 +56,25 @@ describe('Know marks of a signed-in learner', () => {
     await waitFor(() => expect(client.getQueryData(ME_QUERY_KEY)).toEqual({ user: TEST_USER }));
     await act(async () => {});
     const id = firstCardId();
-    fireEvent.click(button('Know'));
+    fireEvent.click(button('Know, forever'));
     expect(stored()).toEqual([{ i: id, t: 'he', c: 1, f: 0, n: expect.any(Number) as number }]);
     expect(window.localStorage.getItem(queueStorageKey(TEST_USER.id))).not.toMatch(/sample/);
     fireEvent.click(button('Back'));
     fireEvent.click(button('Don’t know'));
+    expect(stored()).toEqual([]);
+  });
+
+  it('Know · ask again queues nothing; switching from Know removes the queued entry', async () => {
+    const { client } = setup(false);
+    await waitFor(() => expect(client.getQueryData(ME_QUERY_KEY)).toEqual({ user: TEST_USER }));
+    await act(async () => {});
+    fireEvent.click(button('Know, ask again'));
+    expect(stored()).toEqual([]);
+    fireEvent.click(button('Back'));
+    fireEvent.click(button('Know, forever'));
+    expect(stored()).toHaveLength(1);
+    fireEvent.click(button('Back'));
+    fireEvent.click(button('Know, ask again'));
     expect(stored()).toEqual([]);
   });
 

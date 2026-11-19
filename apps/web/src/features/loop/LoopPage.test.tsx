@@ -9,13 +9,13 @@ import { LoopPage, type KnownSink } from './LoopPage';
 
 const CARDS = [makeCard(1), makeCard(2), makeCard(3)];
 
-function setup(sink?: KnownSink) {
+function setup(sink?: KnownSink, { isGuest = true }: { isGuest?: boolean } = {}) {
   saveLoop({
     cards: CARDS,
     state: createLoop([1, 2, 3], 42),
     undoWindowSeconds: 4,
     selection: { sourceLang: 'en', targetLang: 'he', categoryId: null, type: 'word', size: 5 },
-    isGuest: true,
+    isGuest,
   });
   const router = createMemoryRouter(
     [
@@ -122,6 +122,60 @@ describe('LoopPage', () => {
     // Know again on a card already known changes nothing in the queue.
     fireEvent.click(btn('Back'));
     fireEvent.click(btn('Know'));
+    expect(sink.onKnow).toHaveBeenCalledTimes(2);
+  });
+
+  it('guests have a single Know, without captions, and the A key does nothing', () => {
+    setup();
+    expect(screen.getAllByRole('button', { name: /^Know/ })).toHaveLength(1);
+    expect(screen.queryByText('forever')).not.toBeInTheDocument();
+    expect(screen.queryByText('ask again')).not.toBeInTheDocument();
+    fireEvent.keyDown(window, { key: 'a' });
+    expect(progress()).toBe('Cycle 1 · Card 1/3 · 0 known');
+  });
+
+  it('signed-in: Know (forever), Know (ask again), Don’t know; ask again is never recorded', () => {
+    const sink = { onKnow: vi.fn(), onUnknow: vi.fn() };
+    setup(sink, { isGuest: false });
+    const names = screen
+      .getAllByRole('button')
+      .map((b) => b.getAttribute('aria-label') ?? b.textContent)
+      .filter((n) => /know/i.test(n ?? ''));
+    expect(names).toEqual(['Know, forever', 'Know, ask again', 'Don’t know']);
+    expect(btn('Know, ask again')).toHaveClass('lbtn--again');
+    expect(screen.getByText('forever')).toBeInTheDocument();
+    expect(screen.getByText('ask again')).toBeInTheDocument();
+
+    fireEvent.click(btn('Know, ask again'));
+    expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known'); // counts like Know in the session
+    expect(sink.onKnow).not.toHaveBeenCalled();
+    expect(loadLoop()?.state.known[0]?.again).toBe(true); // a refresh keeps it
+    fireEvent.click(btn('Back'));
+    expect(screen.getByTestId('answer-chip')).toHaveTextContent('Your answer: Know (ask again)');
+    expect(screen.getByText('Card 1 of 3. Your answer: Know (ask again)')).toHaveClass('sr-only');
+
+    fireEvent.keyDown(window, { key: 'a' }); // the same answer: nothing changes
+    expect(sink.onKnow).not.toHaveBeenCalled();
+    expect(sink.onUnknow).not.toHaveBeenCalled();
+  });
+
+  it('signed-in: switching between the two Knows records and unrecords the word', () => {
+    const sink = { onKnow: vi.fn(), onUnknow: vi.fn() };
+    setup(sink, { isGuest: false });
+    fireEvent.click(btn('Know, forever'));
+    expect(sink.onKnow).toHaveBeenCalledTimes(1);
+    fireEvent.click(btn('Back'));
+    fireEvent.click(btn('Know, ask again'));
+    expect(sink.onUnknow).toHaveBeenCalledWith(sink.onKnow.mock.calls[0]![0].id);
+    expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known');
+    fireEvent.click(btn('Back'));
+    fireEvent.click(btn('Know, forever'));
+    expect(sink.onKnow).toHaveBeenCalledTimes(2);
+    fireEvent.click(btn('Back'));
+    fireEvent.click(btn('Know, ask again'));
+    fireEvent.click(btn('Back'));
+    fireEvent.click(btn('Don’t know')); // from ask again: nothing was recorded, nothing to undo
+    expect(sink.onUnknow).toHaveBeenCalledTimes(2);
     expect(sink.onKnow).toHaveBeenCalledTimes(2);
   });
 

@@ -291,6 +291,55 @@ describe('Back and changing an answer (FR-L29a)', () => {
   });
 });
 
+describe('Know · ask again (FR-L27a)', () => {
+  it('acts like Know in the session, with an "again" mark', () => {
+    const s0 = createLoop([1, 2, 3], 9);
+    const first = currentCardId(s0)!;
+    const s1 = run(s0, 'FLIP', 'KNOW_AGAIN');
+    expect(s1.known).toEqual([{ id: first, cycle: 1, again: true }]);
+    expect(s1).toMatchObject({ index: 1, phase: 'deciding', side: 'front' });
+    expect(answerOf(s1, first)).toBe('knowAgain');
+    expect(loopProgress(s1).knownCount).toBe(1);
+  });
+
+  it('is allowed exactly when Know is', () => {
+    const s0 = createLoop([1, 2], 9);
+    expect(canDispatch(s0, 'KNOW_AGAIN')).toBe(true);
+    const revealed = run(s0, 'DONT_KNOW');
+    expect(canDispatch(revealed, 'KNOW_AGAIN')).toBe(false);
+    expect(run(revealed, 'KNOW_AGAIN')).toBe(revealed);
+  });
+
+  it('counts in the summary like Know', () => {
+    const done = run(createLoop([1, 2], 9), 'KNOW', 'KNOW_AGAIN');
+    expect(done.phase).toBe('finished');
+    expect(loopSummary(done)).toEqual({ totalCards: 2, cycles: 1, alreadyKnew: 2, learnedHere: 0 });
+  });
+
+  it('switches with Know on a card reached with Back, keeping one mark', () => {
+    const s0 = createLoop([1, 2, 3], 8);
+    const id = s0.order[0]!;
+    const toAgain = run(s0, 'KNOW', 'BACK', 'KNOW_AGAIN');
+    expect(toAgain.known).toEqual([{ id, cycle: 1, again: true }]);
+    expect(toAgain.index).toBe(1);
+    const toKnow = run(toAgain, 'BACK', 'KNOW');
+    expect(toKnow.known).toEqual([{ id, cycle: 1 }]);
+    expect(run(toAgain, 'BACK', 'KNOW_AGAIN').known).toEqual(toAgain.known); // same answer
+  });
+
+  it('replaces Don’t know, and Don’t know replaces it', () => {
+    const s0 = createLoop([1, 2, 3], 8);
+    const id = s0.order[0]!;
+    const s = run(s0, 'DONT_KNOW', 'NEXT', 'BACK', 'KNOW_AGAIN');
+    expect(s.known).toEqual([{ id, cycle: 1, again: true }]);
+    expect(s.nextCycle).toEqual([]);
+    const back = run(s, 'BACK', 'DONT_KNOW');
+    expect(back.known).toEqual([]);
+    expect(back.nextCycle).toEqual([id]);
+    expect(back.phase).toBe('revealed');
+  });
+});
+
 describe('Stop', () => {
   it('ends the loop and ignores later actions', () => {
     const s = run(createLoop([1, 2], 2), 'KNOW', 'STOP');

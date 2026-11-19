@@ -10,7 +10,12 @@ import { readJson, removeKey, writeJson } from '../../lib/storage';
 const KEY = 'myvocab.loop.v1';
 
 const ids = z.array(z.number().int());
-const mark = z.object({ id: z.number().int(), cycle: z.number().int().min(1) });
+const mark = z.object({
+  id: z.number().int(),
+  cycle: z.number().int().min(1),
+  /** Know · ask again (FR-L27a); without it a refresh would turn it into a plain Know. */
+  again: z.literal(true).optional(),
+});
 
 const loopStateSchema = z.object({
   phase: z.enum(['deciding', 'revealed', 'cycleBreak', 'finished', 'stopped']),
