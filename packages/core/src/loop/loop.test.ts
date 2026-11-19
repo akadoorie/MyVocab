@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { MAX_RESHUFFLES, orderNextCycle, sameRelativeOrder } from './cycle-order';
 import { nextRandom, randomSeed, shuffle } from './random';
 import {
+  answerOf,
   canDispatch,
   createLoop,
   currentCardId,
@@ -105,7 +106,6 @@ describe('Know and Don’t know', () => {
     const first = currentCardId(s0);
     const s1 = run(s0, 'FLIP', 'TOGGLE_HINTS', 'KNOW');
     expect(s1.known).toEqual([{ id: first, cycle: 1 }]);
-    expect(s1.lastKnow).toEqual({ id: first, cycle: 1 });
     expect(s1).toMatchObject({ index: 1, phase: 'deciding', side: 'front', hintsShown: false });
   });
 
@@ -207,49 +207,87 @@ describe('cycles and the end of the loop', () => {
   });
 });
 
-describe('Undo (FR-L27)', () => {
-  it('during a cycle: the card returns to the next cycle', () => {
+describe('Back and changing an answer (FR-L29a)', () => {
+  it('goes back card by card, front side up with hints hidden, to the first card of the cycle', () => {
     const s0 = createLoop([1, 2, 3], 8);
-    const first = currentCardId(s0);
-    const s1 = run(s0, 'KNOW', 'UNDO_KNOW');
-    expect(s1.known).toEqual([]);
-    expect(s1.nextCycle).toEqual([first]);
-    expect(s1.lastKnow).toBeNull();
-    expect(s1.phase).toBe('deciding');
-    expect(currentCardId(s1)).toBe(s0.order[1]);
+    expect(canDispatch(s0, 'BACK')).toBe(false);
+    const s = run(s0, 'KNOW', 'DONT_KNOW');
+    expect(s).toMatchObject({ index: 1, phase: 'revealed', side: 'back' });
+    const back = run(s, 'BACK');
+    expect(back).toMatchObject({ index: 0, phase: 'deciding', side: 'front', hintsShown: false });
+    expect(canDispatch(back, 'BACK')).toBe(false);
+    expect(back.known).toEqual(s.known); // looking back changes nothing
+    expect(back.nextCycle).toEqual(s.nextCycle);
   });
 
-  it('at a cycle break: the count updates', () => {
+  it('Next steps forward over answered cards and stops at the first unanswered card', () => {
+    const s0 = createLoop([1, 2, 3], 8);
+    const back = run(s0, 'KNOW', 'DONT_KNOW', 'NEXT', 'BACK', 'BACK');
+    expect(back.index).toBe(0);
+    expect(answerOf(back, s0.order[0]!)).toBe('know');
+    expect(canDispatch(back, 'NEXT')).toBe(true);
+    const second = run(back, 'NEXT');
+    expect(second).toMatchObject({ index: 1, phase: 'deciding', side: 'front' });
+    expect(answerOf(second, s0.order[1]!)).toBe('dontKnow');
+    const third = run(second, 'NEXT');
+    expect(third.index).toBe(2);
+    expect(answerOf(third, s0.order[2]!)).toBeNull();
+    expect(canDispatch(third, 'NEXT')).toBe(false);
+  });
+
+  it('Know replaces Don’t know: the card leaves the next cycle and the session moves on', () => {
+    const s0 = createLoop([1, 2, 3], 8);
+    const s = run(s0, 'DONT_KNOW', 'NEXT', 'BACK', 'KNOW');
+    expect(s.known).toEqual([{ id: s0.order[0], cycle: 1 }]);
+    expect(s.nextCycle).toEqual([]);
+    expect(s).toMatchObject({ index: 1, phase: 'deciding' });
+  });
+
+  it('Don’t know replaces Know, reveals the answer, and never queues a card twice', () => {
+    const s0 = createLoop([1, 2, 3], 8);
+    const s = run(s0, 'KNOW', 'BACK', 'DONT_KNOW');
+    expect(s.known).toEqual([]);
+    expect(s.nextCycle).toEqual([s0.order[0]]);
+    expect(s).toMatchObject({ index: 0, phase: 'revealed', side: 'back' });
+    const again = run(s, 'NEXT', 'BACK', 'DONT_KNOW');
+    expect(again.nextCycle).toEqual([s0.order[0]]);
+  });
+
+  it('Know on a card already known just moves on', () => {
+    const s0 = createLoop([1, 2, 3], 8);
+    const s = run(s0, 'KNOW', 'BACK', 'KNOW');
+    expect(s.known).toEqual([{ id: s0.order[0], cycle: 1 }]);
+    expect(s.index).toBe(1);
+  });
+
+  it('from the cycle break: back to the last card, and a changed answer updates the count', () => {
     const s = run(createLoop([1, 2], 8), 'DONT_KNOW', 'NEXT', 'KNOW');
     expect(s.phase).toBe('cycleBreak');
     expect(loopProgress(s).remaining).toBe(1);
-    const undone = run(s, 'UNDO_KNOW');
-    expect(undone.phase).toBe('cycleBreak');
-    expect(loopProgress(undone).remaining).toBe(2);
+    const back = run(s, 'BACK');
+    expect(back).toMatchObject({ index: 1, phase: 'deciding', side: 'front' });
+    const brk = run(back, 'DONT_KNOW', 'NEXT');
+    expect(brk.phase).toBe('cycleBreak');
+    expect(loopProgress(brk).remaining).toBe(2);
   });
 
-  it('after the last Know: the summary turns back into a cycle break with that card', () => {
+  it('from the summary: back to the last card; Don’t know turns the end into a cycle break', () => {
     const s0 = createLoop([1, 2], 8);
     const done = run(s0, 'KNOW', 'KNOW');
     expect(done.phase).toBe('finished');
-    const undone = run(done, 'UNDO_KNOW');
-    expect(undone.phase).toBe('cycleBreak');
-    expect(undone.nextCycle).toEqual([s0.order[1]]);
-    expect(undone.known).toEqual([{ id: s0.order[0], cycle: 1 }]);
+    const back = run(done, 'BACK');
+    expect(back).toMatchObject({ index: 1, phase: 'deciding' });
+    const brk = run(back, 'DONT_KNOW', 'NEXT');
+    expect(brk.phase).toBe('cycleBreak');
+    expect(brk.nextCycle).toEqual([s0.order[1]]);
+    expect(brk.known).toEqual([{ id: s0.order[0], cycle: 1 }]);
   });
 
-  it('only the most recent Know can be undone', () => {
-    const s0 = createLoop([1, 2, 3], 8);
-    const s = run(s0, 'KNOW', 'KNOW', 'UNDO_KNOW');
-    expect(s.known).toEqual([{ id: s0.order[0], cycle: 1 }]);
-    expect(canDispatch(s, 'UNDO_KNOW')).toBe(false);
-    expect(run(s, 'UNDO_KNOW')).toBe(s);
-  });
-
-  it('still works after Continue started the next cycle', () => {
-    const s = run(createLoop([1, 2], 8), 'DONT_KNOW', 'NEXT', 'KNOW', 'CONTINUE', 'UNDO_KNOW');
-    expect(s.cycle).toBe(2);
-    expect(s.nextCycle).toHaveLength(1);
+  it('cards of earlier cycles are out of reach', () => {
+    const s = run(createLoop([1, 2], 8), 'KNOW', 'DONT_KNOW', 'NEXT', 'CONTINUE');
+    expect(s).toMatchObject({ cycle: 2, index: 0 });
+    expect(canDispatch(s, 'BACK')).toBe(false);
+    expect(answerOf(s, s.order[0]!)).toBeNull(); // a new cycle starts unanswered
   });
 });
 
@@ -258,7 +296,7 @@ describe('Stop', () => {
     const s = run(createLoop([1, 2], 2), 'KNOW', 'STOP');
     expect(s.phase).toBe('stopped');
     expect(s.known).toHaveLength(1);
-    expect(run(s, 'KNOW', 'FLIP', 'UNDO_KNOW', 'CONTINUE')).toBe(s);
+    expect(run(s, 'KNOW', 'FLIP', 'BACK', 'CONTINUE')).toBe(s);
     expect(currentCardId(s)).toBeNull();
   });
 

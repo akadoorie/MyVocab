@@ -15,6 +15,10 @@ export function actionForKey(key: string): LoopActionType | 'ENTER' | null {
     case 'f':
     case ' ':
       return 'FLIP';
+    case 'arrowleft':
+      return 'BACK';
+    case 'arrowright':
+      return 'NEXT';
     case 'enter':
       return 'ENTER';
     case 'escape':

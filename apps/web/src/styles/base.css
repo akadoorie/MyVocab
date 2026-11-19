@@ -583,55 +583,6 @@ body {
   }
 }
 
-/* The countdown ring on the Undo button empties over the undo window. */
-.undo-timer {
-  position: relative;
-  display: inline-flex;
-  width: 26px;
-  height: 26px;
-  flex-shrink: 0;
-}
-.undo-timer svg {
-  position: absolute;
-  inset: 0;
-  transform: rotate(-90deg);
-}
-.undo-timer circle {
-  fill: none;
-  stroke-width: 2.5;
-}
-.undo-timer__track {
-  stroke: rgba(250, 204, 21, 0.22);
-}
-.undo-timer__ring {
-  stroke: var(--hint);
-  stroke-linecap: round;
-  stroke-dasharray: 62.83;
-  animation: undo-ring var(--undo-s) linear forwards;
-}
-.undo-timer__n {
-  margin: auto;
-  font-size: 0.75rem;
-  font-weight: 700;
-  line-height: 1;
-}
-@keyframes undo-ring {
-  to {
-    stroke-dashoffset: 62.83;
-  }
-}
-
-/* The floating Undo bar fades in. */
-@keyframes undo-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-}
-.undo-float {
-  animation: undo-in 180ms ease-out;
-}
-
 /* The "N known" counter pops when the crumpled card lands in it. */
 @keyframes count-pop {
   0%,
@@ -659,12 +610,6 @@ body {
   }
   .crumple {
     display: none;
-  }
-  .undo-float {
-    animation: none;
-  }
-  .undo-timer__ring {
-    animation: none; /* the seconds still count down */
   }
   .count-pop {
     animation: none;

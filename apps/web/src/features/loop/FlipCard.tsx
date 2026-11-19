@@ -40,6 +40,7 @@ export function FlipCard({
   hintsShown,
   onFlip,
   decorative = false,
+  answer = null,
 }: {
   card: CardView;
   side: CardSide;
@@ -47,11 +48,24 @@ export function FlipCard({
   onFlip: () => void;
   /** A purely visual copy (the Know animation): no test ids. */
   decorative?: boolean;
+  /** The answer already given, on a card reached with Back (FR-L29a): shown as a chip. */
+  answer?: 'know' | 'dontKnow' | null;
 }) {
   const tid = (id: string) => (decorative ? undefined : id);
   const label = `${card.direction.source.toUpperCase()} → ${card.direction.target.toUpperCase()} · ${strings.types[card.type]}`;
   const front = side === 'front';
   const Answer = card.answer.numbered ? 'ol' : 'ul';
+  // On both faces; the test id goes on the front one only.
+  const answerChip = (face: 'front' | 'back') =>
+    answer && (
+      <p
+        className={`chip ${answer === 'know' ? 'text-know' : 'text-dontknow'}`}
+        data-testid={face === 'front' ? tid('answer-chip') : undefined}
+      >
+        {answer === 'know' ? strings.card.answeredKnow : strings.card.answeredDontKnow}{' '}
+        <span aria-hidden="true">{answer === 'know' ? '✓' : '✗'}</span>
+      </p>
+    );
   // The Flip button is the keyboard control; a tap anywhere else on the card is a pointer shortcut.
   const flipButton = (
     <LoopButton
@@ -80,7 +94,10 @@ export function FlipCard({
         data-side={side}
       >
         <div className="flip-card__face flip-card__front" inert={!front} aria-hidden={!front}>
-          <p className="chip self-start">{label}</p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="chip">{label}</p>
+            {answerChip('front')}
+          </div>
           {/* The item sits in the upper part of the card and never moves; hints and synonyms
               appear below it in the space kept for them (PRD §9.3). */}
           <div className="flex min-h-[46%] shrink-0 flex-col items-center justify-center gap-4 py-4 text-center">
@@ -107,11 +124,14 @@ export function FlipCard({
         </div>
 
         <div className="flip-card__face flip-card__back" inert={front} aria-hidden={front}>
-          <p className="chip self-start">
-            {card.answer.kind === 'translation'
-              ? strings.card.translation
-              : strings.card.explanation}
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="chip">
+              {card.answer.kind === 'translation'
+                ? strings.card.translation
+                : strings.card.explanation}
+            </p>
+            {answerChip('back')}
+          </div>
           <div className="flex min-h-[46%] shrink-0 flex-col items-center justify-center py-4 text-center">
             <Answer
               lang={card.answer.lang}

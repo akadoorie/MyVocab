@@ -285,3 +285,22 @@ Format: date · context · decision · consequences.
   ("Return 2 words to practice?", "… back in practice"), which reads better than "to sessions".
 - **Unchanged:** "loop" stays the technical term in the PRD, the code, the API paths (`/api/loops`)
   and the `/loop` page address, so nothing breaks and no links change.
+
+## D-019 · 2026-11-19 · Back, swipes, and changing an answer replace Undo (owner request)
+
+- **Why:** the owner wanted to look at the previous card again, and to move with swipes on the
+  phone (left = Next, right = Back). Being able to change an answer on a card reached with Back
+  makes the Undo bar redundant: it only covered the latest Know, while Back covers every card of
+  the cycle.
+- **Change:** a round **Back** button (and ←) steps back card by card to the first card of the
+  current cycle; the cycle break and the summary offer "← Back to the last card". A card reached
+  with Back always shows its front, with a "Your answer" chip; Next skips forward over answered
+  cards. Know / Don't know there replace the earlier answer. Touch swipes: left = Next, right =
+  Back, only when allowed, with no on-screen hint. The Undo bar and its countdown are gone.
+- **How:** the answer is derived from the existing loop state (`known` for this cycle,
+  `nextCycle`), so there is no new store; `UNDO_KNOW` and `lastKnow` were removed, and a saved
+  session from before still resumes (the old field is dropped on load). Signed-in Know marks keep
+  their short wait before sending (`undo.windowSeconds`, now labelled "Seconds before a Know is
+  saved"); a change to Don't know uses the existing queue removal / `DELETE /api/me/known/:itemId`.
+  No API or database change.
+- **Trade-off:** fixing a mistaken Know takes two taps (Back, Don't know) instead of one.

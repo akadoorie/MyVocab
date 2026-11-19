@@ -1,5 +1,5 @@
 import type { loopSummary } from '@myvocab/core';
-import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { Button3D } from '../../components/Button3D';
 import { KeyboardIcon } from '../../components/Icons';
 import { startGoogleSignIn } from '../../lib/session';
@@ -17,10 +17,12 @@ export function CycleBreak({
   cycle,
   remaining,
   onContinue,
+  onBack,
 }: {
   cycle: number;
   remaining: number;
   onContinue: () => void;
+  onBack: () => void;
 }) {
   const focusRef = useFocusOnMount<HTMLButtonElement>();
   return (
@@ -31,6 +33,7 @@ export function CycleBreak({
       <Button3D size="lg" ref={focusRef} onClick={onContinue}>
         {strings.loop.continue}
       </Button3D>
+      <BackToLastCard onBack={onBack} />
     </section>
   );
 }
@@ -41,11 +44,13 @@ export function Summary({
   isGuest,
   onNewLoop,
   onHome,
+  onBack,
 }: {
   summary: ReturnType<typeof loopSummary>;
   isGuest: boolean;
   onNewLoop: () => void;
   onHome: () => void;
+  onBack: () => void;
 }) {
   const focusRef = useFocusOnMount<HTMLButtonElement>();
   const stats = [
@@ -82,43 +87,21 @@ export function Summary({
           {strings.summary.newLoop}
         </Button3D>
       </div>
+      <BackToLastCard onBack={onBack} />
     </section>
   );
 }
 
-/**
- * The Undo bar after Know (PRD FR-L27): "Date → תאריך, תמר ✓ [Undo]". Compact (as wide as its
- * text), with a small 3D yellow Undo button.
- */
-export function UndoBar({
-  label,
-  seconds,
-  onUndo,
-}: {
-  label: string;
-  /** How long the bar stays (undo.windowSeconds); the countdown ring runs for this long. */
-  seconds: number;
-  onUndo: () => void;
-}) {
-  const [front, answer] = label.split(' → ');
-  const [left, setLeft] = useState(seconds);
-  useEffect(() => {
-    const id = window.setInterval(() => setLeft((n) => Math.max(1, n - 1)), 1000);
-    return () => window.clearInterval(id);
-  }, []);
+/** "← Back to the last card" on the cycle break and the summary (PRD FR-L29a). */
+function BackToLastCard({ onBack }: { onBack: () => void }) {
   return (
-    <div
-      role="status"
-      className="inline-flex max-w-full items-center gap-3 rounded-full border border-[rgba(139,108,255,0.35)] bg-surface-2 py-1.5 pr-1.5 pl-4 text-sm shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+    <button
+      type="button"
+      onClick={onBack}
+      className="flex min-h-11 items-center gap-1.5 rounded-[10px] px-3 text-muted hover:text-text"
     >
-      <span className="min-w-0 truncate" data-testid="undo-label">
-        <bdi>{front}</bdi> → <bdi>{answer}</bdi> <span aria-hidden="true">✓</span>
-      </span>
-      <Button3D variant="hint" size="sm" className="shrink-0 pl-1.5" onClick={onUndo}>
-        <UndoTimer seconds={seconds} left={left} />
-        {strings.loop.undo}
-      </Button3D>
-    </div>
+      <span aria-hidden="true">←</span> {strings.loop.backToCard}
+    </button>
   );
 }
 
@@ -166,27 +149,5 @@ export function ShortcutsMenu() {
         </div>
       )}
     </div>
-  );
-}
-
-/**
- * A small countdown on the Undo button: a yellow ring that empties over the undo window, with the
- * seconds left inside, so it's clear the bar is about to vanish (PRD FR-L27). Decorative for
- * assistive tech: the button's name stays "Undo".
- */
-function UndoTimer({ seconds, left }: { seconds: number; left: number }) {
-  return (
-    <span
-      className="undo-timer"
-      style={{ '--undo-s': `${seconds}s` } as CSSProperties}
-      aria-hidden="true"
-      data-testid="undo-timer"
-    >
-      <svg viewBox="0 0 24 24" focusable="false">
-        <circle className="undo-timer__track" cx="12" cy="12" r="10" />
-        <circle className="undo-timer__ring" cx="12" cy="12" r="10" />
-      </svg>
-      <span className="undo-timer__n">{left}</span>
-    </span>
   );
 }

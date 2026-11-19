@@ -227,7 +227,7 @@ export const adminStrings = {
       'guests.loopSize': 'Guest session size',
       'guests.loopsPerHour': 'Guest sessions per hour (per network)',
       'users.cardsPerDay': 'Cards per learner per day',
-      'undo.windowSeconds': 'Undo bar seconds',
+      'undo.windowSeconds': 'Seconds before a Know is saved',
       'maintenance.enabled': 'Maintenance mode',
       'maintenance.message': 'Maintenance message',
       'trash.retentionHours': 'Hours before Trash is purged',

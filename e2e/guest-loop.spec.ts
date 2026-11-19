@@ -44,11 +44,18 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   await card(page).click();
   await expect(card(page)).toHaveAttribute('data-side', 'back');
 
-  // Know from the back side → next card, front side up, Undo bar.
+  // Know from the back side → next card, front side up.
   await button(page, 'Know').click();
   await expect(progress(page)).toHaveText('Cycle 1 · Card 2/5 · 1 known');
   await expect(card(page)).toHaveAttribute('data-side', 'front');
-  await page.getByRole('button', { name: 'Undo' }).click();
+  // Back shows that card again (front up, with its answer); Don't know changes the answer.
+  await button(page, 'Back').click();
+  await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 1 known');
+  await expect(card(page)).toHaveAttribute('data-side', 'front');
+  await expect(page.getByTestId('answer-chip')).toHaveText(/Your answer: Know/);
+  await button(page, 'Don’t know').click();
+  await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 0 known');
+  await button(page, 'Next').click();
   await expect(progress(page)).toHaveText('Cycle 1 · Card 2/5 · 0 known');
 
   // Don't know → auto-flip → one big Next in place of Know / Don't know.
@@ -76,6 +83,47 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   // New loop keeps the selection.
   await page.getByRole('button', { name: 'New session' }).click();
   await expect(page).toHaveURL(/\/$/);
+});
+
+/** A touch swipe across the card, as pointer events (PRD FR-L29b). */
+async function swipe(page: Page, dx: number) {
+  const box = (await card(page).boundingBox())!;
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  const target = page.getByTestId('flip-card');
+  const ev = (clientX: number) => ({
+    pointerType: 'touch',
+    pointerId: 7,
+    isPrimary: true,
+    clientX,
+    clientY: y,
+    bubbles: true,
+  });
+  await target.dispatchEvent('pointerdown', ev(x));
+  for (let i = 1; i <= 5; i++) await target.dispatchEvent('pointermove', ev(x + (dx * i) / 5));
+  await target.dispatchEvent('pointerup', ev(x + dx));
+}
+
+test('on touch, swipe left is Next and swipe right is Back', async ({ page }) => {
+  await page.goto('/');
+  await page
+    .getByRole('region', { name: 'Start a session' })
+    .getByRole('button', { name: 'Start' })
+    .click();
+  await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 0 known');
+  // Not answered yet: swiping left does nothing.
+  await swipe(page, -160);
+  await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 0 known');
+  await button(page, 'Don’t know').click();
+  await swipe(page, -160);
+  await expect(progress(page)).toHaveText('Cycle 1 · Card 2/5 · 0 known');
+  await expect(card(page)).toHaveAttribute('data-side', 'front');
+  // A short swipe springs back; a full one goes back, front side up.
+  await swipe(page, 20);
+  await expect(progress(page)).toHaveText('Cycle 1 · Card 2/5 · 0 known');
+  await swipe(page, 160);
+  await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 0 known');
+  await expect(card(page)).toHaveAttribute('data-side', 'front');
 });
 
 test('Stop asks first, then ends the session and returns home', async ({ page }) => {

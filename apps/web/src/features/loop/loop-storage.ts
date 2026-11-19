@@ -21,7 +21,7 @@ const loopStateSchema = z.object({
   hintsShown: z.boolean(),
   nextCycle: ids,
   known: z.array(mark),
-  lastKnow: mark.nullable(),
+  // `lastKnow` (the old Undo) is gone; Zod drops it from sessions saved before, so they resume.
   totalCards: z.number().int().min(1),
   rng: z.number().int(),
 }) satisfies z.ZodType<LoopState>;

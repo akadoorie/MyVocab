@@ -164,7 +164,7 @@ private content repository. It never appears in the public code repo or any publ
 | Flip | The round **Flip** button on the card (front and back), a tap/click on the card, or Space/F. It toggles front ↔ back any number of times and never affects grading |
 | Known memory | **Any** "Know" (any cycle) is remembered per **item** and hides the item in **every** direction |
 | Known list | "My known words": search/filter/sort; return items to loops (single, selected, all filtered) |
-| Know tap | Advances immediately + an Undo bar for ~4 s showing `item → answer ✓ Undo` |
+| Know tap | Advances immediately; Back (or swipe right) returns to the card, and its answer can be changed (FR-L29a) |
 | Categories | Many-to-many. "General" = all items |
 | Content sources | Agent-written starter set (in the private content repo) → then admins add manually or by CSV bulk upload |
 | UI language | English only (strings centralized for future i18n). Hebrew content renders RTL |
@@ -238,12 +238,14 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L23** Header progress: `Cycle 2 · Card 1/3 · 2 known` (known = total known in this loop).
 - **FR-L24** Buttons and phases:
 
-| Phase | Know | Hints | Flip | Don't know | Next | Stop |
-|---|---|---|---|---|---|---|
-| **Deciding** (front or back side) | enabled | enabled\* | enabled | enabled | **disabled** | enabled |
-| **Revealed** (after Don't know) | disabled | enabled\* | enabled | disabled | **enabled + focused** | enabled |
+| Phase | Know | Hints | Flip | Don't know | Back | Next | Stop |
+|---|---|---|---|---|---|---|---|
+| **Deciding**, card not answered yet | enabled | enabled\* | enabled | enabled | enabled\*\* | **disabled** | enabled |
+| **Deciding**, card answered earlier (reached with Back) | enabled | enabled\* | enabled | enabled | enabled\*\* | **enabled** | enabled |
+| **Revealed** (after Don't know) | disabled | enabled\* | enabled | disabled | enabled\*\* | **enabled + focused** | enabled |
 
 \* Hints is enabled whenever the **front** is showing (it is a toggle: on, then off again).
+\*\* Back is disabled on the first card of a cycle (FR-L29a).
 
 - **FR-L25 Hints**: a **toggle** (the **Hints** button or the **H** key) that shows the hints and synonyms on the
   **front** of the current card, and on a second press hides them again, so the card is exactly as before. While on,
@@ -256,21 +258,33 @@ private content repository. It never appears in the public code repo or any publ
   **Space**/**F** keys. The learner can flip back and forth
   **any number of times**, in both phases. **Flipping has no effect on grading** and is not recorded.
 - **FR-L27 Know** (available on either side while Deciding): removes the card from the loop (it won't appear in the
-  next cycle), records it as known in this cycle, and **immediately** shows the next card (front side up). An **Undo
-  bar** appears for `undo.windowSeconds` (default 5) with a small **countdown** on the Undo button (a yellow ring that
-  empties, with the seconds left inside, so it is clear the bar will vanish soon): `Date → תאריך, תמר ✓  [Undo]` (the item text →
-  the answer lines joined with ", ", cut at about 40 characters with "…").
-  - **Undo** turns that card into "Don't know": it goes back into the next cycle's set. This works even if the Know
-    ended a cycle (the interstitial updates) or ended the loop (the summary turns back into a cycle break with that card).
-  - Only the **most recent** Know can be undone. A new Know finalizes the previous one.
+  next cycle), records it as known in this cycle, and **immediately** shows the next card (front side up). A Know made
+  by mistake is fixed with **Back** and then **Don't know** (FR-L29a). The earlier **Undo bar** (with its countdown)
+  was removed on 2026-11-19 at the owner's request (D-019): Back covers it and works for any card of the cycle.
 - **FR-L28 Don't know** (available on either side while Deciding): adds the card to the next cycle. If the card is
   showing its front, it **flips automatically** to the back (answer + hints + synonyms). The phase becomes
   **Revealed**: Know and Don't know disable, **Next** enables and receives focus, and Flip stays available. In this
   phase the Know / Don't know pills are **replaced by one wide violet "Next ›" pill** in the same place (and the small
   round Next is hidden), so the only way on is the biggest button on screen (owner request, 2026-11-18: the small
   Next was easy to miss).
-- **FR-L29 Next**: moves to the next card (only enabled in the Revealed phase). The next card enters front side up with
-  a short rise-in (no reverse-flip animation).
+- **FR-L29 Next**: moves to the next card (enabled in the Revealed phase, and on a card answered earlier that was
+  reached with Back). The next card enters front side up with a short rise-in (no reverse-flip animation).
+- **FR-L29a Back and changing an answer** (owner request, 2026-11-19): the round **Back** button (or **←**) shows the
+  previous card of the current cycle, card by card, down to the first card of the cycle (earlier cycles are out of
+  reach). On the cycle break and the summary, **"← Back to the last card"** returns to the cycle's last card. A card
+  reached with Back (or Next) **always shows its front**, hints hidden, even if it was showing its back when left.
+  - A card that already has an answer shows a chip **"Your answer: Know ✓"** (green) or **"Your answer: Don't know ✗"**
+    (red), and **Next** steps forward without answering again, up to the first unanswered card.
+  - **The answer can be changed.** **Know** on a Don't know card takes it out of the next cycle, records it as known
+    and moves on. **Don't know** on a Know card removes the Know, adds the card to the next cycle (never twice) and
+    reveals the answer as in FR-L28. Choosing the same answer again changes nothing. A change on the last card can
+    turn the summary into a cycle break, or the reverse.
+  - Answers are derived from the loop state (`known` for this cycle, `nextCycle`), so there is no separate store.
+- **FR-L29b Swipe** (phones, touch only; owner request, 2026-11-19): **swipe left = Next**, **swipe right = Back**,
+  only when that action is allowed. The card follows the finger with a slight tilt; past about 70 px (or a quick flick)
+  it slides out and the action runs, otherwise it springs back. When the action isn't allowed it moves only a little,
+  with resistance. A mostly vertical drag is ignored, a tap still flips, and with "reduce motion" there is no movement
+  (the action just happens). There is no on-screen hint; the buttons stay.
 - **FR-L30 Stop**: the **Stop** button (or Esc) first asks **"Stop the session? This will stop the session. Are you
   sure?"** with **Yes** / **No**, the same question as Home (FR-L30a; owner request, 2026-11-18). **Yes** ends the
   loop and returns to `/`; already-made Know marks are kept (and flushed, §6.4). **No** continues where it was.
@@ -286,7 +300,7 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L33** The loop state (including the current card's side and whether its hints are shown) is saved in
   `sessionStorage`, so a page refresh resumes the same loop. Stop or finishing clears it.
 - **FR-L34** Desktop keyboard shortcuts (listed in a "Keyboard shortcuts" popover in the loop header): **K** Know, **D** Don't know, **H** Hints,
-  **Space/F** Flip, **Enter** Next or Continue, **Esc** Stop (asks first, FR-L30). Shortcuts respect the enabled/disabled state.
+  **Space/F** Flip, **←** Back, **→** Next, **Enter** Next or Continue, **Esc** Stop (asks first, FR-L30). Shortcuts respect the enabled/disabled state.
 
 ### 6.3 What the back of the card shows
 The front always shows the item text. The back depends only on whether the two languages are the **same or
@@ -305,19 +319,20 @@ different**:
   before sending it (§12.1). The browser only renders it and never applies these rules itself.
 - **FR-L42** Hints and synonyms are always in the item's language and are shown with its `dir`.
 - **FR-L43** The literal meaning never makes an item playable on its own (FR-L40 still needs a translation), is never
-  revealed by **Hints** (it would give the answer away), and is not part of the Undo bar or "My known words".
+  revealed by **Hints** (it would give the answer away), and is not part of "My known words".
 
 ### 6.4 Known items (signed-in learners only)
 - **FR-L50** Every Know (in any cycle) is recorded as `{itemId, target, cycle}` in a client-side **pending queue**
   (`target` is kept for display only, FR-L60).
-- **FR-L51** An entry becomes **final** when its undo window expires or a newer Know happens. Final entries are sent in
-  batches (`POST /api/me/known`, debounced ~2 s). On `pagehide`/`visibilitychange=hidden`, **all** entries (including
-  ones still in their undo window) are flushed with `fetch(..., {keepalive: true})`.
+- **FR-L51** An entry becomes **final** when its short waiting period expires (`undo.windowSeconds`, default 5, so a
+  quick change of answer costs no request) or a newer Know happens. Final entries are sent in batches
+  (`POST /api/me/known`, debounced ~2 s). On `pagehide`/`visibilitychange=hidden`, **all** entries (including ones
+  still waiting) are flushed with `fetch(..., {keepalive: true})`.
 - **FR-L52** The queue is mirrored to `localStorage` (keyed by user id; item ids only, never item text) so unsent
   entries survive a closed tab and are sent on the next app load. Sends retry with exponential backoff. The server
   upsert is **idempotent** (it keeps the earliest `known_at`).
-- **FR-L53** Undo removes the entry from the queue. If it was already sent, the client calls
-  `DELETE /api/me/known/:itemId`.
+- **FR-L53** Changing a Know to Don't know (FR-L29a) removes the entry from the queue. If it was already sent, the
+  client calls `DELETE /api/me/known/:itemId`. Changing Don't know to Know queues a new entry.
 - **FR-L54** `POST /api/loops` for a signed-in user **excludes** all their known items, **in every direction**. Knowing
   "Swift" in EN → HE also hides it from EN → EN. Separate items are not affected: the Hebrew item "מהיר" still appears
   in HE → EN loops.
@@ -446,7 +461,7 @@ so learners never download it. All admin pages work on mobile (tables collapse i
 | `guests.loopSize` | int | `5` | Fixed guest amount (server-enforced) |
 | `guests.loopsPerHour` | int | `10` | Guest loops per hour per IP |
 | `users.cardsPerDay` | int | `500` | Cards served per learner per UTC day (admins exempt) |
-| `undo.windowSeconds` | int | `5` | Undo bar duration (1–15) |
+| `undo.windowSeconds` | int | `5` | Seconds a Know waits in the queue before it is sent (1–15; FR-L51). Admin label "Seconds before a Know is saved" |
 | `maintenance.enabled` | bool | `false` | Show banner + block loops for non-admins |
 | `maintenance.message` | string | `""` | Banner text (≤ 280 chars) |
 | `trash.retentionHours` | int | `24` | Hours before auto-purge (1–720) |
@@ -771,8 +786,8 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   green ✓ glow the card folds into ~10 triangular facets, each tilting its own way in 3D with its own light or shadow,
   like real crumpled paper; the wad shrinks and turns as it flies. About 0.8s in total, and the next card rises in at
   the same time, so Know never feels slow. Reduced motion: no crumple. (A first, simpler "squash into a ball"
-  version was tried and dropped in favour of this one.) Undo has no reverse
-  animation (the card returns to the next cycle, not to the screen). Don't know keeps the flip.
+  version was tried and dropped in favour of this one.) Back has no reverse crumple: the earlier card simply rises in,
+  front side up. Don't know keeps the flip. A swipe slides the card out sideways (FR-L29b).
 
 ### 9.5 Start card (look)
 - Five fields stacked on mobile (2-column grid on desktop), each with a label and either a select (languages,
@@ -799,16 +814,13 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
 - **Loop header**: the MyVocab logo mark (two stacked cards) and the progress `Cycle 1 • Card 2/10 • 1 known` on the
   left; on the right, on desktop a "⌨ Keyboard shortcuts" link that opens a small popover listing the shortcuts, and
   "← Home" (asks before stopping the loop, FR-L30a).
-- **Loop buttons**: on desktop, one row under the card, in this order: `Stop · Hints · Know · Don't know · Next`
-  (round, round, pill, pill, round). Flip is on the card itself.
+- **Loop buttons**: on desktop, one row under the card, in this order: `Stop · Hints · Back · Know · Don't know ·
+  Next` (round, round, round, pill, pill, round); after Don't know, `Stop · Hints · Back · [Next ›]`. Flip is on the
+  card itself.
 - **Loop (mobile, 360–767px)**: the flip card fills the space above; the buttons form a **sticky bottom bar** in the
   thumb zone, in two rows: the wide **Know** and **Don't know** pills (with their labels) on top, and the round
-  `Stop · Hints · Next` (with captions) below, so the two main actions stay big. After Don't know, one wide
-  "Next ›" pill replaces Know / Don't know, with `Stop · Hints` below (FR-L28). The Undo bar **floats over the bottom
-  of the card**, to the left of its Flip button, and takes no space, so the card never changes size when it appears
-  or disappears (owner request, 2026-11-18). The same on desktop. The bar is compact (as wide as its
-  text) and left-aligned on the card; **Undo** is a small 3D pressable button in the Hints style (yellow text on dark
-  amber, with a ledge) so it stands out.
+  `Stop · Hints · Back · Next` (with captions) below, so the two main actions stay big. After Don't know, one wide
+  "Next ›" pill replaces Know / Don't know, with `Stop · Hints · Back` below (FR-L28, FR-L29a).
 - **Loop (desktop ≥ 768px)**: a centered column of about 1100px; the card is wide (≈ 2.3 : 1) and the pills carry
   their labels.
 - **Cycle break / Summary**: a glassy card with large numbers and the 3D buttons.
@@ -871,7 +883,7 @@ MyVocab/
 │  │     ├─ routes/               route modules (landing, loop, known, account, privacy, admin/*)
 │  │     ├─ features/
 │  │     │  ├─ setup/             start card (defaults, default/selected styling, guest lock + toast, Turnstile)
-│  │     │  ├─ loop/              loop screen, FlipCard, useLoop (wraps core reducer), undo bar, known queue
+│  │     │  ├─ loop/              loop screen, FlipCard, useLoop (wraps core reducer), useSwipe, known queue
 │  │     │  ├─ known/             My known words
 │  │     │  └─ admin/             lazy-loaded admin feature modules + ListEditor
 │  │     ├─ components/           Button3D, FlipCard, Card, Panel, Toast, Dialog, Select, Segmented…
@@ -936,7 +948,7 @@ MyVocab/
   limits, duplicates, required fields) run in the admin editor, the API (Zod schemas built from them) and the CSV
   importer.
 - **Pure loop engine**: `loopReducer(state, action)` in `packages/core` with actions
-  `KNOW | DONT_KNOW | TOGGLE_HINTS | FLIP | NEXT | CONTINUE | UNDO_KNOW | STOP`. State includes `phase` (`deciding |
+  `KNOW | DONT_KNOW | TOGGLE_HINTS | FLIP | NEXT | BACK | CONTINUE | STOP` (`answerOf` derives a card's answer). State includes `phase` (`deciding |
   revealed | cycleBreak | finished | stopped`), `side` (`front | back`) and `hintsShown` (boolean, current card).
   `FLIP` only toggles `side`; `TOGGLE_HINTS` only flips `hintsShown` and is ignored unless `side = front`; neither changes
   grading. `DONT_KNOW` sets `side = back`. A new card always starts with `side = front` and `hintsShown = false`. An
@@ -1351,7 +1363,7 @@ Answers are sent to the browser at loop start **by design** (self-assessment; a 
 |---|---|
 | Responsiveness | 360px → 1440px+. No horizontal scrolling. Touch targets ≥ 48px |
 | Performance | Learner path JS ≤ 200 KB gzipped (admin lazy-loaded; Turnstile script loaded only for guests). LCP < 2.5 s on mid-range mobile over 4G. Button response < 50 ms (the loop is local). Flip animation at 60 fps (transform-only) |
-| Accessibility | WCAG 2.2 AA: contrast, visible focus, full keyboard operation, ARIA labels/live regions (announce Undo, flip side, hints shown, cycle changes, toasts), `prefers-reduced-motion` respected (no 3D flip; crossfade instead). The default/selected field styles are not conveyed by color alone (the "Default" tag + outline style) |
+| Accessibility | WCAG 2.2 AA: contrast, visible focus, full keyboard operation, ARIA labels/live regions (announce Back with the card's answer, flip side, hints shown, cycle changes, toasts), `prefers-reduced-motion` respected (no 3D flip; crossfade instead). The default/selected field styles are not conveyed by color alone (the "Default" tag + outline style) |
 | Browsers | The last 2 versions of Chrome, Edge, Firefox and Safari; iOS Safari 16+; Android Chrome |
 | RTL | Correct rendering of Hebrew content (and mixed Hebrew/English) via per-element `dir`/`lang` on both card faces |
 | Reliability | Known marks are never lost silently (persistent queue + retries) |
@@ -1396,12 +1408,12 @@ Cloudflare Access: free for ≤ 50 users. Turnstile: free.
 ## 17. Testing strategy
 | Level | Tooling | Must cover |
 |---|---|---|
-| Unit | Vitest | Every `loopReducer` transition: Know/Don't know/Show hints/Flip/Next/Continue/Stop; `FLIP` toggles `side` any number of times in both phases and never changes grading; `TOGGLE_HINTS` works only on the front, toggles on and off, resets on the next card and never changes grading; `DONT_KNOW` on the front sets `side = back`; new cards start on the front with hints hidden; cycle building; the **order differs** rule (seeded RNG); Undo during a cycle, at a cycle break, and after finishing; only the latest Know is undoable. Answer strategies (translation vs explanation chosen by same/different languages, playability, line order, numbering); `buildCard` output; item validation (no same-language translation, list limits, duplicates, `lang` absent from the update schema); multiple-meanings warnings; the mixed-script check; `normalize`; CSV row validation (incl. `translation_<code>` columns and the own-language column rule), merge planning (incl. the `multiple_meanings` OR rule), **CSV serializer**; start-card defaults resolution (settings → defaults; guest size = 5) |
+| Unit | Vitest | Every `loopReducer` transition: Know/Don't know/Show hints/Flip/Next/Continue/Stop; `FLIP` toggles `side` any number of times in both phases and never changes grading; `TOGGLE_HINTS` works only on the front, toggles on and off, resets on the next card and never changes grading; `DONT_KNOW` on the front sets `side = back`; new cards start on the front with hints hidden; cycle building; the **order differs** rule (seeded RNG); Back card by card (front up, never into an earlier cycle) and from the cycle break / summary; Next only on answered cards; changing an answer both ways (no duplicates in the next cycle). Answer strategies (translation vs explanation chosen by same/different languages, playability, line order, numbering); `buildCard` output; item validation (no same-language translation, list limits, duplicates, `lang` absent from the update schema); multiple-meanings warnings; the mixed-script check; `normalize`; CSV row validation (incl. `translation_<code>` columns and the own-language column rule), merge planning (incl. the `multiple_meanings` OR rule), **CSV serializer**; start-card defaults resolution (settings → defaults; guest size = 5) |
 | Integration | Vitest + `@cloudflare/vitest-pool-workers` (local D1, migrations applied) | Loop selection by type/category/direction (translation vs explanation playability; the SQL rule agrees with `isPlayable` on fixtures); known items excluded **in every direction**; the DB CHECK rejects a same-language translation even through a direct repository write; item PATCH with a stale `version` → 409 and **no** audit row; **guest size forced to 5 even if a larger size is sent**; **guest without/with an invalid Turnstile token → 403 and zero D1 writes**; guest hourly cap → 429 with zero writes after the first `limit.exceeded` entry; learner daily cap → 429 with remaining allowance; admin exempt from caps; learner size must be in `sizeOptions`; admin endpoints → 401 guest / 403 user / 403 admin without an Access JWT in production mode / 403 on an email mismatch; item create/update + audit rows (before/after of changed lists); Trash: delete hides from loops and known lists, restore brings known marks back, restore blocked on a duplicate, purge cascades + snapshot; CSV dry run vs commit, merge rules, error and warning rows; idempotent `POST /me/known`; user A can't touch user B's known rows; `/api/*` responses carry `noindex` + `no-store` headers; settings validation (defaults must be active languages, etc.) |
 | Scripts | Vitest (Node) against a local D1 | `db:seed` falls back to `seed/sample.csv` when `CONTENT_DIR` is missing; **export round-trip**: seed → `db:export --local --content-only` → import into an empty D1 → identical content; full export produces `manifest.json` row counts that match the tables, valid JSON per table (item lists as real arrays/objects), and a `schema.sql` that recreates the schema in a fresh SQLite |
 | Guard | CI | `check:no-vocabulary` fails on a committed non-fixture `.csv`/`.sql`/export, or a `seed/sample.csv` over 20 rows |
-| Component | Vitest + Testing Library | Button states per phase (incl. Hints only while the front shows, and its pressed state); FlipCard (button/tap/keyboard toggling, hints section on the front after Hints and always on the back, multiple-meanings badge, numbered explanation lines, hidden face `inert`, live-region text, reduced-motion path); start card default vs selected styling + "Reset to defaults" + same-language note; guest locked amount + toast (auto once per session, on tap); Undo bar timing and truncation; ListEditor add/edit/delete/reorder + 409 handling; RTL rendering on both faces |
-| E2E | Playwright (mobile 390×844 + desktop 1280×800) | Guest: landing → press Start without changing anything (defaults EN→HE, General, Words) → 5-card loop to the summary (incl. Hints on the front, then Flip showing hints on the back, Flip back and forth by button and by tapping the card, Know from the back side, Don't know → auto-flip → Next, Know → Undo); guest sees the register toast and can't change the amount. Signed-in (test session): choose 20 → loop; Know → appears in My known words → no longer offered in the other direction → Return to loops → available again. Admin: create an item with translations, explanation, synonyms, hints and multiple meanings; preview both directions; delete to Trash; restore. CSV: dry run with errors and warnings, then commit |
+| Component | Vitest + Testing Library | Button states per phase (incl. Hints only while the front shows, and its pressed state); FlipCard (button/tap/keyboard toggling, hints section on the front after Hints and always on the back, multiple-meanings badge, numbered explanation lines, hidden face `inert`, live-region text, reduced-motion path); start card default vs selected styling + "Reset to defaults" + same-language note; guest locked amount + toast (auto once per session, on tap); Back, the "Your answer" chip, ← / →, and answer changes reaching the Know queue; ListEditor add/edit/delete/reorder + 409 handling; RTL rendering on both faces |
+| E2E | Playwright (mobile 390×844 + desktop 1280×800) | Guest: landing → press Start without changing anything (defaults EN→HE, General, Words) → 5-card loop to the summary (incl. Hints on the front, then Flip showing hints on the back, Flip back and forth by button and by tapping the card, Know from the back side, Don't know → auto-flip → Next, Know → Back → Don't know; touch swipes left = Next and right = Back); guest sees the register toast and can't change the amount. Signed-in (test session): choose 20 → loop; Know → appears in My known words → no longer offered in the other direction → Return to loops → available again. Admin: create an item with translations, explanation, synonyms, hints and multiple meanings; preview both directions; delete to Trash; restore. CSV: dry run with errors and warnings, then commit |
 | Manual (post-deploy) | Phone + desktop | Play a loop (check the flip and hints feel on a real phone); guest Turnstile works invisibly; sign in; known list; `/admin` → Cloudflare Access asks for a one-time code; a non-admin email is refused by Access; a normal user calling `/api/admin/*` → 403; `pnpm db:export` and `--content-only` work from the owner's machine; the D1 dashboard shows rows read/written well within the free tier |
 
 CI fails on lint, type or test errors, a guard failure, or if `packages/core` coverage < 90%.

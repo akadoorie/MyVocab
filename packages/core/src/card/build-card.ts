@@ -41,11 +41,3 @@ export function buildCard(item: ItemData, target: LangCode, languages: LanguageM
     extrasLang: own,
   };
 }
-
-/** Text for the Undo bar: "Date → תאריך, תמר", cut at about 40 characters (PRD FR-L27). */
-export function undoBarLabel(card: CardView, maxAnswerChars = 40): string {
-  const answer = card.answer.lines.join(', ');
-  const cut =
-    answer.length > maxAnswerChars ? `${answer.slice(0, maxAnswerChars).trimEnd()}…` : answer;
-  return `${card.front.text} → ${cut}`;
-}

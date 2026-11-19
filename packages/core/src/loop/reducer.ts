@@ -25,8 +25,6 @@ export type LoopState = {
   nextCycle: number[];
   /** Cards marked Know in this loop, with the cycle they were marked in. */
   known: KnownMark[];
-  /** The most recent Know, which Undo can still reverse (FR-L27). */
-  lastKnow: KnownMark | null;
   totalCards: number;
   rng: RngState;
 };
@@ -37,8 +35,8 @@ export type LoopAction =
   | { type: 'TOGGLE_HINTS' }
   | { type: 'FLIP' }
   | { type: 'NEXT' }
+  | { type: 'BACK' }
   | { type: 'CONTINUE' }
-  | { type: 'UNDO_KNOW' }
   | { type: 'STOP' };
 
 export type LoopActionType = LoopAction['type'];
@@ -57,7 +55,6 @@ export function createLoop(cardIds: readonly number[], seed: RngState): LoopStat
     hintsShown: false,
     nextCycle: [],
     known: [],
-    lastKnow: null,
     totalCards: unique.length,
     rng,
   };
@@ -78,6 +75,16 @@ function advance(state: LoopState): LoopState {
   };
 }
 
+/**
+ * The answer already given to a card in the current cycle (PRD FR-L29a): Know, Don't know, or null
+ * when it hasn't been answered yet. Derived from `known` and `nextCycle`, so it can't drift.
+ */
+export function answerOf(state: LoopState, id: number): 'know' | 'dontKnow' | null {
+  if (state.known.some((k) => k.id === id && k.cycle === state.cycle)) return 'know';
+  if (state.nextCycle.includes(id)) return 'dontKnow';
+  return null;
+}
+
 /** Which actions are allowed right now (drives the button states in PRD FR-L24). */
 export function canDispatch(state: LoopState, type: LoopActionType): boolean {
   const onCard = state.phase === 'deciding' || state.phase === 'revealed';
@@ -91,11 +98,19 @@ export function canDispatch(state: LoopState, type: LoopActionType): boolean {
     case 'FLIP':
       return onCard;
     case 'NEXT':
-      return state.phase === 'revealed';
+      // After Don't know, or on a card answered earlier (reached with Back, FR-L29a).
+      return (
+        state.phase === 'revealed' ||
+        (state.phase === 'deciding' && answerOf(state, currentId(state)) !== null)
+      );
+    case 'BACK':
+      // Card by card to the first card of this cycle; from the cycle break or the summary to its
+      // last card. Earlier cycles are out of reach.
+      return (
+        (onCard && state.index > 0) || state.phase === 'cycleBreak' || state.phase === 'finished'
+      );
     case 'CONTINUE':
       return state.phase === 'cycleBreak';
-    case 'UNDO_KNOW':
-      return state.lastKnow !== null && state.phase !== 'stopped';
     case 'STOP':
       return onCard || state.phase === 'cycleBreak';
   }
@@ -105,22 +120,46 @@ export function loopReducer(state: LoopState, action: LoopAction): LoopState {
   if (!canDispatch(state, action.type)) return state;
   switch (action.type) {
     case 'KNOW': {
-      const mark: KnownMark = { id: currentId(state), cycle: state.cycle };
-      return advance({ ...state, known: [...state.known, mark], lastKnow: mark });
+      // A first answer, or a change from Don't know on a card reached with Back (FR-L29a).
+      const id = currentId(state);
+      if (answerOf(state, id) === 'know') return advance(state);
+      return advance({
+        ...state,
+        known: [...state.known, { id, cycle: state.cycle }],
+        nextCycle: state.nextCycle.filter((n) => n !== id),
+      });
     }
-    case 'DONT_KNOW':
+    case 'DONT_KNOW': {
+      const id = currentId(state);
+      const answer = answerOf(state, id);
       return {
         ...state,
-        nextCycle: [...state.nextCycle, currentId(state)],
+        known:
+          answer === 'know'
+            ? state.known.filter((k) => !(k.id === id && k.cycle === state.cycle))
+            : state.known,
+        nextCycle: answer === 'dontKnow' ? state.nextCycle : [...state.nextCycle, id],
         phase: 'revealed',
         side: 'back',
       };
+    }
     case 'TOGGLE_HINTS':
       return { ...state, hintsShown: !state.hintsShown };
     case 'FLIP':
       return { ...state, side: state.side === 'front' ? 'back' : 'front' };
     case 'NEXT':
       return advance(state);
+    case 'BACK': {
+      // The card always arrives front side up, hints hidden (FR-L29a).
+      const from = state.phase === 'cycleBreak' || state.phase === 'finished';
+      return {
+        ...state,
+        index: (from ? state.order.length : state.index) - 1,
+        phase: 'deciding',
+        side: 'front',
+        hintsShown: false,
+      };
+    }
     case 'CONTINUE': {
       const [order, rng] = orderNextCycle(state.nextCycle, state.order, state.rng);
       return {
@@ -135,15 +174,8 @@ export function loopReducer(state: LoopState, action: LoopAction): LoopState {
         rng,
       };
     }
-    case 'UNDO_KNOW': {
-      const undone = state.lastKnow as KnownMark;
-      const known = state.known.filter((k) => !(k.id === undone.id && k.cycle === undone.cycle));
-      const nextCycle = [...state.nextCycle, undone.id];
-      const phase = state.phase === 'finished' ? 'cycleBreak' : state.phase;
-      return { ...state, known, nextCycle, lastKnow: null, phase };
-    }
     case 'STOP':
-      return { ...state, phase: 'stopped', lastKnow: null };
+      return { ...state, phase: 'stopped' };
   }
 }
 

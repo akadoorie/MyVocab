@@ -1,5 +1,5 @@
 import { createLoop } from '@myvocab/core';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '../../components/Toast';
@@ -82,30 +82,72 @@ describe('LoopPage', () => {
     expect(front()).not.toBeNull();
   });
 
-  it('Know shows the Undo bar with a countdown; it disappears after the undo window', () => {
-    vi.useFakeTimers();
-    const sink = { onKnow: vi.fn(), onUndo: vi.fn() };
-    setup(sink);
+  it('Back shows the previous card front side up with its answer; Next steps forward again', () => {
+    setup();
+    expect(btn('Back')).toBeDisabled(); // first card of the cycle
     fireEvent.click(btn('Know'));
+    fireEvent.click(btn('Don’t know'));
+    expect(side()).toBe('back');
+    fireEvent.click(btn('Back'));
+    expect(progress()).toBe('Cycle 1 · Card 1/3 · 1 known');
+    expect(side()).toBe('front');
+    expect(screen.getByTestId('answer-chip')).toHaveTextContent('Your answer: Know');
+    expect(screen.getByText('Card 1 of 3. Your answer: Know')).toHaveClass('sr-only');
+    expect(btn('Next')).toBeEnabled(); // answered, so Next skips ahead without answering again
+    fireEvent.click(btn('Next'));
     expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known');
-    expect(screen.getByTestId('undo-label')).toHaveTextContent(/→ מילה-/);
-    expect(sink.onKnow).toHaveBeenCalledWith(expect.objectContaining({ cycle: 1 }), 'he');
-    // The countdown on the Undo button shows the seconds left (the window is 4s in this setup).
-    expect(screen.getByTestId('undo-timer')).toHaveTextContent('4');
-    expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
-    act(() => vi.advanceTimersByTime(1000));
-    expect(screen.getByTestId('undo-timer')).toHaveTextContent('3');
-    act(() => vi.advanceTimersByTime(3100));
-    expect(screen.queryByTestId('undo-label')).not.toBeInTheDocument();
+    expect(side()).toBe('front'); // even though it was showing its back when we left it
+    expect(screen.getByTestId('answer-chip')).toHaveTextContent('Your answer: Don’t know');
+    fireEvent.click(btn('Next'));
+    expect(screen.queryByTestId('answer-chip')).not.toBeInTheDocument(); // not answered yet
+    expect(btn('Next')).toBeDisabled();
   });
 
-  it('Undo reverses the last Know', () => {
-    const sink = { onKnow: vi.fn(), onUndo: vi.fn() };
+  it('changing an answer: Know → Don’t know unmarks it, Don’t know → Know marks it', () => {
+    const sink = { onKnow: vi.fn(), onUnknow: vi.fn() };
     setup(sink);
     fireEvent.click(btn('Know'));
-    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
-    expect(progress()).toBe('Cycle 1 · Card 2/3 · 0 known');
-    expect(sink.onUndo).toHaveBeenCalledTimes(1);
+    expect(sink.onKnow).toHaveBeenCalledTimes(1);
+    expect(sink.onKnow).toHaveBeenCalledWith(expect.objectContaining({ cycle: 1 }), 'he');
+    fireEvent.click(btn('Back'));
+    fireEvent.click(btn('Don’t know'));
+    expect(sink.onUnknow).toHaveBeenCalledTimes(1);
+    expect(progress()).toBe('Cycle 1 · Card 1/3 · 0 known');
+    expect(side()).toBe('back');
+    fireEvent.click(btn('Next'));
+    fireEvent.click(btn('Back'));
+    fireEvent.click(btn('Know'));
+    expect(sink.onKnow).toHaveBeenCalledTimes(2);
+    expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known');
+    // Know again on a card already known changes nothing in the queue.
+    fireEvent.click(btn('Back'));
+    fireEvent.click(btn('Know'));
+    expect(sink.onKnow).toHaveBeenCalledTimes(2);
+  });
+
+  it('← and → are Back and Next', () => {
+    setup();
+    fireEvent.keyDown(window, { key: 'k' });
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(progress()).toBe('Cycle 1 · Card 1/3 · 1 known');
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known');
+  });
+
+  it('the cycle break and the summary go back to the last card', () => {
+    setup();
+    fireEvent.click(btn('Know'));
+    fireEvent.click(btn('Know'));
+    fireEvent.click(btn('Know'));
+    expect(screen.getByRole('heading', { name: 'Session complete' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
+    expect(progress()).toBe('Cycle 1 · Card 3/3 · 3 known');
+    expect(loadLoop()).not.toBeNull(); // the session is alive again
+    fireEvent.click(btn('Don’t know'));
+    fireEvent.click(btn('Next'));
+    expect(screen.getByRole('heading', { name: 'Cycle 2 · 1 card left' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
+    expect(progress()).toBe('Cycle 1 · Card 3/3 · 2 known');
   });
 
   it('supports keyboard shortcuts', () => {

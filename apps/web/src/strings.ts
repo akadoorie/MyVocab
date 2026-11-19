@@ -153,7 +153,8 @@ export const strings = {
     next: 'Next',
     stop: 'Stop',
     continue: 'Continue',
-    undo: 'Undo',
+    back: 'Back',
+    backToCard: 'Back to the last card',
     progress: (cycle: number, card: number, size: number, known: number) =>
       `Cycle ${cycle} · Card ${card}/${size} · ${known} known`,
     cycleBreak: (cycle: number, left: number) =>
@@ -171,6 +172,8 @@ export const strings = {
       ['D', 'Don’t know'],
       ['H', 'Hints'],
       ['F / Space', 'Flip'],
+      ['←', 'Back'],
+      ['→', 'Next'],
       ['Enter', 'Next / Continue'],
       ['Esc', 'Stop'],
     ] as const,
@@ -187,6 +190,11 @@ export const strings = {
     showingAnswer: 'Showing answer',
     hintsShown: 'Hints shown',
     hintsHidden: 'Hints hidden',
+    answeredKnow: 'Your answer: Know',
+    answeredDontKnow: 'Your answer: Don’t know',
+    /** Announced when Back lands on a card (screen readers). */
+    backTo: (card: number, size: number, answer: string | null) =>
+      `Card ${card} of ${size}${answer ? `. ${answer}` : ''}`,
   },
   summary: {
     title: 'Session complete',

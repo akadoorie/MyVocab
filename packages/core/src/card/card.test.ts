@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { LANGS, makeItem } from '../test-fixtures';
-import { buildCard, CardBuildError, undoBarLabel } from './build-card';
+import { buildCard, CardBuildError } from './build-card';
 import {
   explanationStrategy,
   isPlayableFor,
@@ -105,16 +105,5 @@ describe('buildCard', () => {
     expect(() => buildCard(makeItem({ translation: { fr: ['x'] } }), 'fr', LANGS)).toThrow(
       /Unknown language/,
     );
-  });
-});
-
-describe('undoBarLabel', () => {
-  it('joins the answer lines', () => {
-    expect(undoBarLabel(buildCard(makeItem(), 'he', LANGS))).toBe('Date → תאריך, תמר');
-  });
-
-  it('cuts long answers with an ellipsis', () => {
-    const label = undoBarLabel(buildCard(makeItem(), 'en', LANGS), 20);
-    expect(label).toBe('Date → A particular day of…');
   });
 });

@@ -50,7 +50,7 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe('Know marks of a signed-in learner', () => {
-  it('Know queues {itemId, target, cycle} (ids only) and Undo removes it', async () => {
+  it('Know queues {itemId, target, cycle} (ids only); Back → Don’t know removes it', async () => {
     const { client } = setup(false);
     // The queue exists once the session is known.
     await waitFor(() => expect(client.getQueryData(ME_QUERY_KEY)).toEqual({ user: TEST_USER }));
@@ -59,7 +59,8 @@ describe('Know marks of a signed-in learner', () => {
     fireEvent.click(button('Know'));
     expect(stored()).toEqual([{ i: id, t: 'he', c: 1, f: 0, n: expect.any(Number) as number }]);
     expect(window.localStorage.getItem(queueStorageKey(TEST_USER.id))).not.toMatch(/sample/);
-    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    fireEvent.click(button('Back'));
+    fireEvent.click(button('Don’t know'));
     expect(stored()).toEqual([]);
   });
 

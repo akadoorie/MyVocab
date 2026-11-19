@@ -1,10 +1,10 @@
 import {
+  answerOf,
   canDispatch,
   currentCardId,
   loopProgress,
   loopReducer,
   loopSummary,
-  undoBarLabel,
   type KnownMark,
   type LoopActionType,
 } from '@myvocab/core';
@@ -19,18 +19,19 @@ import { LogoMark } from '../../components/Icons';
 import { ButtonBar } from './ButtonBar';
 import { FlipCard } from './FlipCard';
 import { clearLoop, loadLoop, saveLoop, type StoredLoop } from './loop-storage';
-import { CycleBreak, ShortcutsMenu, Summary, UndoBar } from './LoopScreens';
+import { CycleBreak, ShortcutsMenu, Summary } from './LoopScreens';
 import { CrumpleGhost, type Crumple } from './CrumpleGhost';
 import { useLoopShortcuts } from './useLoopShortcuts';
+import { useSwipe } from './useSwipe';
 
 export type KnownSink = {
   /** A Know was made (signed-in learners queue it, PRD §6.4). */
   onKnow(mark: KnownMark, target: string): void;
-  /** That Know was undone. */
-  onUndo(mark: KnownMark): void;
+  /** A Know was changed to Don't know on a card reached with Back (FR-L29a). */
+  onUnknow(itemId: number): void;
 };
 
-const noopSink: KnownSink = { onKnow: () => undefined, onUndo: () => undefined };
+const noopSink: KnownSink = { onKnow: () => undefined, onUnknow: () => undefined };
 
 /**
  * The loop screen. Signed-in learners' Know marks go to the Know queue (PRD §6.4); guests' marks
@@ -42,14 +43,16 @@ export function LoopPage({ knownSink }: { knownSink?: KnownSink }) {
   const sink = useMemo<KnownSink>(() => {
     if (knownSink) return knownSink;
     if (!queue || !stored || stored.isGuest) return noopSink;
-    const undoMs = stored.undoWindowSeconds * 1000;
+    // A Know waits this long before it's sent, so a quick change of mind costs no request.
+    const delayMs = stored.undoWindowSeconds * 1000;
     return {
-      onKnow: (mark, target) => queue.add({ itemId: mark.id, target, cycle: mark.cycle }, undoMs),
-      onUndo: (mark) => queue.undo(mark.id),
+      onKnow: (mark, target) => queue.add({ itemId: mark.id, target, cycle: mark.cycle }, delayMs),
+      // Drops a pending mark, or deletes it on the server if it was already sent (FR-L53).
+      onUnknow: (itemId) => queue.undo(itemId),
     };
   }, [knownSink, queue, stored]);
 
-  // Leaving the loop screen ends every undo window: pending marks become final.
+  // Leaving the loop screen ends every waiting period: pending marks become final.
   useEffect(() => () => queue?.finalizeAll(), [queue]);
 
   if (!stored) return <Navigate to="/" replace />;
@@ -63,7 +66,6 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   const [state, dispatch] = useReducer(loopReducer, stored.state);
   const cards = useMemo(() => new Map(stored.cards.map((c) => [c.itemId, c])), [stored.cards]);
   const nextRef = useRef<HTMLButtonElement>(null);
-  const [expired, setExpired] = useState<KnownMark | null>(null);
   const [announcement, setAnnouncement] = useState('');
   // Stop and Home both ask before ending the session (PRD FR-L30, FR-L30a).
   const [confirmLeave, setConfirmLeave] = useState<'stop' | 'home' | null>(null);
@@ -85,15 +87,6 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
     if (notice) toast.show({ message: notice });
   }, [notice, toast]);
 
-  // The Undo bar shows for undo.windowSeconds after each Know (FR-L27).
-  useEffect(() => {
-    const mark = state.lastKnow;
-    if (!mark) return;
-    const id = window.setTimeout(() => setExpired(mark), stored.undoWindowSeconds * 1000);
-    return () => window.clearTimeout(id);
-  }, [state.lastKnow, stored.undoWindowSeconds]);
-  const undoVisible = state.lastKnow !== null && expired !== state.lastKnow;
-
   // After Don't know, Next receives focus (FR-L28).
   useEffect(() => {
     if (state.phase === 'revealed') nextRef.current?.focus();
@@ -103,9 +96,12 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
     (type: LoopActionType) => {
       if (!canDispatch(state, type)) return;
       const id = currentCardId(state);
+      // On a card reached with Back the answer can change (FR-L29a); only changes reach the queue.
+      const before = id === null ? null : answerOf(state, id);
+      if (type === 'DONT_KNOW' && id !== null && before === 'know') knownSink.onUnknow(id);
       if (type === 'KNOW' && id !== null) {
         const mark = { id, cycle: state.cycle };
-        knownSink.onKnow(mark, cards.get(id)?.direction.target ?? '');
+        if (before !== 'know') knownSink.onKnow(mark, cards.get(id)?.direction.target ?? '');
         // The known card crumples and flies into the "known" counter (PRD §9.4).
         const known = cards.get(id);
         const from = cardRef.current?.getBoundingClientRect();
@@ -122,7 +118,22 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           });
         }
       }
-      if (type === 'UNDO_KNOW' && state.lastKnow) knownSink.onUndo(state.lastKnow);
+      if (type === 'BACK') {
+        const offCard = state.phase === 'cycleBreak' || state.phase === 'finished';
+        const to = (offCard ? state.order.length : state.index) - 1;
+        const answer = answerOf(state, state.order[to]!);
+        setAnnouncement(
+          strings.card.backTo(
+            to + 1,
+            state.order.length,
+            answer === 'know'
+              ? strings.card.answeredKnow
+              : answer === 'dontKnow'
+                ? strings.card.answeredDontKnow
+                : null,
+          ),
+        );
+      }
       if (type === 'FLIP') {
         setAnnouncement(
           state.side === 'front' ? strings.card.showingAnswer : strings.card.showingFront,
@@ -151,7 +162,16 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   const progress = loopProgress(state);
   const id = currentCardId(state);
   const card = id === null ? undefined : cards.get(id);
-  const lastKnownCard = state.lastKnow ? cards.get(state.lastKnow.id) : undefined;
+  // The chip shows on a card that already had an answer when it came up (reached with Back).
+  const shownAnswer = id !== null && state.phase === 'deciding' ? answerOf(state, id) : null;
+  const swipeRef = useSwipe({
+    canLeft: canDispatch(state, 'NEXT'),
+    canRight: canDispatch(state, 'BACK'),
+    onLeft: () => act('NEXT'),
+    onRight: () => act('BACK'),
+    enabled: !confirmLeave,
+    animate: motionAllowed(),
+  });
 
   const ghost = crumple ? (
     <CrumpleGhost key={crumple.key} crumple={crumple} onDone={clearCrumple} />
@@ -165,16 +185,6 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
     ),
   );
 
-  const undoBar =
-    undoVisible && lastKnownCard ? (
-      <UndoBar
-        key={`${state.lastKnow?.id}-${state.lastKnow?.cycle}`}
-        label={undoBarLabel(lastKnownCard)}
-        seconds={stored.undoWindowSeconds}
-        onUndo={() => act('UNDO_KNOW')}
-      />
-    ) : null;
-
   if (state.phase === 'cycleBreak') {
     return (
       <main id="main" className="mx-auto flex min-h-dvh w-full max-w-[640px] flex-col px-4 py-6">
@@ -182,8 +192,8 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           cycle={state.cycle + 1}
           remaining={progress.remaining}
           onContinue={() => act('CONTINUE')}
+          onBack={() => act('BACK')}
         />
-        <div className="sticky bottom-4 flex justify-center">{undoBar}</div>
         {ghost}
       </main>
     );
@@ -196,8 +206,8 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           isGuest={stored.isGuest}
           onHome={() => navigate('/')}
           onNewLoop={() => navigate('/', { state: { selection: stored.selection } })}
+          onBack={() => act('BACK')}
         />
-        <div className="sticky bottom-4 flex justify-center">{undoBar}</div>
         {ghost}
       </main>
     );
@@ -260,12 +270,17 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
         ref={cardRef}
         className="card-enter flex min-h-0 flex-1 flex-col md:h-[clamp(420px,58vh,600px)] md:flex-none"
       >
-        <FlipCard
-          card={card}
-          side={state.side}
-          hintsShown={state.hintsShown}
-          onFlip={() => act('FLIP')}
-        />
+        {/* The swipe moves this inner box: the rise-in animation owns the outer one's transform.
+            Vertical drags stay with the page (touch-action: pan-y). */}
+        <div ref={swipeRef} className="flex min-h-0 flex-1 touch-pan-y flex-col">
+          <FlipCard
+            card={card}
+            side={state.side}
+            hintsShown={state.hintsShown}
+            onFlip={() => act('FLIP')}
+            answer={shownAnswer}
+          />
+        </div>
       </div>
 
       <p className="sr-only" aria-live="polite">
@@ -273,13 +288,6 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
       </p>
 
       <div className="sticky bottom-0 -mx-4 flex flex-col gap-4 bg-gradient-to-t from-bg via-bg to-transparent px-4 pt-4 pb-4 md:relative md:mx-0 md:bg-none md:px-0 md:pt-0 md:pb-8">
-        {/* The Undo bar floats over the bottom of the card, left of its Flip button, and takes no
-            space: the card never changes size when it comes and goes (PRD §9.7). */}
-        {undoBar && (
-          <div className="undo-float absolute right-[100px] bottom-[calc(100%+32px)] left-7 z-30 md:right-[112px] md:bottom-[calc(100%+56px)] md:left-6">
-            {undoBar}
-          </div>
-        )}
         <ButtonBar
           state={state}
           onAction={(type) => (type === 'STOP' ? setConfirmLeave('stop') : act(type))}

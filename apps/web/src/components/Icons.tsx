@@ -51,6 +51,13 @@ export const ChevronIcon = () => (
   </Svg>
 );
 
+/** The left-pointing chevron of Back (PRD FR-L29a). */
+export const ChevronBackIcon = () => (
+  <Svg strokeWidth={2.8}>
+    <path d="m15 5-7 7 7 7" />
+  </Svg>
+);
+
 export const FlipIcon = () => (
   <Svg strokeWidth={2.6}>
     <path d="M7.5 6.2A8 8 0 1 0 12 4" />
