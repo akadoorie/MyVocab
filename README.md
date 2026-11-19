@@ -53,6 +53,7 @@ e2e/                Playwright tests (synthetic data only)
 seed/sample.csv     ≤ 20 obviously fake rows for development and CI
 scripts/            repo tooling (no-vocabulary guard, E2E server)
 docs/DECISIONS.md   why things are the way they are
+docs/DATA-MODEL.md  the database tables and how they relate
 ```
 
 ## Local setup (Windows, macOS, Linux)
