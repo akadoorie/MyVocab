@@ -323,3 +323,9 @@ Format: date · context · decision · consequences.
 - **How:** the page picks the button's place with a media query in code rather than CSS
   reordering, so the keyboard and screen-reader order match what is on screen. The invisible
   security check moves with the button and is drawn again if the window crosses the width.
+
+## D-022 · 2026-11-19 · New landing headline (owner request)
+
+- **Change:** the landing headline is now **"Learn words until they stick"** (was "Learn words
+  that stick: one session at a time"). It is shorter and says how the app works: cards come back
+  until you know them.

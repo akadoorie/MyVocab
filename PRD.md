@@ -826,7 +826,7 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
 
 ### 9.7 Layouts
 - **Landing**: header (logo "MyVocab", sign-in / avatar, an "Admin" link for admins as a full-page navigation); hero
-  ("Learn words that stick: one session at a time"); How it works (1. Pick languages and a topic, or just press Start ·
+  ("Learn words until they stick"); How it works (1. Pick languages and a topic, or just press Start ·
   2. Use Hints or Flip, then mark what you know · 3. Repeat until nothing is left); Start card; footer (Privacy,
   GitHub). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
 - **Loop header**: the MyVocab logo mark (two stacked cards) and the progress `Cycle 1 • Card 2/10 • 1 known` on the

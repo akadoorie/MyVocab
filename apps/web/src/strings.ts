@@ -5,7 +5,7 @@
 export const strings = {
   app: {
     name: 'MyVocab',
-    tagline: 'Learn words that stick: one session at a time',
+    tagline: 'Learn words until they stick',
   },
   nav: {
     home: 'Home',
@@ -20,7 +20,7 @@ export const strings = {
     skipToContent: 'Skip to content',
   },
   landing: {
-    heroTitle: 'Learn words that stick: one session at a time',
+    heroTitle: 'Learn words until they stick',
     heroBody:
       'Pick a set of words or expressions. Each round shows only the ones you still don’t know, until nothing is left.',
     howItWorks: 'How it works',
