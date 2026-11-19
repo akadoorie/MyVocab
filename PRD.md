@@ -304,7 +304,9 @@ private content repository. It never appears in the public code repo or any publ
   remembered on the device (`localStorage`), and sound is on by default. If the browser refuses to play, only the
   confetti shows.
   - **Once per session**: after "← Back to the last card", reaching the summary again shows no confetti and plays no
-    sound. The flag is kept with the saved session, so a refresh doesn't repeat it either.
+    sound. The flag is kept with the saved session, so a refresh doesn't repeat it either. **Exception**: if the
+    learner went back, changed a card to Don't know and **continued into a new cycle**, completing that cycle is a
+    new completion, so the celebration and the crown's flight happen again.
   - **The crown**: as the last confetti falls (about 2.4 s), a yellow crown flies in slowly (about 2 s) along one
     smooth arc (no pause on the way) from the top-left of
     the screen and lands, tilted, on the **upper-left corner** of the summary card with a small bounce. It stays there,

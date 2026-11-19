@@ -175,6 +175,34 @@ describe('LoopPage', () => {
     vi.restoreAllMocks();
   });
 
+  it('celebrates again when a new cycle was started after the celebration', () => {
+    window.localStorage.clear();
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockImplementation(() => Promise.resolve());
+    vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    setup();
+    for (let i = 0; i < 3; i++) fireEvent.click(btn('Know'));
+    expect(play).toHaveBeenCalledTimes(1);
+    // Back, change the last card to Don't know, then Back to Know again: no new cycle, no repeat.
+    fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
+    fireEvent.click(btn('Don’t know'));
+    fireEvent.click(btn('Back')); // to card 2
+    fireEvent.click(btn('Next')); // card 3 again, answered Don't know
+    fireEvent.click(btn('Know')); // changed back: the session is completed again
+    expect(screen.getByRole('heading', { name: 'Session completed' })).toBeInTheDocument();
+    expect(play).toHaveBeenCalledTimes(1);
+    // Now a real new cycle: Back, Don't know, Next → cycle break → Continue → Know → completed.
+    fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
+    fireEvent.click(btn('Don’t know'));
+    fireEvent.click(btn('Next'));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    fireEvent.click(btn('Know'));
+    expect(screen.getByRole('heading', { name: 'Session completed' })).toBeInTheDocument();
+    expect(play).toHaveBeenCalledTimes(2);
+    vi.restoreAllMocks();
+  });
+
   it('the cycle break and the summary go back to the last card', () => {
     setup();
     fireEvent.click(btn('Know'));

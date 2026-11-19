@@ -147,6 +147,9 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
         setAnnouncement(strings.card.showingAnswer);
       if (type === 'TOGGLE_HINTS')
         setAnnouncement(state.hintsShown ? strings.card.hintsHidden : strings.card.hintsShown);
+      // A new cycle after the celebration means the session will be completed anew: celebrate
+      // (and fly the crown) again when it ends (FR-L32a).
+      if (type === 'CONTINUE') setCelebrated(false);
       dispatch({ type });
     },
     [state, cards, knownSink],
