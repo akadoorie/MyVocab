@@ -1379,7 +1379,7 @@ Answers are sent to the browser at loop start **by design** (self-assessment; a 
 | Accessibility | WCAG 2.2 AA: contrast, visible focus, full keyboard operation, ARIA labels/live regions (announce Back with the card's answer, flip side, hints shown, cycle changes, toasts), `prefers-reduced-motion` respected (no 3D flip; crossfade instead). The default/selected field styles are not conveyed by color alone (the "Default" tag + outline style) |
 | Browsers | The last 2 versions of Chrome, Edge, Firefox and Safari; iOS Safari 16+; Android Chrome |
 | RTL | Correct rendering of Hebrew content (and mixed Hebrew/English) via per-element `dir`/`lang` on both card faces |
-| Reliability | Known marks are never lost silently (persistent queue + retries) |
+| Reliability | Known marks are never lost silently (persistent queue + retries). A tab opened before a deploy whose lazily loaded part (e.g. the admin area) no longer exists reloads itself once to pick up the new version, instead of showing "'text/html' is not a valid JavaScript MIME type" (`vite:preloadError`; at most one automatic reload per 15 s, so a real error still shows) |
 | Database budget | Stays within the D1 free tier by design (§11.2) |
 | Cost | Runs on the Cloudflare Workers Free (+ Turnstile, Access free tiers) and GitHub Free plans. Upgrade path: Workers Paid ($5/mo) |
 | Observability | Workers logs (structured JSON, request id, no content), Cloudflare Web Analytics, audit log for admin actions and limit events |

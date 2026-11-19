@@ -12,7 +12,11 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router/dom';
 import { ToastProvider } from './components/Toast';
 import { KnownQueueProvider } from './features/known/KnownQueueProvider';
+import { installStaleBuildReload } from './lib/stale-build';
 import { createRouter } from './router';
+
+// After a deploy, an old tab reloads itself once instead of showing a load error.
+installStaleBuildReload();
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Missing #root element');
