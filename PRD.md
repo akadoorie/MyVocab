@@ -469,7 +469,7 @@ so learners never download it. All admin pages work on mobile (tables collapse i
 | `defaults.type` | `"word"` \| `"expr"` | `"word"` | Start card default type |
 | `loop.sizeOptions` | int[] | `[10,20,30,40,50]` | Amount choices for signed-in learners |
 | `loop.defaultSize` | int | `10` | Default amount (must be in `sizeOptions`) |
-| `loop.maxSize` | int | `50` | Server-side cap for `POST /loops` |
+| `loop.maxSize` | int | `50` | Server-side cap for `POST /loops`; no amount choice may exceed it. Admin label "Maximum amount", with a hint under the field explaining this |
 | `guests.enabled` | bool | `true` | Allow guests to run loops |
 | `guests.loopSize` | int | `5` | Fixed guest amount (server-enforced) |
 | `guests.loopsPerHour` | int | `10` | Guest loops per hour per IP |

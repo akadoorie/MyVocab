@@ -114,4 +114,12 @@ describe('AdminApp', () => {
     ).toBeVisible();
     expect(await within(hints).findByText('Changed elsewhere.')).toBeVisible();
   });
+
+  it('settings: "Maximum amount" explains itself under the field', async () => {
+    render('/admin/settings', { 'GET /api/admin/settings': () => Response.json({}) });
+    const field = await screen.findByLabelText('Maximum amount');
+    expect(field).toHaveAccessibleDescription(
+      'The largest amount allowed in the amount choices above. Settings won’t save if a choice is bigger.',
+    );
+  });
 });

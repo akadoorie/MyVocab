@@ -87,6 +87,7 @@ function SettingsForm({
       error={errors[key]}
       value={draft[key] as number}
       onChange={(v) => set(key, v as never)}
+      hint={(s.settings.hints as Partial<Record<keyof Draft, string>>)[key]}
     />
   );
   const bool = (key: keyof Draft) => (
@@ -206,14 +207,18 @@ function NumberField({
   value,
   onChange,
   error,
+  hint,
 }: {
   id: string;
   label: string;
   value: number;
   onChange: (v: number) => void;
   error?: string | undefined;
+  /** A short explanation under the field. */
+  hint?: string | undefined;
 }) {
   const fieldId = useFieldId(id);
+  const hintId = `${fieldId}-hint`;
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={fieldId} className="text-sm text-muted">
@@ -228,7 +233,13 @@ function NumberField({
         onChange={(e) => onChange(e.target.valueAsNumber)}
         className={inputClass}
         aria-invalid={error ? true : undefined}
+        aria-describedby={hint ? hintId : undefined}
       />
+      {hint && (
+        <p id={hintId} className="text-sm text-muted">
+          {hint}
+        </p>
+      )}
       {error && <p className="text-sm text-dontknow">{error}</p>}
     </div>
   );

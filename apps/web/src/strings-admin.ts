@@ -207,6 +207,11 @@ export const adminStrings = {
   settings: {
     title: 'Settings',
     saved: 'Settings saved',
+    /** Short explanations under some fields. */
+    hints: {
+      'loop.maxSize':
+        'The largest amount allowed in the amount choices above. Settings won’t save if a choice is bigger.',
+    },
     groups: {
       defaults: 'Start card defaults',
       loops: 'Sessions',
