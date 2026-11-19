@@ -10,7 +10,7 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   await page.goto('/');
 
   // Defaults: EN → HE, General, Words, amount locked at 5, all in the "default" style.
-  const startCard = page.getByRole('region', { name: 'Start a session' });
+  const startCard = page.getByRole('region', { name: 'Configure your session' });
   await expect(startCard.getByLabel('From', { exact: true })).toHaveValue('en');
   await expect(startCard.getByLabel('To', { exact: true })).toHaveValue('he');
   await expect(startCard.getByText('Default')).toHaveCount(5);
@@ -107,7 +107,7 @@ async function swipe(page: Page, dx: number) {
 test('on touch, swipe left is Next and swipe right is Back', async ({ page }) => {
   await page.goto('/');
   await page
-    .getByRole('region', { name: 'Start a session' })
+    .getByRole('region', { name: 'Configure your session' })
     .getByRole('button', { name: 'Start' })
     .click();
   await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 0 known');
@@ -129,7 +129,7 @@ test('on touch, swipe left is Next and swipe right is Back', async ({ page }) =>
 test('Stop asks first, then ends the session and returns home', async ({ page }) => {
   await page.goto('/');
   await page
-    .getByRole('region', { name: 'Start a session' })
+    .getByRole('region', { name: 'Configure your session' })
     .getByRole('button', { name: 'Start' })
     .click();
   await expect(page).toHaveURL(/\/loop$/);

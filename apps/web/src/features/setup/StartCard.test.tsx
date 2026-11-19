@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '../../components/Toast';
@@ -79,6 +79,30 @@ describe('StartCard', () => {
     expect(screen.getAllByText('Default')).toHaveLength(5);
     expect(await screen.findByText('6 new cards available')).toBeInTheDocument();
     expect(screen.queryByText('Reset to defaults')).not.toBeInTheDocument();
+  });
+
+  it('puts Start above the settings on phones and below them on wider screens', () => {
+    mockApi();
+    const startBeforeHeading = () =>
+      Boolean(
+        screen
+          .getByRole('button', { name: 'Start' })
+          .compareDocumentPosition(
+            screen.getByRole('heading', { name: 'Configure your session' }),
+          ) & Node.DOCUMENT_POSITION_FOLLOWING,
+      );
+    setup(learner); // no matchMedia in jsdom: the desktop layout
+    expect(startBeforeHeading()).toBe(false);
+    cleanup();
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    setup(learner);
+    expect(startBeforeHeading()).toBe(true);
+    vi.unstubAllGlobals();
   });
 
   it('switches a changed field to the selected style and offers a reset', () => {

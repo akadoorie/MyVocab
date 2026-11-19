@@ -311,3 +311,15 @@ Format: date · context · decision · consequences.
   applause, with a Sound on/off switch remembered on the device (PRD FR-L32a). It happens once per
   session (a `celebrated` flag saved with the session, so Back and a refresh don't repeat it); then
   a yellow crown flies onto the card's upper-left corner and stays there on later visits.
+
+## D-021 · 2026-11-19 · Start button first on phones (owner request)
+
+- **Why:** on a phone the Start button was below the five fields, so a learner had to scroll to
+  reach it, although every field has a default.
+- **Change:** on phones (under 768px) the Start button sits right under the hero text (and the
+  guest sign-in note), above the settings; on wider screens it stays at the bottom of the
+  settings panel. The panel's heading is now **"Configure your session"** (was "Start a
+  session").
+- **How:** the page picks the button's place with a media query in code rather than CSS
+  reordering, so the keyboard and screen-reader order match what is on screen. The invisible
+  security check moves with the button and is drawn again if the window crosses the width.

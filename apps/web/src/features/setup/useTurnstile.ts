@@ -52,6 +52,7 @@ function loadScript(): Promise<TurnstileApi> {
 export function useTurnstile(siteKey: string | undefined, enabled: boolean) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetId = useRef<string | null>(null);
+  const renderedIn = useRef<HTMLElement | null>(null);
   const pending = useRef<{ resolve: (t: string) => void; reject: (e: Error) => void } | null>(null);
 
   useEffect(() => {
@@ -69,7 +70,14 @@ export function useTurnstile(siteKey: string | undefined, enabled: boolean) {
     const token = new Promise<string>((resolve, reject) => {
       pending.current = { resolve, reject };
     });
+    // The container moves when the window crosses the phone/desktop width (StartCard places the
+    // Start button differently), so a widget drawn into an old container is drawn again.
+    if (widgetId.current && renderedIn.current !== el) {
+      ts.remove(widgetId.current);
+      widgetId.current = null;
+    }
     if (!widgetId.current) {
+      renderedIn.current = el;
       widgetId.current = ts.render(el, {
         sitekey: siteKey,
         execution: 'execute',

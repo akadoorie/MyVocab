@@ -32,7 +32,7 @@ export const strings = {
     guestBanner: 'Sign in with Google to remember the words you know and choose bigger sessions.',
   },
   setup: {
-    title: 'Start a session',
+    title: 'Configure your session',
     source: 'From',
     target: 'To',
     category: 'Topic',

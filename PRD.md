@@ -117,7 +117,7 @@ private content repository. It never appears in the public code repo or any publ
 | **Hints (button)** | Reveals the hints and synonyms on the front of the card. |
 | **Flip** | Turning the on-screen card over (front ↔ back). It can be done any number of times and **has no effect on grading**. |
 | **Amount** | The number of cards in a loop (learners: 10/20/30/40/50; guests: always 5). |
-| **Loop** | One learning session over a group of cards. **In the UI it is called a "Session"** ("Start a session", "Session completed", "New session"); "loop" stays the technical term in this spec and in the code (D-018). |
+| **Loop** | One learning session over a group of cards. **In the UI it is called a "Session"** ("Configure your session", "Session completed", "New session"); "loop" stays the technical term in this spec and in the code (D-018). |
 | **Cycle** | One pass over the loop's remaining cards. |
 | **Known item** | An item a signed-in learner marked "Know" (in any direction). It is excluded from all their future loops, **in every direction**, until returned. |
 | **Category** | A topic (Home, Nature, …). An item can have many, or none. **General** is virtual: random across all items, including items without a category. |
@@ -177,7 +177,8 @@ private content repository. It never appears in the public code repo or any publ
 
 ### 6.1 Landing page and start card
 - **FR-L1** The landing page (`/`) shows a short hero, a 3-step "How it works" section, and the **Start card**.
-  Desktop: hero and start card side by side. Mobile: stacked, with the start card visible after minimal scrolling.
+  Desktop: hero and start card side by side. Mobile: stacked, with the **Start** button right under the hero text
+  (and the guest sign-in note), above the start card's fields, so it can be pressed without scrolling (D-021).
 - **FR-L2** Start card fields and **defaults** (the defaults come from admin settings, §7.7):
 
 | Field | Options | Default |
@@ -812,8 +813,10 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   `--accent` outline and no tag.
 - **Guest amount**: a single "5" pill with a lock icon; tapping it shows the "please register" toast (FR-L6).
 - The "Same language: the back shows an explanation" note (FR-L5) appears under the language fields when they match.
-- The large **Start** button (accent color, pressable ledge) sits under the fields, with the "N new cards available"
-  line just above it.
+- The card's heading is **"Configure your session"**.
+- The large **Start** button (accent color, pressable ledge): on desktop it sits under the fields, with the "N new
+  cards available" line just above it; on mobile it sits above the card, right under the hero text (FR-L1). The
+  security check (if any) and error messages appear next to it.
 
 ### 9.6 Typography
 - **Rubik** (Latin + Hebrew), self-hosted via `@fontsource/rubik` (no external font requests; keeps the CSP strict).

@@ -47,7 +47,7 @@ test('Know → My known words → hidden in every direction → Return to loops'
   await expect(page.getByText('Sign in with Google to remember')).toHaveCount(0);
 
   // Signed-in learners choose the amount: 20 (more than the synthetic set has).
-  const startCard = page.getByRole('region', { name: 'Start a session' });
+  const startCard = page.getByRole('region', { name: 'Configure your session' });
   const amount20 = startCard.getByRole('radio', { name: '20' });
   await amount20.click();
   await expect(amount20).toHaveAttribute('aria-checked', 'true');
