@@ -56,7 +56,24 @@ export type StoredLoop = {
   celebrated?: boolean;
 };
 
+/**
+ * Cards saved before D-024 have no `answer.main` / `answer.meaning`: fill them in place, so a
+ * session running during the deploy resumes instead of being dropped. Their lines were the
+ * translation (now the parallel) or the explanation.
+ */
+function upgradeCards(v: unknown): void {
+  const cards = (v as { cards?: unknown } | null)?.cards;
+  if (!Array.isArray(cards)) return;
+  for (const card of cards) {
+    const answer = (card as { answer?: Record<string, unknown> } | null)?.answer;
+    if (!answer || typeof answer !== 'object' || 'main' in answer) continue;
+    answer.main = answer.kind === 'explanation' ? 'explanation' : 'parallel';
+    answer.meaning = [];
+  }
+}
+
 const isStoredLoop = (v: unknown): v is StoredLoop => {
+  upgradeCards(v);
   const parsed = storedLoopSchema.safeParse(v);
   if (!parsed.success) return false;
   const cardIds = new Set(parsed.data.cards.map((c) => c.itemId));

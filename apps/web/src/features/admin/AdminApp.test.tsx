@@ -15,7 +15,8 @@ const ITEM: AdminItem = {
   multipleMeanings: false,
   categoryIds: [],
   categories: [],
-  translation: { he: ['מילה'] },
+  parallel: { he: ['מילה'] },
+  meaning: {},
   literal: {},
   explanation: [],
   synonyms: [],
@@ -79,7 +80,13 @@ describe('AdminApp', () => {
     expect(await screen.findByRole('heading', { name: 'sample-item', level: 1 })).toBeVisible();
     expect(screen.getByText('No explanation: not playable EN → EN')).toBeVisible();
     expect(screen.getByText(/language is fixed after creation/)).toBeVisible();
-    expect(screen.getByRole('heading', { name: 'Hebrew translation' })).toBeVisible();
+    // The three kinds of translation for the other language (D-024).
+    for (const name of [
+      'Hebrew translation (parallel)',
+      'Hebrew meaning',
+      'Hebrew literal translation',
+    ])
+      expect(screen.getByRole('heading', { name })).toBeVisible();
     expect(screen.queryByRole('heading', { name: 'English translation' })).toBeNull();
   });
 

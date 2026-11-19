@@ -9,7 +9,8 @@ type Row = {
   text: string;
   type: ItemType;
   multiple_meanings: number;
-  translation: string;
+  parallel: string;
+  meaning: string;
   literal: string;
   explanation: string;
   synonyms: string;
@@ -24,7 +25,8 @@ function whereClause(s: LoopSelection): SQL {
   const answer =
     s.source === s.target
       ? sql`json_array_length(i.explanation) > 0`
-      : sql`json_array_length(i.translation, '$."' || ${s.target} || '"') > 0`;
+      : sql`(COALESCE(json_array_length(i.translation_parallel, '$."' || ${s.target} || '"'), 0) > 0
+          OR COALESCE(json_array_length(i.translation_meaning, '$."' || ${s.target} || '"'), 0) > 0)`;
   const known = s.userId
     ? sql`AND NOT EXISTS (SELECT 1 FROM user_known_items k WHERE k.user_id = ${s.userId} AND k.item_id = i.id)`
     : sql``;
@@ -52,7 +54,8 @@ export class D1LoopRepository implements LoopRepository {
 
   async selectPlayable(s: LoopSelection, limit: number): Promise<ItemData[]> {
     const rows = await this.db.all<Row>(sql`
-      SELECT i.id, i.lang, i.text, i.type, i.multiple_meanings, i.translation, i.literal,
+      SELECT i.id, i.lang, i.text, i.type, i.multiple_meanings, i.translation_parallel AS parallel, i.translation_meaning AS meaning,
+      i.translation_literal AS literal,
              i.explanation,
              i.synonyms, i.hints
       ${fromClause(s)}
@@ -66,7 +69,8 @@ export class D1LoopRepository implements LoopRepository {
       text: r.text,
       type: r.type,
       multipleMeanings: r.multiple_meanings === 1,
-      translation: JSON.parse(r.translation) as Translations,
+      parallel: JSON.parse(r.parallel) as Translations,
+      meaning: JSON.parse(r.meaning) as Translations,
       literal: JSON.parse(r.literal) as Translations,
       explanation: JSON.parse(r.explanation) as string[],
       synonyms: JSON.parse(r.synonyms) as string[],

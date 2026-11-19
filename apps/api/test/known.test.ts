@@ -229,7 +229,7 @@ describe('GET /api/me/known (FR-L60–63)', () => {
       const text = `bulk-${String(i).padStart(3, '0')}`;
       stmts.push(
         env.DB.prepare(
-          `INSERT INTO items (lang, text, normalized_text, type, translation, created_at, updated_at)
+          `INSERT INTO items (lang, text, normalized_text, type, translation_parallel, created_at, updated_at)
            VALUES ('en', ?, ?, 'word', '{"he":["x"]}', ?, ?)`,
         ).bind(text, text, now, now),
       );

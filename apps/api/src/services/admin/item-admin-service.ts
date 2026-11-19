@@ -15,6 +15,7 @@ import {
   normalize,
   playableTargets,
   toLanguageMap,
+  TRANSLATION_KINDS,
   validateItem,
   type CardView,
   type ItemContent,
@@ -42,6 +43,17 @@ type LanguageContext = {
   activeCodes: string[];
 };
 
+function translationCounts(
+  parallel: Record<string, string[]>,
+  meaning: Record<string, string[]>,
+): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const list of [parallel, meaning])
+    for (const [code, entries] of Object.entries(list))
+      counts[code] = (counts[code] ?? 0) + entries.length;
+  return counts;
+}
+
 /** The full JSON snapshot kept in the audit log for delete / restore / purge (FR-A24). */
 export function itemSnapshot(rec: ItemRecord) {
   return {
@@ -51,7 +63,8 @@ export function itemSnapshot(rec: ItemRecord) {
     lang: rec.lang,
     multipleMeanings: rec.multipleMeanings,
     categories: rec.categorySlugs,
-    translation: rec.translation,
+    parallel: rec.parallel,
+    meaning: rec.meaning,
     literal: rec.literal,
     explanation: rec.explanation,
     synonyms: rec.synonyms,
@@ -126,7 +139,7 @@ export class ItemAdminService {
     const notPlayable: ItemIssueView[] = ctx.activeCodes
       .filter((target) => !playable.has(target))
       .map((target) => ({
-        path: target === item.lang ? 'explanation' : `translation.${target}`,
+        path: target === item.lang ? 'explanation' : `parallel.${target}`,
         code: 'NOT_PLAYABLE',
         message:
           target === item.lang
@@ -149,7 +162,8 @@ export class ItemAdminService {
       multipleMeanings: rec.multipleMeanings,
       categoryIds: rec.categoryIds,
       categories: rec.categorySlugs,
-      translation: rec.translation,
+      parallel: rec.parallel,
+      meaning: rec.meaning,
       literal: rec.literal,
       explanation: rec.explanation,
       synonyms: rec.synonyms,
@@ -193,9 +207,8 @@ export class ItemAdminService {
         type: r.type,
         multipleMeanings: r.multipleMeanings,
         categories: categories.get(r.id) ?? [],
-        translationCounts: Object.fromEntries(
-          Object.entries(r.translation).map(([code, entries]) => [code, entries.length]),
-        ),
+        // Per language: parallel + meaning entries (either one answers a card, FR-L40).
+        translationCounts: translationCounts(r.parallel, r.meaning),
         explanationCount: r.explanationCount,
         synonymCount: r.synonymCount,
         hintCount: r.hintCount,
@@ -242,9 +255,9 @@ export class ItemAdminService {
     const [rec, ctx] = await Promise.all([this.live(id), this.languageContext()]);
     if (rec.version !== patch.version) throw staleError();
 
-    // New translations / literal meanings only into active languages; existing data of inactive
-    // ones is kept.
-    for (const list of ['translation', 'literal'] as const) {
+    // New translations of any kind only into active languages; existing data of inactive ones is
+    // kept.
+    for (const list of TRANSLATION_KINDS) {
       for (const code of Object.keys(patch[list] ?? {})) {
         if (!ctx.activeCodes.includes(code) && !(code in rec[list])) {
           throw new ValidationError('Invalid item', [
@@ -263,7 +276,8 @@ export class ItemAdminService {
         text: patch.text ?? rec.text,
         type: patch.type ?? rec.type,
         multipleMeanings: patch.multipleMeanings ?? rec.multipleMeanings,
-        translation: patch.translation ?? rec.translation,
+        parallel: patch.parallel ?? rec.parallel,
+        meaning: patch.meaning ?? rec.meaning,
         literal: patch.literal ?? rec.literal,
         explanation: patch.explanation ?? rec.explanation,
         synonyms: patch.synonyms ?? rec.synonyms,
@@ -280,7 +294,8 @@ export class ItemAdminService {
       'text',
       'type',
       'multipleMeanings',
-      'translation',
+      'parallel',
+      'meaning',
       'literal',
       'explanation',
       'synonyms',

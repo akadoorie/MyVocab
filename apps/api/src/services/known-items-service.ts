@@ -100,7 +100,7 @@ export class KnownItemsService {
     const items: KnownItem[] = page.map((r) => {
       const strategy = strategyFor(r.lang, r.knownTarget);
       const lines = strategy.answerLines(
-        { ...r, literal: {}, synonyms: [], hints: [] },
+        { ...r, literal: {}, synonyms: [], hints: [] }, // the parallel, else the meaning
         r.knownTarget,
       );
       const answerLang = strategy.kind === 'translation' ? r.knownTarget : r.lang;

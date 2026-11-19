@@ -1,5 +1,5 @@
 import type { AdminCategory, AdminItem, AdminItemPatch, AdminLanguage } from '@myvocab/contracts';
-import { ITEM_LIMITS, type CardView } from '@myvocab/core';
+import { ITEM_LIMITS, TRANSLATION_KINDS, type CardView } from '@myvocab/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useId, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
@@ -398,37 +398,26 @@ function Editor({
       <div className="flex flex-col gap-6">
         {targets.map((target) => (
           <div key={target.code} className="rounded-[14px] border border-border bg-surface p-5">
-            <ListEditor
-              label={s.editor.translationInto(target.name)}
-              entries={item.translation[target.code] ?? []}
-              lang={target.code}
-              dir={target.dir}
-              maxEntries={ITEM_LIMITS.translation.maxEntries}
-              maxLength={ITEM_LIMITS.translation.entryMax}
-              onSave={(next) => {
-                const translation = { ...latest.current.translation };
-                if (next.length > 0) translation[target.code] = next;
-                else delete translation[target.code];
-                return save({ translation });
-              }}
-            />
-            <div className="mt-5 border-t border-border pt-5">
-              <ListEditor
-                label={s.editor.literalIn(target.name)}
-                help={s.editor.literalHelp}
-                entries={item.literal[target.code] ?? []}
-                lang={target.code}
-                dir={target.dir}
-                maxEntries={ITEM_LIMITS.literal.maxEntries}
-                maxLength={ITEM_LIMITS.literal.entryMax}
-                onSave={(next) => {
-                  const literal = { ...latest.current.literal };
-                  if (next.length > 0) literal[target.code] = next;
-                  else delete literal[target.code];
-                  return save({ literal });
-                }}
-              />
-            </div>
+            {/* The three kinds of translation (PRD §8.1, D-024): parallel, meaning, literal. */}
+            {TRANSLATION_KINDS.map((kind, i) => (
+              <div key={kind} className={i > 0 ? 'mt-5 border-t border-border pt-5' : ''}>
+                <ListEditor
+                  label={s.editor.kinds[kind].label(target.name)}
+                  help={s.editor.kinds[kind].help}
+                  entries={item[kind][target.code] ?? []}
+                  lang={target.code}
+                  dir={target.dir}
+                  maxEntries={ITEM_LIMITS[kind].maxEntries}
+                  maxLength={ITEM_LIMITS[kind].entryMax}
+                  onSave={(next) => {
+                    const lists = { ...latest.current[kind] };
+                    if (next.length > 0) lists[target.code] = next;
+                    else delete lists[target.code];
+                    return save({ [kind]: lists });
+                  }}
+                />
+              </div>
+            ))}
           </div>
         ))}
         <div className="rounded-[14px] border border-border bg-surface p-5">

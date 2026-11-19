@@ -52,8 +52,10 @@ Cupboard (ארון).
 
 **Translation or explanation.** The front of the card always shows the item's text. If the learner chose two
 different languages (EN → HE), the back shows the **translation**. If they chose the same language (EN → EN), the back
-shows the **explanation**. A translation may also carry a **literal meaning** (the word-for-word translation of an
-expression), shown under it. Hints and synonyms can be revealed on the front and always appear on the back.
+shows the **explanation**. A translation has up to three kinds (D-024): the **parallel** (the equivalent word or
+expression), the **meaning** (what it means) and the **literal translation** (word for word). The parallel is the main
+answer; the meaning and the literal translation are shown under it. Hints and synonyms can be revealed on the front and
+always appear on the back.
 
 **Known items memory.** For signed-in learners, every item they mark "Know" is remembered and never shown again in any
 future loop, **in any direction**. A "My known words" page lists those items and lets the learner return any of them
@@ -106,8 +108,7 @@ private content repository. It never appears in the public code repo or any publ
 |---|---|
 | **Item** | The basic content unit: one word or expression in its **language** (e.g. English "Swift"). It holds its type, the multiple-meanings flag, categories, translations, explanation, synonyms and hints (§8.1). Its `text` is always what the front of the card shows. |
 | **Type** | `word` or `expr`, shown as **Words** / **Expressions**. Set by the admin on each item; the learner picks one on the start card. |
-| **Translation** | For each **other** language, an ordered list of translations of the item (e.g. `he: ["מהיר", "סנונית"]`). An item never has a translation into its own language. |
-| **Literal meaning** | Optional, per **other** language: the word-for-word translation, for expressions whose literal words differ from their meaning (e.g. an idiom). The translation holds the meaning; the literal meaning is shown under it as "Literal meaning: …". An item never has a literal meaning in its own language. |
+| **Translation** | For each **other** language, up to three ordered lists, each optional (D-024): the **parallel** (`translation_parallel`: the equivalent word or expression, e.g. "The cat is out of the bag"; for a plain word, simply its translation, e.g. `he: ["מהיר", "סנונית"]`), the **meaning** (`translation_meaning`: what it means, e.g. "The truth came out") and the **literal translation** (`translation_literal`: word for word, e.g. "The awl came out of the sack"). A plain word keeps only the parallel. An item never has a translation of any kind into its own language. |
 | **Explanation** | An ordered list of explanations **in the item's own language**, one entry per meaning. |
 | **Synonym** | An alternative word or expression in the item's language. Synonyms have their own list and are shown in a "Synonyms" section next to the hints. |
 | **Hint** | A usage example or sentence in the item's language. 0..N per item. |
@@ -129,7 +130,8 @@ private content repository. It never appears in the public code repo or any publ
 | EN → HE · Words | Swift ◆ | מהיר / סנונית | Hints + Synonyms |
 | EN → EN · Words | Swift ◆ | 1. Moving or able to move very fast · 2. A small bird that flies very fast | Hints + Synonyms |
 | EN → HE · Expressions | A needle in a haystack | מחט בערימת שחת | Hints |
-| EN → HE · Expressions | *an idiom* | *its meaning in Hebrew* | **Literal meaning:** *its word-for-word Hebrew translation*, then Hints |
+| EN → HE · Expressions | *an idiom* | *its Hebrew parallel* | **Meaning:** *what it means, in Hebrew*; **Literal translation:** *word for word* (muted); then Hints |
+| EN → HE · Expressions | *an idiom with no Hebrew parallel* | *its meaning in Hebrew* (headline "Meaning") | **Literal translation** (muted), then Hints |
 | EN → EN · Expressions | A needle in a haystack | Something very hard to find among many other things | Hints |
 
 ◆ = the "Multiple meanings" badge.
@@ -155,9 +157,9 @@ private content repository. It never appears in the public code repo or any publ
 | Amount | Learners: **10 / 20 / 30 / 40 / 50** (default 10). Guests: **always 5**, locked, with a "please register" toast |
 | Guests | Can run 5-card loops after an invisible **Turnstile** bot check. Their Know marks are **not** remembered |
 | Anti-scraping | Turnstile for guests + strict limits (guests ~10 loops/hour per IP; learners ~500 cards/day) + `noindex` + no third-party content exposure |
-| Content model | One **item** per word/expression, in its own language. Translations and literal meanings (per other language), explanation, synonyms and hints are **ordered lists** stored inside the item row (§11) |
+| Content model | One **item** per word/expression, in its own language. The three kinds of translation (parallel, meaning, literal; per other language), explanation, synonyms and hints are **ordered lists** stored inside the item row (§11) |
 | Types | Two: `word` / `expr` (Words / Expressions) |
-| Back of card | Different languages → **translation** (+ **literal meaning** if any); same language → **explanation**. Hints + synonyms always below |
+| Back of card | Different languages → the **parallel** (or the **meaning** when there is no parallel), then **Meaning** and **Literal translation** (muted) when present; same language → **explanation**. Hints + synonyms always below |
 | Multiple meanings | Admin-set flag. Shown as a "◆ Multiple meanings" badge on the front |
 | Card UI | A glassy, violet-glowing **flip card** with a 3D flip animation and a round **Flip** button on both sides |
 | Hints | A **Hints** toggle button shows or hides hints + synonyms on the front. Flipping always shows them on the back |
@@ -231,9 +233,11 @@ private content repository. It never appears in the public code repo or any publ
     when the item has multiple meanings. After **Hints** is pressed (FR-L25), a **Hints** section appears under the
     text: the hints in order, then a **Synonyms:** line (if there are synonyms), in smaller muted text with the item
     language's `dir`. If the item has no hints and no synonyms, the section shows "Hint is not available".
-  - **Back**: a small muted label ("Translation" or "Explanation"); the **answer lines** (§6.3) in large text with the
-    answer language's `dir`; for a translation with a literal meaning, a muted **"Literal meaning: …"** line under the
-    answer lines (entries comma-separated, in the answer language's `dir`); a thin divider; then the Hints section and the Synonyms line, **always** (whether or not
+  - **Back**: a small label naming the main answer ("Translation" for a word, "Parallel expression" for an expression,
+    "Meaning" when there is no parallel, "Explanation" for the same language); the **answer lines** (§6.3) in large text
+    with the answer language's `dir`; under them, for a translation, a **"Meaning"** section (only under a parallel) and
+    then a **"Literal translation"** section in a muted color (each with its small headline, in the answer language's
+    `dir`; a kind with no entries isn't shown, D-024); a thin divider; then the Hints section and the Synonyms line, **always** (whether or not
     Hints was pressed), or "Hint is not available".
   - Every card starts **front side up, with hints hidden**.
 - **FR-L23** Header progress: `Cycle 2 · Card 1/3 · 2 known` (known = total known in this loop).
@@ -335,18 +339,19 @@ different**:
 
 | Languages | Answer (large) | Below the divider |
 |---|---|---|
-| different (e.g. EN → HE) | the item's **translation** into the target language: each entry on its own line; then "Literal meaning: …" (smaller, muted) if the item has a literal meaning in the target language | Hints + Synonyms (item language) |
+| different (e.g. EN → HE) | the item's **parallel** in the target language, or its **meaning** when it has no parallel: each entry on its own line; then "Meaning" (under a parallel) and "Literal translation" (smaller, muted) when the item has them in the target language (D-024) | Hints + Synonyms (item language) |
 | same (e.g. EN → EN) | the item's **explanation**: each entry on its own line, **numbered** ("1.", "2.") when there are two or more | Hints + Synonyms (item language) |
 
 - **FR-L40 Playability**: an item can be used for a direction only if it is `published`, not in Trash, of the chosen
   type, its language is the source language, and:
-  - different languages: it has **≥ 1 translation** into the target language;
+  - different languages: it has **≥ 1 parallel or meaning** entry in the target language (D-024);
   - same language: it has **≥ 1 explanation** entry.
-- **FR-L41** The server composes each card (front, answer lines, literal meaning, hints, synonyms, languages and text directions)
+- **FR-L41** The server composes each card (front, answer lines and what they are, meaning, literal translation, hints, synonyms, languages and text directions)
   before sending it (§12.1). The browser only renders it and never applies these rules itself.
 - **FR-L42** Hints and synonyms are always in the item's language and are shown with its `dir`.
-- **FR-L43** The literal meaning never makes an item playable on its own (FR-L40 still needs a translation), is never
-  revealed by **Hints** (it would give the answer away), and is not part of "My known words".
+- **FR-L43** The literal translation never makes an item playable on its own (FR-L40 still needs a parallel or a
+  meaning). The meaning and the literal translation are never revealed by **Hints** (they would give the answer away).
+  "My known words" shows the main answer only (the parallel, else the meaning).
 
 ### 6.4 Known items (signed-in learners only)
 - **FR-L50** Every Know (in any cycle) is recorded as `{itemId, target, cycle}` in a client-side **pending queue**
@@ -416,9 +421,9 @@ so learners never download it. All admin pages work on mobile (tables collapse i
     categories (multi-select chips). The **language is chosen at creation and then fixed** (to change it, create a new
     item); this keeps an existing translation from becoming a same-language translation. Save validates uniqueness
     (same language + normalized text + type among non-deleted items).
-  - **Translations**: one inline list editor per active language **other than the item's language** (an English item
-    shows "Hebrew"; a Hebrew item shows "English"). The item's own language is never offered (§8.1). Under each
-    translation, a **Literal meaning** list editor for the same language (optional, usually one entry).
+  - **Translations**: per active language **other than the item's language** (an English item shows "Hebrew"; a
+    Hebrew item shows "English"), three inline list editors in display order: **translation (parallel)**, **meaning**
+    and **literal translation** (each optional, D-024). The item's own language is never offered (§8.1).
   - **Explanation**: an inline list editor, one entry per meaning, in the item's language.
   - **Synonyms**: an inline list editor.
   - **Hints**: an inline list editor.
@@ -521,7 +526,8 @@ This JSON shape is used by the API, the admin editor and the JSON export (illust
   "lang": "en",
   "multipleMeanings": true,
   "categories": ["food"],
-  "translation": { "he": ["תאריך", "תמר"] },
+  "parallel": { "he": ["תאריך", "תמר"] },
+  "meaning": {},
   "literal": {},
   "explanation": ["A particular day of the month or year",
                   "The sweet brown fruit of the date palm"],
@@ -537,22 +543,27 @@ This JSON shape is used by the API, the admin editor and the JSON export (illust
 | `lang` | An active language. **Fixed after creation** |
 | `multipleMeanings` | Boolean, default `false` |
 | `categories` | 0..N category slugs (ids in the admin API). An item without categories appears only under General |
-| `translation` | An object whose keys are language codes **other than `lang`**; each value is a non-empty ordered list (≤ 10 entries, each ≤ 200 chars) |
-| `literal` | Same shape as `translation` (keys **other than `lang`**), optional per language (≤ 5 entries, each ≤ 200 chars): the word-for-word translation, shown under the translation |
+| `parallel` | Column `translation_parallel`. An object whose keys are language codes **other than `lang`**; each value is a non-empty ordered list (≤ 10 entries, each ≤ 200 chars): the equivalent word or expression in that language. For a plain word, this is simply its translation. The main answer of a card |
+| `meaning` | Column `translation_meaning`. Same shape (≤ 10 entries, each ≤ 300 chars): what the item means, in that language. Shown under the parallel, or as the main answer when there is no parallel |
+| `literal` | Column `translation_literal`. Same shape (≤ 5 entries, each ≤ 200 chars): the word-for-word translation, shown last in a muted color. Left empty when it would only repeat the parallel |
 | `explanation` | Ordered list in `lang` (≤ 10 entries, each ≤ 500 chars), one entry per meaning |
 | `synonyms` | Ordered list in `lang` (≤ 20 entries, each ≤ 100 chars) |
 | `hints` | Ordered list in `lang` (≤ 20 entries, each ≤ 500 chars) |
 | `status` | `published` (default) or `draft` (hidden from loops) |
 
-- **No translation (or literal meaning) into the item's own language, at every layer**: the editor never offers it,
+- Each kind is optional per language (D-024). Example, the Hebrew idiom "יצא המרצע מן השק" in English: parallel
+  "The cat is out of the bag", meaning "The truth came out", literal "The awl came out of the sack". The English
+  word "fork" in Hebrew: only the parallel "מזלג".
+- **No translation of any kind into the item's own language, at every layer**: the editor never offers it,
   the API and CSV import reject it (Zod), and a database CHECK constraint blocks it (§11). Because `lang` is fixed after creation, an
   existing translation can never turn into a same-language one.
 - Within each list, entries are trimmed, empty entries are dropped, and duplicates are rejected (normalized compare,
   §8.2).
 - Hebrew → English cards need **Hebrew items** (the `text` is always the front). The English item "Swift" and the
   Hebrew item "מהיר" are separate items, each with its own lists and known marks.
-- **Adding a language later**: activate it, add translations into it on existing items (a new `translation_<code>`
-  CSV column), and create items whose `lang` is the new language.
+- **Adding a language later**: activate it, add translations into it on existing items (new
+  `translation_parallel_<code>` / `translation_meaning_<code>` / `translation_literal_<code>` CSV columns), and create
+  items whose `lang` is the new language.
 
 ### 8.2 Text normalization (`packages/core`)
 `normalized_text` is used for uniqueness and merge matching (never shown):
@@ -575,20 +586,24 @@ The same normalization (case-insensitive, NFC) is used to de-duplicate entries w
 | `type` | yes | `word` or `expr` |
 | `multiple_meanings` | no | `true` / `false` (default `false`) |
 | `categories` | no | Category slugs, `|`-separated |
-| `translation_<code>` | no | One column per language, e.g. `translation_he`, `translation_en`: translations into that language, `|`-separated. The column of the row's own `lang` must be empty |
-| `literal_<code>` | no | One column per language, e.g. `literal_he`: the literal (word-for-word) meaning in that language, `|`-separated. The column of the row's own `lang` must be empty |
+| `translation_parallel_<code>` | no | One column per language, e.g. `translation_parallel_he`: the parallel (equivalent word or expression) in that language, `|`-separated. The column of the row's own `lang` must be empty |
+| `translation_meaning_<code>` | no | One column per language: the meaning in that language, `|`-separated. The row's own `lang` column must be empty |
+| `translation_literal_<code>` | no | One column per language: the literal (word-for-word) translation in that language, `|`-separated. The row's own `lang` column must be empty |
 | `explanation` | no | Explanation entries in the row's language, `|`-separated |
 | `synonyms` | no | `|`-separated |
 | `hints` | no | `|`-separated |
 | `status` | no | `published` (default) or `draft` |
 
 Rules:
-- A row must have **at least one translation or an explanation** (otherwise it can't be played in any direction).
-- A `translation_<code>` header for an unknown language is a file error. A value in the row's own language column is a
-  row error ("An English item can't have an English translation; use `explanation`").
+- A row must have **at least one parallel, meaning or explanation** (otherwise it can't be played in any direction).
+- A translation column for an unknown language is a file error. A value in the row's own language column is a row
+  error ("An English item can't have an English translation; use `explanation`"). Errors name the column as it is in
+  the file.
+- **Old column names** (before D-024) are still read: `translation_<code>` is the parallel and `literal_<code>` the
+  literal translation. An old and a new name for the same list in one file is a duplicate column.
 - **Merge semantics** (an import never deletes or overwrites):
   - An item matches an existing **non-deleted** item on (`lang`, normalized `text`, `type`); otherwise it is created.
-  - Categories are unioned. Translation and literal entries (per language), explanation entries, synonyms and hints are appended
+  - Categories are unioned. Parallel, meaning and literal entries (per language), explanation entries, synonyms and hints are appended
     if not already present (normalized compare).
   - `multiple_meanings = true` turns the flag on; `false` or empty never turns it off.
   - `status` applies only to newly created items (an existing item's status isn't changed by import).
@@ -598,19 +613,20 @@ Rules:
 - **Warnings** (shown in the dry run; they don't block the commit): multiple meanings with a single-entry list; mixed
   scripts (FR-A11).
 - **Dry run** (`dryRun=true`): parses and validates everything and returns totals (new items, merged items, new
-  translation entries, explanation entries, synonyms, hints, skipped duplicates) and lists of `{row, column, message}`
+  parallel, meaning and literal entries, explanation entries, synonyms, hints, skipped duplicates) and lists of `{row, column, message}`
   errors and warnings. Nothing is written.
 - **Commit**: refused if the dry run would report errors (fix the file first). It is written in a single D1 `batch()`
   (transactional). If D1 limits require it, the write is chunked by item with a precise report of what was written.
   It writes one `csv.import` audit entry with totals and the file name/SHA-256 (never the file contents).
 - **Round-trip guarantee**: exporting the vocabulary to CSV (§8.6) and importing that CSV into an empty database
   produces identical content (items, categories, all lists in order, flags, statuses). The export writes a
-  `translation_<code>` column for every language present. No cell escaping that would alter values is applied.
+  `translation_parallel_<code>`, `translation_meaning_<code>` and `translation_literal_<code>` column for every
+  language present. No cell escaping that would alter values is applied.
 
-**Example** (illustrative only; the template also has a synthetic expression row showing `literal_he`). Files
-without `literal_<code>` columns stay valid.
+**Example** (illustrative only; the template also has a synthetic expression row with all three kinds). Only the
+columns a file needs are required; the others may be left out.
 ```csv
-lang,text,type,multiple_meanings,categories,translation_he,translation_en,explanation,synonyms,hints,status
+lang,text,type,multiple_meanings,categories,translation_parallel_he,translation_parallel_en,explanation,synonyms,hints,status
 en,Swift,word,true,,מהיר|סנונית,,"Moving or able to move very fast|A small bird that flies very fast",fast|quick|rapid,"He gave a swift reply.|A swift nested under the roof.",published
 he,מהיר,word,false,,,fast|quick,"שנע או פועל במהירות רבה",זריז,"הרכבת המהירה הגיעה בזמן.",published
 ```
@@ -623,8 +639,9 @@ he,מהיר,word,false,,,fast|quick,"שנע או פועל במהירות רבה"
 - Every English item has a **Hebrew translation** and an **English explanation**. Every Hebrew item has an **English
   translation** and a **Hebrew explanation**. Synonyms where natural; 1–2 hints per item (natural usage sentences in
   the item's language). `multiple_meanings` is set where a word truly has several meanings, with one translation and
-  one explanation entry per meaning. Idioms whose literal words differ from their meaning put the meaning in
-  `translation_<code>` and the word-for-word translation in `literal_<code>`.
+  one explanation entry per meaning. Idioms put their equivalent in the other language in
+  `translation_parallel_<code>`, what they mean in `translation_meaning_<code>`, and the word-for-word translation in
+  `translation_literal_<code>` (left empty when it would repeat the parallel).
 - ⚠️ **The owner reviews the Hebrew and English content before it is seeded into production.**
 
 ### 8.5 Private content repository and data flow
@@ -762,9 +779,12 @@ Disabled buttons lose glow and ledge and look muted. Base mechanics:
   centered, large and bold; under it, when applicable, a
   small pill badge "◆ Multiple meanings" (`--surface-2` background, `--accent` text). After Hints: a thin divider,
   then the hints as a muted list and a "Synonyms: …" line (or "Hint is not available").
-- **Back**: a small muted label ("Translation" / "Explanation"); the answer lines large and centered (one per line;
+- **Back**: a small muted label naming the main answer ("Translation" for a word, "Parallel expression" for an
+  expression, "Meaning" when there is no parallel, "Explanation"); the answer lines large and centered (one per line;
   explanation lines numbered when there are two or more, and set in a smaller size when long); under them, when
-  present, "Literal meaning: …" in `--text-muted` at the hints' size; a thin divider; then
+  present (D-024): a **"Meaning"** section (small violet headline, then the meaning lines in `--text`, semibold, a
+  size below the answer), then a **"Literal translation"** section in `--text-muted` (small headline, entries
+  comma-separated at the hints' size), the least emphasized; a thin divider; then
   **Hints** as a muted list and a "Synonyms: …" line (or "Hint is not available").
 - A round **Flip** button (↻) sits in the bottom-right corner of **both** faces, so the card can be turned back from
   the answer side too.
@@ -773,7 +793,7 @@ Disabled buttons lose glow and ledge and look muted. Base mechanics:
   it is `clamp(420px, 58vh, 600px)`. Both faces share one grid cell. A face with more content than fits scrolls
   inside the card.
 - **Placement**: the item (front) and the answer (back) sit in the **upper part** of the card (a block of at least
-  46% of its height, content centered in it) and never move; hints, synonyms and the literal meaning appear below
+  46% of its height, content centered in it) and never move; the meaning, the literal translation, hints and synonyms appear below
   it, in the space kept for them.
 
 ```
@@ -837,7 +857,7 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
 ### 9.6 Typography
 - **Rubik** (Latin + Hebrew), self-hosted via `@fontsource/rubik` (no external font requests; keeps the CSP strict).
 - Item text (front): `clamp(2rem, 6vw, 3.5rem)`, weight 600. Answer lines (back): `clamp(1.5rem, 4.5vw, 2.25rem)`;
-  long explanation lines step down to `1.125rem–1.25rem`. Hints, synonyms and the literal meaning: 1.125rem on every screen (raised from 1rem on phones at the owner's request), `--text-muted`.
+  long explanation lines step down to `1.125rem–1.25rem`. Hints, synonyms and the literal translation: 1.125rem on every screen (raised from 1rem on phones at the owner's request), `--text-muted`.
 - Every piece of content text gets `dir` and `lang` from its language (`he` → `rtl`). The UI chrome stays LTR English.
 
 ### 9.7 Layouts
@@ -1039,8 +1059,9 @@ CREATE TABLE items (
   normalized_text    TEXT NOT NULL,
   type               TEXT NOT NULL CHECK (type IN ('word','expr')),
   multiple_meanings  INTEGER NOT NULL DEFAULT 0 CHECK (multiple_meanings IN (0,1)),
-  translation        TEXT NOT NULL DEFAULT '{}',   -- JSON object { "<lang>": ["…", …] }; never the item's own lang
-  literal            TEXT NOT NULL DEFAULT '{}',   -- same shape: word-for-word meaning (D-016); never own lang
+  translation_parallel TEXT NOT NULL DEFAULT '{}', -- JSON object { "<lang>": ["…", …] }; never the item's own lang (D-024)
+  translation_meaning  TEXT NOT NULL DEFAULT '{}', -- same shape: what it means (D-024); never own lang
+  translation_literal  TEXT NOT NULL DEFAULT '{}', -- same shape: word for word (D-016, D-024); never own lang
   explanation        TEXT NOT NULL DEFAULT '[]',   -- JSON array of strings, item's language
   synonyms           TEXT NOT NULL DEFAULT '[]',   -- JSON array of strings, item's language
   hints              TEXT NOT NULL DEFAULT '[]',   -- JSON array of strings, item's language
@@ -1051,10 +1072,9 @@ CREATE TABLE items (
   updated_at         INTEGER NOT NULL,
   deleted_at         INTEGER,                      -- soft delete (Trash)
   deleted_by         TEXT REFERENCES "user"(id) ON DELETE SET NULL,
-  CHECK (json_valid(translation) AND json_type(translation) = 'object'),
-  CHECK (json_extract(translation, '$."' || lang || '"') IS NULL),  -- no translation into the item's own language
-  CHECK (json_valid(literal) AND json_type(literal) = 'object'),
-  CHECK (json_extract(literal, '$."' || lang || '"') IS NULL),
+  -- The same two CHECKs for each of translation_parallel, translation_meaning and translation_literal:
+  CHECK (json_valid(translation_parallel) AND json_type(translation_parallel) = 'object'),
+  CHECK (json_extract(translation_parallel, '$."' || lang || '"') IS NULL),  -- no translation into the item's own language
   CHECK (json_valid(explanation) AND json_type(explanation) = 'array'),
   CHECK (json_valid(synonyms)    AND json_type(synonyms)    = 'array'),
   CHECK (json_valid(hints)       AND json_type(hints)       = 'array')
@@ -1156,9 +1176,11 @@ thousands of Know marks per day on the free tier.
 ### 11.3 Loop selection query (shape)
 ```sql
 -- General (no category). The service inserts the answer condition from the AnswerStrategy (§10.4):
---   different languages:  json_array_length(i.translation, '$."' || :tgt || '"') > 0
+--   different languages:  json_array_length(i.translation_parallel, '$."' || :tgt || '"') > 0
+--                          OR json_array_length(i.translation_meaning, '$."' || :tgt || '"') > 0   (D-024)
 --   same language:        json_array_length(i.explanation) > 0
-SELECT i.id, i.text, i.lang, i.type, i.multiple_meanings, i.translation, i.explanation, i.synonyms, i.hints
+SELECT i.id, i.text, i.lang, i.type, i.multiple_meanings, i.translation_parallel, i.translation_meaning,
+       i.translation_literal, i.explanation, i.synonyms, i.hints
 FROM items i
 WHERE i.lang = :src AND i.type = :type
   AND i.status = 'published' AND i.deleted_at IS NULL          -- served by ix_items_playable
@@ -1206,8 +1228,10 @@ type CardView = {
   front: { text: string; lang: LangCode; dir: Dir };      // the item text
   answer: {                                               // composed by the server (§6.3)
     kind: 'translation' | 'explanation';
-    lines: string[];                                      // translation[target] or explanation, in order
+    main: 'parallel' | 'meaning' | 'explanation';         // what `lines` are (D-024)
+    lines: string[];                                      // parallel[target], else meaning[target]; or explanation
     numbered: boolean;                                    // explanation with 2+ lines
+    meaning: string[];                                    // meaning[target] under a parallel, else []
     literal: string[];                                    // literal[target] for a translation, else [] (D-016)
     lang: LangCode; dir: Dir;
   };
@@ -1443,7 +1467,7 @@ Cloudflare Access: free for ≤ 50 users. Turnstile: free.
 ## 17. Testing strategy
 | Level | Tooling | Must cover |
 |---|---|---|
-| Unit | Vitest | Every `loopReducer` transition: Know/Don't know/Show hints/Flip/Next/Continue/Stop; `FLIP` toggles `side` any number of times in both phases and never changes grading; `TOGGLE_HINTS` works only on the front, toggles on and off, resets on the next card and never changes grading; `DONT_KNOW` on the front sets `side = back`; new cards start on the front with hints hidden; cycle building; the **order differs** rule (seeded RNG); Back card by card (front up, never into an earlier cycle) and from the cycle break / summary; Next only on answered cards; changing an answer both ways (no duplicates in the next cycle). Answer strategies (translation vs explanation chosen by same/different languages, playability, line order, numbering); `buildCard` output; item validation (no same-language translation, list limits, duplicates, `lang` absent from the update schema); multiple-meanings warnings; the mixed-script check; `normalize`; CSV row validation (incl. `translation_<code>` columns and the own-language column rule), merge planning (incl. the `multiple_meanings` OR rule), **CSV serializer**; start-card defaults resolution (settings → defaults; guest size = 5) |
+| Unit | Vitest | Every `loopReducer` transition: Know/Don't know/Show hints/Flip/Next/Continue/Stop; `FLIP` toggles `side` any number of times in both phases and never changes grading; `TOGGLE_HINTS` works only on the front, toggles on and off, resets on the next card and never changes grading; `DONT_KNOW` on the front sets `side = back`; new cards start on the front with hints hidden; cycle building; the **order differs** rule (seeded RNG); Back card by card (front up, never into an earlier cycle) and from the cycle break / summary; Next only on answered cards; changing an answer both ways (no duplicates in the next cycle). Answer strategies (translation vs explanation chosen by same/different languages, playability, line order, numbering); `buildCard` output; item validation (no same-language translation, list limits, duplicates, `lang` absent from the update schema); multiple-meanings warnings; the mixed-script check; `normalize`; CSV row validation (incl. the three `translation_<kind>_<code>` columns, the old column names, and the own-language column rule), merge planning (incl. the `multiple_meanings` OR rule), **CSV serializer**; start-card defaults resolution (settings → defaults; guest size = 5) |
 | Integration | Vitest + `@cloudflare/vitest-pool-workers` (local D1, migrations applied) | Loop selection by type/category/direction (translation vs explanation playability; the SQL rule agrees with `isPlayable` on fixtures); known items excluded **in every direction**; the DB CHECK rejects a same-language translation even through a direct repository write; item PATCH with a stale `version` → 409 and **no** audit row; **guest size forced to 5 even if a larger size is sent**; **guest without/with an invalid Turnstile token → 403 and zero D1 writes**; guest hourly cap → 429 with zero writes after the first `limit.exceeded` entry; learner daily cap → 429 with remaining allowance; admin exempt from caps; learner size must be in `sizeOptions`; admin endpoints → 401 guest / 403 user / 403 admin without an Access JWT in production mode / 403 on an email mismatch; item create/update + audit rows (before/after of changed lists); Trash: delete hides from loops and known lists, restore brings known marks back, restore blocked on a duplicate, purge cascades + snapshot; CSV dry run vs commit, merge rules, error and warning rows; idempotent `POST /me/known`; user A can't touch user B's known rows; `/api/*` responses carry `noindex` + `no-store` headers; settings validation (defaults must be active languages, etc.) |
 | Scripts | Vitest (Node) against a local D1 | `db:seed` falls back to `seed/sample.csv` when `CONTENT_DIR` is missing; **export round-trip**: seed → `db:export --local --content-only` → import into an empty D1 → identical content; full export produces `manifest.json` row counts that match the tables, valid JSON per table (item lists as real arrays/objects), and a `schema.sql` that recreates the schema in a fresh SQLite |
 | Guard | CI | `check:no-vocabulary` fails on a committed non-fixture `.csv`/`.sql`/export, or a `seed/sample.csv` over 20 rows |

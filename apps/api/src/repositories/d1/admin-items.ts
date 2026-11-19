@@ -23,7 +23,8 @@ type ItemRow = {
   normalized_text: string;
   type: ItemType;
   multiple_meanings: number;
-  translation: string;
+  parallel: string;
+  meaning: string;
   literal: string;
   explanation: string;
   synonyms: string;
@@ -39,8 +40,9 @@ type ItemRow = {
 };
 
 const ITEM_COLUMNS = sql`
-  i.id, i.lang, i.text, i.normalized_text, i.type, i.multiple_meanings, i.translation, i.literal,
-  i.explanation, i.synonyms, i.hints, i.status, i.version, i.created_at, i.updated_at,
+  i.id, i.lang, i.text, i.normalized_text, i.type, i.multiple_meanings,
+  i.translation_parallel AS parallel, i.translation_meaning AS meaning,
+  i.translation_literal AS literal, i.explanation, i.synonyms, i.hints, i.status, i.version, i.created_at, i.updated_at,
   i.deleted_at, i.deleted_by,
   (SELECT json_group_array(ic.category_id) FROM item_categories ic WHERE ic.item_id = i.id)
     AS category_ids,
@@ -55,7 +57,8 @@ function toRecord(r: ItemRow): ItemRecord {
     normalizedText: r.normalized_text,
     type: r.type,
     multipleMeanings: r.multiple_meanings === 1,
-    translation: JSON.parse(r.translation) as Translations,
+    parallel: JSON.parse(r.parallel) as Translations,
+    meaning: JSON.parse(r.meaning) as Translations,
     literal: JSON.parse(r.literal) as Translations,
     explanation: JSON.parse(r.explanation) as string[],
     synonyms: JSON.parse(r.synonyms) as string[],
@@ -99,16 +102,20 @@ function listConditions(f: AdminItemFilter, activeLangs: readonly string[]): SQL
   }
   if (f.missingTranslation) {
     conds.push(sql`i.lang <> ${f.missingTranslation}
-      AND COALESCE(json_array_length(i.translation, '$."' || ${f.missingTranslation} || '"'), 0) = 0`);
+      AND COALESCE(json_array_length(i.translation_parallel, '$."' || ${f.missingTranslation} || '"'), 0) = 0
+      AND COALESCE(json_array_length(i.translation_meaning, '$."' || ${f.missingTranslation} || '"'), 0) = 0`);
   }
   if (f.missingExplanation) conds.push(sql`json_array_length(i.explanation) = 0`);
   if (f.noHints) conds.push(sql`json_array_length(i.hints) = 0`);
   if (f.notPlayable) {
-    // No explanation and no translation into any other active language (FR-L40).
+    // No explanation and no parallel or meaning in any other active language (FR-L40).
+    const active = JSON.stringify(activeLangs);
     conds.push(sql`json_array_length(i.explanation) = 0 AND NOT EXISTS (
-      SELECT 1 FROM json_each(i.translation) AS t
-      WHERE t.key IN (SELECT value FROM json_each(${JSON.stringify(activeLangs)}))
-        AND json_array_length(t.value) > 0)`);
+      SELECT 1 FROM json_each(i.translation_parallel) AS t
+      WHERE t.key IN (SELECT value FROM json_each(${active})) AND json_array_length(t.value) > 0
+    ) AND NOT EXISTS (
+      SELECT 1 FROM json_each(i.translation_meaning) AS t
+      WHERE t.key IN (SELECT value FROM json_each(${active})) AND json_array_length(t.value) > 0)`);
   }
   return conds;
 }
@@ -160,14 +167,16 @@ export class D1AdminItemRepository implements AdminItemRepository {
         lang: string;
         type: ItemType;
         multiple_meanings: number;
-        translation: string;
+        parallel: string;
+        meaning: string;
         explanation_count: number;
         synonym_count: number;
         hint_count: number;
         status: 'draft' | 'published';
         updated_at: number;
       }>(sql`
-        SELECT i.id, i.text, i.lang, i.type, i.multiple_meanings, i.translation,
+        SELECT i.id, i.text, i.lang, i.type, i.multiple_meanings,
+               i.translation_parallel AS parallel, i.translation_meaning AS meaning,
                json_array_length(i.explanation) AS explanation_count,
                json_array_length(i.synonyms) AS synonym_count,
                json_array_length(i.hints) AS hint_count, i.status, i.updated_at
@@ -184,7 +193,8 @@ export class D1AdminItemRepository implements AdminItemRepository {
         lang: r.lang,
         type: r.type,
         multipleMeanings: r.multiple_meanings === 1,
-        translation: JSON.parse(r.translation) as Record<string, string[]>,
+        parallel: JSON.parse(r.parallel) as Record<string, string[]>,
+        meaning: JSON.parse(r.meaning) as Record<string, string[]>,
         explanationCount: r.explanation_count,
         synonymCount: r.synonym_count,
         hintCount: r.hint_count,
@@ -210,7 +220,8 @@ export class D1AdminItemRepository implements AdminItemRepository {
         normalizedText: item.normalizedText,
         type: item.type,
         multipleMeanings: item.multipleMeanings,
-        translation: item.translation,
+        parallel: item.parallel,
+        meaning: item.meaning,
         literal: item.literal,
         explanation: item.explanation,
         synonyms: item.synonyms,

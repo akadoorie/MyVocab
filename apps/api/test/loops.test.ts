@@ -149,6 +149,40 @@ describe('POST /api/loops (guest)', () => {
     expect(body.cards.every((c) => c.answer.kind === 'explanation')).toBe(true);
   });
 
+  it('plays an item with only a meaning, showing the meaning as the main answer (D-024)', async () => {
+    const available = async (q: string) =>
+      availableResponseSchema.parse(await (await api(`/loops/available?${q}`)).json()).available;
+    const now = Date.now();
+    await env.DB.prepare(
+      `INSERT INTO items (lang, text, normalized_text, type, translation_meaning, translation_literal,
+         created_at, updated_at)
+       VALUES ('en', 'fx-expr-meaning', 'fx-expr-meaning', 'expr', '{"he":["משמעות-1"]}',
+         '{"he":["מילולי-2"]}', ?, ?)`,
+    )
+      .bind(now, now)
+      .run();
+    expect(await available('source=en&target=he&type=expr')).toBe(2);
+    mockTurnstile(true);
+    const res = startLoopResponseSchema.parse(
+      await (await postJson('/loops', { ...guestBody, type: 'expr' })).json(),
+    );
+    const card = res.cards.find((c) => c.front.text === 'fx-expr-meaning');
+    expect(card?.answer).toMatchObject({
+      main: 'meaning',
+      lines: ['משמעות-1'],
+      meaning: [],
+      literal: ['מילולי-2'],
+    });
+    // A literal translation alone doesn't make an item playable.
+    await env.DB.prepare(
+      `INSERT INTO items (lang, text, normalized_text, type, translation_literal, created_at, updated_at)
+       VALUES ('en', 'fx-expr-literal', 'fx-expr-literal', 'expr', '{"he":["מילולי-3"]}', ?, ?)`,
+    )
+      .bind(now, now)
+      .run();
+    expect(await available('source=en&target=he&type=expr')).toBe(2);
+  });
+
   it('adds the literal meaning to translation cards, not to explanation cards', async () => {
     mockTurnstile(true);
     const he = startLoopResponseSchema.parse(

@@ -8,7 +8,8 @@ export function likePattern(text: string): string {
 }
 
 /**
- * Search on items `i`: the item text (normalized like the stored copy) or any translation entry.
+ * Search on items `i`: the item text (normalized like the stored copy) or any translation entry
+ * (parallel, meaning or literal).
  * Returns null when the query has nothing searchable.
  */
 export function itemSearchCondition(q: string): SQL | null {
@@ -17,9 +18,16 @@ export function itemSearchCondition(q: string): SQL | null {
   const either: SQL[] = [];
   if (text) either.push(sql`i.normalized_text LIKE ${likePattern(text)} ESCAPE '\\'`);
   if (raw) {
-    either.push(sql`EXISTS (
-      SELECT 1 FROM json_each(i.translation) AS t, json_each(t.value) AS v
-      WHERE v.value LIKE ${likePattern(raw)} ESCAPE '\\')`);
+    const pattern = likePattern(raw);
+    for (const column of [
+      sql`i.translation_parallel`,
+      sql`i.translation_meaning`,
+      sql`i.translation_literal`,
+    ]) {
+      either.push(sql`EXISTS (
+        SELECT 1 FROM json_each(${column}) AS t, json_each(t.value) AS v
+        WHERE v.value LIKE ${pattern} ESCAPE '\\')`);
+    }
   }
   return either.length > 0 ? sql`(${sql.join(either, sql` OR `)})` : null;
 }

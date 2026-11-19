@@ -1,10 +1,15 @@
 import type { LanguageMap } from '../lang/languages';
 import { itemIdentityKey } from '../item/identity';
 import { ITEM_LIMITS, type ListName } from '../item/limits';
-import type { ItemContent, ItemStatus } from '../item/types';
+import {
+  TRANSLATION_KINDS,
+  type ItemContent,
+  type ItemStatus,
+  type Translations,
+} from '../item/types';
 import { mixedScriptWarnings, multipleMeaningsWarnings } from '../item/validate';
 import { normalize } from '../text/normalize';
-import { CSV_COLUMNS } from './columns';
+import { CSV_COLUMNS, translationColumn } from './columns';
 import { toCsvIssue, type CsvIssue, type ParsedRow } from './parse-rows';
 
 /**
@@ -43,6 +48,7 @@ export type ImportTotals = {
   newItems: number;
   mergedItems: number;
   newTranslationEntries: number;
+  newMeaningEntries: number;
   newLiteralEntries: number;
   newExplanationEntries: number;
   newSynonyms: number;
@@ -76,11 +82,15 @@ function appendUnique(target: string[], incoming: readonly string[], counts: Cou
   }
 }
 
+const cloneLists = (t: Translations): Translations =>
+  Object.fromEntries(Object.entries(t).map(([k, v]) => [k, [...v]]));
+
 function cloneContent(c: ItemContent): ItemContent {
   return {
     ...c,
-    translation: Object.fromEntries(Object.entries(c.translation).map(([k, v]) => [k, [...v]])),
-    literal: Object.fromEntries(Object.entries(c.literal).map(([k, v]) => [k, [...v]])),
+    parallel: cloneLists(c.parallel),
+    meaning: cloneLists(c.meaning),
+    literal: cloneLists(c.literal),
     explanation: [...c.explanation],
     synonyms: [...c.synonyms],
     hints: [...c.hints],
@@ -91,7 +101,8 @@ function emptyContent(from: ItemContent): ItemContent {
   return {
     ...from,
     multipleMeanings: false,
-    translation: {},
+    parallel: {},
+    meaning: {},
     literal: {},
     explanation: [],
     synonyms: [],
@@ -108,6 +119,7 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
       newItems: 0,
       mergedItems: 0,
       newTranslationEntries: 0,
+      newMeaningEntries: 0,
       newLiteralEntries: 0,
       newExplanationEntries: 0,
       newSynonyms: 0,
@@ -133,7 +145,8 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
     const existing = ctx.existing.get(key);
     const content = existing ? cloneContent(existing.content) : emptyContent(first.content);
     const counts = {
-      translation: { added: 0, skipped: 0 },
+      parallel: { added: 0, skipped: 0 },
+      meaning: { added: 0, skipped: 0 },
       literal: { added: 0, skipped: 0 },
       explanation: { added: 0, skipped: 0 },
       synonyms: { added: 0, skipped: 0 },
@@ -144,13 +157,11 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
     const categoriesToAdd: string[] = [];
 
     for (const row of group) {
-      for (const [lang, entries] of Object.entries(row.content.translation)) {
-        const list = (content.translation[lang] ??= []);
-        appendUnique(list, entries, counts.translation);
-      }
-      for (const [lang, entries] of Object.entries(row.content.literal)) {
-        const list = (content.literal[lang] ??= []);
-        appendUnique(list, entries, counts.literal);
+      for (const kind of TRANSLATION_KINDS) {
+        for (const [lang, entries] of Object.entries(row.content[kind])) {
+          const list = (content[kind][lang] ??= []);
+          appendUnique(list, entries, counts[kind]);
+        }
       }
       appendUnique(content.explanation, row.content.explanation, counts.explanation);
       appendUnique(content.synonyms, row.content.synonyms, counts.synonyms);
@@ -179,7 +190,11 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
       }
     }
 
-    if (Object.keys(content.translation).length === 0 && content.explanation.length === 0) {
+    if (
+      Object.keys(content.parallel).length === 0 &&
+      Object.keys(content.meaning).length === 0 &&
+      content.explanation.length === 0
+    ) {
       plan.errors.push({
         row: first.row,
         column: CSV_COLUMNS.explanation,
@@ -197,18 +212,18 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
         });
       }
     };
-    for (const [lang, entries] of Object.entries(content.translation)) {
-      tooMany('translation', entries.length, `translation_${lang}`);
-    }
-    for (const [lang, entries] of Object.entries(content.literal)) {
-      tooMany('literal', entries.length, `literal_${lang}`);
+    for (const kind of TRANSLATION_KINDS) {
+      for (const [lang, entries] of Object.entries(content[kind])) {
+        tooMany(kind, entries.length, translationColumn(kind, lang));
+      }
     }
     tooMany('explanation', content.explanation.length, CSV_COLUMNS.explanation);
     tooMany('synonyms', content.synonyms.length, CSV_COLUMNS.synonyms);
     tooMany('hints', content.hints.length, CSV_COLUMNS.hints);
 
     const added =
-      counts.translation.added +
+      counts.parallel.added +
+      counts.meaning.added +
       counts.literal.added +
       counts.explanation.added +
       counts.synonyms.added +
@@ -222,13 +237,15 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
       plan.warnings.push(...itemWarnings.map((w) => toCsvIssue(first.row, w)));
     }
 
-    plan.totals.newTranslationEntries += counts.translation.added;
+    plan.totals.newTranslationEntries += counts.parallel.added;
+    plan.totals.newMeaningEntries += counts.meaning.added;
     plan.totals.newLiteralEntries += counts.literal.added;
     plan.totals.newExplanationEntries += counts.explanation.added;
     plan.totals.newSynonyms += counts.synonyms.added;
     plan.totals.newHints += counts.hints.added;
     plan.totals.skippedDuplicates +=
-      counts.translation.skipped +
+      counts.parallel.skipped +
+      counts.meaning.skipped +
       counts.literal.skipped +
       counts.explanation.skipped +
       counts.synonyms.skipped +

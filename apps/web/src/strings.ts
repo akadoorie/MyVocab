@@ -187,8 +187,11 @@ export const strings = {
   },
   card: {
     translation: 'Translation',
+    /** The main answer of an expression card is its parallel (PRD §9.3, D-024). */
+    parallel: 'Parallel expression',
+    meaning: 'Meaning',
     explanation: 'Explanation',
-    literal: 'Literal meaning:',
+    literal: 'Literal translation',
     hints: 'Hints',
     synonyms: 'Synonyms:',
     noHints: 'Hint is not available',

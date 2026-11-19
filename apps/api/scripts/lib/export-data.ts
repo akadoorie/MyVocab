@@ -14,7 +14,14 @@ function ident(name: string): string {
 
 /** Columns stored as JSON text, written as real JSON in `json/` (the §8.1 item shape). */
 const JSON_COLUMNS: Record<string, readonly string[]> = {
-  items: ['translation', 'literal', 'explanation', 'synonyms', 'hints'],
+  items: [
+    'translation_parallel',
+    'translation_meaning',
+    'translation_literal',
+    'explanation',
+    'synonyms',
+    'hints',
+  ],
   app_settings: ['value'],
   audit_log: ['details'],
 };
@@ -94,8 +101,8 @@ export async function vocabularyCsv(d1: D1Database): Promise<{ csv: string; item
     d1.prepare('SELECT code FROM languages ORDER BY sort_order, code').all<{ code: string }>(),
     d1
       .prepare(
-        `SELECT i.lang, i.text, i.type, i.multiple_meanings, i.translation, i.literal,
-                i.explanation, i.synonyms, i.hints, i.status,
+        `SELECT i.lang, i.text, i.type, i.multiple_meanings, i.translation_parallel AS parallel,
+                i.translation_meaning AS meaning, i.translation_literal AS literal, i.explanation, i.synonyms, i.hints, i.status,
                 (SELECT json_group_array(slug) FROM (
                    SELECT c.slug FROM item_categories ic JOIN categories c ON c.id = ic.category_id
                    WHERE ic.item_id = i.id ORDER BY c.slug)) AS categories
@@ -106,7 +113,8 @@ export async function vocabularyCsv(d1: D1Database): Promise<{ csv: string; item
         text: string;
         type: ItemType;
         multiple_meanings: number;
-        translation: string;
+        parallel: string;
+        meaning: string;
         literal: string;
         explanation: string;
         synonyms: string;
@@ -121,7 +129,8 @@ export async function vocabularyCsv(d1: D1Database): Promise<{ csv: string; item
       text: r.text,
       type: r.type,
       multipleMeanings: r.multiple_meanings === 1,
-      translation: JSON.parse(r.translation) as Record<string, string[]>,
+      parallel: JSON.parse(r.parallel) as Record<string, string[]>,
+      meaning: JSON.parse(r.meaning) as Record<string, string[]>,
       literal: JSON.parse(r.literal) as Record<string, string[]>,
       explanation: JSON.parse(r.explanation) as string[],
       synonyms: JSON.parse(r.synonyms) as string[],
@@ -151,7 +160,7 @@ const TABLE_NOTES: Record<string, string> = {
   languages: 'Languages (data-driven). `dir` is the text direction, `script` the ISO 15924 script.',
   categories: 'Topics. Items link to them through `item_categories`.',
   items:
-    'One row per word or expression. `translation` and `literal` (word-for-word meaning) are objects `{ "<lang>": [entries] }`; `explanation`, `synonyms` and `hints` are arrays in the item language. `deleted_at` set = in Trash.',
+    'One row per word or expression. `translation_parallel` (the equivalent word or expression), `translation_meaning` (what it means) and `translation_literal` (word for word) are objects `{ "<lang>": [entries] }`; `explanation`, `synonyms` and `hints` are arrays in the item language. `deleted_at` set = in Trash.',
   item_categories: 'Item ↔ category links (many-to-many).',
   user_known_items: 'Which user knows which item (hides it in every direction).',
   usage_counters: 'Anti-scraping counters (hashed IPs or user ids; never raw IPs). Kept 48 hours.',
@@ -208,7 +217,8 @@ export async function exportReadme(
     '  is_active boolean NOT NULL, sort_order int NOT NULL, created_at bigint, updated_at bigint);',
     'CREATE TABLE items (id int PRIMARY KEY, lang text NOT NULL REFERENCES languages(code), text text NOT NULL,',
     '  normalized_text text NOT NULL, type text NOT NULL, multiple_meanings boolean NOT NULL,',
-    '  translation jsonb NOT NULL, literal jsonb NOT NULL, explanation jsonb NOT NULL, synonyms jsonb NOT NULL,',
+    '  translation_parallel jsonb NOT NULL, translation_meaning jsonb NOT NULL,',
+    '  translation_literal jsonb NOT NULL, explanation jsonb NOT NULL, synonyms jsonb NOT NULL,',
     '  hints jsonb NOT NULL,',
     '  status text NOT NULL, version int NOT NULL, created_at bigint, updated_at bigint, deleted_at bigint);',
     'CREATE TABLE item_categories (item_id int REFERENCES items(id) ON DELETE CASCADE,',
@@ -229,9 +239,10 @@ export async function exportReadme(
     "  await db.query('INSERT INTO categories VALUES ($1,$2,$3,$4,$5,$6,$7)',",
     '    [c.id, c.slug, c.name, c.is_active === 1, c.sort_order, c.created_at, c.updated_at]);',
     "for (const i of rows('items'))",
-    "  await db.query('INSERT INTO items VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)', [",
+    "  await db.query('INSERT INTO items VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)', [",
     '    i.id, i.lang, i.text, i.normalized_text, i.type, i.multiple_meanings === 1,',
-    '    JSON.stringify(i.translation), JSON.stringify(i.literal), JSON.stringify(i.explanation),',
+    '    JSON.stringify(i.translation_parallel), JSON.stringify(i.translation_meaning),',
+    '    JSON.stringify(i.translation_literal), JSON.stringify(i.explanation),',
     '    JSON.stringify(i.synonyms), JSON.stringify(i.hints), i.status, i.version, i.created_at, i.updated_at, i.deleted_at]);',
     "for (const ic of rows('item_categories'))",
     "  await db.query('INSERT INTO item_categories VALUES ($1,$2)', [ic.item_id, ic.category_id]);",

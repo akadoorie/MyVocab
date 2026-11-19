@@ -104,10 +104,21 @@ export const adminStrings = {
     created: 'Item created',
     headerSaved: 'Changes saved',
     translations: 'Translations',
-    translationInto: (name: string) => `${name} translation`,
-    literalIn: (name: string) => `${name} literal meaning`,
-    literalHelp:
-      'Optional word-for-word translation, for expressions whose literal words differ from their meaning. Shown under the translation.',
+    /** The three kinds of translation per language (PRD §8.1, D-024), in display order. */
+    kinds: {
+      parallel: {
+        label: (name: string) => `${name} translation (parallel)`,
+        help: 'The equivalent word or expression. For a plain word, this is its translation. Shown as the main answer.',
+      },
+      meaning: {
+        label: (name: string) => `${name} meaning`,
+        help: 'What it means, in other words. Shown under the parallel, or as the main answer when there is no parallel.',
+      },
+      literal: {
+        label: (name: string) => `${name} literal translation`,
+        help: 'Optional word-for-word translation, when the words differ from the meaning. Shown last, in a softer color. Leave it empty when it would repeat the parallel.',
+      },
+    },
     explanation: 'Explanation',
     explanationHelp: 'One entry per meaning, in the item’s language.',
     synonyms: 'Synonyms',
@@ -257,8 +268,9 @@ export const adminStrings = {
     totals: {
       newItems: 'New items',
       mergedItems: 'Merged into existing items',
-      newTranslationEntries: 'New translation entries',
-      newLiteralEntries: 'New literal meanings',
+      newTranslationEntries: 'New translation (parallel) entries',
+      newMeaningEntries: 'New meaning entries',
+      newLiteralEntries: 'New literal translations',
       newExplanationEntries: 'New explanation entries',
       newSynonyms: 'New synonyms',
       newHints: 'New hints',

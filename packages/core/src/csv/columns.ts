@@ -1,8 +1,9 @@
 import type { LangCode } from '../lang/languages';
+import { TRANSLATION_KINDS, type TranslationKind } from '../item/types';
 
 /**
- * CSV columns (PRD §8.3). Translations and literal meanings use one `translation_<code>` /
- * `literal_<code>` column per language.
+ * CSV columns (PRD §8.3). The three kinds of translation use one column per kind and language:
+ * `translation_parallel_<code>`, `translation_meaning_<code>`, `translation_literal_<code>`.
  */
 export const CSV_COLUMNS = {
   lang: 'lang',
@@ -18,17 +19,26 @@ export const CSV_COLUMNS = {
 
 export const REQUIRED_COLUMNS = [CSV_COLUMNS.lang, CSV_COLUMNS.text, CSV_COLUMNS.type] as const;
 
-export const TRANSLATION_PREFIX = 'translation_';
-
-export function translationColumn(lang: LangCode): string {
-  return `${TRANSLATION_PREFIX}${lang}`;
+export function translationColumn(kind: TranslationKind, lang: LangCode): string {
+  return `translation_${kind}_${lang}`;
 }
 
-/** Literal (word-for-word) meanings use one `literal_<code>` column per language. */
-export const LITERAL_PREFIX = 'literal_';
+/**
+ * Column prefixes for the per-language translation columns, longest first. The old names from
+ * before D-024 are still read: `translation_<code>` (the parallel) and `literal_<code>`.
+ */
+export const TRANSLATION_COLUMN_PREFIXES: readonly { prefix: string; kind: TranslationKind }[] = [
+  ...TRANSLATION_KINDS.map((kind) => ({ prefix: `translation_${kind}_`, kind })),
+  { prefix: 'translation_', kind: 'parallel' },
+  { prefix: 'literal_', kind: 'literal' },
+];
 
-export function literalColumn(lang: LangCode): string {
-  return `${LITERAL_PREFIX}${lang}`;
+/** The kind and language of a per-language translation column, or undefined. */
+export function translationColumnOf(
+  column: string,
+): { kind: TranslationKind; lang: string } | undefined {
+  const match = TRANSLATION_COLUMN_PREFIXES.find(({ prefix }) => column.startsWith(prefix));
+  return match ? { kind: match.kind, lang: column.slice(match.prefix.length) } : undefined;
 }
 
 export const CATEGORY_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;

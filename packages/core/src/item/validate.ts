@@ -6,6 +6,7 @@ import { ITEM_LIMITS, type ListName } from './limits';
 import {
   ITEM_TYPES,
   OWN_LANGUAGE_LISTS,
+  TRANSLATION_KINDS,
   type ItemContent,
   type ItemType,
   type Translations,
@@ -39,7 +40,8 @@ export type ItemInput = {
   text: string;
   type: string;
   multipleMeanings?: boolean;
-  translation?: Record<string, readonly string[]>;
+  parallel?: Record<string, readonly string[]>;
+  meaning?: Record<string, readonly string[]>;
   literal?: Record<string, readonly string[]>;
   explanation?: readonly string[];
   synonyms?: readonly string[];
@@ -99,10 +101,16 @@ function cleanList(
   return cleaned;
 }
 
-/** A per-language list object (`translation`, `literal`): other active languages only. */
+const SAME_LANGUAGE_MESSAGE: Record<(typeof TRANSLATION_KINDS)[number], string> = {
+  parallel: 'An item cannot have a translation into its own language; use the explanation',
+  meaning: 'An item cannot have a meaning in its own language; use the explanation',
+  literal: 'An item cannot have a literal translation in its own language',
+};
+
+/** A per-language list object (parallel, meaning, literal): other active languages only. */
 function cleanPerLanguage(
   input: Record<string, readonly string[]> | undefined,
-  list: 'translation' | 'literal',
+  list: (typeof TRANSLATION_KINDS)[number],
   lang: string,
   ctx: ItemValidationContext,
   errors: ItemIssue[],
@@ -115,10 +123,7 @@ function cleanPerLanguage(
       errors.push({
         path,
         code: 'SAME_LANGUAGE_TRANSLATION',
-        message:
-          list === 'translation'
-            ? 'An item cannot have a translation into its own language; use the explanation'
-            : 'An item cannot have a literal meaning in its own language',
+        message: SAME_LANGUAGE_MESSAGE[list],
       });
       continue;
     }
@@ -161,7 +166,8 @@ export function validateItem(input: ItemInput, ctx: ItemValidationContext): Item
     errors.push({ path: 'type', code: 'INVALID_TYPE', message: 'Type must be "word" or "expr"' });
   }
 
-  const translation = cleanPerLanguage(input.translation, 'translation', lang, ctx, errors);
+  const parallel = cleanPerLanguage(input.parallel, 'parallel', lang, ctx, errors);
+  const meaning = cleanPerLanguage(input.meaning, 'meaning', lang, ctx, errors);
   const literal = cleanPerLanguage(input.literal, 'literal', lang, ctx, errors);
 
   const explanation = cleanList(input.explanation, 'explanation', 'explanation', errors);
@@ -173,7 +179,8 @@ export function validateItem(input: ItemInput, ctx: ItemValidationContext): Item
     text,
     type: isItemType(type) ? type : 'word',
     multipleMeanings: input.multipleMeanings ?? false,
-    translation,
+    parallel,
+    meaning,
     literal,
     explanation,
     synonyms,
@@ -184,14 +191,19 @@ export function validateItem(input: ItemInput, ctx: ItemValidationContext): Item
   return { value, errors, warnings };
 }
 
-/** "Multiple meanings" is on, but a translation list or the explanation has only one entry. */
+/**
+ * "Multiple meanings" is on, but the answer for a language (its parallel, or its meaning when
+ * there is no parallel) or the explanation has only one entry.
+ */
 export function multipleMeaningsWarnings(item: ItemContent): ItemIssue[] {
   if (!item.multipleMeanings) return [];
   const issues: ItemIssue[] = [];
   const message = 'Multiple meanings is on, but this list has only one entry';
-  for (const [code, entries] of Object.entries(item.translation)) {
-    if (entries.length === 1) {
-      issues.push({ path: `translation.${code}`, code: 'MULTIPLE_MEANINGS_SINGLE_ENTRY', message });
+  const codes = new Set([...Object.keys(item.parallel), ...Object.keys(item.meaning)]);
+  for (const code of codes) {
+    const kind = item.parallel[code as LangCode]?.length ? 'parallel' : 'meaning';
+    if (item[kind][code as LangCode]?.length === 1) {
+      issues.push({ path: `${kind}.${code}`, code: 'MULTIPLE_MEANINGS_SINGLE_ENTRY', message });
     }
   }
   if (item.explanation.length === 1) {
@@ -220,7 +232,7 @@ export function mixedScriptWarnings(item: ItemContent, languages: LanguageMap): 
   for (const list of OWN_LANGUAGE_LISTS) {
     item[list].forEach((entry, i) => issues.push(...scriptIssue(`${list}[${i}]`, entry, own)));
   }
-  for (const list of ['translation', 'literal'] as const) {
+  for (const list of TRANSLATION_KINDS) {
     for (const [code, entries] of Object.entries(item[list])) {
       const script = languages[code as LangCode]?.script;
       entries.forEach((entry, i) =>

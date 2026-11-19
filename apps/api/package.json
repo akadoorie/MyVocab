@@ -12,6 +12,7 @@
     "db:generate": "drizzle-kit generate",
     "db:seed": "tsx scripts/seed.ts",
     "db:export": "tsx scripts/export.ts",
+    "db:update-translations": "tsx scripts/update-translations.ts",
     "test:scripts": "vitest run --config vitest.scripts.config.ts"
   },
   "dependencies": {

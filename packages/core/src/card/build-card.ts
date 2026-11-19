@@ -1,6 +1,6 @@
 import type { LangCode, LanguageMap, TextDir } from '../lang/languages';
 import type { ItemData } from '../item/types';
-import { strategyFor } from './strategies';
+import { mainTranslation, strategyFor } from './strategies';
 import type { CardView, LangDir } from './types';
 
 export class CardBuildError extends Error {}
@@ -22,6 +22,8 @@ export function buildCard(item: ItemData, target: LangCode, languages: LanguageM
     throw new CardBuildError(`Item ${item.id} has no ${strategy.kind} for ${source} → ${target}`);
   }
   const lines = strategy.answerLines(item, target);
+  const translation = strategy.kind === 'translation';
+  const main = translation ? mainTranslation(item, target) : 'explanation';
   const own = langDir(source, languages);
   return {
     itemId: item.id,
@@ -31,9 +33,11 @@ export function buildCard(item: ItemData, target: LangCode, languages: LanguageM
     front: { text: item.text, ...own },
     answer: {
       kind: strategy.kind,
+      main,
       lines,
       numbered: strategy.numbered(lines),
-      literal: strategy.kind === 'translation' ? [...(item.literal[target] ?? [])] : [],
+      meaning: main === 'parallel' ? [...(item.meaning[target] ?? [])] : [],
+      literal: translation ? [...(item.literal[target] ?? [])] : [],
       ...langDir(target, languages),
     },
     hints: [...item.hints],

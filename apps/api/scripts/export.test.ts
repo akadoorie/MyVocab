@@ -49,7 +49,8 @@ async function withDb<T>(config: string, fn: (d1: D1Database) => Promise<T>): Pr
 function content(d1: D1Database) {
   return d1
     .prepare(
-      `SELECT i.lang, i.text, i.type, i.multiple_meanings, i.translation, i.explanation,
+      `SELECT i.lang, i.text, i.type, i.multiple_meanings, i.translation_parallel,
+              i.translation_meaning, i.translation_literal, i.explanation,
               i.synonyms, i.hints, i.status,
               (SELECT group_concat(slug, '|') FROM (SELECT c.slug FROM item_categories ic
                  JOIN categories c ON c.id = ic.category_id WHERE ic.item_id = i.id ORDER BY c.slug))
@@ -122,13 +123,15 @@ describe('pnpm db:export', () => {
     expect(manifest.tables.items).toBeGreaterThan(0);
 
     const items = JSON.parse(readFileSync(path.join(dir, 'json', 'items.json'), 'utf8')) as {
-      translation: unknown;
+      translation_parallel: unknown;
+      translation_meaning: unknown;
       explanation: unknown;
       created_at: number;
       created_at_iso: string;
     }[];
     expect(items).toHaveLength(manifest.tables.items!);
-    expect(typeof items[0]!.translation).toBe('object');
+    expect(typeof items[0]!.translation_parallel).toBe('object');
+    expect(typeof items[0]!.translation_meaning).toBe('object');
     expect(Array.isArray(items[0]!.explanation)).toBe(true);
     expect(items[0]!.created_at_iso).toBe(new Date(items[0]!.created_at).toISOString());
     expect(readFileSync(path.join(dir, 'README.md'), 'utf8')).toContain('personal data');

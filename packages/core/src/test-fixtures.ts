@@ -14,7 +14,8 @@ export function makeItem(overrides: Partial<ItemData> = {}): ItemData {
     text: 'Date',
     type: 'word',
     multipleMeanings: true,
-    translation: { he: ['תאריך', 'תמר'] },
+    parallel: { he: ['תאריך', 'תמר'] },
+    meaning: {},
     literal: {},
     explanation: [
       'A particular day of the month or year',

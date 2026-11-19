@@ -21,7 +21,7 @@ describe('playability (FR-L40)', () => {
     const item = makeItem();
     expect(isPlayableFor(item, 'en', 'he')).toBe(true);
     expect(isPlayableFor(item, 'en', 'en')).toBe(true);
-    expect(isPlayableFor(makeItem({ translation: {} }), 'en', 'he')).toBe(false);
+    expect(isPlayableFor(makeItem({ parallel: {} }), 'en', 'he')).toBe(false);
     expect(isPlayableFor(makeItem({ explanation: [] }), 'en', 'en')).toBe(false);
   });
 
@@ -46,8 +46,10 @@ describe('buildCard', () => {
       front: { text: 'Date', lang: 'en', dir: 'ltr' },
       answer: {
         kind: 'translation',
+        main: 'parallel',
         lines: ['תאריך', 'תמר'],
         numbered: false,
+        meaning: [],
         literal: [],
         lang: 'he',
         dir: 'rtl',
@@ -58,12 +60,52 @@ describe('buildCard', () => {
     });
   });
 
+  it('shows the parallel as the main answer, with the meaning and literal under it (D-024)', () => {
+    const item = makeItem({
+      type: 'expr',
+      multipleMeanings: false,
+      parallel: { he: ['מקבילה-1'] },
+      meaning: { he: ['משמעות-1'] },
+      literal: { he: ['מילולי-1'] },
+    });
+    expect(buildCard(item, 'he', LANGS).answer).toMatchObject({
+      main: 'parallel',
+      lines: ['מקבילה-1'],
+      meaning: ['משמעות-1'],
+      literal: ['מילולי-1'],
+    });
+  });
+
+  it('uses the meaning as the main answer when there is no parallel', () => {
+    const item = makeItem({ parallel: {}, meaning: { he: ['משמעות-1', 'משמעות-2'] } });
+    expect(isPlayableFor(item, 'en', 'he')).toBe(true);
+    expect(buildCard(item, 'he', LANGS).answer).toMatchObject({
+      main: 'meaning',
+      lines: ['משמעות-1', 'משמעות-2'],
+      meaning: [], // not repeated under itself
+    });
+  });
+
+  it('a literal translation alone does not make an item playable', () => {
+    const item = makeItem({ parallel: {}, meaning: {}, literal: { he: ['מילולי-1'] } });
+    expect(isPlayableFor(item, 'en', 'he')).toBe(false);
+  });
+
+  it('same-language cards show the explanation, with no meaning or literal', () => {
+    const item = makeItem({ meaning: { he: ['משמעות-1'] }, literal: { he: ['מילולי-1'] } });
+    expect(buildCard(item, 'en', LANGS).answer).toMatchObject({
+      main: 'explanation',
+      meaning: [],
+      literal: [],
+    });
+  });
+
   it('adds the literal meaning to translation cards only', () => {
     const item = makeItem({
       text: 'sample expression',
       type: 'expr',
       multipleMeanings: false,
-      translation: { he: ['משמעות-1'] },
+      parallel: { he: ['משמעות-1'] },
       literal: { he: ['מילולי-1'] },
     });
     expect(buildCard(item, 'he', LANGS).answer.literal).toEqual(['מילולי-1']);
@@ -84,7 +126,7 @@ describe('buildCard', () => {
   });
 
   it('builds a Hebrew item card with RTL front and LTR answer', () => {
-    const item = makeItem({ lang: 'he', text: 'מהיר', translation: { en: ['fast', 'quick'] } });
+    const item = makeItem({ lang: 'he', text: 'מהיר', parallel: { en: ['fast', 'quick'] } });
     const card = buildCard(item, 'en', LANGS);
     expect(card.front).toEqual({ text: 'מהיר', lang: 'he', dir: 'rtl' });
     expect(card.extrasLang.dir).toBe('rtl');
@@ -97,12 +139,12 @@ describe('buildCard', () => {
     card.hints.push('x');
     card.answer.lines.push('y');
     expect(item.hints).toHaveLength(2);
-    expect(item.translation.he).toHaveLength(2);
+    expect(item.parallel.he).toHaveLength(2);
   });
 
   it('refuses an unplayable item or an unknown language', () => {
-    expect(() => buildCard(makeItem({ translation: {} }), 'he', LANGS)).toThrow(CardBuildError);
-    expect(() => buildCard(makeItem({ translation: { fr: ['x'] } }), 'fr', LANGS)).toThrow(
+    expect(() => buildCard(makeItem({ parallel: {} }), 'he', LANGS)).toThrow(CardBuildError);
+    expect(() => buildCard(makeItem({ parallel: { fr: ['x'] } }), 'fr', LANGS)).toThrow(
       /Unknown language/,
     );
   });

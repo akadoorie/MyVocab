@@ -348,3 +348,33 @@ Format: date · context · decision · consequences.
 - **Considered:** a spaced-review schedule (words come back after 3 days, 1 week, 1 month…) and
   mixing due words into sessions. Rejected in favour of this simpler, learner-controlled choice:
   no schedule, the word just returns to the pool.
+
+## D-024 · 2026-11-19 · Three kinds of translation (owner request)
+
+- **Why:** an expression has three different translations into another language, and they were
+  mixed: the meaning sat in `translation` next to the equivalent expression, and sometimes the
+  equivalent sat in `literal`. Example, the Hebrew idiom "יצא המרצע מן השק" in English: the
+  **parallel** "The cat is out of the bag", the **meaning** "The truth came out", the **literal**
+  "The awl came out of the sack". Keeping them apart shows each one under its own headline, and
+  later lets parallels be used in the opposite direction.
+- **Model:** three per-language fields on the item (still one row per item, PRD §11.2 rule 1):
+  `translation_parallel` (the old `translation`), `translation_meaning` (new) and
+  `translation_literal` (the old `literal`). Each is optional per language: a plain word keeps
+  only the parallel ("fork" → "מזלג"), and a literal that would repeat the parallel stays empty.
+  In code and the API they are `parallel`, `meaning` and `literal`.
+- **Card:** the parallel is the main answer (headline "Translation" for a word, "Parallel
+  expression" for an expression); under it "Meaning", then "Literal translation" in a muted color.
+  With no parallel, the meaning is the main answer (headline "Meaning"). An item is playable with a
+  parallel **or** a meaning; a literal alone never makes it playable.
+- **Migration `0003_translation_kinds` is hand-written** (the D-016 rule): two `RENAME COLUMN`s
+  and one `ADD COLUMN`, no table rebuild. SQLite rewrites the existing CHECK constraints to the new
+  column names; the constraint names stay as they were. The drizzle snapshot was written to match,
+  and `db:generate` reports no drift. No data moves in the migration.
+- **CSV:** `translation_parallel_<code>`, `translation_meaning_<code>`, `translation_literal_<code>`.
+  The old `translation_<code>` and `literal_<code>` are still read, so existing files stay valid.
+- **Existing content:** moved with `pnpm db:update-translations`, from a reviewed CSV of item ids.
+  It replaces only the lists named in the file and goes through the same service as an Admin edit
+  (validation, version check, audit entry). It prints every change first; `--remote` asks for a
+  typed confirmation.
+- **Sessions running during the deploy** keep working: saved cards without the new answer fields
+  are filled in when loaded.

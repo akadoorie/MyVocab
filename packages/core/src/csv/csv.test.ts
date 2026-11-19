@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { itemIdentityKey } from '../item/identity';
 import type { ItemContent } from '../item/types';
 import { LANGS } from '../test-fixtures';
-import { joinList, splitList, translationColumn } from './columns';
+import { joinList, splitList, translationColumn, translationColumnOf } from './columns';
 import { planImport, type ExistingItem, type PlanContext } from './merge-planner';
 import { parseImportCsv } from './parse-rows';
 import { CsvSyntaxError, parseCsv, serializeCsv } from './rfc4180';
@@ -74,7 +74,11 @@ describe('columns', () => {
     expect(splitList(' a | b ||c ')).toEqual(['a', 'b', 'c']);
     expect(splitList('')).toEqual([]);
     expect(joinList(['a', 'b'])).toBe('a|b');
-    expect(translationColumn('he')).toBe('translation_he');
+    expect(translationColumn('parallel', 'he')).toBe('translation_parallel_he');
+    expect(translationColumnOf('translation_meaning_he')).toEqual({ kind: 'meaning', lang: 'he' });
+    expect(translationColumnOf('translation_he')).toEqual({ kind: 'parallel', lang: 'he' }); // old name
+    expect(translationColumnOf('literal_he')).toEqual({ kind: 'literal', lang: 'he' }); // old name
+    expect(translationColumnOf('explanation')).toBeUndefined();
   });
 });
 
@@ -92,11 +96,11 @@ describe('parseImportCsv', () => {
         text: 'Swift',
         type: 'word',
         multipleMeanings: true,
-        translation: { he: ['מהיר', 'סנונית'] },
+        parallel: { he: ['מהיר', 'סנונית'] },
         synonyms: ['fast', 'quick', 'rapid'],
       },
     });
-    expect(r.rows[1]?.content.translation).toEqual({ en: ['fast', 'quick'] });
+    expect(r.rows[1]?.content.parallel).toEqual({ en: ['fast', 'quick'] });
   });
 
   it('accepts minimal columns in any order and skips blank lines', () => {
@@ -163,7 +167,46 @@ en,sample expression,expr,משמעות-1,,literal-1`,
       {
         row: 2,
         column: 'literal_en',
-        message: `An item in "en" can't have a literal meaning in "en"`,
+        message: `An item in "en" can't have a literal translation in "en"`,
+      },
+    ]);
+  });
+
+  it('reads the three translation columns by kind (D-024)', () => {
+    const r = parseImportCsv(
+      `lang,text,type,translation_parallel_he,translation_meaning_he,translation_literal_he
+en,sample expression,expr,מקבילה-1,משמעות-1|משמעות-2,מילולי-1`,
+      opts,
+    );
+    expect(r.errors).toEqual([]);
+    expect(r.rows[0]?.content).toMatchObject({
+      parallel: { he: ['מקבילה-1'] },
+      meaning: { he: ['משמעות-1', 'משמעות-2'] },
+      literal: { he: ['מילולי-1'] },
+    });
+  });
+
+  it('treats an old and a new name for the same list as a duplicate column', () => {
+    const r = parseImportCsv(
+      'lang,text,type,translation_he,translation_parallel_he\nen,a,word,x,y',
+      opts,
+    );
+    expect(r.errors).toEqual([
+      {
+        row: 1,
+        column: 'translation_parallel_he',
+        message: 'Duplicate column "translation_parallel_he"',
+      },
+    ]);
+  });
+
+  it('rejects a meaning in the row own language', () => {
+    const r = parseImportCsv('lang,text,type,translation_meaning_en\nen,a,expr,x', opts);
+    expect(r.errors).toEqual([
+      {
+        row: 2,
+        column: 'translation_meaning_en',
+        message: `An item in "en" can't have a meaning in "en"; use explanation`,
       },
     ]);
   });
@@ -209,7 +252,8 @@ function existingSwift(over: Partial<ItemContent> = {}): ExistingItem {
       text: 'Swift',
       type: 'word',
       multipleMeanings: false,
-      translation: { he: ['מהיר'] },
+      parallel: { he: ['מהיר'] },
+      meaning: {},
       literal: {},
       explanation: ['Moving or able to move very fast'],
       synonyms: ['fast'],
@@ -241,7 +285,7 @@ describe('planImport', () => {
     const plan = planImport(parsed.rows, emptyCtx({ existing }));
     expect(plan.updates).toHaveLength(1);
     const update = plan.updates[0];
-    expect(update?.content.translation.he).toEqual(['מהיר', 'סנונית']);
+    expect(update?.content.parallel.he).toEqual(['מהיר', 'סנונית']);
     expect(update?.content.explanation).toEqual([
       'Moving or able to move very fast',
       'A small bird that flies very fast',
@@ -288,7 +332,7 @@ en,Swift,word,,זריז`;
     const plan = planImport(parseImportCsv(csv, opts).rows, emptyCtx());
     expect(plan.creates).toHaveLength(1);
     expect(plan.creates[0]).toMatchObject({
-      content: { text: 'Swift', translation: { he: ['מהיר', 'סנונית'] } },
+      content: { text: 'Swift', parallel: { he: ['מהיר', 'סנונית'] } },
       categories: ['home', 'food'],
       status: 'draft',
       rows: [2, 3, 4],
@@ -361,7 +405,7 @@ en,Swift,word,,זריז`;
       `lang,text,type,translation_he\nen,Cat,word,${a}\nen,Cat,word,${b}`,
       opts,
     ).rows;
-    expect(planImport(rows, emptyCtx()).errors[0]?.column).toBe('translation_he');
+    expect(planImport(rows, emptyCtx()).errors[0]?.column).toBe('translation_parallel_he');
   });
 
   it('computes warnings on the merged result', () => {
@@ -375,7 +419,7 @@ en,Swift,word,,זריז`;
       ).rows,
       emptyCtx(),
     );
-    expect(single.warnings.map((w) => w.column)).toEqual(['translation_he', 'text']);
+    expect(single.warnings.map((w) => w.column)).toEqual(['translation_parallel_he', 'text']);
   });
 });
 
@@ -387,7 +431,8 @@ describe('serializeItemsCsv (round trip)', () => {
         text: 'Swift',
         type: 'word',
         multipleMeanings: true,
-        translation: { he: ['מהיר', 'סנונית'] },
+        parallel: { he: ['מהיר', 'סנונית'] },
+        meaning: {},
         literal: {},
         explanation: ['Moving or able to move very fast', 'A small bird, "swift" in flight'],
         synonyms: ['fast', 'quick'],
@@ -402,7 +447,8 @@ describe('serializeItemsCsv (round trip)', () => {
         text: 'מהיר',
         type: 'word',
         multipleMeanings: false,
-        translation: { en: ['fast'] },
+        parallel: { en: ['fast'] },
+        meaning: { en: ['speedy'] },
         literal: { en: ['quick one'] },
         explanation: [],
         synonyms: [],
@@ -413,17 +459,19 @@ describe('serializeItemsCsv (round trip)', () => {
     },
   ];
 
-  it('writes a header with a translation and a literal column per language', () => {
+  it('writes a header with parallel, meaning and literal columns per language', () => {
     expect(csvHeader(['en', 'he'])).toEqual([
       'lang',
       'text',
       'type',
       'multiple_meanings',
       'categories',
-      'translation_en',
-      'translation_he',
-      'literal_en',
-      'literal_he',
+      'translation_parallel_en',
+      'translation_parallel_he',
+      'translation_meaning_en',
+      'translation_meaning_he',
+      'translation_literal_en',
+      'translation_literal_he',
       'explanation',
       'synonyms',
       'hints',
@@ -433,7 +481,7 @@ describe('serializeItemsCsv (round trip)', () => {
 
   it('adds languages that are present but not in the given order', () => {
     const out = serializeItemsCsv(items, ['en']);
-    expect(parseCsv(out)[0]).toContain('translation_he');
+    expect(parseCsv(out)[0]).toContain('translation_parallel_he');
   });
 
   it('re-imports into an empty database with identical content', () => {

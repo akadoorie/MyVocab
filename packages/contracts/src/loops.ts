@@ -60,8 +60,10 @@ export const cardViewSchema = z.object({
   front: z.object({ text: z.string(), ...langDir }),
   answer: z.object({
     kind: z.enum(['translation', 'explanation']),
+    main: z.enum(['parallel', 'meaning', 'explanation']),
     lines: z.array(z.string()).min(1),
     numbered: z.boolean(),
+    meaning: z.array(z.string()),
     literal: z.array(z.string()),
     ...langDir,
   }),

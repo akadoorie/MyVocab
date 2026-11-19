@@ -13,7 +13,7 @@ const base: ItemInput = {
   lang: 'en',
   text: 'Swift',
   type: 'word',
-  translation: { he: ['מהיר', 'סנונית'] },
+  parallel: { he: ['מהיר', 'סנונית'] },
   explanation: ['Moving or able to move very fast', 'A small bird that flies very fast'],
   synonyms: ['fast', 'quick'],
   hints: ['He gave a swift reply.'],
@@ -34,21 +34,21 @@ describe('validateItem: valid input', () => {
 
   it('defaults missing lists to empty and drops empty translation lists', () => {
     const r = validateItem(
-      { lang: 'EN', text: 'Cat', type: 'WORD', translation: { he: ['  '] }, explanation: ['x'] },
+      { lang: 'EN', text: 'Cat', type: 'WORD', parallel: { he: ['  '] }, explanation: ['x'] },
       ctx,
     );
     expect(r.errors).toEqual([]);
-    expect(r.value).toMatchObject({ lang: 'en', type: 'word', translation: {}, hints: [] });
+    expect(r.value).toMatchObject({ lang: 'en', type: 'word', parallel: {}, hints: [] });
   });
 });
 
 describe('validateItem: errors', () => {
   it('rejects a translation into the item own language', () => {
-    const r = validateItem({ ...base, translation: { en: ['fast'], he: ['מהיר'] } }, ctx);
+    const r = validateItem({ ...base, parallel: { en: ['fast'], he: ['מהיר'] } }, ctx);
     expect(r.errors).toEqual([
-      expect.objectContaining({ path: 'translation.en', code: 'SAME_LANGUAGE_TRANSLATION' }),
+      expect.objectContaining({ path: 'parallel.en', code: 'SAME_LANGUAGE_TRANSLATION' }),
     ]);
-    expect(r.value.translation).toEqual({ he: ['מהיר'] });
+    expect(r.value.parallel).toEqual({ he: ['מהיר'] });
   });
 
   it('rejects a literal meaning in the item own language and keeps the others', () => {
@@ -61,10 +61,10 @@ describe('validateItem: errors', () => {
 
   it('rejects unknown languages for the item and for translations', () => {
     expect(codes(validateItem({ ...base, lang: 'fr' }, ctx).errors)).toContain('UNKNOWN_LANGUAGE');
-    expect(codes(validateItem({ ...base, translation: { de: ['x'] } }, ctx).errors)).toEqual([
+    expect(codes(validateItem({ ...base, parallel: { de: ['x'] } }, ctx).errors)).toEqual([
       'UNKNOWN_LANGUAGE',
     ]);
-    expect(codes(validateItem({ ...base, translation: { '$.x': ['x'] } }, ctx).errors)).toEqual([
+    expect(codes(validateItem({ ...base, parallel: { '$.x': ['x'] } }, ctx).errors)).toEqual([
       'UNKNOWN_LANGUAGE',
     ]);
   });
@@ -108,11 +108,11 @@ describe('validateItem: errors', () => {
 describe('warnings', () => {
   it('warns when multiple meanings is on but a list has one entry', () => {
     const r = validateItem(
-      { ...base, multipleMeanings: true, translation: { he: ['מהיר'] }, explanation: ['fast'] },
+      { ...base, multipleMeanings: true, parallel: { he: ['מהיר'] }, explanation: ['fast'] },
       ctx,
     );
     expect(r.errors).toEqual([]);
-    expect(r.warnings.map((w) => w.path)).toEqual(['translation.he', 'explanation']);
+    expect(r.warnings.map((w) => w.path)).toEqual(['parallel.he', 'explanation']);
   });
 
   it('does not warn when multiple meanings is off', () => {
@@ -127,14 +127,14 @@ describe('warnings', () => {
         text: 'A מeedle in a haystack',
         type: 'expr',
         hints: ['ok', 'bad ש'],
-        translation: { he: ['מחט בערימת שחת x'] },
+        parallel: { he: ['מחט בערימת שחת x'] },
       },
       ctx,
     );
     expect(r.warnings.filter((w) => w.code === 'MIXED_SCRIPT').map((w) => w.path)).toEqual([
       'text',
       'hints[1]',
-      'translation.he[0]',
+      'parallel.he[0]',
     ]);
   });
 

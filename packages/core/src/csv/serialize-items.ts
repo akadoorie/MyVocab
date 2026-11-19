@@ -1,6 +1,6 @@
 import type { LangCode } from '../lang/languages';
-import type { ItemContent, ItemStatus } from '../item/types';
-import { CSV_COLUMNS, joinList, literalColumn, translationColumn } from './columns';
+import { TRANSLATION_KINDS, type ItemContent, type ItemStatus } from '../item/types';
+import { CSV_COLUMNS, joinList, translationColumn } from './columns';
 import { serializeCsv } from './rfc4180';
 
 export type ExportItem = {
@@ -19,11 +19,8 @@ function translationLanguages(
 ): LangCode[] {
   const present = new Set<LangCode>(order);
   for (const item of items)
-    for (const lang of [
-      ...Object.keys(item.content.translation),
-      ...Object.keys(item.content.literal),
-    ])
-      present.add(lang);
+    for (const kind of TRANSLATION_KINDS)
+      for (const lang of Object.keys(item.content[kind])) present.add(lang);
   const extra = [...present].filter((l) => !order.includes(l)).sort();
   return [...order, ...extra];
 }
@@ -35,8 +32,7 @@ export function csvHeader(translationLangs: readonly LangCode[]): string[] {
     CSV_COLUMNS.type,
     CSV_COLUMNS.multipleMeanings,
     CSV_COLUMNS.categories,
-    ...translationLangs.map(translationColumn),
-    ...translationLangs.map(literalColumn),
+    ...TRANSLATION_KINDS.flatMap((kind) => translationLangs.map((l) => translationColumn(kind, l))),
     CSV_COLUMNS.explanation,
     CSV_COLUMNS.synonyms,
     CSV_COLUMNS.hints,
@@ -59,8 +55,7 @@ export function serializeItemsCsv(
     content.type,
     content.multipleMeanings ? 'true' : 'false',
     joinList(categories),
-    ...langs.map((l) => joinList(content.translation[l] ?? [])),
-    ...langs.map((l) => joinList(content.literal[l] ?? [])),
+    ...TRANSLATION_KINDS.flatMap((kind) => langs.map((l) => joinList(content[kind][l] ?? []))),
     joinList(content.explanation),
     joinList(content.synonyms),
     joinList(content.hints),

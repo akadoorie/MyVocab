@@ -18,7 +18,8 @@ type ListRow = {
   lang: string;
   type: ItemType;
   multiple_meanings: number;
-  translation: string;
+  parallel: string;
+  meaning: string;
   explanation: string;
   known_target: string;
   known_in_cycle: number;
@@ -124,7 +125,7 @@ export class D1KnownRepository implements KnownRepository {
     const rows = await this.db.all<ListRow>(sql`
       SELECT k.item_id, k.known_target, k.known_in_cycle, k.known_at,
              i.text, i.normalized_text, i.lang, i.type, i.multiple_meanings,
-             i.translation, i.explanation
+             i.translation_parallel AS parallel, i.translation_meaning AS meaning, i.explanation
       FROM user_known_items AS k JOIN items AS i ON i.id = k.item_id
       WHERE ${sql.join(conds, sql` AND `)}
       ORDER BY ${ORDER[sort]}
@@ -137,7 +138,8 @@ export class D1KnownRepository implements KnownRepository {
       lang: r.lang,
       type: r.type,
       multipleMeanings: r.multiple_meanings === 1,
-      translation: JSON.parse(r.translation) as Record<string, string[]>,
+      parallel: JSON.parse(r.parallel) as Record<string, string[]>,
+      meaning: JSON.parse(r.meaning) as Record<string, string[]>,
       explanation: JSON.parse(r.explanation) as string[],
       knownTarget: r.known_target,
       knownInCycle: r.known_in_cycle,

@@ -10,6 +10,14 @@ const CHIP: Record<CardAnswer, { color: string; text: string; mark: string }> = 
   dontKnow: { color: 'text-dontknow', text: strings.card.answeredDontKnow, mark: '✗' },
 };
 
+/** The chip above the answer: what the main answer lines are (PRD §9.3, D-024). */
+function mainHeadline(card: CardView): string {
+  const { main } = card.answer;
+  if (main === 'explanation') return strings.card.explanation;
+  if (main === 'meaning') return strings.card.meaning;
+  return card.type === 'expr' ? strings.card.parallel : strings.card.translation;
+}
+
 function Extras({ card }: { card: CardView }) {
   const { hints, synonyms, extrasLang } = card;
   if (hints.length === 0 && synonyms.length === 0) {
@@ -131,11 +139,7 @@ export function FlipCard({
 
         <div className="flip-card__face flip-card__back" inert={front} aria-hidden={front}>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="chip">
-              {card.answer.kind === 'translation'
-                ? strings.card.translation
-                : strings.card.explanation}
-            </p>
+            <p className="chip">{mainHeadline(card)}</p>
             {answerChip('back')}
           </div>
           <div className="flex min-h-[46%] shrink-0 flex-col items-center justify-center py-4 text-center">
@@ -154,13 +158,32 @@ export function FlipCard({
                 <li key={line}>{line}</li>
               ))}
             </Answer>
+            {/* Under the parallel: the meaning, then the literal translation, softer (D-024). */}
+            {card.answer.meaning.length > 0 && (
+              <div className="mt-4" data-testid={tid('meaning')}>
+                <p className="text-sm font-semibold tracking-wide text-accent uppercase">
+                  {strings.card.meaning}
+                </p>
+                <ul
+                  lang={card.answer.lang}
+                  dir={card.answer.dir}
+                  className="mt-1 space-y-0.5 text-xl font-semibold text-text md:text-2xl"
+                >
+                  {card.answer.meaning.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {card.answer.literal.length > 0 && (
-              <p className="mt-3 text-lg text-muted" data-testid={tid('literal')}>
-                <span className="font-medium">{strings.card.literal}</span>{' '}
-                <span lang={card.answer.lang} dir={card.answer.dir}>
+              <div className="mt-3 text-muted" data-testid={tid('literal')}>
+                <p className="text-sm font-medium tracking-wide uppercase opacity-80">
+                  {strings.card.literal}
+                </p>
+                <p lang={card.answer.lang} dir={card.answer.dir} className="mt-1 text-lg">
                   {card.answer.literal.join(', ')}
-                </span>
-              </p>
+                </p>
+              </div>
             )}
           </div>
           <div className="border-t border-border pt-4" data-testid={tid('back-hints')}>

@@ -16,11 +16,20 @@ export interface AnswerStrategy {
   numbered(lines: readonly string[]): boolean;
 }
 
+/**
+ * The main answer of a translation card (PRD §8.1, D-024): the parallel, or the meaning when the
+ * item has no parallel in that language. The literal translation never answers on its own.
+ */
+export function mainTranslation(item: ItemContent, target: LangCode): 'parallel' | 'meaning' {
+  return (item.parallel[target]?.length ?? 0) > 0 ? 'parallel' : 'meaning';
+}
+
 export const translationStrategy: AnswerStrategy = {
   kind: 'translation',
   appliesTo: (source, target) => source !== target,
-  isPlayable: (item, target) => (item.translation[target]?.length ?? 0) > 0,
-  answerLines: (item, target) => [...(item.translation[target] ?? [])],
+  isPlayable: (item, target) =>
+    (item.parallel[target]?.length ?? 0) > 0 || (item.meaning[target]?.length ?? 0) > 0,
+  answerLines: (item, target) => [...(item[mainTranslation(item, target)][target] ?? [])],
   numbered: () => false,
 };
 

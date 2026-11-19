@@ -133,12 +133,17 @@ export const items = sqliteTable(
     normalizedText: text('normalized_text').notNull(),
     type: text('type').$type<ItemType>().notNull(),
     multipleMeanings: integer('multiple_meanings', { mode: 'boolean' }).notNull().default(false),
-    translation: text('translation', { mode: 'json' })
+    // The three kinds of translation per other language (PRD §8.1, D-024): the equivalent word or
+    // expression, what it means, and the word-for-word translation.
+    parallel: text('translation_parallel', { mode: 'json' })
       .$type<Translations>()
       .notNull()
       .default(sql`'{}'`),
-    // Word-for-word meaning per other language, shown as "Literal meaning" (PRD §8.1).
-    literal: text('literal', { mode: 'json' })
+    meaning: text('translation_meaning', { mode: 'json' })
+      .$type<Translations>()
+      .notNull()
+      .default(sql`'{}'`),
+    literal: text('translation_literal', { mode: 'json' })
       .$type<Translations>()
       .notNull()
       .default(sql`'{}'`),
@@ -166,17 +171,33 @@ export const items = sqliteTable(
     check('ck_items_type', sql`type IN ('word','expr')`),
     check('ck_items_status', sql`status IN ('draft','published')`),
     check('ck_items_multiple_meanings', sql`multiple_meanings IN (0,1)`),
+    // The parallel and literal constraints keep their names from before the columns were renamed
+    // (migration 0003): SQLite can't rename a constraint without rebuilding the table.
     check(
       'ck_items_translation_object',
-      sql`json_valid(translation) AND json_type(translation) = 'object'`,
+      sql`json_valid(translation_parallel) AND json_type(translation_parallel) = 'object'`,
     ),
-    // No translation into the item's own language (PRD §8.1).
+    // No translation of any kind into the item's own language (PRD §8.1).
     check(
       'ck_items_no_own_translation',
-      sql`json_extract(translation, '$."' || lang || '"') IS NULL`,
+      sql`json_extract(translation_parallel, '$."' || lang || '"') IS NULL`,
     ),
-    check('ck_items_literal_object', sql`json_valid(literal) AND json_type(literal) = 'object'`),
-    check('ck_items_no_own_literal', sql`json_extract(literal, '$."' || lang || '"') IS NULL`),
+    check(
+      'ck_items_meaning_object',
+      sql`json_valid(translation_meaning) AND json_type(translation_meaning) = 'object'`,
+    ),
+    check(
+      'ck_items_no_own_meaning',
+      sql`json_extract(translation_meaning, '$."' || lang || '"') IS NULL`,
+    ),
+    check(
+      'ck_items_literal_object',
+      sql`json_valid(translation_literal) AND json_type(translation_literal) = 'object'`,
+    ),
+    check(
+      'ck_items_no_own_literal',
+      sql`json_extract(translation_literal, '$."' || lang || '"') IS NULL`,
+    ),
     check(
       'ck_items_explanation_array',
       sql`json_valid(explanation) AND json_type(explanation) = 'array'`,

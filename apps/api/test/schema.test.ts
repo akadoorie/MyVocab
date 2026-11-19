@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 const now = Date.now();
 const insertItem = (lang: string, text: string, translation: string, extra = '') =>
   env.DB.prepare(
-    `INSERT INTO items (lang, text, normalized_text, type, translation, created_at, updated_at${extra ? ', explanation' : ''})
+    `INSERT INTO items (lang, text, normalized_text, type, translation_parallel, created_at, updated_at${extra ? ', explanation' : ''})
      VALUES (?, ?, ?, 'word', ?, ?, ?${extra ? ', ?' : ''})`,
   )
     .bind(lang, text, text.toLowerCase(), translation, now, now, ...(extra ? [extra] : []))
@@ -36,20 +36,40 @@ describe('schema', () => {
     await expect(insertItem('en', 'Swift', '{"he":["מהיר"]}')).resolves.toBeTruthy();
   });
 
-  it('defaults literal to {} and rejects a literal in the item own language or a non-object (CHECK)', async () => {
-    const withLiteral = (text: string, literal: string) =>
+  it('defaults meaning and literal to {} and rejects one in the item own language or a non-object (CHECK, D-024)', async () => {
+    const withList = (column: string, text: string, value: string) =>
       env.DB.prepare(
-        `INSERT INTO items (lang, text, normalized_text, type, literal, created_at, updated_at)
+        `INSERT INTO items (lang, text, normalized_text, type, ${column}, created_at, updated_at)
          VALUES ('en', ?, ?, 'expr', ?, ?, ?)`,
       )
-        .bind(text, text.toLowerCase(), literal, now, now)
+        .bind(text, text.toLowerCase(), value, now, now)
         .run();
     await insertItem('en', 'Plain', '{"he":["פשוט"]}');
-    const row = await env.DB.prepare(`SELECT literal FROM items WHERE text = 'Plain'`).first();
-    expect(row).toEqual({ literal: '{}' });
-    await expect(withLiteral('L1', '{"en":["x"]}')).rejects.toThrow(/CHECK/);
-    await expect(withLiteral('L2', '["x"]')).rejects.toThrow(/CHECK/);
-    await expect(withLiteral('L3', '{"he":["מילולי-1"]}')).resolves.toBeTruthy();
+    const row = await env.DB.prepare(
+      `SELECT translation_meaning, translation_literal FROM items WHERE text = 'Plain'`,
+    ).first();
+    expect(row).toEqual({ translation_meaning: '{}', translation_literal: '{}' });
+    for (const column of ['translation_meaning', 'translation_literal']) {
+      await expect(withList(column, `${column}-1`, '{"en":["x"]}')).rejects.toThrow(/CHECK/);
+      await expect(withList(column, `${column}-2`, '["x"]')).rejects.toThrow(/CHECK/);
+      await expect(withList(column, `${column}-3`, '{"he":["רשומה-1"]}')).resolves.toBeTruthy();
+    }
+  });
+
+  it('has the three translation columns and no old ones (migration 0003)', async () => {
+    const { results } = await env.DB.prepare(`SELECT name FROM pragma_table_info('items')`).all<{
+      name: string;
+    }>();
+    const names = results.map((r) => r.name);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'translation_parallel',
+        'translation_meaning',
+        'translation_literal',
+      ]),
+    );
+    expect(names).not.toContain('translation');
+    expect(names).not.toContain('literal');
   });
 
   it('rejects invalid JSON shapes for the lists (CHECK)', async () => {

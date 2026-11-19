@@ -135,7 +135,8 @@ export type KnownListRow = {
   lang: string;
   type: ItemType;
   multipleMeanings: boolean;
-  translation: Record<string, string[]>;
+  parallel: Record<string, string[]>;
+  meaning: Record<string, string[]>;
   explanation: string[];
   knownTarget: string;
   knownInCycle: number;
@@ -204,7 +205,8 @@ export type ItemChanges = Partial<
     | 'text'
     | 'type'
     | 'multipleMeanings'
-    | 'translation'
+    | 'parallel'
+    | 'meaning'
     | 'literal'
     | 'explanation'
     | 'synonyms'
@@ -232,7 +234,8 @@ export type AdminItemListRow = {
   lang: string;
   type: ItemType;
   multipleMeanings: boolean;
-  translation: Record<string, string[]>;
+  parallel: Record<string, string[]>;
+  meaning: Record<string, string[]>;
   explanationCount: number;
   synonymCount: number;
   hintCount: number;

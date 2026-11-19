@@ -15,7 +15,7 @@ type Item = {
   version: number;
   text: string;
   categoryIds: number[];
-  translation: Record<string, string[]>;
+  parallel: Record<string, string[]>;
   explanation: string[];
   hints: string[];
   warnings: { code: string; path: string }[];
@@ -41,7 +41,7 @@ describe('POST /api/admin/items', () => {
       type: 'word',
       multipleMeanings: true,
       categoryIds: [home],
-      translation: { he: ['מילה-חדשה'] },
+      parallel: { he: ['מילה-חדשה'] },
       hints: ['A synthetic hint.'],
     });
     expect(res.status).toBe(201);
@@ -63,7 +63,7 @@ describe('POST /api/admin/items', () => {
 
   it('rejects same-language translations, unknown categories and duplicates', async () => {
     const base = { lang: 'en', text: 'another', type: 'word' };
-    expect((await create({ ...base, translation: { en: ['x'] } })).status).toBe(400);
+    expect((await create({ ...base, parallel: { en: ['x'] } })).status).toBe(400);
     expect((await create({ ...base, categoryIds: [9999] })).status).toBe(400);
     expect((await create({ ...base, text: 'x'.repeat(201) })).status).toBe(400);
     const dup = await create({ ...base, text: 'FX-WORD-1' });
@@ -152,7 +152,7 @@ describe('PATCH /api/admin/items/:id (optimistic concurrency)', () => {
   it('never accepts lang, validates the merged item and refuses duplicates', async () => {
     const id = await itemId('fx-word-1');
     expect((await patch(id, { version: 1, lang: 'he' })).status).toBe(400);
-    expect((await patch(id, { version: 1, translation: { en: ['x'] } })).status).toBe(400);
+    expect((await patch(id, { version: 1, parallel: { en: ['x'] } })).status).toBe(400);
     expect((await patch(id, { version: 1, literal: { en: ['x'] } })).status).toBe(400);
     expect((await patch(id, { version: 1, hints: ['a', 'A'] })).status).toBe(400);
     expect((await patch(id, { version: 1, text: 'fx-word-2' })).status).toBe(409);
@@ -254,7 +254,7 @@ describe('Trash (FR-A20–24)', () => {
       itemId: id,
       text: 'fx-word-1',
       categories: ['home'],
-      translation: { he: ['מילה-1'] },
+      parallel: { he: ['מילה-1'] },
     });
   });
 

@@ -19,7 +19,8 @@
     "db:migrate:local": "pnpm --filter @myvocab/api db:migrate:local",
     "db:seed": "pnpm --filter @myvocab/api db:seed",
     "e2e": "playwright test",
-    "db:export": "pnpm --filter @myvocab/api db:export"
+    "db:export": "pnpm --filter @myvocab/api db:export",
+    "db:update-translations": "pnpm --filter @myvocab/api db:update-translations"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",

@@ -59,7 +59,8 @@ export class D1ImportWriter implements ImportWriter {
             normalizedText: normalize(c.text),
             type: c.type,
             multipleMeanings: c.multipleMeanings,
-            translation: c.translation,
+            parallel: c.parallel,
+            meaning: c.meaning,
             literal: c.literal,
             explanation: c.explanation,
             synonyms: c.synonyms,
@@ -99,7 +100,8 @@ export class D1ImportWriter implements ImportWriter {
         query: this.db
           .update(items)
           .set({
-            translation: c.translation,
+            parallel: c.parallel,
+            meaning: c.meaning,
             literal: c.literal,
             explanation: c.explanation,
             synonyms: c.synonyms,
