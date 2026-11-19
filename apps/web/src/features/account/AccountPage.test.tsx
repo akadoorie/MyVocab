@@ -69,7 +69,8 @@ describe('AccountPage', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/'));
     expect(JSON.parse(String(del.mock.calls[0]![0]!.body))).toEqual({ confirm: 'DELETE' });
     expect(await screen.findByText('Your account was deleted.')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Sign in with Google' })).toBeVisible();
+    // The header's button; the guest register notice may add a second one, depending on timing.
+    expect(screen.getAllByRole('button', { name: 'Sign in with Google' })[0]).toBeVisible();
   });
 
   it('shows why the last admin cannot delete their account', async () => {

@@ -74,12 +74,16 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   const [crumple, setCrumple] = useState<Crumple | null>(null);
   const clearCrumple = useCallback(() => setCrumple(null), []);
 
+  // The summary celebrates once per session (FR-L32a), also across Back and a refresh.
+  const [celebrated, setCelebrated] = useState(stored.celebrated ?? false);
+  const markCelebrated = useCallback(() => setCelebrated(true), []);
+
   // Persist on every change; Stop and the end of the loop clear it (FR-L33).
   useEffect(() => {
     if (state.phase === 'stopped' || state.phase === 'finished') clearLoop();
-    else saveLoop({ ...stored, state });
+    else saveLoop({ ...stored, state, celebrated });
     if (state.phase === 'stopped') navigate('/', { replace: true });
-  }, [state, stored, navigate]);
+  }, [state, stored, navigate, celebrated]);
 
   // "Only N new cards in Home…" once, when the loop starts (FR-L8).
   const notice = (location.state as LoopStartNotice | null)?.insufficient;
@@ -207,6 +211,8 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           onHome={() => navigate('/')}
           onNewLoop={() => navigate('/', { state: { selection: stored.selection } })}
           onBack={() => act('BACK')}
+          celebrate={!celebrated}
+          onCelebrated={markCelebrated}
         />
         {ghost}
       </main>

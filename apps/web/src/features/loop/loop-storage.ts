@@ -38,6 +38,8 @@ const storedLoopSchema = z.object({
     size: z.number().int(),
   }),
   isGuest: z.boolean(),
+  /** The summary's celebration was shown (FR-L32a); after Back it isn't repeated. */
+  celebrated: z.boolean().optional(),
 });
 
 export type StoredLoop = {
@@ -46,6 +48,7 @@ export type StoredLoop = {
   undoWindowSeconds: number;
   selection: StartChoices;
   isGuest: boolean;
+  celebrated?: boolean;
 };
 
 const isStoredLoop = (v: unknown): v is StoredLoop => {

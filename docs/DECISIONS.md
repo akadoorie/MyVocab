@@ -304,3 +304,10 @@ Format: date · context · decision · consequences.
   saved"); a change to Don't know uses the existing queue removal / `DELETE /api/me/known/:itemId`.
   No API or database change.
 - **Trade-off:** fixing a mistaken Know takes two taps (Back, Don't know) instead of one.
+
+## D-020 · 2026-11-19 · Session-complete celebration (owner request)
+
+- **Change:** the summary shows canvas confetti (none with "reduce motion") and plays a short
+  applause, with a Sound on/off switch remembered on the device (PRD FR-L32a). It happens once per
+  session (a `celebrated` flag saved with the session, so Back and a refresh don't repeat it); then
+  a yellow crown flies onto the card's upper-left corner and stays there on later visits.

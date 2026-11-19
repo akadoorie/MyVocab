@@ -4,6 +4,19 @@ import { Button3D } from '../../components/Button3D';
 import { KeyboardIcon } from '../../components/Icons';
 import { startGoogleSignIn } from '../../lib/session';
 import { strings } from '../../strings';
+import {
+  CELEBRATION_MS,
+  Confetti,
+  Crown,
+  SoundToggle,
+  useApplause,
+  useSoundSetting,
+} from './Celebration';
+
+/** Animations are skipped for "reduce motion" (and where it can't be detected, e.g. tests). */
+function motionAllowed(): boolean {
+  return window.matchMedia?.('(prefers-reduced-motion: no-preference)').matches ?? false;
+}
 
 /** Moves keyboard focus to the main action of a screen when it appears. */
 function useFocusOnMount<T extends HTMLElement>() {
@@ -45,14 +58,35 @@ export function Summary({
   onNewLoop,
   onHome,
   onBack,
+  celebrate,
+  onCelebrated,
 }: {
   summary: ReturnType<typeof loopSummary>;
   isGuest: boolean;
   onNewLoop: () => void;
   onHome: () => void;
   onBack: () => void;
+  /** First time on the summary in this session: celebrate. Later visits (after Back) don't. */
+  celebrate: boolean;
+  onCelebrated: () => void;
 }) {
   const focusRef = useFocusOnMount<HTMLButtonElement>();
+  // The celebration (FR-L32a), once per session: confetti (not with "reduce motion") and applause
+  // (if sound is on), then the crown flies onto the card. On later visits the crown just sits there.
+  const [first] = useState(celebrate);
+  const [motion] = useState(motionAllowed);
+  const [sound, setSound] = useSoundSetting();
+  useApplause(sound && first);
+  const [crown, setCrown] = useState<'none' | 'fly' | 'sit'>(first && motion ? 'none' : 'sit');
+  useEffect(() => {
+    if (!first) return;
+    onCelebrated();
+    if (!motion) return;
+    const id = window.setTimeout(() => setCrown('fly'), CELEBRATION_MS);
+    return () => window.clearTimeout(id);
+    // Runs once, when the summary appears.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const stats = [
     [strings.summary.cards, summary.totalCards],
     [strings.summary.cycles, summary.cycles],
@@ -60,7 +94,8 @@ export function Summary({
     [strings.summary.learnedHere, summary.learnedHere],
   ] as const;
   return (
-    <section className="glass m-auto flex w-full max-w-lg flex-col items-center gap-6 px-6 py-10 text-center">
+    <section className="glass relative m-auto flex w-full max-w-lg flex-col items-center gap-6 px-6 py-10 text-center">
+      {crown !== 'none' && <Crown fly={crown === 'fly'} />}
       <h1 className="text-3xl font-bold tracking-tight">{strings.summary.title}</h1>
       <dl className="grid w-full max-w-md grid-cols-2 gap-3">
         {stats.map(([label, value]) => (
@@ -87,7 +122,11 @@ export function Summary({
           {strings.summary.newLoop}
         </Button3D>
       </div>
-      <BackToLastCard onBack={onBack} />
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <BackToLastCard onBack={onBack} />
+        <SoundToggle on={sound} onChange={setSound} />
+      </div>
+      {first && motion && <Confetti />}
     </section>
   );
 }

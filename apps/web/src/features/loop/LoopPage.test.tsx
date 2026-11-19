@@ -134,12 +134,53 @@ describe('LoopPage', () => {
     expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known');
   });
 
+  it('Session completed plays the applause; the sound switch turns it off and is remembered', () => {
+    window.localStorage.clear();
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockImplementation(() => Promise.resolve());
+    const pause = vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    setup();
+    for (let i = 0; i < 3; i++) fireEvent.click(btn('Know'));
+    expect(play).toHaveBeenCalledTimes(1);
+    const toggle = screen.getByRole('button', { name: /Sound on/ });
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(toggle);
+    expect(pause).toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: /Sound off/ })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    expect(window.localStorage.getItem('myvocab.sound.v1')).toBe('false');
+    vi.restoreAllMocks();
+  });
+
+  it('celebrates once: after Back and Next the summary returns without sound, crown still there', () => {
+    window.localStorage.clear();
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockImplementation(() => Promise.resolve());
+    vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    setup();
+    for (let i = 0; i < 3; i++) fireEvent.click(btn('Know'));
+    expect(play).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('crown')).toBeInTheDocument(); // reduced motion here: no flight
+    fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
+    expect(loadLoop()?.celebrated).toBe(true); // survives a refresh too
+    fireEvent.click(btn('Next'));
+    expect(screen.getByRole('heading', { name: 'Session completed' })).toBeInTheDocument();
+    expect(play).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('crown')).toBeInTheDocument();
+    expect(screen.queryByTestId('confetti')).not.toBeInTheDocument();
+    vi.restoreAllMocks();
+  });
+
   it('the cycle break and the summary go back to the last card', () => {
     setup();
     fireEvent.click(btn('Know'));
     fireEvent.click(btn('Know'));
     fireEvent.click(btn('Know'));
-    expect(screen.getByRole('heading', { name: 'Session complete' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Session completed' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
     expect(progress()).toBe('Cycle 1 · Card 3/3 · 3 known');
     expect(loadLoop()).not.toBeNull(); // the session is alive again
@@ -178,7 +219,7 @@ describe('LoopPage', () => {
     expect(progress()).toBe('Cycle 2 · Card 1/1 · 2 known');
     fireEvent.click(btn('Know'));
     const summary = screen
-      .getByRole('heading', { name: 'Session complete' })
+      .getByRole('heading', { name: 'Session completed' })
       .closest('section') as HTMLElement;
     expect(within(summary).getByText('Already knew').nextSibling).toHaveTextContent('2');
     expect(within(summary).getByText('Learned here').nextSibling).toHaveTextContent('1');

@@ -117,7 +117,7 @@ private content repository. It never appears in the public code repo or any publ
 | **Hints (button)** | Reveals the hints and synonyms on the front of the card. |
 | **Flip** | Turning the on-screen card over (front ↔ back). It can be done any number of times and **has no effect on grading**. |
 | **Amount** | The number of cards in a loop (learners: 10/20/30/40/50; guests: always 5). |
-| **Loop** | One learning session over a group of cards. **In the UI it is called a "Session"** ("Start a session", "Session complete", "New session"); "loop" stays the technical term in this spec and in the code (D-018). |
+| **Loop** | One learning session over a group of cards. **In the UI it is called a "Session"** ("Start a session", "Session completed", "New session"); "loop" stays the technical term in this spec and in the code (D-018). |
 | **Cycle** | One pass over the loop's remaining cards. |
 | **Known item** | An item a signed-in learner marked "Know" (in any direction). It is excluded from all their future loops, **in every direction**, until returned. |
 | **Category** | A topic (Home, Nature, …). An item can have many, or none. **General** is virtual: random across all items, including items without a category. |
@@ -297,6 +297,19 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L32 End of loop**: when a cycle ends with no "Don't know" cards, a summary shows the total cards, the number of
   cycles, **Already knew** (known in cycle 1) vs **Learned here** (known in cycle ≥ 2), and buttons **New session**
   (back to the start card with the same selection) and **Home**. Guests also see "Sign in to remember these words".
+- **FR-L32a Celebration** (owner request, 2026-11-19): when the summary appears, a burst of **confetti** in the app's
+  colours shoots up from the bottom corners and flutters down for about 3 seconds (a canvas drawn by the app, no
+  library; none with "reduce motion"), and a short **applause** plays (`/sounds/applause.wav`, 2.3 s, mono, about
+  150 KB, loaded only then). A **🔊 Sound on / 🔇 Sound off** switch on the summary turns it off; the choice is
+  remembered on the device (`localStorage`), and sound is on by default. If the browser refuses to play, only the
+  confetti shows.
+  - **Once per session**: after "← Back to the last card", reaching the summary again shows no confetti and plays no
+    sound. The flag is kept with the saved session, so a refresh doesn't repeat it either.
+  - **The crown**: as the last confetti falls (about 2.4 s), a yellow crown flies in slowly (about 2 s) along one
+    smooth arc (no pause on the way) from the top-left of
+    the screen and lands, tilted, on the **upper-left corner** of the summary card with a small bounce. It stays there,
+    and on later visits to the summary in the same session it is already in place (no flight). With "reduce motion"
+    it is simply there from the start.
 - **FR-L33** The loop state (including the current card's side and whether its hints are shown) is saved in
   `sessionStorage`, so a page refresh resumes the same loop. Stop or finishing clears it.
 - **FR-L34** Desktop keyboard shortcuts (listed in a "Keyboard shortcuts" popover in the loop header): **K** Know, **D** Don't know, **H** Hints,

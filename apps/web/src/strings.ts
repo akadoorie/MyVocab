@@ -197,7 +197,7 @@ export const strings = {
       `Card ${card} of ${size}${answer ? `. ${answer}` : ''}`,
   },
   summary: {
-    title: 'Session complete',
+    title: 'Session completed',
     cards: 'Cards',
     cycles: 'Cycles',
     alreadyKnew: 'Already knew',
@@ -205,6 +205,8 @@ export const strings = {
     newLoop: 'New session',
     home: 'Home',
     guestNote: 'Sign in to remember these words',
+    soundOn: 'Sound on',
+    soundOff: 'Sound off',
   },
   notFound: { title: 'Page not found', back: 'Back to the start' },
 } as const;

@@ -72,12 +72,12 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
 
   // Know everything else; continue through cycle breaks until the summary.
   for (let i = 0; i < 20; i++) {
-    if (await page.getByRole('heading', { name: 'Session complete' }).isVisible()) break;
+    if (await page.getByRole('heading', { name: 'Session completed' }).isVisible()) break;
     const cont = page.getByRole('button', { name: 'Continue' });
     if (await cont.isVisible()) await cont.click();
     else await button(page, 'Know').click();
   }
-  await expect(page.getByRole('heading', { name: 'Session complete' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Session completed' })).toBeVisible();
   await expect(page.getByText('Sign in to remember these words')).toBeVisible();
 
   // New loop keeps the selection.
