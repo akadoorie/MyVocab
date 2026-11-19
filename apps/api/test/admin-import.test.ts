@@ -44,7 +44,7 @@ describe('GET /api/admin/import/template', () => {
     expect([...bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
     const text = new TextDecoder().decode(bytes);
     expect(text.split(/\r?\n/)[0]).toContain(
-      'translation_parallel_en,translation_parallel_he,translation_meaning_en,translation_meaning_he,translation_literal_en,translation_literal_he',
+      'translation_meaning_en,translation_meaning_he,translation_parallel_en,translation_parallel_he,translation_literal_en,translation_literal_he',
     );
     const report = await (await upload(bytes)).json<Report>();
     expect(report.errors).toEqual([]);

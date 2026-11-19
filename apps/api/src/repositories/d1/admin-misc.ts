@@ -435,7 +435,6 @@ export class D1StatsRepository implements StatsRepository {
         SELECT l.value AS target, COUNT(i.id) AS count
         FROM json_each(${langs}) AS l
         LEFT JOIN items AS i ON i.deleted_at IS NULL AND i.lang <> l.value
-          AND COALESCE(json_array_length(i.translation_parallel, '$."' || l.value || '"'), 0) = 0
           AND COALESCE(json_array_length(i.translation_meaning, '$."' || l.value || '"'), 0) = 0
         GROUP BY l.value`),
       this.db

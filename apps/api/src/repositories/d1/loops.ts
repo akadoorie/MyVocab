@@ -25,8 +25,7 @@ function whereClause(s: LoopSelection): SQL {
   const answer =
     s.source === s.target
       ? sql`json_array_length(i.explanation) > 0`
-      : sql`(COALESCE(json_array_length(i.translation_parallel, '$."' || ${s.target} || '"'), 0) > 0
-          OR COALESCE(json_array_length(i.translation_meaning, '$."' || ${s.target} || '"'), 0) > 0)`;
+      : sql`COALESCE(json_array_length(i.translation_meaning, '$."' || ${s.target} || '"'), 0) > 0`;
   const known = s.userId
     ? sql`AND NOT EXISTS (SELECT 1 FROM user_known_items k WHERE k.user_id = ${s.userId} AND k.item_id = i.id)`
     : sql``;

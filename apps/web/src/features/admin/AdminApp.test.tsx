@@ -15,8 +15,8 @@ const ITEM: AdminItem = {
   multipleMeanings: false,
   categoryIds: [],
   categories: [],
-  parallel: { he: ['מילה'] },
-  meaning: {},
+  parallel: {},
+  meaning: { he: ['מילה'] },
   literal: {},
   explanation: [],
   synonyms: [],
@@ -82,8 +82,8 @@ describe('AdminApp', () => {
     expect(screen.getByText(/language is fixed after creation/)).toBeVisible();
     // The three kinds of translation for the other language (D-024).
     for (const name of [
-      'Hebrew translation (parallel)',
-      'Hebrew meaning',
+      'Hebrew meaning (required)',
+      'Hebrew parallel',
       'Hebrew literal translation',
     ])
       expect(screen.getByRole('heading', { name })).toBeVisible();

@@ -21,7 +21,7 @@ describe('playability (FR-L40)', () => {
     const item = makeItem();
     expect(isPlayableFor(item, 'en', 'he')).toBe(true);
     expect(isPlayableFor(item, 'en', 'en')).toBe(true);
-    expect(isPlayableFor(makeItem({ parallel: {} }), 'en', 'he')).toBe(false);
+    expect(isPlayableFor(makeItem({ meaning: {} }), 'en', 'he')).toBe(false);
     expect(isPlayableFor(makeItem({ explanation: [] }), 'en', 'en')).toBe(false);
   });
 
@@ -46,7 +46,7 @@ describe('buildCard', () => {
       front: { text: 'Date', lang: 'en', dir: 'ltr' },
       answer: {
         kind: 'translation',
-        main: 'parallel',
+        main: 'meaning',
         lines: ['תאריך', 'תמר'],
         numbered: false,
         meaning: [],
@@ -91,6 +91,11 @@ describe('buildCard', () => {
     expect(isPlayableFor(item, 'en', 'he')).toBe(false);
   });
 
+  it('a parallel without a meaning does not make an item playable (D-025)', () => {
+    const item = makeItem({ parallel: { he: ['מקבילה-1'] }, meaning: {} });
+    expect(isPlayableFor(item, 'en', 'he')).toBe(false);
+  });
+
   it('same-language cards show the explanation, with no meaning or literal', () => {
     const item = makeItem({ meaning: { he: ['משמעות-1'] }, literal: { he: ['מילולי-1'] } });
     expect(buildCard(item, 'en', LANGS).answer).toMatchObject({
@@ -105,7 +110,7 @@ describe('buildCard', () => {
       text: 'sample expression',
       type: 'expr',
       multipleMeanings: false,
-      parallel: { he: ['משמעות-1'] },
+      meaning: { he: ['משמעות-1'] },
       literal: { he: ['מילולי-1'] },
     });
     expect(buildCard(item, 'he', LANGS).answer.literal).toEqual(['מילולי-1']);
@@ -126,7 +131,7 @@ describe('buildCard', () => {
   });
 
   it('builds a Hebrew item card with RTL front and LTR answer', () => {
-    const item = makeItem({ lang: 'he', text: 'מהיר', parallel: { en: ['fast', 'quick'] } });
+    const item = makeItem({ lang: 'he', text: 'מהיר', meaning: { en: ['fast', 'quick'] } });
     const card = buildCard(item, 'en', LANGS);
     expect(card.front).toEqual({ text: 'מהיר', lang: 'he', dir: 'rtl' });
     expect(card.extrasLang.dir).toBe('rtl');
@@ -139,12 +144,12 @@ describe('buildCard', () => {
     card.hints.push('x');
     card.answer.lines.push('y');
     expect(item.hints).toHaveLength(2);
-    expect(item.parallel.he).toHaveLength(2);
+    expect(item.meaning.he).toHaveLength(2);
   });
 
   it('refuses an unplayable item or an unknown language', () => {
-    expect(() => buildCard(makeItem({ parallel: {} }), 'he', LANGS)).toThrow(CardBuildError);
-    expect(() => buildCard(makeItem({ parallel: { fr: ['x'] } }), 'fr', LANGS)).toThrow(
+    expect(() => buildCard(makeItem({ meaning: {} }), 'he', LANGS)).toThrow(CardBuildError);
+    expect(() => buildCard(makeItem({ meaning: { fr: ['x'] } }), 'fr', LANGS)).toThrow(
       /Unknown language/,
     );
   });

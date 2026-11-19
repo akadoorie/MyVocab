@@ -41,7 +41,7 @@ describe('POST /api/admin/items', () => {
       type: 'word',
       multipleMeanings: true,
       categoryIds: [home],
-      parallel: { he: ['מילה-חדשה'] },
+      meaning: { he: ['מילה-חדשה'] },
       hints: ['A synthetic hint.'],
     });
     expect(res.status).toBe(201);
@@ -254,7 +254,7 @@ describe('Trash (FR-A20–24)', () => {
       itemId: id,
       text: 'fx-word-1',
       categories: ['home'],
-      parallel: { he: ['מילה-1'] },
+      meaning: { he: ['מילה-1'] },
     });
   });
 

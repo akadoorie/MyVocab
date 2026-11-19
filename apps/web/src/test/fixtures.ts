@@ -11,7 +11,7 @@ export function makeCard(id: number, over: Partial<CardView> = {}): CardView {
     front: { text: `sample-${id}`, lang: 'en', dir: 'ltr' },
     answer: {
       kind: 'translation',
-      main: 'parallel',
+      main: 'meaning',
       lines: [`מילה-${id}`],
       numbered: false,
       meaning: [],

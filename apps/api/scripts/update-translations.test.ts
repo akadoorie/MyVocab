@@ -40,7 +40,7 @@ describe('translation update CSV', () => {
 
   it('accepts the old column names, and rejects unknown columns, bad and repeated ids', () => {
     expect(parseTranslationUpdateCsv('id,translation_he,literal_he\n1,a,b').rows[0]?.lists).toEqual(
-      { parallel: { he: ['a'] }, literal: { he: ['b'] } },
+      { meaning: { he: ['a'] }, literal: { he: ['b'] } }, // translation_<code> = the meaning (D-025)
     );
     expect(parseTranslationUpdateCsv('text\nx').errors).toEqual(['Missing required column "id"']);
     expect(parseTranslationUpdateCsv('id,colour\n1,x').errors).toEqual([
@@ -67,8 +67,8 @@ describe('translation update CSV', () => {
       literal: {},
     });
     expect(describeChanges(before, after)).toEqual([
-      'parallel.he: משמעות-1 | מקבילה-1 → מקבילה-1',
       'meaning.he: (empty) → משמעות-1 | משמעות-2',
+      'parallel.he: משמעות-1 | מקבילה-1 → מקבילה-1',
       'literal.he: מקבילה-1 → (empty)',
     ]);
     expect(describeChanges(after, after)).toEqual([]);
@@ -139,12 +139,13 @@ describe('pnpm db:update-translations (local)', () => {
     writeFileSync(
       file,
       `id,text,translation_parallel_he,translation_meaning_he,translation_literal_he
-${before!.id},sample-expression-1,מקבילה-לדוגמה,ביטוי-לדוגמה-1,מילולי-לדוגמה`,
+${before!.id},sample-expression-1,ביטוי-לדוגמה-1,משמעות-לדוגמה,מילולי-לדוגמה`,
     );
 
     const dry = run('--file', file, '--dry-run');
     expect(dry.status, dry.stderr).toBe(0);
-    expect(dry.stdout).toContain('parallel.he: ביטוי-לדוגמה-1 → מקבילה-לדוגמה');
+    expect(dry.stdout).toContain('meaning.he: ביטוי-לדוגמה-1 → משמעות-לדוגמה');
+    expect(dry.stdout).toContain('parallel.he: (empty) → ביטוי-לדוגמה-1');
     expect(dry.stdout).toContain('1 item(s) to change');
     expect((await item('sample-expression-1'))?.version).toBe(before!.version);
 
@@ -154,8 +155,8 @@ ${before!.id},sample-expression-1,מקבילה-לדוגמה,ביטוי-לדוג�
     const after = await item('sample-expression-1');
     expect(after).toMatchObject({
       version: before!.version + 1,
-      p: '{"he":["מקבילה-לדוגמה"]}',
-      m: '{"he":["ביטוי-לדוגמה-1"]}',
+      p: '{"he":["ביטוי-לדוגמה-1"]}',
+      m: '{"he":["משמעות-לדוגמה"]}',
       l: '{"he":["מילולי-לדוגמה"]}',
     });
   });

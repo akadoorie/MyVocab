@@ -76,7 +76,7 @@ describe('columns', () => {
     expect(joinList(['a', 'b'])).toBe('a|b');
     expect(translationColumn('parallel', 'he')).toBe('translation_parallel_he');
     expect(translationColumnOf('translation_meaning_he')).toEqual({ kind: 'meaning', lang: 'he' });
-    expect(translationColumnOf('translation_he')).toEqual({ kind: 'parallel', lang: 'he' }); // old name
+    expect(translationColumnOf('translation_he')).toEqual({ kind: 'meaning', lang: 'he' }); // old name
     expect(translationColumnOf('literal_he')).toEqual({ kind: 'literal', lang: 'he' }); // old name
     expect(translationColumnOf('explanation')).toBeUndefined();
   });
@@ -96,11 +96,11 @@ describe('parseImportCsv', () => {
         text: 'Swift',
         type: 'word',
         multipleMeanings: true,
-        parallel: { he: ['מהיר', 'סנונית'] },
+        meaning: { he: ['מהיר', 'סנונית'] },
         synonyms: ['fast', 'quick', 'rapid'],
       },
     });
-    expect(r.rows[1]?.content.parallel).toEqual({ en: ['fast', 'quick'] });
+    expect(r.rows[1]?.content.meaning).toEqual({ en: ['fast', 'quick'] });
   });
 
   it('accepts minimal columns in any order and skips blank lines', () => {
@@ -143,7 +143,7 @@ describe('parseImportCsv', () => {
       {
         row: 2,
         column: 'translation_en',
-        message: `An item in "en" can't have a translation into "en"; use explanation`,
+        message: `An item in "en" can't have a meaning in "en"; use explanation`,
       },
     ]);
     expect(r.rows).toEqual([]);
@@ -188,14 +188,14 @@ en,sample expression,expr,מקבילה-1,משמעות-1|משמעות-2,מילו�
 
   it('treats an old and a new name for the same list as a duplicate column', () => {
     const r = parseImportCsv(
-      'lang,text,type,translation_he,translation_parallel_he\nen,a,word,x,y',
+      'lang,text,type,translation_he,translation_meaning_he\nen,a,word,x,y',
       opts,
     );
     expect(r.errors).toEqual([
       {
         row: 1,
-        column: 'translation_parallel_he',
-        message: 'Duplicate column "translation_parallel_he"',
+        column: 'translation_meaning_he',
+        message: 'Duplicate column "translation_meaning_he"',
       },
     ]);
   });
@@ -252,8 +252,8 @@ function existingSwift(over: Partial<ItemContent> = {}): ExistingItem {
       text: 'Swift',
       type: 'word',
       multipleMeanings: false,
-      parallel: { he: ['מהיר'] },
-      meaning: {},
+      meaning: { he: ['מהיר'] },
+      parallel: {},
       literal: {},
       explanation: ['Moving or able to move very fast'],
       synonyms: ['fast'],
@@ -285,7 +285,7 @@ describe('planImport', () => {
     const plan = planImport(parsed.rows, emptyCtx({ existing }));
     expect(plan.updates).toHaveLength(1);
     const update = plan.updates[0];
-    expect(update?.content.parallel.he).toEqual(['מהיר', 'סנונית']);
+    expect(update?.content.meaning.he).toEqual(['מהיר', 'סנונית']);
     expect(update?.content.explanation).toEqual([
       'Moving or able to move very fast',
       'A small bird that flies very fast',
@@ -296,7 +296,7 @@ describe('planImport', () => {
     expect(plan.totals).toMatchObject({
       newItems: 0,
       mergedItems: 1,
-      newTranslationEntries: 1,
+      newMeaningEntries: 1,
       newExplanationEntries: 1,
       newSynonyms: 2,
       newHints: 2,
@@ -332,14 +332,14 @@ en,Swift,word,,זריז`;
     const plan = planImport(parseImportCsv(csv, opts).rows, emptyCtx());
     expect(plan.creates).toHaveLength(1);
     expect(plan.creates[0]).toMatchObject({
-      content: { text: 'Swift', parallel: { he: ['מהיר', 'סנונית'] } },
+      content: { text: 'Swift', meaning: { he: ['מהיר', 'סנונית'] } },
       categories: ['home', 'food'],
       status: 'draft',
       rows: [2, 3, 4],
     });
     expect(plan.totals).toMatchObject({
       newItems: 1,
-      newTranslationEntries: 2,
+      newMeaningEntries: 2,
       skippedDuplicates: 1,
     });
   });
@@ -405,7 +405,7 @@ en,Swift,word,,זריז`;
       `lang,text,type,translation_he\nen,Cat,word,${a}\nen,Cat,word,${b}`,
       opts,
     ).rows;
-    expect(planImport(rows, emptyCtx()).errors[0]?.column).toBe('translation_parallel_he');
+    expect(planImport(rows, emptyCtx()).errors[0]?.column).toBe('translation_meaning_he');
   });
 
   it('computes warnings on the merged result', () => {
@@ -419,7 +419,7 @@ en,Swift,word,,זריז`;
       ).rows,
       emptyCtx(),
     );
-    expect(single.warnings.map((w) => w.column)).toEqual(['translation_parallel_he', 'text']);
+    expect(single.warnings.map((w) => w.column)).toEqual(['translation_meaning_he', 'text']);
   });
 });
 
@@ -431,8 +431,8 @@ describe('serializeItemsCsv (round trip)', () => {
         text: 'Swift',
         type: 'word',
         multipleMeanings: true,
-        parallel: { he: ['מהיר', 'סנונית'] },
-        meaning: {},
+        meaning: { he: ['מהיר', 'סנונית'] },
+        parallel: {},
         literal: {},
         explanation: ['Moving or able to move very fast', 'A small bird, "swift" in flight'],
         synonyms: ['fast', 'quick'],
@@ -466,10 +466,10 @@ describe('serializeItemsCsv (round trip)', () => {
       'type',
       'multiple_meanings',
       'categories',
-      'translation_parallel_en',
-      'translation_parallel_he',
       'translation_meaning_en',
       'translation_meaning_he',
+      'translation_parallel_en',
+      'translation_parallel_he',
       'translation_literal_en',
       'translation_literal_he',
       'explanation',

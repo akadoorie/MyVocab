@@ -44,7 +44,7 @@ describe('CsvImportService', () => {
     expect(await count('item_categories')).toBe(2);
 
     const item = await env.DB.prepare(
-      `SELECT text, multiple_meanings, translation_parallel AS translation, explanation, status, version FROM items WHERE text = 'sample-word-1'`,
+      `SELECT text, multiple_meanings, translation_meaning AS translation, explanation, status, version FROM items WHERE text = 'sample-word-1'`,
     ).first<Record<string, unknown>>();
     expect(item).toMatchObject({
       multiple_meanings: 1,
@@ -94,12 +94,12 @@ describe('CsvImportService', () => {
     expect(report.errors).toEqual([]);
     expect(report.totals).toMatchObject({
       mergedItems: 1,
-      newTranslationEntries: 1,
+      newMeaningEntries: 1,
       newSynonyms: 1,
       newCategories: 1,
     });
     const item = await env.DB.prepare(
-      `SELECT id, translation_parallel AS translation, synonyms, status, version FROM items WHERE text = 'sample-word-1'`,
+      `SELECT id, translation_meaning AS translation, synonyms, status, version FROM items WHERE text = 'sample-word-1'`,
     ).first<{
       id: number;
       translation: string;
@@ -175,7 +175,7 @@ describe('CsvImportService', () => {
     });
     expect(report).toMatchObject({ committed: true, skippedConcurrent: 1 });
     const item = await env.DB.prepare(
-      `SELECT translation_parallel AS translation FROM items WHERE text = 'sample-word-1'`,
+      `SELECT translation_meaning AS translation FROM items WHERE text = 'sample-word-1'`,
     ).first<{ translation: string }>();
     expect(item?.translation).not.toContain('מילה-חדשה');
   });

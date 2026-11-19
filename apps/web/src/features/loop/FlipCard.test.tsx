@@ -49,51 +49,50 @@ describe('FlipCard', () => {
 
   it('renders RTL text with its language on each face', () => {
     render(<FlipCard card={makeCard(3)} side="back" hintsShown={false} onFlip={vi.fn()} />);
-    const answer = screen.getByText('מילה-3').closest('ul');
+    const answer = screen.getByText('מילה-3').closest('ol');
     expect(answer).toHaveAttribute('dir', 'rtl');
     expect(answer).toHaveAttribute('lang', 'he');
     expect(screen.getByText('sample-3')).toHaveAttribute('dir', 'ltr');
-    expect(screen.getByText('Translation')).toBeInTheDocument();
   });
 
-  it('shows the literal translation under the translation, in the answer language', () => {
+  it('shows the literal translation under the answer, labelled "Literally", in the answer language', () => {
     const base = makeCard(6);
     const card = makeCard(6, { answer: { ...base.answer, literal: ['מילולי-6'] } });
     render(<FlipCard card={card} side="back" hintsShown={false} onFlip={vi.fn()} />);
-    expect(screen.getByTestId('literal')).toHaveTextContent('Literal translationמילולי-6');
-    expect(screen.getByText('מילולי-6')).toHaveAttribute('dir', 'rtl');
+    expect(screen.getByTestId('literal')).toHaveTextContent('Literallyמילולי-6');
+    expect(screen.getByText('מילולי-6').closest('ol')).toHaveAttribute('dir', 'rtl');
   });
 
-  it('expression: "Parallel expression", then Meaning, then the literal translation (D-024)', () => {
+  it('with a parallel: Parallel (big), then Meaning, then Literally (muted) (D-024)', () => {
     const base = makeCard(8);
     const card = makeCard(8, {
       type: 'expr',
-      answer: { ...base.answer, meaning: ['משמעות-8'], literal: ['מילולי-8'] },
+      answer: { ...base.answer, main: 'parallel', meaning: ['משמעות-8'], literal: ['מילולי-8'] },
     });
     render(<FlipCard card={card} side="back" hintsShown={false} onFlip={vi.fn()} />);
-    expect(screen.getAllByText('Parallel expression')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Parallel')[0]).toBeInTheDocument();
     const meaning = screen.getByTestId('meaning');
     const literal = screen.getByTestId('literal');
     expect(meaning).toHaveTextContent('Meaningמשמעות-8');
-    // Meaning comes before the literal translation, which is the softer one.
     expect(
       meaning.compareDocumentPosition(literal) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(literal).toHaveClass('text-muted');
   });
 
-  it('a word shows "Translation"; a meaning-only answer shows "Meaning" as its headline', () => {
-    const { unmount } = render(
-      <FlipCard card={makeCard(9)} side="back" hintsShown={false} onFlip={vi.fn()} />,
-    );
-    expect(screen.getAllByText('Translation')[0]).toBeInTheDocument();
-    expect(screen.queryByTestId('meaning')).not.toBeInTheDocument();
-    unmount();
-    const base = makeCard(10);
-    const card = makeCard(10, { type: 'expr', answer: { ...base.answer, main: 'meaning' } });
-    render(<FlipCard card={card} side="back" hintsShown={false} onFlip={vi.fn()} />);
+  it('without a parallel (e.g. a plain word): the meaning is the main answer, headed "Meaning" (D-025)', () => {
+    render(<FlipCard card={makeCard(9)} side="back" hintsShown={false} onFlip={vi.fn()} />);
     expect(screen.getAllByText('Meaning')[0]).toBeInTheDocument();
-    expect(screen.queryByText('Parallel expression')).not.toBeInTheDocument();
+    expect(screen.queryByText('Parallel')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('meaning')).not.toBeInTheDocument();
+  });
+
+  it('numbers the entries of a section when there are two or more', () => {
+    const base = makeCard(10);
+    const card = makeCard(10, { answer: { ...base.answer, lines: ['first', 'second'] } });
+    render(<FlipCard card={card} side="back" hintsShown={false} onFlip={vi.fn()} />);
+    expect(screen.getByText('first').closest('li')).toHaveTextContent('1.first');
+    expect(screen.getByText('second').closest('li')).toHaveTextContent('2.second');
   });
 
   it('shows no literal line when there is none', () => {

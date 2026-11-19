@@ -25,11 +25,11 @@ export function translationColumn(kind: TranslationKind, lang: LangCode): string
 
 /**
  * Column prefixes for the per-language translation columns, longest first. The old names from
- * before D-024 are still read: `translation_<code>` (the parallel) and `literal_<code>`.
+ * before D-024 are still read: `translation_<code>` (the meaning, D-025) and `literal_<code>`.
  */
 export const TRANSLATION_COLUMN_PREFIXES: readonly { prefix: string; kind: TranslationKind }[] = [
   ...TRANSLATION_KINDS.map((kind) => ({ prefix: `translation_${kind}_`, kind })),
-  { prefix: 'translation_', kind: 'parallel' },
+  { prefix: 'translation_', kind: 'meaning' },
   { prefix: 'literal_', kind: 'literal' },
 ];
 

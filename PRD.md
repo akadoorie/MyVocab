@@ -52,9 +52,10 @@ Cupboard (ארון).
 
 **Translation or explanation.** The front of the card always shows the item's text. If the learner chose two
 different languages (EN → HE), the back shows the **translation**. If they chose the same language (EN → EN), the back
-shows the **explanation**. A translation has up to three kinds (D-024): the **parallel** (the equivalent word or
-expression), the **meaning** (what it means) and the **literal translation** (word for word). The parallel is the main
-answer; the meaning and the literal translation are shown under it. Hints and synonyms can be revealed on the front and
+shows the **explanation**. A translation has up to three kinds (D-024): the **meaning** (what it means; required,
+D-025), the **parallel** (an equivalent expression, optional) and the **literal translation** (word for word,
+optional). The parallel, when there is one, is the main answer with the meaning and the literal translation under it;
+otherwise the meaning is the main answer. Hints and synonyms can be revealed on the front and
 always appear on the back.
 
 **Known items memory.** For signed-in learners, every item they mark "Know" is remembered and never shown again in any
@@ -108,7 +109,7 @@ private content repository. It never appears in the public code repo or any publ
 |---|---|
 | **Item** | The basic content unit: one word or expression in its **language** (e.g. English "Swift"). It holds its type, the multiple-meanings flag, categories, translations, explanation, synonyms and hints (§8.1). Its `text` is always what the front of the card shows. |
 | **Type** | `word` or `expr`, shown as **Words** / **Expressions**. Set by the admin on each item; the learner picks one on the start card. |
-| **Translation** | For each **other** language, up to three ordered lists, each optional (D-024): the **parallel** (`translation_parallel`: the equivalent word or expression, e.g. "The cat is out of the bag"; for a plain word, simply its translation, e.g. `he: ["מהיר", "סנונית"]`), the **meaning** (`translation_meaning`: what it means, e.g. "The truth came out") and the **literal translation** (`translation_literal`: word for word, e.g. "The awl came out of the sack"). A plain word keeps only the parallel. An item never has a translation of any kind into its own language. |
+| **Translation** | For each **other** language, up to three ordered lists (D-024, D-025): the **meaning** (`translation_meaning`, required to play into that language: what it means, e.g. "The truth came out"; for a plain word, simply its translation, e.g. `he: ["מהיר", "סנונית"]`), the **parallel** (`translation_parallel`, optional: an equivalent expression, e.g. "The cat is out of the bag") and the **literal translation** (`translation_literal`, optional: word for word, e.g. "The awl came out of the sack"). A plain word keeps only the meaning. An item never has a translation of any kind into its own language. |
 | **Explanation** | An ordered list of explanations **in the item's own language**, one entry per meaning. |
 | **Synonym** | An alternative word or expression in the item's language. Synonyms have their own list and are shown in a "Synonyms" section next to the hints. |
 | **Hint** | A usage example or sentence in the item's language. 0..N per item. |
@@ -130,8 +131,8 @@ private content repository. It never appears in the public code repo or any publ
 | EN → HE · Words | Swift ◆ | מהיר / סנונית | Hints + Synonyms |
 | EN → EN · Words | Swift ◆ | 1. Moving or able to move very fast · 2. A small bird that flies very fast | Hints + Synonyms |
 | EN → HE · Expressions | A needle in a haystack | מחט בערימת שחת | Hints |
-| EN → HE · Expressions | *an idiom* | *its Hebrew parallel* | **Meaning:** *what it means, in Hebrew*; **Literal translation:** *word for word* (muted); then Hints |
-| EN → HE · Expressions | *an idiom with no Hebrew parallel* | *its meaning in Hebrew* (headline "Meaning") | **Literal translation** (muted), then Hints |
+| EN → HE · Expressions | *an idiom* | **Parallel:** *its Hebrew parallel* | **Meaning:** *what it means, in Hebrew*; **Literally:** *word for word* (muted); then Hints |
+| EN → HE · Expressions | *an idiom with no Hebrew parallel* | **Meaning:** *its meaning in Hebrew* | **Literally** (muted), then Hints |
 | EN → EN · Expressions | A needle in a haystack | Something very hard to find among many other things | Hints |
 
 ◆ = the "Multiple meanings" badge.
@@ -159,7 +160,7 @@ private content repository. It never appears in the public code repo or any publ
 | Anti-scraping | Turnstile for guests + strict limits (guests ~10 loops/hour per IP; learners ~500 cards/day) + `noindex` + no third-party content exposure |
 | Content model | One **item** per word/expression, in its own language. The three kinds of translation (parallel, meaning, literal; per other language), explanation, synonyms and hints are **ordered lists** stored inside the item row (§11) |
 | Types | Two: `word` / `expr` (Words / Expressions) |
-| Back of card | Different languages → the **parallel** (or the **meaning** when there is no parallel), then **Meaning** and **Literal translation** (muted) when present; same language → **explanation**. Hints + synonyms always below |
+| Back of card | Different languages → the **parallel** (or the **meaning** when there is no parallel), then **Meaning** and **Literally** (muted) when present, each under its own headline; same language → **explanation**. Hints + synonyms always below |
 | Multiple meanings | Admin-set flag. Shown as a "◆ Multiple meanings" badge on the front |
 | Card UI | A glassy, violet-glowing **flip card** with a 3D flip animation and a round **Flip** button on both sides |
 | Hints | A **Hints** toggle button shows or hides hints + synonyms on the front. Flipping always shows them on the back |
@@ -233,11 +234,11 @@ private content repository. It never appears in the public code repo or any publ
     when the item has multiple meanings. After **Hints** is pressed (FR-L25), a **Hints** section appears under the
     text: the hints in order, then a **Synonyms:** line (if there are synonyms), in smaller muted text with the item
     language's `dir`. If the item has no hints and no synonyms, the section shows "Hint is not available".
-  - **Back**: a small label naming the main answer ("Translation" for a word, "Parallel expression" for an expression,
-    "Meaning" when there is no parallel, "Explanation" for the same language); the **answer lines** (§6.3) in large text
-    with the answer language's `dir`; under them, for a translation, a **"Meaning"** section (only under a parallel) and
-    then a **"Literal translation"** section in a muted color (each with its small headline, in the answer language's
-    `dir`; a kind with no entries isn't shown, D-024); a thin divider; then the Hints section and the Synonyms line, **always** (whether or not
+  - **Back**: for a translation, labelled sections (D-024, D-025): the main answer in large text under a small
+    headline ("Parallel" when the item has one, otherwise "Meaning"); under a parallel, a **"Meaning"** section in a
+    medium size; then a **"Literally"** section, small and muted. Each section is in the answer language's `dir`; two
+    or more entries in a section are numbered; a kind with no entries isn't shown. For the same language: the
+    "Explanation" chip and the explanation lines; a thin divider; then the Hints section and the Synonyms line, **always** (whether or not
     Hints was pressed), or "Hint is not available".
   - Every card starts **front side up, with hints hidden**.
 - **FR-L23** Header progress: `Cycle 2 · Card 1/3 · 2 known` (known = total known in this loop).
@@ -344,12 +345,13 @@ different**:
 
 - **FR-L40 Playability**: an item can be used for a direction only if it is `published`, not in Trash, of the chosen
   type, its language is the source language, and:
-  - different languages: it has **≥ 1 parallel or meaning** entry in the target language (D-024);
+  - different languages: it has **≥ 1 meaning** entry in the target language (D-025: the meaning is the required
+    translation; a parallel or literal translation alone never makes an item playable);
   - same language: it has **≥ 1 explanation** entry.
 - **FR-L41** The server composes each card (front, answer lines and what they are, meaning, literal translation, hints, synonyms, languages and text directions)
   before sending it (§12.1). The browser only renders it and never applies these rules itself.
 - **FR-L42** Hints and synonyms are always in the item's language and are shown with its `dir`.
-- **FR-L43** The literal translation never makes an item playable on its own (FR-L40 still needs a parallel or a
+- **FR-L43** The parallel and the literal translation never make an item playable on their own (FR-L40 needs a
   meaning). The meaning and the literal translation are never revealed by **Hints** (they would give the answer away).
   "My known words" shows the main answer only (the parallel, else the meaning).
 
@@ -422,8 +424,8 @@ so learners never download it. All admin pages work on mobile (tables collapse i
     item); this keeps an existing translation from becoming a same-language translation. Save validates uniqueness
     (same language + normalized text + type among non-deleted items).
   - **Translations**: per active language **other than the item's language** (an English item shows "Hebrew"; a
-    Hebrew item shows "English"), three inline list editors in display order: **translation (parallel)**, **meaning**
-    and **literal translation** (each optional, D-024). The item's own language is never offered (§8.1).
+    Hebrew item shows "English"), three inline list editors in display order: **meaning (required)**, **parallel** and
+    **literal translation** (D-024, D-025). A missing meaning shows the "not playable" warning. The item's own language is never offered (§8.1).
   - **Explanation**: an inline list editor, one entry per meaning, in the item's language.
   - **Synonyms**: an inline list editor.
   - **Hints**: an inline list editor.
@@ -526,8 +528,8 @@ This JSON shape is used by the API, the admin editor and the JSON export (illust
   "lang": "en",
   "multipleMeanings": true,
   "categories": ["food"],
-  "parallel": { "he": ["תאריך", "תמר"] },
-  "meaning": {},
+  "parallel": {},
+  "meaning": { "he": ["תאריך", "תמר"] },
   "literal": {},
   "explanation": ["A particular day of the month or year",
                   "The sweet brown fruit of the date palm"],
@@ -551,9 +553,10 @@ This JSON shape is used by the API, the admin editor and the JSON export (illust
 | `hints` | Ordered list in `lang` (≤ 20 entries, each ≤ 500 chars) |
 | `status` | `published` (default) or `draft` (hidden from loops) |
 
-- Each kind is optional per language (D-024). Example, the Hebrew idiom "יצא המרצע מן השק" in English: parallel
-  "The cat is out of the bag", meaning "The truth came out", literal "The awl came out of the sack". The English
-  word "fork" in Hebrew: only the parallel "מזלג".
+- The meaning is required to play an item into a language; the parallel and the literal translation are optional
+  (D-024, D-025). Example, the Hebrew idiom "יצא המרצע מן השק" in English: parallel "The cat is out of the bag",
+  meaning "The truth came out", literal "The awl came out of the sack". The English word "fork" in Hebrew: only the
+  meaning "מזלג".
 - **No translation of any kind into the item's own language, at every layer**: the editor never offers it,
   the API and CSV import reject it (Zod), and a database CHECK constraint blocks it (§11). Because `lang` is fixed after creation, an
   existing translation can never turn into a same-language one.
@@ -595,12 +598,12 @@ The same normalization (case-insensitive, NFC) is used to de-duplicate entries w
 | `status` | no | `published` (default) or `draft` |
 
 Rules:
-- A row must have **at least one parallel, meaning or explanation** (otherwise it can't be played in any direction).
+- A row must have **at least one meaning or explanation** (otherwise it can't be played in any direction).
 - A translation column for an unknown language is a file error. A value in the row's own language column is a row
   error ("An English item can't have an English translation; use `explanation`"). Errors name the column as it is in
   the file.
-- **Old column names** (before D-024) are still read: `translation_<code>` is the parallel and `literal_<code>` the
-  literal translation. An old and a new name for the same list in one file is a duplicate column.
+- **Old column names** (before D-024) are still read: `translation_<code>` is the meaning (D-025) and
+  `literal_<code>` the literal translation. An old and a new name for the same list in one file is a duplicate column.
 - **Merge semantics** (an import never deletes or overwrites):
   - An item matches an existing **non-deleted** item on (`lang`, normalized `text`, `type`); otherwise it is created.
   - Categories are unioned. Parallel, meaning and literal entries (per language), explanation entries, synonyms and hints are appended
@@ -626,7 +629,7 @@ Rules:
 **Example** (illustrative only; the template also has a synthetic expression row with all three kinds). Only the
 columns a file needs are required; the others may be left out.
 ```csv
-lang,text,type,multiple_meanings,categories,translation_parallel_he,translation_parallel_en,explanation,synonyms,hints,status
+lang,text,type,multiple_meanings,categories,translation_meaning_he,translation_meaning_en,explanation,synonyms,hints,status
 en,Swift,word,true,,מהיר|סנונית,,"Moving or able to move very fast|A small bird that flies very fast",fast|quick|rapid,"He gave a swift reply.|A swift nested under the roof.",published
 he,מהיר,word,false,,,fast|quick,"שנע או פועל במהירות רבה",זריז,"הרכבת המהירה הגיעה בזמן.",published
 ```
@@ -639,9 +642,9 @@ he,מהיר,word,false,,,fast|quick,"שנע או פועל במהירות רבה"
 - Every English item has a **Hebrew translation** and an **English explanation**. Every Hebrew item has an **English
   translation** and a **Hebrew explanation**. Synonyms where natural; 1–2 hints per item (natural usage sentences in
   the item's language). `multiple_meanings` is set where a word truly has several meanings, with one translation and
-  one explanation entry per meaning. Idioms put their equivalent in the other language in
-  `translation_parallel_<code>`, what they mean in `translation_meaning_<code>`, and the word-for-word translation in
-  `translation_literal_<code>` (left empty when it would repeat the parallel).
+  one explanation entry per meaning. Every item has its translation in
+  `translation_meaning_<code>`; idioms also put their equivalent expression in the other language, when one exists, in
+  `translation_parallel_<code>`, and the word-for-word translation in `translation_literal_<code>`.
 - ⚠️ **The owner reviews the Hebrew and English content before it is seeded into production.**
 
 ### 8.5 Private content repository and data flow
@@ -779,12 +782,12 @@ Disabled buttons lose glow and ledge and look muted. Base mechanics:
   centered, large and bold; under it, when applicable, a
   small pill badge "◆ Multiple meanings" (`--surface-2` background, `--accent` text). After Hints: a thin divider,
   then the hints as a muted list and a "Synonyms: …" line (or "Hint is not available").
-- **Back**: a small muted label naming the main answer ("Translation" for a word, "Parallel expression" for an
-  expression, "Meaning" when there is no parallel, "Explanation"); the answer lines large and centered (one per line;
-  explanation lines numbered when there are two or more, and set in a smaller size when long); under them, when
-  present (D-024): a **"Meaning"** section (small violet headline, then the meaning lines in `--text`, semibold, a
-  size below the answer), then a **"Literal translation"** section in `--text-muted` (small headline, entries
-  comma-separated at the hints' size), the least emphasized; a thin divider; then
+- **Back**: for a translation, centered sections, each under a small uppercase headline (D-024, D-025): the main
+  answer, large and bold ("Parallel", or "Meaning" when there is no parallel); under a parallel, **"Meaning"** in
+  `--text`, semibold, a size below the answer; then **"Literally"** in `--text-muted` at the hints' size, the least
+  emphasized. Two or more entries in a section are numbered ("1.", "2."). For the same language: the "Explanation"
+  chip and the explanation lines (numbered when there are two or more, smaller when long). Then a thin divider;
+  then
   **Hints** as a muted list and a "Synonyms: …" line (or "Hint is not available").
 - A round **Flip** button (↻) sits in the bottom-right corner of **both** faces, so the card can be turned back from
   the answer side too.
@@ -1176,8 +1179,7 @@ thousands of Know marks per day on the free tier.
 ### 11.3 Loop selection query (shape)
 ```sql
 -- General (no category). The service inserts the answer condition from the AnswerStrategy (§10.4):
---   different languages:  json_array_length(i.translation_parallel, '$."' || :tgt || '"') > 0
---                          OR json_array_length(i.translation_meaning, '$."' || :tgt || '"') > 0   (D-024)
+--   different languages:  json_array_length(i.translation_meaning, '$."' || :tgt || '"') > 0   (D-025)
 --   same language:        json_array_length(i.explanation) > 0
 SELECT i.id, i.text, i.lang, i.type, i.multiple_meanings, i.translation_parallel, i.translation_meaning,
        i.translation_literal, i.explanation, i.synonyms, i.hints

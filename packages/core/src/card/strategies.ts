@@ -27,8 +27,8 @@ export function mainTranslation(item: ItemContent, target: LangCode): 'parallel'
 export const translationStrategy: AnswerStrategy = {
   kind: 'translation',
   appliesTo: (source, target) => source !== target,
-  isPlayable: (item, target) =>
-    (item.parallel[target]?.length ?? 0) > 0 || (item.meaning[target]?.length ?? 0) > 0,
+  // The meaning is the mandatory translation; parallel and literal are optional extras (D-025).
+  isPlayable: (item, target) => (item.meaning[target]?.length ?? 0) > 0,
   answerLines: (item, target) => [...(item[mainTranslation(item, target)][target] ?? [])],
   numbered: () => false,
 };

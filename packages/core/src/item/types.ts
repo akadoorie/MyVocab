@@ -37,5 +37,5 @@ export const OWN_LANGUAGE_LISTS = ['explanation', 'synonyms', 'hints'] as const;
 export type OwnLanguageList = (typeof OWN_LANGUAGE_LISTS)[number];
 
 /** The per-language translation fields, in display order (PRD §8.1). */
-export const TRANSLATION_KINDS = ['parallel', 'meaning', 'literal'] as const;
+export const TRANSLATION_KINDS = ['meaning', 'parallel', 'literal'] as const;
 export type TranslationKind = (typeof TRANSLATION_KINDS)[number];

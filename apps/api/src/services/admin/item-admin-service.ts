@@ -139,12 +139,12 @@ export class ItemAdminService {
     const notPlayable: ItemIssueView[] = ctx.activeCodes
       .filter((target) => !playable.has(target))
       .map((target) => ({
-        path: target === item.lang ? 'explanation' : `parallel.${target}`,
+        path: target === item.lang ? 'explanation' : `meaning.${target}`,
         code: 'NOT_PLAYABLE',
         message:
           target === item.lang
             ? `No explanation: not playable ${item.lang.toUpperCase()} → ${target.toUpperCase()}`
-            : `No ${name(target)} translation: not playable ${item.lang.toUpperCase()} → ${target.toUpperCase()}`,
+            : `No ${name(target)} meaning: not playable ${item.lang.toUpperCase()} → ${target.toUpperCase()}`,
       }));
     return [
       ...notPlayable,

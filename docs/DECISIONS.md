@@ -378,3 +378,23 @@ Format: date · context · decision · consequences.
   typed confirmation.
 - **Sessions running during the deploy** keep working: saved cards without the new answer fields
   are filled in when loaded.
+
+## D-025 · 2026-11-19 · The meaning is the required translation (owner request)
+
+- **Why:** every item has a meaning in another language, but only some expressions have a parallel
+  (the Hebrew "חבל על הזמן" has meanings in English, "amazing" and "a waste of time", and no English
+  parallel). So the meaning is the one translation every item carries, and a plain word is just its
+  meaning ("fork" → "מזלג"), with no parallel and no literal.
+- **Playability (FR-L40):** a translation card needs **≥ 1 meaning** in the target language. A
+  parallel or a literal translation alone never makes an item playable. The SQL in the loop
+  repository and `isPlayable` in core say the same, checked by the existing test.
+- **Card back:** labelled sections. With a parallel: **Parallel** (big), **Meaning** (medium),
+  **Literally** (small, muted). Without one: **Meaning** (big), **Literally** (small, muted). Two or
+  more entries in a section are numbered. The corner chip is kept only for explanation cards.
+- **Order everywhere** (editor, CSV columns, diffs): meaning, parallel, literal. The editor marks
+  the meaning as required; a missing one shows the existing "not playable" warning (not a block).
+- **CSV:** the old `translation_<code>` column now reads as the meaning (it held the plain
+  translation of words). Import totals count new meaning and new parallel entries separately.
+- **Rollout:** existing words still hold their translation in `translation_parallel`, so the data is
+  moved first, from a reviewed CSV with `pnpm db:update-translations`; the code that requires the
+  meaning is deployed after that, so no item stops being playable in between.

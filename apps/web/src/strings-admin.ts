@@ -106,17 +106,17 @@ export const adminStrings = {
     translations: 'Translations',
     /** The three kinds of translation per language (PRD §8.1, D-024), in display order. */
     kinds: {
-      parallel: {
-        label: (name: string) => `${name} translation (parallel)`,
-        help: 'The equivalent word or expression. For a plain word, this is its translation. Shown as the main answer.',
-      },
       meaning: {
-        label: (name: string) => `${name} meaning`,
-        help: 'What it means, in other words. Shown under the parallel, or as the main answer when there is no parallel.',
+        label: (name: string) => `${name} meaning (required)`,
+        help: 'What it means. Required to play this item into this language. For a plain word, this is its translation. Shown as the main answer when there is no parallel.',
+      },
+      parallel: {
+        label: (name: string) => `${name} parallel`,
+        help: 'Optional: an equivalent expression in this language (e.g. an idiom). When present, it is the main answer and the meaning is shown under it. Usually empty for plain words.',
       },
       literal: {
         label: (name: string) => `${name} literal translation`,
-        help: 'Optional word-for-word translation, when the words differ from the meaning. Shown last, in a softer color. Leave it empty when it would repeat the parallel.',
+        help: 'Optional word-for-word translation. Shown last, in a softer color. Usually empty for plain words.',
       },
     },
     explanation: 'Explanation',
@@ -268,7 +268,7 @@ export const adminStrings = {
     totals: {
       newItems: 'New items',
       mergedItems: 'Merged into existing items',
-      newTranslationEntries: 'New translation (parallel) entries',
+      newTranslationEntries: 'New parallel entries',
       newMeaningEntries: 'New meaning entries',
       newLiteralEntries: 'New literal translations',
       newExplanationEntries: 'New explanation entries',

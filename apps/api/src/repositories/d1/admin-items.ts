@@ -102,18 +102,14 @@ function listConditions(f: AdminItemFilter, activeLangs: readonly string[]): SQL
   }
   if (f.missingTranslation) {
     conds.push(sql`i.lang <> ${f.missingTranslation}
-      AND COALESCE(json_array_length(i.translation_parallel, '$."' || ${f.missingTranslation} || '"'), 0) = 0
       AND COALESCE(json_array_length(i.translation_meaning, '$."' || ${f.missingTranslation} || '"'), 0) = 0`);
   }
   if (f.missingExplanation) conds.push(sql`json_array_length(i.explanation) = 0`);
   if (f.noHints) conds.push(sql`json_array_length(i.hints) = 0`);
   if (f.notPlayable) {
-    // No explanation and no parallel or meaning in any other active language (FR-L40).
+    // No explanation and no meaning in any other active language (FR-L40, D-025).
     const active = JSON.stringify(activeLangs);
     conds.push(sql`json_array_length(i.explanation) = 0 AND NOT EXISTS (
-      SELECT 1 FROM json_each(i.translation_parallel) AS t
-      WHERE t.key IN (SELECT value FROM json_each(${active})) AND json_array_length(t.value) > 0
-    ) AND NOT EXISTS (
       SELECT 1 FROM json_each(i.translation_meaning) AS t
       WHERE t.key IN (SELECT value FROM json_each(${active})) AND json_array_length(t.value) > 0)`);
   }

@@ -46,7 +46,7 @@ test('admin creates an item, previews both directions, moves it to Trash and res
   await expect(page.getByText('Version 1')).toBeVisible();
 
   // Lists: each change saves at once (PATCH with the version).
-  await addEntries(page, 'Hebrew translation', ['מילה-ראשונה', 'מילה-שנייה']);
+  await addEntries(page, 'Hebrew meaning', ['מילה-ראשונה', 'מילה-שנייה']);
   await addEntries(page, 'Explanation', ['First synthetic meaning', 'Second synthetic meaning']);
   await addEntries(page, 'Synonyms', ['synthetic-synonym']);
   await addEntries(page, 'Hints', ['A synthetic hint.']);

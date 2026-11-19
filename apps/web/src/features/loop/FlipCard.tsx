@@ -15,7 +15,37 @@ function mainHeadline(card: CardView): string {
   const { main } = card.answer;
   if (main === 'explanation') return strings.card.explanation;
   if (main === 'meaning') return strings.card.meaning;
-  return card.type === 'expr' ? strings.card.parallel : strings.card.translation;
+  return strings.card.parallel;
+}
+
+/** A labelled group of answer entries; two or more are numbered (D-024). */
+function Section(props: {
+  label: string;
+  entries: string[];
+  card: CardView;
+  className: string;
+  muted?: boolean;
+  testId?: string;
+}) {
+  const { label, entries, card, className, muted, testId } = props;
+  const many = entries.length > 1;
+  return (
+    <div className={className} data-testid={testId}>
+      <p
+        className={`mb-1 text-xs font-semibold tracking-wide uppercase md:text-sm ${muted ? 'opacity-80' : 'text-accent'}`}
+      >
+        {label}
+      </p>
+      <ol lang={card.answer.lang} dir={card.answer.dir} className="space-y-1">
+        {entries.map((e, i) => (
+          <li key={e}>
+            {many && <span className="me-2 opacity-60">{i + 1}.</span>}
+            {e}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
 }
 
 function Extras({ card }: { card: CardView }) {
@@ -139,51 +169,56 @@ export function FlipCard({
 
         <div className="flip-card__face flip-card__back" inert={front} aria-hidden={front}>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="chip">{mainHeadline(card)}</p>
+            {card.answer.kind === 'explanation' ? (
+              <p className="chip">{mainHeadline(card)}</p>
+            ) : (
+              <span />
+            )}
             {answerChip('back')}
           </div>
           <div className="flex min-h-[46%] shrink-0 flex-col items-center justify-center py-4 text-center">
-            <Answer
-              lang={card.answer.lang}
-              dir={card.answer.dir}
-              className={[
-                'space-y-2 font-semibold',
-                card.answer.kind === 'explanation' && card.answer.lines.some((l) => l.length > 60)
-                  ? 'text-[1.125rem] md:text-[1.25rem]'
-                  : 'text-[clamp(1.75rem,5.5vw,3.25rem)] font-bold',
-                card.answer.numbered ? 'list-inside list-decimal text-start' : '',
-              ].join(' ')}
-            >
-              {card.answer.lines.map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-            </Answer>
-            {/* Under the parallel: the meaning, then the literal translation, softer (D-024). */}
-            {card.answer.meaning.length > 0 && (
-              <div className="mt-4" data-testid={tid('meaning')}>
-                <p className="text-sm font-semibold tracking-wide text-accent uppercase">
-                  {strings.card.meaning}
-                </p>
-                <ul
-                  lang={card.answer.lang}
-                  dir={card.answer.dir}
-                  className="mt-1 space-y-0.5 text-xl font-semibold text-text md:text-2xl"
-                >
-                  {card.answer.meaning.map((line) => (
-                    <li key={line}>{line}</li>
-                  ))}
-                </ul>
-              </div>
+            {card.answer.kind === 'translation' ? (
+              <Section
+                label={mainHeadline(card)}
+                entries={card.answer.lines}
+                card={card}
+                className="text-[clamp(1.75rem,5.5vw,3.25rem)] font-bold"
+              />
+            ) : (
+              <Answer
+                lang={card.answer.lang}
+                dir={card.answer.dir}
+                className={[
+                  'space-y-2 font-semibold',
+                  card.answer.kind === 'explanation' && card.answer.lines.some((l) => l.length > 60)
+                    ? 'text-[1.125rem] md:text-[1.25rem]'
+                    : 'text-[clamp(1.75rem,5.5vw,3.25rem)] font-bold',
+                  card.answer.numbered ? 'list-inside list-decimal text-start' : '',
+                ].join(' ')}
+              >
+                {card.answer.lines.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </Answer>
+            )}
+            {card.answer.kind === 'translation' && card.answer.meaning.length > 0 && (
+              <Section
+                testId={tid('meaning')}
+                label={strings.card.meaning}
+                entries={card.answer.meaning}
+                card={card}
+                className="mt-5 text-xl font-semibold text-text md:text-2xl"
+              />
             )}
             {card.answer.literal.length > 0 && (
-              <div className="mt-3 text-muted" data-testid={tid('literal')}>
-                <p className="text-sm font-medium tracking-wide uppercase opacity-80">
-                  {strings.card.literal}
-                </p>
-                <p lang={card.answer.lang} dir={card.answer.dir} className="mt-1 text-lg">
-                  {card.answer.literal.join(', ')}
-                </p>
-              </div>
+              <Section
+                testId={tid('literal')}
+                label={strings.card.literal}
+                entries={card.answer.literal}
+                card={card}
+                muted
+                className="mt-4 text-base text-muted md:text-lg"
+              />
             )}
           </div>
           <div className="border-t border-border pt-4" data-testid={tid('back-hints')}>
