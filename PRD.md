@@ -1006,9 +1006,6 @@ MyVocab/
 ---
 
 ## 11. Data model
-
-An overview of the tables and their relationships is in [`docs/DATA-MODEL.md`](./docs/DATA-MODEL.md).
-
 SQLite (D1) via Drizzle. Timestamps are `INTEGER` unix epoch milliseconds. Foreign keys enforced.
 
 ### 11.1 Schema
