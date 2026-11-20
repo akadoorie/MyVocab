@@ -1,5 +1,7 @@
 # Local-only files (never committed to the public repo)
 /AGENT_PROMPT.md
+# The decisions log lives in the private MyVocab-Content repo (docs/DECISIONS.md).
+/docs/DECISIONS.md
 
 # --- Vocabulary privacy guardrails (PRD §8.5) ---
 # Real vocabulary lives only in the private sibling repo ../MyVocab-Content.

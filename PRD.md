@@ -1019,7 +1019,6 @@ MyVocab/
 │  └─ contracts/                  Zod request/response schemas + inferred types
 ├─ seed/sample.csv                SYNTHETIC rows only (≤ 20), for tests/CI
 ├─ scripts/check-no-vocabulary.ts CI guard (§8.5)
-├─ docs/DECISIONS.md              ADR-style log of implementation decisions
 ├─ .github/ workflows/{ci.yml,deploy.yml,codeql.yml} · dependabot.yml
 ├─ PRD.md · README.md · .gitignore     (AGENT_PROMPT.md sits here locally but is git-ignored)
 ```
@@ -1203,7 +1202,7 @@ follow these rules:
    - every child column used by `ON DELETE CASCADE` has an index (otherwise SQLite scans the whole child table for each
      deleted parent): `item_categories` via its primary key, `user_known_items.item_id` via `ix_known_item`;
    - if Drizzle/drizzle-kit can't express `WITHOUT ROWID` reliably (including when it rebuilds a table in a later
-     migration), use normal tables and record it in `docs/DECISIONS.md`.
+     migration), use normal tables and record it in the decisions log.
 4. **Loop selection reads as little as possible** (§11.3): it uses `ix_items_playable`, starts from `item_categories`
    when a category is chosen, checks playability on the candidate row itself (no extra lookups), and returns the
    chosen cards' data in the same query (no second round trip).
@@ -1358,7 +1357,7 @@ In test, Turnstile uses Cloudflare's documented **test keys** (always-pass / alw
   No tokens in `localStorage`. Session refresh at most once a day (§11.2 rule 6).
 - Better Auth must be instantiated per request inside the Worker (bindings come from `env`).
 - If Better Auth cannot run reliably on Workers + D1, the fallback is Arctic (Google OAuth) + our own `session` table
-  with the same cookie semantics. Record the choice in `docs/DECISIONS.md`.
+  with the same cookie semantics. Record the choice in the decisions log.
 
 ### 13.2 Who is an admin
 - `user.role` ∈ {`user`, `admin`}; default `user`. It is **never** writable from client input.
@@ -1477,7 +1476,7 @@ Answers are sent to the browser at loop start **by design** (self-assessment; a 
 | Database budget | Stays within the D1 free tier by design (§11.2) |
 | Cost | Runs on the Cloudflare Workers Free (+ Turnstile, Access free tiers) and GitHub Free plans. Upgrade path: Workers Paid ($5/mo) |
 | Observability | Workers logs (structured JSON, request id, no content), Cloudflare Web Analytics, audit log for admin actions and limit events |
-| Maintainability | Strict TS, lint clean, `packages/core` coverage ≥ 90%, ADR log in `docs/DECISIONS.md` |
+| Maintainability | Strict TS, lint clean, `packages/core` coverage ≥ 90%, ADR log (the private decisions log, "D-0xx") |
 | Dev environment | Works on Windows, macOS and Linux. npm scripts must be cross-platform (no bash-only syntax) |
 | Portability | Full export to SQLite SQL + DB-agnostic JSON + import-ready CSV (§8.6) |
 

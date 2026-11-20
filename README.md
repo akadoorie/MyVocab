@@ -2,8 +2,8 @@
 
 Learn words and expressions in a **shrinking loop** of flip cards. English and Hebrew first.
 Each round shows only the cards you still don't know, until nothing is left. The full
-specification is in [`PRD.md`](./PRD.md); implementation decisions are in
-[`docs/DECISIONS.md`](./docs/DECISIONS.md).
+specification is in [`PRD.md`](./PRD.md). Implementation decisions (the "D-0xx" references) are
+kept in a private log.
 
 > **Vocabulary privacy:** this repository is public and contains **no real vocabulary**.
 > Content lives only in the private `MyVocab-Content` repository and in the app's database.
@@ -52,7 +52,6 @@ packages/contracts  Zod request/response schemas shared by web and API
 e2e/                Playwright tests (synthetic data only)
 seed/sample.csv     ≤ 20 obviously fake rows for development and CI
 scripts/            repo tooling (no-vocabulary guard, E2E server)
-docs/DECISIONS.md   why things are the way they are
 ```
 
 ## Local setup (Windows, macOS, Linux)
