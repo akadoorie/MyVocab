@@ -97,7 +97,7 @@ export function parseImportCsv(text: string, opts: ParseRowsOptions): ParseRowsR
   const seen = new Set<string>();
   columns.forEach((col, i) => {
     const perLanguage = translationColumnOf(col);
-    // An old and a new name for the same list (`translation_he` + `translation_parallel_he`)
+    // An old and a new name for the same list (`translation_he` + `translation_meaning_he`)
     // count as a duplicate too.
     const key = perLanguage ? translationColumn(perLanguage.kind, perLanguage.lang) : col;
     if (seen.has(key)) {
