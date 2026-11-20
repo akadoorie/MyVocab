@@ -300,6 +300,7 @@ export const adminStrings = {
       'trash.retentionHours': 'Hours before Trash is purged',
     } as Record<string, string>,
     general: 'All topics',
+    topicsGroup: 'Topics',
   },
   import: {
     title: 'CSV import',

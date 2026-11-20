@@ -233,11 +233,13 @@ export function StartCard({
                       <option value="" disabled>
                         {strings.setup.general}
                       </option>
-                      {meta.topics.map((c) => (
-                        <option key={c.id} value={c.id} disabled>
-                          {c.name}
-                        </option>
-                      ))}
+                      <optgroup label={strings.setup.topicsGroup} disabled>
+                        {meta.topics.map((c) => (
+                          <option key={c.id} value={c.id} disabled>
+                            {c.name}
+                          </option>
+                        ))}
+                      </optgroup>
                     </select>
                     <span
                       aria-hidden="true"
@@ -270,11 +272,16 @@ export function StartCard({
                     <option value="sample">{strings.setup.sampleSet}</option>
                   )}
                   <option value="">{strings.setup.general}</option>
-                  {meta.topics.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
+                  {/* The real topics under a heading, apart from "All topics" (D-040). */}
+                  {meta.topics.length > 0 && (
+                    <optgroup label={strings.setup.topicsGroup}>
+                      {meta.topics.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
               )
             }

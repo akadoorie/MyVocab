@@ -193,7 +193,7 @@ private content repository. It never appears in the public code repo or any publ
 |---|---|---|
 | Source language | Active languages | **English** |
 | Target language | Active languages | **Hebrew** |
-| Topic | "All topics" + active topics (by `sort_order`) | **All topics** |
+| Topic | "All topics", then the active topics (by `sort_order`) under a **"Topics"** heading (D-040) | **All topics** |
 | Type | Words / Expressions | **Words** |
 | Amount (signed-in) | **10 / 20 / 30 / 40 / 50** (segmented control) | **10** |
 | Amount (guest) | **5**, fixed and locked | **5** |

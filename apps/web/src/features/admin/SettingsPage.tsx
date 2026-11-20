@@ -128,10 +128,11 @@ function SettingsForm({
           error={errors['defaults.topicId']}
           value={draft['defaults.topicId'] === null ? '' : String(draft['defaults.topicId'])}
           onChange={(v) => set('defaults.topicId', v === '' ? null : Number(v))}
-          options={[
-            ['', s.settings.general],
-            ...topics.map((c) => [String(c.id), c.name] as [string, string]),
-          ]}
+          options={[['', s.settings.general]]}
+          group={{
+            label: s.settings.topicsGroup,
+            options: topics.map((c) => [String(c.id), c.name] as [string, string]),
+          }}
         />
         <SelectField
           id="defaults.type"
@@ -286,6 +287,7 @@ function SelectField({
   value,
   onChange,
   options,
+  group,
   error,
 }: {
   id: string;
@@ -293,6 +295,8 @@ function SelectField({
   value: string;
   onChange: (v: string) => void;
   options: [string, string][];
+  /** More options under a heading, after the others (the real topics, D-040). */
+  group?: { label: string; options: [string, string][] } | undefined;
   error?: string | undefined;
 }) {
   const fieldId = useFieldId(id);
@@ -312,6 +316,15 @@ function SelectField({
             {l}
           </option>
         ))}
+        {group && group.options.length > 0 && (
+          <optgroup label={group.label}>
+            {group.options.map(([v, l]) => (
+              <option key={v} value={v}>
+                {l}
+              </option>
+            ))}
+          </optgroup>
+        )}
       </select>
       {error && <p className="text-sm text-dontknow">{error}</p>}
     </div>
