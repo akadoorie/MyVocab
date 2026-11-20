@@ -31,7 +31,7 @@ export const strings = {
       'Repeat until nothing is left',
     ],
     /** Under the slogan, for everyone (D-036). */
-    registeredUsers: (n: number) => `Registered users: ${n.toLocaleString('en-US')}`,
+    registeredUsersLabel: 'Registered users:',
     /** The guest banner: the first words start sign-in (D-033). */
     guestBannerLink: 'Sign-in with Google',
     guestBannerRest: ' to remember the words you know and choose bigger sessions.',

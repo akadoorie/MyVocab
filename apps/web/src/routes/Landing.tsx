@@ -148,7 +148,8 @@ function RegisteredUsers() {
   if (users.data === undefined) return null;
   return (
     <p className="mt-2 text-sm text-muted" data-testid="registered-users">
-      {strings.landing.registeredUsers(users.data.registeredUsers)}
+      {strings.landing.registeredUsersLabel}{' '}
+      <span className="text-hint">{users.data.registeredUsers.toLocaleString('en-US')}</span>
     </p>
   );
 }

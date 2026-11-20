@@ -95,7 +95,9 @@ describe('Landing: registered users (D-036)', () => {
       null,
     );
     renderRoutes(routes, ['/']);
-    expect(await screen.findByText('Registered users: 1,234')).toBeVisible();
+    const line = await screen.findByTestId('registered-users');
+    expect(line).toHaveTextContent('Registered users: 1,234');
+    expect(screen.getByText('1,234')).toHaveClass('text-hint'); // yellow, like the version
   });
 
   it('shows nothing when the count fails to load', async () => {

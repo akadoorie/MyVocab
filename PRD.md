@@ -179,7 +179,7 @@ private content repository. It never appears in the public code repo or any publ
 ## 6. Functional requirements: Learner
 
 ### 6.1 Landing page and start card
-- **FR-L1** The landing page (`/`) shows the slogan, with **"Registered users: N"** in small muted text under it for
+- **FR-L1** The landing page (`/`) shows the slogan, with **"Registered users: N"** in small muted text under it (the number in yellow, like the version) for
   everyone (fetched once when the page opens; hidden if it fails to load, D-036) (when the page loads or is refreshed on Home, the first words
   fade in and "stick" drops in, bounces off twice and sticks on the third try with a soft squash and a faint shine, about
   3s; not when coming back to Home inside the app; a short fade with reduced motion, D-034, D-037), the app version (a small yellow "v1.N" next to the name, D-032), a short hero, a 3-step "How it works" section with a **"Buttons"** guide
