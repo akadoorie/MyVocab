@@ -471,3 +471,17 @@ Format: date · context · decision · consequences.
   "Return" work per row. Paging breaks ties by item id and then target.
 - **Deploy window:** the migration runs a few seconds before the new code is live; a Know sent in
   between fails on the old upsert and is resent by the queue.
+
+## D-029 · 2026-11-20 · "New session" starts the next session at once (owner request)
+
+- **Why:** "New session" went back to the start card, pre-filled; the learner still had to press
+  Start. "Home" already covers changing the choices, so "New session" now starts right away.
+- **How:** the start logic (Turnstile for guests, `POST /api/loops`, saving the loop, the "Only N
+  new cards" notice and the error messages) moved from the start card into `useStartLoop`, which
+  both use. The summary calls it with the finished loop's selection and replaces the history
+  entry with the new loop; the loop page is keyed by the history entry, so it mounts fresh.
+- **Edge cases:** no new cards left, the daily limit or a failed check show a message under the
+  buttons. The signed-in state is read now (a guest who signed in during the loop starts as a
+  learner). The button waits while `/api/meta` loads (fetched when the loop page opens, usually
+  already cached); if it fails, the old behaviour (start card, pre-filled) is the fallback. One
+  Summary component throughout, so the celebration never restarts.

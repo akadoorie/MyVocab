@@ -1,35 +1,27 @@
 import type { MetaResponse } from '@myvocab/contracts';
 import {
-  createLoop,
   defaultFields,
   differsFromDefaults,
   isSameLanguage,
-  randomSeed,
   type StartChoices,
 } from '@myvocab/core';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link } from 'react-router';
 import { Button3D } from '../../components/Button3D';
 import { Field, Segmented } from '../../components/Field';
 import { useToast } from '../../components/Toast';
-import { api, ApiError } from '../../lib/api';
-import { ME_QUERY_KEY, startGoogleSignIn, type SessionState } from '../../lib/session';
+import { api } from '../../lib/api';
+import { startGoogleSignIn, type SessionState } from '../../lib/session';
 import { readFlag, writeFlag } from '../../lib/storage';
 import { DESKTOP_QUERY, useMediaQuery } from '../../lib/useMediaQuery';
 import { strings } from '../../strings';
-import { saveLoop } from '../loop/loop-storage';
 import { useDebounced } from './useDebounced';
-import { useTurnstile } from './useTurnstile';
+import { useStartLoop } from './useStartLoop';
 
 const GUEST_TOAST_FLAG = 'myvocab.guestAmountToast';
 
-export type LoopStartNotice = { insufficient?: string };
-
-function remainingOf(details: unknown): number {
-  const remaining = (details as { remaining?: unknown } | undefined)?.remaining;
-  return typeof remaining === 'number' ? remaining : 0;
-}
+export type { LoopStartNotice } from './useStartLoop';
 
 /**
  * The start card (PRD §6.1, §9.5). Every field has a default, so Start works immediately: on
@@ -50,13 +42,17 @@ export function StartCard({
 }) {
   const isGuest = session.isGuest;
   const isDesktop = useMediaQuery(DESKTOP_QUERY, true);
-  const navigate = useNavigate();
   const toast = useToast();
-  const queryClient = useQueryClient();
-  const { containerRef, getToken } = useTurnstile(
-    meta.turnstileSiteKey,
-    isGuest && meta.guest.enabled,
-  );
+  const {
+    start: startLoop,
+    starting,
+    error,
+    setError,
+    containerRef,
+  } = useStartLoop({
+    meta,
+    isGuest,
+  });
 
   const defaults: StartChoices = useMemo(
     () => ({ ...meta.defaults, size: isGuest ? meta.guest.loopSize : meta.defaults.size }),
@@ -67,8 +63,6 @@ export function StartCard({
       ? { ...initialSelection, size: isGuest ? meta.guest.loopSize : initialSelection.size }
       : defaults,
   );
-  const [starting, setStarting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const defaultSet = defaultFields(choices, defaults);
 
   const guestToast = useMemo(
@@ -113,58 +107,8 @@ export function StartCard({
     setChoices((c) => ({ ...c, [key]: value }));
   };
 
-  const topicName =
-    choices.categoryId === null
-      ? strings.setup.general
-      : (meta.categories.find((c) => c.id === choices.categoryId)?.name ?? strings.setup.general);
-
   async function start() {
-    setStarting(true);
-    setError(null);
-    try {
-      const turnstileToken = isGuest ? await getToken() : undefined;
-      const res = await api.startLoop({
-        source: choices.sourceLang,
-        target: choices.targetLang,
-        type: choices.type,
-        categoryId: choices.categoryId,
-        ...(isGuest ? {} : { size: choices.size }),
-        ...(turnstileToken ? { turnstileToken } : {}),
-      });
-      if (res.cards.length === 0) {
-        void available.refetch();
-        return;
-      }
-      saveLoop({
-        cards: res.cards,
-        state: createLoop(
-          res.cards.map((c) => c.itemId),
-          randomSeed(),
-        ),
-        undoWindowSeconds: meta.undoWindowSeconds,
-        selection: choices,
-        isGuest,
-      });
-      const notice: LoopStartNotice =
-        res.returned < res.requested
-          ? { insufficient: strings.loop.insufficient(res.returned, topicName) }
-          : {};
-      navigate('/loop', { state: notice });
-    } catch (e) {
-      if (e instanceof ApiError && e.code === 'BOT_CHECK_FAILED')
-        setError(strings.setup.botCheckFailed);
-      else if (e instanceof ApiError && e.code === 'RATE_LIMITED' && !isGuest)
-        setError(strings.setup.dailyCap(remainingOf(e.details)));
-      else if (e instanceof ApiError && e.code === 'UNAUTHORIZED' && !isGuest) {
-        setError(strings.setup.sessionExpired);
-        void queryClient.invalidateQueries({ queryKey: ME_QUERY_KEY });
-      } else if (e instanceof ApiError) setError(e.message);
-      else if (e instanceof Error && e.message.startsWith('Turnstile'))
-        setError(strings.setup.botCheckFailed);
-      else setError(strings.setup.genericError);
-    } finally {
-      setStarting(false);
-    }
+    if ((await startLoop(choices)) === 'empty') void available.refetch();
   }
 
   const count = available.data?.available;

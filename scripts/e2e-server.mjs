@@ -34,6 +34,24 @@ run(
   ],
   apiDir,
 );
+// Every spec, on both projects, starts guest sessions from the same local IP: raise the hourly
+// guest limit (default 10) so they don't run into it. The limit itself is covered by API tests.
+run(
+  'pnpm',
+  [
+    'exec',
+    'wrangler',
+    'd1',
+    'execute',
+    'myvocab-prod',
+    '--local',
+    '--persist-to',
+    persistTo,
+    '--command',
+    `"INSERT INTO app_settings (key, value, updated_at) VALUES ('guests.loopsPerHour', '100', ${Date.now()})"`,
+  ],
+  apiDir,
+);
 
 // Everything the Worker needs, so CI (which has no .dev.vars) runs the same as a local machine.
 // Test values only; Turnstile uses Cloudflare's always-pass test keys.

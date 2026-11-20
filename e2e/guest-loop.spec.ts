@@ -80,9 +80,10 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   await expect(page.getByRole('heading', { name: 'Session completed' })).toBeVisible();
   await expect(page.getByText('Sign in to remember these words')).toBeVisible();
 
-  // New loop keeps the selection.
+  // New session starts the next loop right away, with the same choices (FR-L32).
   await page.getByRole('button', { name: 'New session' }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(progress(page)).toHaveText(/^Cycle 1 · Card 1\/\d+ · 0 known$/);
+  await expect(page).toHaveURL(/\/loop$/);
 });
 
 /** A touch swipe across the card, as pointer events (PRD FR-L29b). */

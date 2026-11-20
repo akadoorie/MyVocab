@@ -1,0 +1,106 @@
+import type { MetaResponse } from '@myvocab/contracts';
+import { createLoop, randomSeed, type StartChoices } from '@myvocab/core';
+import { useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
+import { api, ApiError } from '../../lib/api';
+import { ME_QUERY_KEY } from '../../lib/session';
+import { strings } from '../../strings';
+import { saveLoop } from '../loop/loop-storage';
+import { useTurnstile } from './useTurnstile';
+
+export type LoopStartNotice = { insufficient?: string };
+
+/** `started`: on the way to the loop; `empty`: no new cards for these choices; `failed`: see `error`. */
+export type StartResult = 'started' | 'empty' | 'failed';
+
+function remainingOf(details: unknown): number {
+  const remaining = (details as { remaining?: unknown } | undefined)?.remaining;
+  return typeof remaining === 'number' ? remaining : 0;
+}
+
+/**
+ * Starting a loop (PRD FR-L7–L10), shared by the start card and the summary's "New session"
+ * (which starts the next loop with the same choices, without going through the start card). For
+ * guests it runs the invisible Turnstile check; render `containerRef` where an interactive
+ * challenge may appear. `meta` may still be loading (`undefined`): `start` then reports a generic
+ * error, so callers disable their button until it is there.
+ */
+export function useStartLoop({
+  meta,
+  isGuest,
+}: {
+  meta: MetaResponse | undefined;
+  isGuest: boolean;
+}) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { containerRef, getToken } = useTurnstile(
+    meta?.turnstileSiteKey,
+    isGuest && (meta?.guest.enabled ?? false),
+  );
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function start(
+    choices: StartChoices,
+    options: { replace?: boolean } = {},
+  ): Promise<StartResult> {
+    if (!meta) {
+      setError(strings.setup.genericError);
+      return 'failed';
+    }
+    setStarting(true);
+    setError(null);
+    try {
+      const turnstileToken = isGuest ? await getToken() : undefined;
+      const res = await api.startLoop({
+        source: choices.sourceLang,
+        target: choices.targetLang,
+        type: choices.type,
+        categoryId: choices.categoryId,
+        ...(isGuest ? {} : { size: choices.size }),
+        ...(turnstileToken ? { turnstileToken } : {}),
+      });
+      if (res.cards.length === 0) return 'empty';
+      saveLoop({
+        cards: res.cards,
+        state: createLoop(
+          res.cards.map((c) => c.itemId),
+          randomSeed(),
+        ),
+        undoWindowSeconds: meta.undoWindowSeconds,
+        selection: choices,
+        isGuest,
+      });
+      const topicName =
+        choices.categoryId === null
+          ? strings.setup.general
+          : (meta.categories.find((c) => c.id === choices.categoryId)?.name ??
+            strings.setup.general);
+      const notice: LoopStartNotice =
+        res.returned < res.requested
+          ? { insufficient: strings.loop.insufficient(res.returned, topicName) }
+          : {};
+      navigate('/loop', { state: notice, replace: options.replace ?? false });
+      return 'started';
+    } catch (e) {
+      if (e instanceof ApiError && e.code === 'BOT_CHECK_FAILED')
+        setError(strings.setup.botCheckFailed);
+      else if (e instanceof ApiError && e.code === 'RATE_LIMITED' && !isGuest)
+        setError(strings.setup.dailyCap(remainingOf(e.details)));
+      else if (e instanceof ApiError && e.code === 'UNAUTHORIZED' && !isGuest) {
+        setError(strings.setup.sessionExpired);
+        void queryClient.invalidateQueries({ queryKey: ME_QUERY_KEY });
+      } else if (e instanceof ApiError) setError(e.message);
+      else if (e instanceof Error && e.message.startsWith('Turnstile'))
+        setError(strings.setup.botCheckFailed);
+      else setError(strings.setup.genericError);
+      return 'failed';
+    } finally {
+      setStarting(false);
+    }
+  }
+
+  return { start, starting, error, setError, containerRef };
+}

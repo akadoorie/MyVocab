@@ -1,5 +1,5 @@
 import type { loopSummary } from '@myvocab/core';
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type Ref } from 'react';
 import { Button3D } from '../../components/Button3D';
 import { KeyboardIcon } from '../../components/Icons';
 import { startGoogleSignIn } from '../../lib/session';
@@ -51,7 +51,7 @@ export function CycleBreak({
   );
 }
 
-/** End of loop (PRD FR-L32). */
+/** End of loop (PRD FR-L32). "New session" starts the next loop with the same choices. */
 export function Summary({
   summary,
   isGuest,
@@ -60,6 +60,11 @@ export function Summary({
   onBack,
   celebrate,
   onCelebrated,
+  starting = false,
+  newLoopDisabled = false,
+  startingLabel,
+  error = null,
+  turnstileRef,
 }: {
   summary: ReturnType<typeof loopSummary>;
   isGuest: boolean;
@@ -69,6 +74,15 @@ export function Summary({
   /** First time on the summary in this session: celebrate. Later visits (after Back) don't. */
   celebrate: boolean;
   onCelebrated: () => void;
+  /** The next loop is being started (New session). */
+  starting?: boolean;
+  /** Not ready to start the next loop yet (its settings are loading). */
+  newLoopDisabled?: boolean;
+  startingLabel?: string;
+  /** Why the next loop couldn't start (shown under the buttons). */
+  error?: string | null;
+  /** Where a guest's interactive security check may appear. */
+  turnstileRef?: Ref<HTMLDivElement>;
 }) {
   const focusRef = useFocusOnMount<HTMLButtonElement>();
   // The celebration (FR-L32a), once per session: confetti (not with "reduce motion") and applause
@@ -118,10 +132,16 @@ export function Summary({
         <Button3D variant="stop" onClick={onHome}>
           {strings.summary.home}
         </Button3D>
-        <Button3D ref={focusRef} onClick={onNewLoop}>
-          {strings.summary.newLoop}
+        <Button3D ref={focusRef} onClick={onNewLoop} disabled={starting || newLoopDisabled}>
+          {starting && startingLabel ? startingLabel : strings.summary.newLoop}
         </Button3D>
       </div>
+      {turnstileRef && <div ref={turnstileRef} className="flex justify-center empty:hidden" />}
+      {error && (
+        <p role="alert" className="max-w-md text-sm text-dontknow">
+          {error}
+        </p>
+      )}
       <div className="flex flex-wrap items-center justify-center gap-2">
         <BackToLastCard onBack={onBack} />
         <SoundToggle on={sound} onChange={setSound} />

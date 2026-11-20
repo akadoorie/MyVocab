@@ -1,15 +1,25 @@
 import { createLoop } from '@myvocab/core';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '../../components/Toast';
 import { makeCard } from '../../test/fixtures';
+import { mockFetch } from '../../test/render';
 import { loadLoop, saveLoop } from './loop-storage';
 import { LoopPage, type KnownSink } from './LoopPage';
 
 const CARDS = [makeCard(1), makeCard(2), makeCard(3)];
 
-function setup(sink?: KnownSink, { isGuest = true }: { isGuest?: boolean } = {}) {
+function setup(
+  sink?: KnownSink,
+  {
+    isGuest = true,
+    routes = {},
+  }: { isGuest?: boolean; routes?: Parameters<typeof mockFetch>[0] } = {},
+) {
+  // /api/me answers with a signed-in learner, /api/meta with the test settings.
+  const fetchSpy = mockFetch(routes);
   saveLoop({
     cards: CARDS,
     state: createLoop([1, 2, 3], 42),
@@ -24,12 +34,15 @@ function setup(sink?: KnownSink, { isGuest = true }: { isGuest?: boolean } = {})
     ],
     { initialEntries: ['/loop'] },
   );
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
-    <ToastProvider>
-      <RouterProvider router={router} />
-    </ToastProvider>,
+    <QueryClientProvider client={client}>
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
+    </QueryClientProvider>,
   );
-  return router;
+  return Object.assign(router, { fetchSpy });
 }
 
 const btn = (name: string) => {
@@ -40,7 +53,10 @@ const progress = () => screen.getByTestId('progress').textContent;
 const side = () => screen.getByTestId('flip-card').getAttribute('data-side');
 
 beforeEach(() => window.sessionStorage.clear());
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
 
 describe('LoopPage', () => {
   it('starts on the front with Next disabled and the decision buttons enabled', () => {
@@ -308,6 +324,76 @@ describe('LoopPage', () => {
     expect(loadLoop()).toBeNull(); // finishing clears the saved loop
   });
 
+  describe('New session on the summary (FR-L32)', () => {
+    const finish = () => {
+      // Signed-in learners have two Knows; "forever" is the recorded one.
+      for (let i = 0; i < 3; i++) fireEvent.click(btn('Know, forever'));
+      expect(screen.getByRole('heading', { name: 'Session completed' })).toBeInTheDocument();
+    };
+
+    it('starts the next session right away with the same choices', async () => {
+      const posted: unknown[] = [];
+      const router = setup(undefined, {
+        isGuest: false,
+        routes: {
+          'POST /api/loops': (init) => {
+            posted.push(JSON.parse(String(init?.body)));
+            return Response.json({ requested: 5, returned: 2, cards: [makeCard(7), makeCard(8)] });
+          },
+        },
+      });
+      finish();
+      const newSession = screen.getByRole('button', { name: 'New session' });
+      await waitFor(() => expect(newSession).toBeEnabled()); // once the settings have loaded
+      fireEvent.click(newSession);
+      await waitFor(() => expect(progress()).toBe('Cycle 1 · Card 1/2 · 0 known'));
+      expect(posted).toEqual([
+        { source: 'en', target: 'he', type: 'word', categoryId: null, size: 5 },
+      ]);
+      expect(router.state.location.pathname).toBe('/loop');
+      expect(loadLoop()?.cards.map((c) => c.itemId)).toEqual([7, 8]);
+      expect(loadLoop()?.selection).toMatchObject({ sourceLang: 'en', targetLang: 'he' });
+      expect(await screen.findByText('Only 2 new cards in General, starting with 2')).toBeVisible();
+    });
+
+    it('says so when no new cards are left, and Home still works', async () => {
+      const router = setup(undefined, {
+        isGuest: false,
+        routes: {
+          'POST /api/loops': () => Response.json({ requested: 5, returned: 0, cards: [] }),
+        },
+      });
+      finish();
+      const newSession = screen.getByRole('button', { name: 'New session' });
+      await waitFor(() => expect(newSession).toBeEnabled()); // once the settings have loaded
+      fireEvent.click(newSession);
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'No new cards left for these choices. Go Home to pick others.',
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+      await waitFor(() => expect(router.state.location.pathname).toBe('/'));
+    });
+
+    it('shows why it could not start (e.g. the daily limit)', async () => {
+      setup(undefined, {
+        isGuest: false,
+        routes: {
+          'POST /api/loops': () =>
+            Response.json(
+              { error: { code: 'RATE_LIMITED', message: 'limit', details: { remaining: 3 } } },
+              { status: 429 },
+            ),
+        },
+      });
+      finish();
+      const newSession = screen.getByRole('button', { name: 'New session' });
+      await waitFor(() => expect(newSession).toBeEnabled()); // once the settings have loaded
+      fireEvent.click(newSession);
+      expect(await screen.findByRole('alert')).toHaveTextContent(/You can still get 3 cards today/);
+      expect(screen.getByRole('heading', { name: 'Session completed' })).toBeInTheDocument();
+    });
+  });
+
   it('saves progress so a refresh resumes; Stop asks, then clears it and goes home', async () => {
     const router = setup();
     fireEvent.click(btn('Know'));
@@ -361,10 +447,13 @@ describe('LoopPage', () => {
       ],
       { initialEntries: ['/loop'] },
     );
+    mockFetch({});
     render(
-      <ToastProvider>
-        <RouterProvider router={router} />
-      </ToastProvider>,
+      <QueryClientProvider client={new QueryClient()}>
+        <ToastProvider>
+          <RouterProvider router={router} />
+        </ToastProvider>
+      </QueryClientProvider>,
     );
     expect(await screen.findByText('home page')).toBeInTheDocument();
   });

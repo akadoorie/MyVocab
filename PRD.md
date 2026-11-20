@@ -199,8 +199,9 @@ private content repository. It never appears in the public code repo or any publ
   `--accent` outline and the tag disappears (owner feedback, 2026-11-18: the muted look made defaults seem unset).
   When any field differs from its default, a **"Reset to defaults"** link appears. The user can press **Start**
   immediately without touching anything.
-- **FR-L4** "New session" from the summary keeps the previous selection (fields that differ from the defaults show the
-  selected style). A fresh visit to `/` always starts from the defaults (nothing is remembered between visits).
+- **FR-L4** "New session" from the summary starts the next session with the same selection right away (FR-L32,
+  D-029). A fresh visit to `/`, including **Home** from the summary, always starts from the defaults (nothing is
+  remembered between visits).
 - **FR-L5 Same language**: choosing source = target is allowed. The back of the card then shows the item's
   **explanation** instead of a translation. While the two languages are the same, a short muted note under the
   fields says "Same language: the back shows an explanation".
@@ -314,7 +315,11 @@ private content repository. It never appears in the public code repo or any publ
   "Cycle 3 · 2 cards left" with a **Continue** button (Enter also continues).
 - **FR-L32 End of loop**: when a cycle ends with no "Don't know" cards, a summary shows the total cards, the number of
   cycles, **Already knew** (known in cycle 1) vs **Learned here** (known in cycle ≥ 2), and buttons **New session**
-  (back to the start card with the same selection) and **Home**. Guests also see "Sign in to remember these words".
+  and **Home**. **New session** starts the next session at once with the same selection (languages, topic, type,
+  amount), without the start card (D-029): the button reads "Starting…" (guests: the security check) meanwhile, and a
+  problem (no new cards left, the daily limit, a failed check) is shown under the buttons, where Home stays available.
+  It waits while the start settings load, and if they can't load it falls back to the start card, pre-filled.
+  **Home** goes to the start card with the defaults. Guests also see "Sign in to remember these words".
 - **FR-L32a Celebration** (owner request, 2026-11-19): when the summary appears, a burst of **confetti** in the app's
   colours shoots up from the bottom corners and flutters down for about 3 seconds (a canvas drawn by the app, no
   library; none with "reduce motion"), and a short **applause** plays (`/sounds/applause.wav`, 2.3 s, mono, about

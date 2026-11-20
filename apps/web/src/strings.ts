@@ -218,6 +218,7 @@ export const strings = {
     alreadyKnew: 'Already knew',
     learnedHere: 'Learned here',
     newLoop: 'New session',
+    nothingLeft: 'No new cards left for these choices. Go Home to pick others.',
     home: 'Home',
     guestNote: 'Sign in to remember these words',
     soundOn: 'Sound on',

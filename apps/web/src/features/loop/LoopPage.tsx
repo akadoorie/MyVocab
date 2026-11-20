@@ -8,13 +8,16 @@ import {
   type KnownMark,
   type LoopActionType,
 } from '@myvocab/core';
+import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { useToast } from '../../components/Toast';
+import { api } from '../../lib/api';
+import { useSession } from '../../lib/session';
 import { strings } from '../../strings';
 import { useKnownQueue } from '../known/KnownQueueProvider';
-import type { LoopStartNotice } from '../setup/StartCard';
+import { useStartLoop, type LoopStartNotice } from '../setup/useStartLoop';
 import { LogoMark } from '../../components/Icons';
 import { ButtonBar } from './ButtonBar';
 import { FlipCard } from './FlipCard';
@@ -36,9 +39,21 @@ const noopSink: KnownSink = { onKnow: () => undefined, onUnknow: () => undefined
 /**
  * The loop screen. Signed-in learners' Know marks go to the Know queue (PRD §6.4); guests' marks
  * go nowhere (FR-L55). `knownSink` overrides the queue (tests).
+ *
+ * Keyed by the history entry: "New session" on the summary saves the next loop and navigates to
+ * /loop again, which mounts a fresh screen that loads it (FR-L32).
  */
 export function LoopPage({ knownSink }: { knownSink?: KnownSink }) {
+  const location = useLocation();
+  return <LoopScreen key={location.key} {...(knownSink ? { knownSink } : {})} />;
+}
+
+const META_QUERY = { queryKey: ['meta'], queryFn: api.meta, staleTime: 60_000 } as const;
+
+function LoopScreen({ knownSink }: { knownSink?: KnownSink }) {
   const [stored] = useState<StoredLoop | null>(() => loadLoop());
+  // Loaded early (usually cached from the start card), so "New session" is ready at the end.
+  useQuery(META_QUERY);
   const queue = useKnownQueue();
   const sink = useMemo<KnownSink>(() => {
     if (knownSink) return knownSink;
@@ -215,11 +230,9 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   if (state.phase === 'finished') {
     return (
       <main id="main" className="mx-auto flex min-h-dvh w-full max-w-[640px] flex-col px-4 py-6">
-        <Summary
+        <FinishedScreen
+          stored={stored}
           summary={loopSummary(state)}
-          isGuest={stored.isGuest}
-          onHome={() => navigate('/')}
-          onNewLoop={() => navigate('/', { state: { selection: stored.selection } })}
           onBack={() => act('BACK')}
           celebrate={!celebrated}
           onCelebrated={markCelebrated}
@@ -325,4 +338,51 @@ function splitKnown(text: string): [string, string] {
 /** The crumple is skipped for "reduce motion" (and where it can't be detected, e.g. tests). */
 function motionAllowed(): boolean {
   return window.matchMedia?.('(prefers-reduced-motion: no-preference)').matches ?? false;
+}
+
+type FinishedProps = {
+  stored: StoredLoop;
+  summary: ReturnType<typeof loopSummary>;
+  onBack: () => void;
+  celebrate: boolean;
+  onCelebrated: () => void;
+};
+
+/**
+ * The summary (FR-L32). "New session" starts the next loop with the same choices right away; it
+ * waits while the start settings (/api/meta) load, and if they can't load it falls back to the
+ * start card, pre-filled. One Summary throughout, so the celebration never restarts.
+ */
+function FinishedScreen({ stored, ...rest }: FinishedProps) {
+  const meta = useQuery(META_QUERY);
+  const navigate = useNavigate();
+  const session = useSession();
+  // The signed-in state now, not when the loop started (a guest may have signed in since).
+  const isGuest = session.loading ? stored.isGuest : session.isGuest;
+  const { start, starting, error, setError, containerRef } = useStartLoop({
+    meta: meta.data,
+    isGuest,
+  });
+  const newLoop = () => {
+    if (!meta.data) {
+      navigate('/', { state: { selection: stored.selection } });
+      return;
+    }
+    void start(stored.selection, { replace: true }).then((result) => {
+      if (result === 'empty') setError(strings.summary.nothingLeft);
+    });
+  };
+  return (
+    <Summary
+      {...rest}
+      isGuest={stored.isGuest}
+      onHome={() => navigate('/')}
+      onNewLoop={newLoop}
+      newLoopDisabled={meta.isPending}
+      starting={starting}
+      startingLabel={isGuest ? strings.setup.botCheck : strings.setup.starting}
+      error={error}
+      turnstileRef={containerRef}
+    />
+  );
 }
