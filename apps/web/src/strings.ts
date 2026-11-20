@@ -8,6 +8,7 @@ export const strings = {
     tagline: 'Learn words until they stick',
   },
   nav: {
+    version: 'Version',
     home: 'Home',
     signIn: 'Sign in with Google',
     signOut: 'Sign out',

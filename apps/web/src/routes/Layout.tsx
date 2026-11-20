@@ -6,6 +6,8 @@ import { api } from '../lib/api';
 import { startGoogleSignIn, useSession } from '../lib/session';
 import { strings } from '../strings';
 
+const version = import.meta.env.VITE_APP_VERSION;
+
 /** Header, maintenance banner and footer around the regular pages (PRD §9.7). */
 export function Layout() {
   const session = useSession();
@@ -27,12 +29,25 @@ export function Layout() {
         </div>
       )}
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
-        <Link to="/" className="flex items-center gap-2.5 text-xl font-bold tracking-tight">
-          <LogoMark className="h-8 w-8" />
-          <span>
-            My<span className="text-accent">Vocab</span>
-          </span>
-        </Link>
+        <div className="flex items-baseline gap-2">
+          <Link
+            to="/"
+            className="flex items-center gap-2.5 self-center text-xl font-bold tracking-tight"
+          >
+            <LogoMark className="h-8 w-8" />
+            <span>
+              My<span className="text-accent">Vocab</span>
+            </span>
+          </Link>
+          {onHome && version && (
+            // The version, so a refresh shows at a glance whether a new one is live (D-032).
+            <span className="text-xs text-muted" data-testid="app-version">
+              <span className="sr-only">{strings.nav.version} </span>
+              <span aria-hidden="true">v</span>
+              {version}
+            </span>
+          )}
+        </div>
         <nav className="flex items-center gap-3 text-sm">
           {!onHome && (
             // Every page other than the start page offers a way back to it.

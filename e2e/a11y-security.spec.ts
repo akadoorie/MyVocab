@@ -36,6 +36,8 @@ test('guest pages: no accessibility violations and no CSP violations', async ({ 
   const csp = collectCspViolations(page);
   await page.goto('/');
   await expect(page.getByText(/new cards? available/)).toBeVisible();
+  // The build-time version (D-032): "v1.N", read as "Version v1.N".
+  await expect(page.getByTestId('app-version')).toHaveText(/^Version v1\.\d+$/);
   await expectNoViolations(page, 'landing');
 
   await page

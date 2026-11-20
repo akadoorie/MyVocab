@@ -511,3 +511,10 @@ Format: date · context · decision · consequences.
   focus, and pumps (scale plus a soft ring) until pressed.
 - **Reduced motion:** a steady ring instead of the pumping.
 - **Back to an answered card:** Next is enabled there too, but does not pump.
+
+## D-032 · 2026-11-20 · App version on the home page
+
+- **What:** small muted "v1.N" next to the MyVocab name, on the home page only, so a refresh
+  shows whether a new version is live. Screen readers hear "Version 1.N".
+- **Number:** "1." plus the git commit count, set at build time (vite.config.ts); it rises
+  with every deploy and needs no manual bump. Deploy checks out the full history for it.
