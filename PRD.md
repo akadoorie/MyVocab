@@ -283,10 +283,10 @@ private content repository. It never appears in the public code repo or any publ
   **greyed out and disabled** ("Sign in to use this"; its A shortcut does nothing).
 - **FR-L28 Don't know** (available on either side while Deciding): adds the card to the next cycle. If the card is
   showing its front, it **flips automatically** to the back (answer + hints + synonyms). The phase becomes
-  **Revealed**: Know and Don't know disable, **Next** enables and receives focus, and Flip stays available. In this
-  phase the Know / Don't know pills are **replaced by one wide violet "Next ›" pill** in the same place (and the small
-  round Next is hidden), so the only way on is the biggest button on screen (owner request, 2026-11-18: the small
-  Next was easy to miss).
+  **Revealed**: the three answer pills stay in place but disable, **Next** enables and receives focus, and Flip
+  stays available (Hints works only while the front shows). The layout does not change: the round **Next turns
+  violet and pumps** (a gentle grow-and-shrink with a soft ring) until it is pressed, so the way on is clear; with
+  reduced motion it shows a steady ring instead (D-031).
 - **FR-L29 Next**: moves to the next card (enabled in the Revealed phase, and on a card answered earlier that was
   reached with Back). The next card enters front side up with a short rise-in (no reverse-flip animation).
 - **FR-L29a Back and changing an answer** (owner request, 2026-11-19): the round **Back** button (or **←**) shows the
@@ -913,12 +913,13 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   "← Home" (asks before stopping the loop, FR-L30a).
 - **Loop buttons**: on desktop, one row under the card, in this order: `Stop · Hints · Back · I know it (green) ·
   I know it (amber) · I don't know · Next` (round, round, round, pill, pill, pill, round; the amber pill greyed out
-  for guests); after I don't know, `Stop · Hints · Back · [Next ›]`. Flip is on the card itself.
+  for guests); after I don't know the row stays the same, the answers disabled and Next pumping (D-031). Flip is
+  on the card itself.
 - **Loop (mobile, 360–767px)**: the flip card fills the space above; the buttons form a **sticky bottom bar** in the
   thumb zone, in two rows: the three answer pills on top (**I know it · I know it · I don't know**, three equal pills
   with their captions), and the round
-  `Stop · Hints · Back · Next` (with captions) below, so the two main actions stay big. After Don't know, one wide
-  "Next ›" pill replaces Know / Don't know, with `Stop · Hints · Back` below (FR-L28, FR-L29a).
+  `Stop · Hints · Back · Next` (with captions) below, so the two main actions stay big. After Don't know, the
+  layout stays: the answer pills disable and the round Next pumps (FR-L28, FR-L29a, D-031).
 - **Loop (desktop ≥ 768px)**: a centered column of about 1100px; the card is wide (≈ 2.3 : 1) and the pills carry
   their labels.
 - **Cycle break / Summary**: a glassy card with large numbers and the 3D buttons.

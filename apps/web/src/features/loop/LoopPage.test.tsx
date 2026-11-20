@@ -73,19 +73,19 @@ describe('LoopPage', () => {
       expect(btn(name)).toBeEnabled();
   });
 
-  it('Don’t know flips to the back, swaps Know/Don’t know for a big Next and focuses it', () => {
+  it('Don’t know flips to the back, keeps the layout, turns the answers off and Next pumps', () => {
     setup();
     fireEvent.click(btn('I don’t know Show again soon'));
     expect(side()).toBe('back');
-    // Know / Don't know give way to one wide Next pill.
-    expect(
-      screen.queryByRole('button', { name: 'I know it Done for this session' }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'I don’t know Show again soon' }),
-    ).not.toBeInTheDocument();
+    // The answers stay in place, disabled; Next is the way on.
+    for (const name of [
+      'I know it Done for this session',
+      'I know it Show again in future (sign in to use)',
+      'I don’t know Show again soon',
+    ])
+      expect(btn(name)).toBeDisabled();
     expect(screen.getAllByRole('button', { name: 'Next' })).toHaveLength(1);
-    expect(btn('Next')).toHaveClass('lbtn--next');
+    expect(btn('Next')).toHaveClass('is-urgent');
     expect(btn('Next')).toBeEnabled();
     expect(document.activeElement).toBe(btn('Next'));
     expect(btn('Hints')).toBeDisabled(); // only while the front shows

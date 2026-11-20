@@ -10,7 +10,7 @@ import {
 } from '../../components/Icons';
 import { strings } from '../../strings';
 
-type Kind = 'round' | 'hint' | 'know' | 'again' | 'dontknow' | 'next';
+type Kind = 'round' | 'hint' | 'know' | 'again' | 'dontknow';
 
 /** A loop button: a 3D circle or pill with an icon, and its caption (PRD §9.2). */
 export function LoopButton({
@@ -71,8 +71,8 @@ export function LoopButton({
 
 /**
  * Loop buttons (PRD FR-L24, §9.7). Desktop: one row `Stop · Hints · Back · three answers · Next`.
- * Phones: the three answer pills on top, `Stop · Hints · Back · Next` below. After "I don't know",
- * one wide Next pill takes their place. Flip is on the card.
+ * Phones: the three answer pills on top, `Stop · Hints · Back · Next` below. After "I don't know"
+ * the layout stays: the answers are off and Next pumps (D-031). Flip is on the card.
  * The answers (D-030): green "I know it · Don't show again", orange "I know it · Show again in
  * future" (FR-L27a) and red "I don't know · Show again soon". Guests (`askAgain` false) see the
  * orange one greyed out and off, and the green caption reads "Done for this session".
@@ -92,24 +92,14 @@ export function ButtonBar({
     disabled: !canDispatch(state, type),
     onClick: () => onAction(type),
   });
-  // Revealed (after Don't know): Know and Don't know are off, so their place becomes one wide
-  // Next pill, the only way on (PRD FR-L28, §9.7).
-  // (On an earlier card reached with Back, Next is allowed too, but Know / Don't know stay.)
+  // Revealed (after Don't know): the layout stays; the answers are off and Next pumps, the only
+  // way on (PRD FR-L28, §9.7, D-031).
+  // (On an earlier card reached with Back, Next is allowed too, but without the pumping.)
   const revealed = state.phase === 'revealed';
   // Three pills on a phone carry their label only (base.css).
   const trio = 'lbtn--trio';
   return (
-    <div
-      className={[
-        'grid items-start gap-x-3 gap-y-5 pb-1',
-        revealed
-          ? "grid-cols-6 [grid-template-areas:'pills_pills_pills_pills_pills_pills'_'stop_stop_hints_hints_back_back']"
-          : "grid-cols-12 [grid-template-areas:'know_know_know_know_again_again_again_again_dk_dk_dk_dk'_'stop_stop_stop_hints_hints_hints_back_back_back_next_next_next']",
-        revealed
-          ? "md:grid-cols-[auto_auto_auto_1fr] md:gap-x-6 md:[grid-template-areas:'stop_hints_back_pills']"
-          : "md:grid-cols-[auto_auto_auto_1fr_1fr_1.1fr_auto] md:gap-x-6 md:[grid-template-areas:'stop_hints_back_know_again_dk_next']",
-      ].join(' ')}
-    >
+    <div className="grid grid-cols-12 items-start gap-x-3 gap-y-5 pb-1 [grid-template-areas:'know_know_know_know_again_again_again_again_dk_dk_dk_dk'_'stop_stop_stop_hints_hints_hints_back_back_back_next_next_next'] md:grid-cols-[auto_auto_auto_1fr_1fr_1.1fr_auto] md:gap-x-6 md:[grid-template-areas:'stop_hints_back_know_again_dk_next']">
       <LoopButton
         kind="round"
         icon={<StopIcon />}
@@ -132,68 +122,56 @@ export function ButtonBar({
         label={strings.loop.back}
         {...btn('BACK')}
       />
-      {revealed ? (
+      <LoopButton
+        kind="know"
+        icon={<CheckIcon />}
+        label={strings.loop.know}
+        caption={askAgain ? strings.loop.knowCaption : strings.loop.knowCaptionGuest}
+        name={askAgain ? strings.loop.knowName : strings.loop.knowNameGuest}
+        className={`[grid-area:know] ${trio}`}
+        {...btn('KNOW')}
+      />
+      {askAgain ? (
         <LoopButton
-          ref={nextRef}
-          kind="next"
-          className="[grid-area:pills]"
-          icon={<ChevronIcon />}
-          label={strings.loop.next}
-          {...btn('NEXT')}
+          kind="again"
+          icon={<CheckIcon />}
+          label={strings.loop.know}
+          caption={strings.loop.againCaption}
+          name={strings.loop.againName}
+          className={`[grid-area:again] ${trio}`}
+          {...btn('KNOW_AGAIN')}
         />
       ) : (
-        <>
-          <LoopButton
-            kind="know"
-            icon={<CheckIcon />}
-            label={strings.loop.know}
-            caption={askAgain ? strings.loop.knowCaption : strings.loop.knowCaptionGuest}
-            name={askAgain ? strings.loop.knowName : strings.loop.knowNameGuest}
-            className={`[grid-area:know] ${trio}`}
-            {...btn('KNOW')}
-          />
-          {askAgain ? (
-            <LoopButton
-              kind="again"
-              icon={<CheckIcon />}
-              label={strings.loop.know}
-              caption={strings.loop.againCaption}
-              name={strings.loop.againName}
-              className={`[grid-area:again] ${trio}`}
-              {...btn('KNOW_AGAIN')}
-            />
-          ) : (
-            // Guests see what signing in adds, greyed out and off (D-030).
-            <LoopButton
-              kind="again"
-              icon={<CheckIcon />}
-              label={strings.loop.know}
-              caption={strings.loop.againCaption}
-              name={strings.loop.againNameGuest}
-              title={strings.loop.signInToUse}
-              className={`[grid-area:again] ${trio}`}
-              locked
-              disabled
-            />
-          )}
-          <LoopButton
-            kind="dontknow"
-            className={`[grid-area:dk] ${trio}`}
-            icon={<CrossIcon />}
-            label={strings.loop.dontKnow}
-            caption={strings.loop.dontKnowCaption}
-            name={strings.loop.dontKnowName}
-            {...btn('DONT_KNOW')}
-          />
-          <LoopButton
-            kind="round"
-            className="[grid-area:next]"
-            icon={<ChevronIcon />}
-            label={strings.loop.next}
-            {...btn('NEXT')}
-          />
-        </>
+        // Guests see what signing in adds, greyed out and off (D-030).
+        <LoopButton
+          kind="again"
+          icon={<CheckIcon />}
+          label={strings.loop.know}
+          caption={strings.loop.againCaption}
+          name={strings.loop.againNameGuest}
+          title={strings.loop.signInToUse}
+          className={`[grid-area:again] ${trio}`}
+          locked
+          disabled
+        />
       )}
+      <LoopButton
+        kind="dontknow"
+        className={`[grid-area:dk] ${trio}`}
+        icon={<CrossIcon />}
+        label={strings.loop.dontKnow}
+        caption={strings.loop.dontKnowCaption}
+        name={strings.loop.dontKnowName}
+        {...btn('DONT_KNOW')}
+      />
+      <LoopButton
+        ref={nextRef}
+        kind="round"
+        className={`[grid-area:next] ${revealed ? 'is-urgent' : ''}`}
+        icon={<ChevronIcon />}
+        label={strings.loop.next}
+        {...btn('NEXT')}
+      />
     </div>
   );
 }

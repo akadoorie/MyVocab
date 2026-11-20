@@ -287,13 +287,65 @@ body {
   .lbtn--hint.is-pressed .lbtn__label {
     color: var(--hint);
   }
-  .lbtn--next {
+  /* After "I don't know", Next is the way on: accent colours, and it pumps with a soft ring
+     (FR-L28, D-031). Reduced motion: a steady ring instead. */
+  .lbtn.is-urgent {
     --top: var(--accent-top);
     --bottom: var(--accent-bottom);
     --c-ledge: var(--accent-ledge);
     --glow: var(--accent-glow);
+    --icon: var(--on-color);
   }
-  /* Pills (Know, Don't know, the wide Next): icon + label inside the pill, on every screen size. */
+  .lbtn.is-urgent .lbtn__label {
+    color: var(--text);
+  }
+  .lbtn.is-urgent:not(:active) .lbtn__shape,
+  .lbtn.is-urgent:not(:active) .lbtn__icon {
+    animation: lbtn-pump 1.1s ease-in-out infinite;
+  }
+  .lbtn.is-urgent:not(:active) .lbtn__shape {
+    animation-name: lbtn-pump, lbtn-ring;
+  }
+  @keyframes lbtn-pump {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.12);
+    }
+  }
+  @keyframes lbtn-ring {
+    0%,
+    100% {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 6px 0 var(--c-ledge),
+        0 8px 26px var(--glow),
+        0 0 0 0 var(--glow);
+    }
+    50% {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 6px 0 var(--c-ledge),
+        0 8px 26px var(--glow),
+        0 0 0 9px var(--glow);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lbtn.is-urgent:not(:active) .lbtn__shape,
+    .lbtn.is-urgent:not(:active) .lbtn__icon {
+      animation: none;
+    }
+    .lbtn.is-urgent .lbtn__shape {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 6px 0 var(--c-ledge),
+        0 8px 26px var(--glow),
+        0 0 0 6px var(--glow);
+    }
+  }
+  /* Pills (the three answers): icon + label inside the pill, on every screen size. */
   .lbtn--pill {
     --size: 60px;
     grid-template-columns: 1fr auto auto 1fr;
@@ -334,13 +386,6 @@ body {
     font-weight: 500;
     line-height: 1;
     white-space: nowrap;
-  }
-  /* Next reads "Next ›": label first, then the chevron. */
-  .lbtn--next .lbtn__label {
-    grid-column: 2;
-  }
-  .lbtn--next .lbtn__icon {
-    grid-column: 3;
   }
   @media (min-width: 768px) {
     .lbtn {

@@ -58,13 +58,12 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   await button(page, 'Next').click();
   await expect(progress(page)).toHaveText('Cycle 1 · Card 2/5 · 0 known');
 
-  // Don't know → auto-flip → one big Next in place of Know / Don't know.
+  // Don't know → auto-flip → the answers stay but turn off, and Next pumps.
   await button(page, 'I don’t know Show again soon').click();
   await expect(card(page)).toHaveAttribute('data-side', 'back');
-  await expect(
-    page.getByRole('button', { name: 'I know it Done for this session', exact: true }),
-  ).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Next', exact: true })).toHaveCount(1);
+  await expect(button(page, 'I know it Done for this session')).toBeDisabled();
+  await expect(button(page, 'I don’t know Show again soon')).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Next', exact: true })).toHaveClass(/is-urgent/);
   await button(page, 'Next').click();
   await expect(progress(page)).toHaveText('Cycle 1 · Card 3/5 · 0 known');
 

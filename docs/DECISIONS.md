@@ -501,3 +501,13 @@ Format: date · context · decision · consequences.
   button in its colour and one line on what it does; guests see the amber one greyed out with
   "(sign in to use)".
 - **Phone width:** the three captions may wrap onto two short lines under the pills.
+
+## D-031 · 2026-11-20 · After "I don't know", the buttons stay in place and Next pumps
+
+- **Why:** swapping the answers for one wide Next pill changed the layout under the learner's
+  finger mid-card.
+- **Now:** the layout stays the same. The three answer pills disable; Stop, Back and Flip stay
+  available (Hints only while the front shows, as before). The round Next turns violet, takes
+  focus, and pumps (scale plus a soft ring) until pressed.
+- **Reduced motion:** a steady ring instead of the pumping.
+- **Back to an answered card:** Next is enabled there too, but does not pump.
