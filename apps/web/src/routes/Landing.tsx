@@ -7,6 +7,7 @@ import { api } from '../lib/api';
 import { startGoogleSignIn, useSession } from '../lib/session';
 import { strings } from '../strings';
 import { ButtonGuide } from './ButtonGuide';
+import { HeroTitle } from './HeroTitle';
 
 /**
  * Landing page (PRD FR-L1): hero, "How it works" and the start card. It never shows real
@@ -61,9 +62,7 @@ export function Landing() {
         </div>
       )}
       <div className="flex flex-col gap-6">
-        <h1 className="bg-gradient-to-br from-text to-[#b9a6ff] bg-clip-text text-3xl leading-tight font-bold tracking-tight text-balance text-transparent md:text-5xl">
-          {strings.landing.heroTitle}
-        </h1>
+        <HeroTitle text={strings.landing.heroTitle} />
         <p className="text-lg text-muted">{strings.landing.heroBody}</p>
         {session.isGuest && !session.loading && (
           // A light runs round the frame two or three times, then the frame keeps a soft glow (D-033).

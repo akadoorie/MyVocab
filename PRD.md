@@ -179,7 +179,8 @@ private content repository. It never appears in the public code repo or any publ
 ## 6. Functional requirements: Learner
 
 ### 6.1 Landing page and start card
-- **FR-L1** The landing page (`/`) shows the app version (a small yellow "v1.N" next to the name, D-032), a short hero, a 3-step "How it works" section with a **"Buttons"** guide
+- **FR-L1** The landing page (`/`) shows the slogan (the first time the home page opens in a tab, its letters fall
+  in like snow and settle in about 1.6s; a short fade with reduced motion, D-034), the app version (a small yellow "v1.N" next to the name, D-032), a short hero, a 3-step "How it works" section with a **"Buttons"** guide
   (a small copy of each answer button, in its colour, and what it does; for guests the orange one is greyed out
   and marked "sign in to use", D-030), and the **Start card**.
   Desktop: hero and start card side by side. Mobile: stacked, with the **Start** button right under the hero text
