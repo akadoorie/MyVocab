@@ -72,6 +72,14 @@ export const KeyboardIcon = () => (
   </Svg>
 );
 
+/** A filled padlock: the badge on a locked button (D-042). */
+export const LockIcon = () => (
+  <Svg strokeWidth={2.4}>
+    <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" />
+    <rect x="5" y="10.5" width="14" height="10" rx="2.2" fill="currentColor" stroke="none" />
+  </Svg>
+);
+
 /** The MyVocab mark: two stacked cards. */
 export function LogoMark({ className }: { className?: string }) {
   return (

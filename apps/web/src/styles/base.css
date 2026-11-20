@@ -248,24 +248,34 @@ body {
   }
   /* Shown but not available (the orange Know for guests, D-030): grey instead of its colour. */
   /* Shown but locked (the green Know for guests, D-042): a darker shade of its own colour, not
-     grey, with a small lock inside its top-right corner. */
+     grey, with a yellow padlock on its top-left edge. */
   .lbtn.is-locked {
     position: relative;
   }
   .lbtn.is-locked .lbtn__shape,
   .lbtn.is-locked .lbtn__icon,
   .lbtn.is-locked .lbtn__label {
-    filter: brightness(0.7) saturate(0.85);
+    filter: brightness(0.55) saturate(0.85);
   }
-  /* Inside the pill: a disabled pill sits 6px lower (pressed down), and the inset clears its
-     rounded end. */
-  .lbtn__lock {
+  /* A yellow padlock with no background; a soft dark shadow keeps its outline clear where it
+     crosses the button's edge. */
+  .lock-badge {
     position: absolute;
-    top: calc(6px + 8px);
-    right: 20px;
-    font-size: 12px;
-    line-height: 1;
+    display: flex;
+    color: var(--hint);
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.85));
     pointer-events: none;
+  }
+  .lock-badge svg {
+    width: 100%;
+    height: 100%;
+  }
+  /* On the pill's top-left edge (a disabled pill sits 6px lower, pressed down). */
+  .lbtn__lock {
+    top: -2px;
+    left: 10px;
+    width: 18px;
+    height: 18px;
   }
   .lbtn--know {
     --top: var(--know-top);
@@ -484,15 +494,13 @@ body {
     --c-ledge: var(--dontknow-ledge);
   }
   .mini-btn.is-locked {
-    position: relative;
-    filter: brightness(0.6) saturate(0.85);
+    filter: brightness(0.38) saturate(0.85);
   }
   .mini-btn__lock {
-    position: absolute;
-    top: 3px;
-    right: 8px;
-    font-size: 9px;
-    line-height: 1;
+    top: -7px;
+    left: 4px;
+    width: 13px;
+    height: 13px;
   }
 
   /* Glassy panel for cards and screens (PRD §9.1). */

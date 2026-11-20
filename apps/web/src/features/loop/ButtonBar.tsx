@@ -3,6 +3,7 @@ import type { MouseEvent, ReactNode, Ref } from 'react';
 import {
   BulbIcon,
   CheckIcon,
+  LockIcon,
   ChevronBackIcon,
   ChevronIcon,
   CrossIcon,
@@ -59,9 +60,9 @@ export function LoopButton({
       <span className="lbtn__icon">{icon}</span>
       <span className={hideLabel ? 'sr-only' : 'lbtn__label'}>{label}</span>
       {locked && (
-        // A small lock inside the corner: visible on phones too, where the pills hide their icons.
-        <span className="lbtn__lock" aria-hidden="true">
-          🔒
+        // A yellow lock on the top-left edge: visible on phones too, where the pills hide icons.
+        <span className="lock-badge lbtn__lock" aria-hidden="true">
+          <LockIcon />
         </span>
       )}
       {/* A space, so the visible text reads "I know it Don't show again", not "itDon't" (axe). */}

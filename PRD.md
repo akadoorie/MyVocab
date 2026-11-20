@@ -184,7 +184,7 @@ private content repository. It never appears in the public code repo or any publ
   fade in and "stick" drops in, bounces off twice and sticks on the third try with a soft squash and a faint shine, about
   3s; not when coming back to Home inside the app; a short fade with reduced motion, D-034, D-037), the app version (a small yellow "v1.N" next to the name, D-032), a short hero, a 3-step "How it works" section with a **"Buttons"** guide
   (a small copy of each answer button, in its colour, and what it does; for guests the green one is dark, with a
-  small lock, and its line ends "(Sign-in to enable)", D-030, D-042), and the **Start card**.
+  small yellow lock, and its line ends "(Sign-in to enable)", D-030, D-042), and the **Start card**.
   Desktop: hero and start card side by side. Mobile: stacked, with the **Start** button right under the hero text
   (and the guest sign-in note), above the start card's fields, so it can be pressed without scrolling (D-021).
 - **FR-L2** Start card fields and **defaults** (the defaults come from admin settings, §7.7):
@@ -292,7 +292,7 @@ private content repository. It never appears in the public code repo or any publ
   **"Show again in future"**; red **"I don't know"** with **"Show again soon"**. Guests see all three, with the same
   labels and captions (D-042): nothing is ever stored for them (FR-L55), so the amber one does for them exactly what
   it says and is their "I know it", while the green **"Don't show again"** is shown **locked**: a darker green, a
-  small lock inside its top-right corner, disabled, titled "Sign-in to enable"; its K shortcut does nothing.
+  yellow padlock on its top-left edge, disabled, titled "Sign-in to enable"; its K shortcut does nothing.
 - **FR-L28 Don't know** (available on either side while Deciding): adds the card to the next cycle. If the card is
   showing its front, it **flips automatically** to the back (answer + hints + synonyms). The phase becomes
   **Revealed**: the three answer pills stay in place but disable, **Next** enables and receives focus, and Flip
@@ -809,8 +809,8 @@ and a colored glow around. The loop uses two shapes:
 - **Pills** (the three answers, FR-L27a, D-030): icon (✓ / ✕) + label inside ("I know it", "I know it", "I don't
   know"). On phones the three pills share the row and carry the label only. Each has a small italic muted caption
   under it ("Don't show again", "Show again in future", "Show again soon"), which may wrap onto two lines on a
-  phone. For guests the green pill is locked: a darker green (dimmed, not grey), disabled, with a small lock inside
-  its top-right corner, shown on phones too where the pills hide their icons (D-042).
+  phone. For guests the green pill is locked: a darker green (dimmed, not grey), disabled, with a small yellow padlock
+  (no background) on its top-left edge, shown on phones too where the pills hide their icons (D-042).
 - **Round buttons** (Stop, Hints, Next; Flip on the card): an icon in a circle (56px mobile, 64px desktop) with an
   italic muted caption underneath ("Stop", "Hints", "Next").
 Disabled buttons lose glow and ledge and look muted. Base mechanics:

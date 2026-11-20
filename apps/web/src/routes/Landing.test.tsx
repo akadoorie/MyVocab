@@ -74,7 +74,8 @@ describe('Landing: the Buttons guide under How it works (D-030)', () => {
       'I know it: Done for this session; it shows up again in future sessions.',
     );
     expect(section).not.toHaveTextContent('sign-in to use');
-    expect(section.querySelector('.mini-btn--know.is-locked .mini-btn__lock')).not.toBeNull();
+    expect(section.querySelector('.mini-btn--know.is-locked')).not.toBeNull();
+    expect(section.querySelectorAll('.mini-btn__lock')).toHaveLength(1);
     expect(section.querySelector('.mini-btn--again.is-locked')).toBeNull();
   });
 });

@@ -1,4 +1,4 @@
-import { CheckIcon, CrossIcon } from '../components/Icons';
+import { CheckIcon, CrossIcon, LockIcon } from '../components/Icons';
 import { strings } from '../strings';
 
 /**
@@ -38,13 +38,17 @@ export function ButtonGuide({ isGuest, headingId }: { isGuest: boolean; headingI
       <ul className="space-y-3">
         {rows.map((row) => (
           <li key={row.kind} className="flex items-start gap-3">
-            <span
-              aria-hidden="true"
-              className={`mini-btn mini-btn--${row.kind} shrink-0 ${row.locked ? 'is-locked' : ''}`}
-            >
-              {row.icon}
-              {row.label}
-              {row.locked && <span className="mini-btn__lock">🔒</span>}
+            {/* The lock sits beside the darkened button, not in it, so it stays bright. */}
+            <span aria-hidden="true" className="relative inline-flex shrink-0">
+              <span className={`mini-btn mini-btn--${row.kind} ${row.locked ? 'is-locked' : ''}`}>
+                {row.icon}
+                {row.label}
+              </span>
+              {row.locked && (
+                <span className="lock-badge mini-btn__lock">
+                  <LockIcon />
+                </span>
+              )}
             </span>
             <span className={`text-sm ${row.locked ? 'text-muted' : ''}`}>
               {/* The button's name for screen readers, since the icon is decorative. */}
