@@ -71,7 +71,7 @@ export class LoopService {
 
     let size: number;
     if (requester.kind === 'guest') {
-      if (!settings['guests.enabled']) throw new UnauthorizedError('Sign in to start a session');
+      if (!settings['guests.enabled']) throw new UnauthorizedError('Sign-in to start a session');
       // Bot check first: an unverified request must not write anything (PRD §11.2 rule 5).
       if (!(await this.deps.botCheck.verify(input.turnstileToken, requester.ip))) {
         throw new BotCheckFailedError();
@@ -81,7 +81,7 @@ export class LoopService {
         settings['guests.loopsPerHour'],
       );
       if (!decision.allowed) {
-        throw new RateLimitedError('Too many sessions for now. Sign in or try again later.');
+        throw new RateLimitedError('Too many sessions for now. Sign-in or try again later.');
       }
       size = settings['guests.loopSize']; // guests can't choose (FR-L6)
     } else {

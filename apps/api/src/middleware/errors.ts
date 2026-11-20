@@ -21,7 +21,7 @@ export class ValidationError extends AppError {
   }
 }
 export class UnauthorizedError extends AppError {
-  constructor(message = 'Sign in required') {
+  constructor(message = 'Sign-in required') {
     super('UNAUTHORIZED', 401, message);
   }
 }

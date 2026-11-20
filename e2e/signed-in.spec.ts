@@ -44,7 +44,7 @@ test('Know → My known words (ask again is not kept) → hidden only in that di
 
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Account menu' })).toBeVisible();
-  await expect(page.getByText('Sign in with Google to remember')).toHaveCount(0);
+  await expect(page.getByText('Sign-in with Google to remember')).toHaveCount(0);
 
   // Signed-in learners choose the amount: 20 (more than the synthetic set has).
   const startCard = page.getByRole('region', { name: 'Configure your session' });

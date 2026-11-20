@@ -182,7 +182,7 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L1** The landing page (`/`) shows the slogan (when the page loads or is refreshed on Home, its letters fall
   in like snow and settle in about 1.6s; not when coming back to Home inside the app; a short fade with reduced motion, D-034), the app version (a small yellow "v1.N" next to the name, D-032), a short hero, a 3-step "How it works" section with a **"Buttons"** guide
   (a small copy of each answer button, in its colour, and what it does; for guests the orange one is greyed out
-  and marked "sign in to use", D-030), and the **Start card**.
+  and marked "sign-in to use"; the green one adds "(Sign-in and it won't show again.)", D-030), and the **Start card**.
   Desktop: hero and start card side by side. Mobile: stacked, with the **Start** button right under the hero text
   (and the guest sign-in note), above the start card's fields, so it can be pressed without scrolling (D-021).
 - **FR-L2** Start card fields and **defaults** (the defaults come from admin settings, §7.7):
@@ -209,7 +209,7 @@ private content repository. It never appears in the public code repo or any publ
   **explanation** instead of a translation. While the two languages are the same, a short muted note under the
   fields says "Same language: the back shows an explanation".
 - **FR-L6 Guest amount**: guests see the Amount field fixed at **5** with a lock icon. It cannot be changed. A
-  **temporary toast** says: **"Please register in order to choose a larger amount of cards."**, with a **"Sign in with
+  **temporary toast** says: **"Please register in order to choose a larger amount of cards."**, with a **"Sign-in with
   Google"** button, and auto-dismisses after ~5 s. It appears:
   - once automatically, the first time a guest sees the start card in a browser session, and
   - every time the guest taps/clicks the locked Amount field.
@@ -219,12 +219,12 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L8** If fewer cards are available than the amount, the loop starts with all available cards and shows a notice
   ("Only 7 new cards in Home, starting with 7"). If 0 are available: an empty state ("You know every card in this
   selection 🎉") with links to change the selection or open "My known words".
-- **FR-L9** Guests see a subtle banner: "Sign in with Google to remember the words you know and choose bigger sessions."
-  "Sign in with Google" is a link that starts sign-in. A soft violet light runs round the banner's frame three times
+- **FR-L9** Guests see a subtle banner: "Sign-in with Google to remember the words you know and choose bigger sessions."
+  "Sign-in with Google" is a link that starts sign-in. A soft violet light runs round the banner's frame three times
   (about 7s a lap), then the frame keeps a steady faint glow; with reduced motion, only the glow (D-033).
 - **FR-L10** Guests pass an **invisible Cloudflare Turnstile** check when they press Start (§14.3). In the rare case
   Turnstile shows an interactive challenge, it appears inline in the start card.
-- **FR-L11** When `guests.enabled` = false, guests see "Sign in to start" instead of the Start button.
+- **FR-L11** When `guests.enabled` = false, guests see "Sign-in to start" instead of the Start button.
 - **FR-L12** When `maintenance.enabled` = true, every page shows `maintenance.message`, and starting loops is disabled
   for non-admins.
 
@@ -283,7 +283,7 @@ private content repository. It never appears in the public code repo or any publ
   **Labels (D-030):** green **"I know it"** with the caption **"Don't show again"**; amber **"I know it"** with
   **"Show again in future"**; red **"I don't know"** with **"Show again soon"**. Guests see all three: the green
   caption reads **"Done for this session"** (their Knows are never stored, FR-L55), and the amber one is shown
-  **greyed out and disabled** ("Sign in to use this"; its A shortcut does nothing).
+  **greyed out and disabled** ("Sign-in to use this"; its A shortcut does nothing).
 - **FR-L28 Don't know** (available on either side while Deciding): adds the card to the next cycle. If the card is
   showing its front, it **flips automatically** to the back (answer + hints + synonyms). The phase becomes
   **Revealed**: the three answer pills stay in place but disable, **Next** enables and receives focus, and Flip
@@ -326,7 +326,7 @@ private content repository. It never appears in the public code repo or any publ
   amount), without the start card (D-029): the button reads "Starting…" (guests: the security check) meanwhile, and a
   problem (no new cards left, the daily limit, a failed check) is shown under the buttons, where Home stays available.
   It waits while the start settings load, and if they can't load it falls back to the start card, pre-filled.
-  **Home** goes to the start card with the defaults. Guests also see "Sign in to remember these words".
+  **Home** goes to the start card with the defaults. Guests also see "Sign-in to remember these words".
 - **FR-L32a Celebration** (owner request, 2026-11-19): when the summary appears, a burst of **confetti** in the app's
   colours shoots up from the bottom corners and flutters down for about 3 seconds (a canvas drawn by the app, no
   library; none with "reduce motion"), and a short **applause** plays (`/sounds/applause.wav`, 2.3 s, mono, about

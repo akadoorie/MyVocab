@@ -10,7 +10,7 @@ export const strings = {
   nav: {
     version: 'Version',
     home: 'Home',
-    signIn: 'Sign in with Google',
+    signIn: 'Sign-in with Google',
     signOut: 'Sign out',
     accountMenu: 'Account menu',
     knownWords: 'My known words',
@@ -31,15 +31,15 @@ export const strings = {
       'Repeat until nothing is left',
     ],
     /** The guest banner: the first words start sign-in (D-033). */
-    guestBannerLink: 'Sign in with Google',
+    guestBannerLink: 'Sign-in with Google',
     guestBannerRest: ' to remember the words you know and choose bigger sessions.',
     /** The answer buttons, explained under "How it works" (D-030). */
     buttonsTitle: 'Buttons',
     buttonGuide: {
       know: 'Don’t show it again. You can bring it back from My known words.',
-      knowGuest: 'Done for this session.',
+      knowGuest: 'Done for this session. (Sign-in and it won’t show again.)',
       again: 'Done for this session; it shows up again in future sessions.',
-      againGuest: 'Done for this session; it shows up again in future sessions (sign in to use).',
+      againGuest: 'Done for this session; it shows up again in future sessions (sign-in to use).',
       dontKnow: 'It comes back later in this session, until you know it.',
     },
   },
@@ -60,7 +60,7 @@ export const strings = {
     checking: 'Checking…',
     guestAmountLocked: 'Guests always get 5 cards',
     guestAmountToast: 'Please register in order to choose a larger amount of cards.',
-    signInToStart: 'Sign in to start',
+    signInToStart: 'Sign-in to start',
     emptyTitle: 'You know every card in this selection 🎉',
     emptyBody: 'Change the selection, or open My known words to bring some back.',
     emptyKnownLink: 'My known words',
@@ -73,15 +73,15 @@ export const strings = {
       remaining > 0
         ? `You’ve reached today’s card limit. You can still get ${remaining} ${remaining === 1 ? 'card' : 'cards'} today: choose a smaller amount.`
         : 'You’ve reached today’s card limit. Come back tomorrow!',
-    sessionExpired: 'Your session has ended. Please sign in again.',
+    sessionExpired: 'Your session has ended. Please sign-in again.',
   },
   auth: {
     signInFailed: 'Sign-in didn’t complete. Please try again.',
     signInRefused:
       'We couldn’t sign you in with this Google account. You can keep learning as a guest.',
     dismiss: 'Dismiss',
-    signInRequiredTitle: 'Sign in to continue',
-    signInRequiredBody: 'Sign in with Google to see the words you know and manage your account.',
+    signInRequiredTitle: 'Sign-in to continue',
+    signInRequiredBody: 'Sign-in with Google to see the words you know and manage your account.',
   },
   known: {
     title: 'My known words',
@@ -143,7 +143,7 @@ export const strings = {
     intro: 'MyVocab stores as little as it can. There are no ads and no tracking cookies.',
     storedTitle: 'What we store',
     stored: [
-      'Your Google account id, email address, name and profile picture link, when you sign in with Google.',
+      'Your Google account id, email address, name and profile picture link, when you sign-in with Google.',
       'The words you marked as known (item, the direction you were learning, the round and the date).',
       'A daily counter of the cards you were served, to keep the service fair for everyone.',
       'For guests: an hourly counter of sessions per network address. The address itself is never stored, only a one-way keyed hash of it.',
@@ -172,8 +172,8 @@ export const strings = {
     againName: 'I know it Show again in future',
     dontKnowName: 'I don’t know Show again soon',
     /** The orange button is shown to guests, but off. */
-    signInToUse: 'Sign in to use this',
-    againNameGuest: 'I know it Show again in future (sign in to use)',
+    signInToUse: 'Sign-in to use this',
+    againNameGuest: 'I know it Show again in future (sign-in to use)',
     hints: 'Hints',
     flip: 'Flip',
     flipTitle: 'Flip the card (F or Space)',
@@ -239,7 +239,7 @@ export const strings = {
     newLoop: 'New session',
     nothingLeft: 'No new cards left for these choices. Go Home to pick others.',
     home: 'Home',
-    guestNote: 'Sign in to remember these words',
+    guestNote: 'Sign-in to remember these words',
     soundOn: 'Sound on',
     soundOff: 'Sound off',
   },

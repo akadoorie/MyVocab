@@ -61,9 +61,9 @@ function setup(routes: Parameters<typeof mockFetch>[0], user?: Parameters<typeof
 afterEach(() => vi.restoreAllMocks());
 
 describe('KnownPage', () => {
-  it('asks guests to sign in', async () => {
+  it('asks guests to sign-in', async () => {
     setup({}, null);
-    expect(await screen.findByRole('heading', { name: 'Sign in to continue' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'Sign-in to continue' })).toBeVisible();
   });
 
   it('lists known items with direction, answer, categories and the cycle badge', async () => {

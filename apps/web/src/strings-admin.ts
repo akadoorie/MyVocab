@@ -250,7 +250,7 @@ export const adminStrings = {
     ban: 'Ban',
     unban: 'Unban',
     banTitle: (name: string) => `Ban ${name}?`,
-    banBody: 'They are signed out everywhere and can’t sign in until unbanned.',
+    banBody: 'They are signed out everywhere and can’t sign-in until unbanned.',
     banReason: 'Reason (optional)',
     updated: 'User updated',
     empty: 'No users found.',

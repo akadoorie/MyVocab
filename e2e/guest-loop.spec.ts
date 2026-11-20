@@ -79,7 +79,7 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
     else await button(page, 'I know it Done for this session').click();
   }
   await expect(page.getByRole('heading', { name: 'Session completed' })).toBeVisible();
-  await expect(page.getByText('Sign in to remember these words')).toBeVisible();
+  await expect(page.getByText('Sign-in to remember these words')).toBeVisible();
 
   // New session starts the next loop right away, with the same choices (FR-L32).
   await page.getByRole('button', { name: 'New session' }).click();

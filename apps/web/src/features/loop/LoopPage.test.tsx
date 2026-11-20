@@ -80,7 +80,7 @@ describe('LoopPage', () => {
     // The answers stay in place, disabled; Next is the way on.
     for (const name of [
       'I know it Done for this session',
-      'I know it Show again in future (sign in to use)',
+      'I know it Show again in future (sign-in to use)',
       'I don’t know Show again soon',
     ])
       expect(btn(name)).toBeDisabled();
@@ -155,10 +155,10 @@ describe('LoopPage', () => {
     setup();
     expect(btn('I know it Done for this session')).toBeEnabled();
     expect(screen.getByText('Done for this session')).toBeInTheDocument();
-    const again = btn('I know it Show again in future (sign in to use)');
+    const again = btn('I know it Show again in future (sign-in to use)');
     expect(again).toBeDisabled();
     expect(again).toHaveClass('lbtn--again', 'is-locked');
-    expect(again).toHaveAttribute('title', 'Sign in to use this');
+    expect(again).toHaveAttribute('title', 'Sign-in to use this');
     expect(screen.getByText('Show again in future')).toBeInTheDocument();
     expect(screen.getByText('Show again soon')).toBeInTheDocument();
     fireEvent.keyDown(window, { key: 'a' });

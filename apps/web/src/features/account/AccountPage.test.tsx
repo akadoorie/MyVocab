@@ -70,7 +70,7 @@ describe('AccountPage', () => {
     expect(JSON.parse(String(del.mock.calls[0]![0]!.body))).toEqual({ confirm: 'DELETE' });
     expect(await screen.findByText('Your account was deleted.')).toBeVisible();
     // The header's button; the guest register notice may add a second one, depending on timing.
-    expect(screen.getAllByRole('button', { name: 'Sign in with Google' })[0]).toBeVisible();
+    expect(screen.getAllByRole('button', { name: 'Sign-in with Google' })[0]).toBeVisible();
   });
 
   it('shows why the last admin cannot delete their account', async () => {
@@ -93,7 +93,7 @@ describe('header (FR-L70)', () => {
   it('shows the account menu with its links and closes it with Escape', async () => {
     setup({}, '/');
     const button = await screen.findByRole('button', { name: 'Account menu' });
-    expect(screen.queryByRole('button', { name: 'Sign in with Google' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Sign-in with Google' })).toBeNull();
     fireEvent.click(button);
     expect(button).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getAllByRole('link', { name: 'My known words' }).length).toBeGreaterThan(0);
@@ -109,6 +109,6 @@ describe('header (FR-L70)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
     await waitFor(() => expect(signOut).toHaveBeenCalled());
     await waitFor(() => expect(router.state.location.pathname).toBe('/'));
-    expect(await screen.findByRole('button', { name: 'Sign in with Google' })).toBeVisible();
+    expect(await screen.findByRole('button', { name: 'Sign-in with Google' })).toBeVisible();
   });
 });

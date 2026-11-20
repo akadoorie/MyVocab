@@ -67,8 +67,10 @@ describe('Landing: the Buttons guide under How it works (D-030)', () => {
     mockFetch({}, null);
     renderRoutes(routes, ['/']);
     const section = await guide();
-    expect(section).toHaveTextContent('I know it: Done for this session.');
-    expect(section).toHaveTextContent('(sign in to use)');
+    expect(section).toHaveTextContent(
+      'I know it: Done for this session. (Sign-in and it won’t show again.)',
+    );
+    expect(section).toHaveTextContent('(sign-in to use)');
     expect(section.querySelector('.mini-btn--again.is-locked')).not.toBeNull();
   });
 });
@@ -77,11 +79,11 @@ describe('Landing: guest sign-in banner (FR-L9, D-033)', () => {
   it('shows guests the glowing banner whose first words start sign-in', async () => {
     mockFetch({}, null);
     renderRoutes(routes, ['/']);
-    const link = await screen.findByRole('button', { name: 'Sign in with Google' });
+    const link = await screen.findByRole('button', { name: 'Sign-in with Google' });
     const banner = link.closest('p');
     expect(banner).toHaveClass('sign-in-glow');
     expect(banner).toHaveTextContent(
-      'Sign in with Google to remember the words you know and choose bigger sessions.',
+      'Sign-in with Google to remember the words you know and choose bigger sessions.',
     );
   });
 });

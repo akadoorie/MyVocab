@@ -539,3 +539,13 @@ Format: date · context · decision · consequences.
 - **Reduced motion:** a 0.6s fade, no movement. Screen readers hear the slogan once as text.
 - **How:** each letter carries its own slice of the slogan-wide gradient, so the end state
   matches the plain heading, which then replaces the letters. CSS only, no library.
+
+## D-035 · 2026-11-20 · "Sign-in" with a dash, and a sign-in note on the green guide line
+
+- **Guide:** for guests, the green "I know it" line in the home page "Buttons" guide reads "Done
+  for this session. (Sign-in and it won't show again.)", in the same quiet style as the orange
+  "(sign-in to use)". Plain text; the banner above already starts sign-in. The button caption in
+  the session stays "Done for this session".
+- **Spelling:** every learner-facing text writes "Sign-in" / "sign-in" with a dash (the header
+  button "Sign-in with Google", the banner, notices, toasts and API messages shown to learners).
+  Earlier entries quote the texts as they were then.
