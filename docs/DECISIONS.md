@@ -518,3 +518,12 @@ Format: date · context · decision · consequences.
   shows whether a new version is live. Screen readers hear "Version 1.N".
 - **Number:** "1." plus the git commit count, set at build time (vite.config.ts); it rises
   with every deploy and needs no manual bump. Deploy checks out the full history for it.
+
+## D-033 · 2026-11-20 · A gentle light round the guest sign-in banner
+
+- **What:** a thin, soft violet light runs round the banner's frame three times (about 7s a
+  lap), then fades, and the frame keeps a steady faint glow. A light that never stops gets tuned
+  out and distracts from the settings beside it.
+- **Link:** "Sign in with Google" in the banner starts sign-in, as the header button does.
+- **How:** a rotating conic gradient masked to the border (CSS `@property`), no library.
+  Reduced motion: no light, the glow only.

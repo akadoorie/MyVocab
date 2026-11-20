@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router';
 import { StartCard } from '../features/setup/StartCard';
 import { api } from '../lib/api';
-import { useSession } from '../lib/session';
+import { startGoogleSignIn, useSession } from '../lib/session';
 import { strings } from '../strings';
 import { ButtonGuide } from './ButtonGuide';
 
@@ -66,7 +66,17 @@ export function Landing() {
         </h1>
         <p className="text-lg text-muted">{strings.landing.heroBody}</p>
         {session.isGuest && !session.loading && (
-          <p className="glass px-4 py-3 text-sm text-muted">{strings.landing.guestBanner}</p>
+          // A light runs round the frame two or three times, then the frame keeps a soft glow (D-033).
+          <p className="glass sign-in-glow px-4 py-3 text-sm text-muted">
+            <button
+              type="button"
+              onClick={startGoogleSignIn}
+              className="font-semibold text-accent underline underline-offset-2 hover:text-text"
+            >
+              {strings.landing.guestBannerLink}
+            </button>
+            {strings.landing.guestBannerRest}
+          </p>
         )}
         <section aria-labelledby="how-title" className="hidden md:block">
           <h2 id="how-title" className="mb-3 text-lg font-semibold">

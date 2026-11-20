@@ -41,6 +41,13 @@ body {
 }
 
 /* Component classes live in the components layer so Tailwind utilities (hidden, md:…) win. */
+/* The angle of the light running round the guest sign-in banner (D-033). */
+@property --glow-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
 @layer components {
   /* Glossy pressable-ledge 3D buttons (PRD §9.2, D-017). */
   .btn3d {
@@ -474,6 +481,71 @@ body {
     border: 1px solid rgba(139, 108, 255, 0.28);
     border-radius: var(--radius-card);
     box-shadow: var(--card-shadow);
+  }
+
+  /* The guest sign-in banner (D-033): a soft light runs round the frame three times (7s a lap),
+     then fades, and the frame keeps a steady faint glow. Reduced motion: the glow only. */
+  .sign-in-glow {
+    position: relative;
+    animation: sign-in-steady 1.2s ease 20.4s both;
+  }
+  .sign-in-glow::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    padding: 1.5px;
+    border-radius: inherit;
+    background: conic-gradient(
+      from var(--glow-angle),
+      transparent 0deg 250deg,
+      var(--accent) 330deg,
+      transparent 360deg
+    );
+    /* Only the 1.5px ring between the padding box and the content box shows. */
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    filter: drop-shadow(0 0 4px var(--accent-glow));
+    pointer-events: none;
+    animation:
+      sign-in-lap 7s linear 3,
+      sign-in-fade 1.2s ease 20.4s forwards;
+  }
+  @keyframes sign-in-lap {
+    to {
+      --glow-angle: 360deg;
+    }
+  }
+  @keyframes sign-in-fade {
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes sign-in-steady {
+    from {
+      border-color: rgba(139, 108, 255, 0.28);
+      box-shadow: var(--card-shadow);
+    }
+    to {
+      border-color: rgba(155, 130, 255, 0.55);
+      box-shadow:
+        var(--card-shadow),
+        0 0 16px rgba(124, 92, 255, 0.28);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sign-in-glow {
+      animation-delay: 0s;
+      animation-duration: 0s;
+    }
+    .sign-in-glow::before {
+      display: none;
+    }
   }
 
   /* A small uppercase pill (the card's direction chip). */

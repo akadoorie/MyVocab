@@ -218,7 +218,9 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L8** If fewer cards are available than the amount, the loop starts with all available cards and shows a notice
   ("Only 7 new cards in Home, starting with 7"). If 0 are available: an empty state ("You know every card in this
   selection 🎉") with links to change the selection or open "My known words".
-- **FR-L9** Guests see a subtle banner: "Sign in with Google to remember the words you know and choose bigger loops."
+- **FR-L9** Guests see a subtle banner: "Sign in with Google to remember the words you know and choose bigger sessions."
+  "Sign in with Google" is a link that starts sign-in. A soft violet light runs round the banner's frame three times
+  (about 7s a lap), then the frame keeps a steady faint glow; with reduced motion, only the glow (D-033).
 - **FR-L10** Guests pass an **invisible Cloudflare Turnstile** check when they press Start (§14.3). In the rare case
   Turnstile shows an interactive challenge, it appears inline in the start card.
 - **FR-L11** When `guests.enabled` = false, guests see "Sign in to start" instead of the Start button.

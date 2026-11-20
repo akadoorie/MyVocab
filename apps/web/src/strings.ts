@@ -30,7 +30,9 @@ export const strings = {
       'Use Hints or Flip, then mark what you know',
       'Repeat until nothing is left',
     ],
-    guestBanner: 'Sign in with Google to remember the words you know and choose bigger sessions.',
+    /** The guest banner: the first words start sign-in (D-033). */
+    guestBannerLink: 'Sign in with Google',
+    guestBannerRest: ' to remember the words you know and choose bigger sessions.',
     /** The answer buttons, explained under "How it works" (D-030). */
     buttonsTitle: 'Buttons',
     buttonGuide: {
