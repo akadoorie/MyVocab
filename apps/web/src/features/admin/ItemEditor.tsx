@@ -498,7 +498,7 @@ function Editor({
         </div>
       </div>
 
-      <Preview itemId={item.itemId} version={item.version} />
+      <Preview item={item} languages={languages} />
 
       <div className="border-t border-border pt-6">
         <Button3D variant="dontknow" onClick={() => setConfirmDelete(true)}>
@@ -532,22 +532,109 @@ function Editor({
   );
 }
 
-/** "Preview as learner": the real flip card for every playable direction (FR-A11). */
-function Preview({ itemId, version }: { itemId: number; version: number }) {
+/** Above this many answer languages, the picker is a dropdown instead of buttons. */
+const PICKER_BUTTONS_MAX = 6;
+
+/**
+ * "Preview as learner" (FR-A11): one card at a time, from the same builder as a session. A picker
+ * chooses the answer language: the other languages first (translation cards), then the item's own
+ * language (explanation card). Each choice is marked ready or not, and one that isn't ready says
+ * what to add. It opens on the first ready translation language (Hebrew item → English, English
+ * item → Hebrew).
+ */
+function Preview({ item, languages }: { item: AdminItem; languages: AdminLanguage[] }) {
   const preview = useQuery({
-    queryKey: ['admin', 'preview', itemId, version],
-    queryFn: () => adminApi.preview(itemId),
+    queryKey: ['admin', 'preview', item.itemId, item.version],
+    queryFn: () => adminApi.preview(item.itemId),
   });
+  const pickerId = useId();
+  const active = languages.filter((l) => l.isActive);
+  const own = active.find((l) => l.code === item.lang);
+  const options = [...active.filter((l) => l.code !== item.lang), ...(own ? [own] : [])];
+  const ready = (code: string) => item.playableTargets.includes(code);
+  const fallback = options.find((l) => l.code !== item.lang && ready(l.code)) ?? options[0];
+  const [chosen, setChosen] = useState<string | null>(null);
+  const target = options.find((l) => l.code === chosen) ?? fallback;
+  if (!target) return null;
+
+  const sourceName = own?.name ?? item.lang;
+  const isExplanation = target.code === item.lang;
+  const card = preview.data?.find((c) => c.direction.target === target.code);
+  const mark = (code: string) => (ready(code) ? '✓' : '✗');
+  const status = (code: string) => (ready(code) ? s.editor.previewReady : s.editor.previewNotReady);
+
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="text-lg font-semibold">{s.editor.preview}</h2>
-      {preview.data?.length === 0 && <p className="text-sm text-muted">{s.editor.previewNone}</p>}
-      {/* One card under the other, each the size of the card in a real session. */}
-      <div className="flex flex-col gap-10">
-        {preview.data?.map((card) => (
-          <PreviewCard key={`${card.direction.source}-${card.direction.target}`} card={card} />
-        ))}
+    <section aria-label={s.editor.preview} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-lg font-semibold">{s.editor.preview}</h2>
+        <p className="text-sm text-muted">{s.editor.previewIntro}</p>
       </div>
+
+      {options.length > PICKER_BUTTONS_MAX ? (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor={pickerId} className="text-sm text-muted">
+            {s.editor.previewAnswerIn}
+          </label>
+          <select
+            id={pickerId}
+            value={target.code}
+            onChange={(e) => setChosen(e.target.value)}
+            className={inputClass}
+          >
+            {options.map((l) => (
+              <option key={l.code} value={l.code}>
+                {`${l.name} ${mark(l.code)}`}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : (
+        <div role="group" aria-label={s.editor.previewAnswerIn} className="flex flex-col gap-2">
+          <p aria-hidden="true" className="text-sm text-muted">
+            {s.editor.previewAnswerIn}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {options.map((l) => {
+              const on = l.code === target.code;
+              return (
+                <button
+                  key={l.code}
+                  type="button"
+                  aria-pressed={on}
+                  aria-label={`${l.name}, ${status(l.code)}`}
+                  onClick={() => setChosen(l.code)}
+                  className={`min-h-10 rounded-full border px-3 text-sm ${on ? 'border-accent bg-accent-strong text-[var(--on-color)]' : 'border-border text-muted hover:text-text'}`}
+                >
+                  {l.name}{' '}
+                  <span
+                    aria-hidden="true"
+                    className={on ? '' : ready(l.code) ? 'text-know' : 'text-dontknow'}
+                  >
+                    {mark(l.code)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-1">
+        <h3 className="font-semibold">
+          {sourceName} → {target.name} ·{' '}
+          {isExplanation ? s.editor.previewExplanation : s.editor.previewTranslation}
+        </h3>
+        <p className="text-sm text-muted">
+          {ready(target.code)
+            ? isExplanation
+              ? s.editor.previewBackExplanation(target.name)
+              : s.editor.previewBackTranslation(target.name)
+            : isExplanation
+              ? s.editor.previewMissingExplanation
+              : s.editor.previewMissingMeaning(target.name)}
+        </p>
+      </div>
+      {ready(target.code) && card && <PreviewCard key={target.code} card={card} />}
     </section>
   );
 }

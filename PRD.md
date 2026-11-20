@@ -432,10 +432,14 @@ so learners never download it. All admin pages work on mobile (tables collapse i
   - **Explanation**: an inline list editor, one entry per meaning, in the item's language.
   - **Synonyms**: an inline list editor.
   - **Hints**: an inline list editor.
-  - **Preview as learner**: renders the **flip card** exactly as the loop would (Hints and Flip working), for every
-    direction: each other active language (translation) and the same language (explanation). It uses the server's card
-    builder (§12.4), so it always matches what learners see. The cards are stacked one under the other, each with the
-    session's Hints toggle. On desktop each card is drawn at the session card's exact size for the window and scaled
+  - **Preview as learner**: renders the **flip card** exactly as the loop would (Hints and Flip working), one
+    direction at a time. A **"Show the answer in"** picker lists each other active language (translation card) and
+    then the item's own language (explanation card), each marked ✓ (learners see it) or ✗ (not yet); past six
+    languages it is a dropdown. It opens on the first ready translation language (a Hebrew item on English, an
+    English item on Hebrew). Above the card, a heading names the direction and the kind ("English → Hebrew ·
+    Translation") with one line on what the back shows; a direction that isn't ready shows what to add instead of a
+    card ("add a Hebrew meaning", "add an explanation"). It uses the server's card builder (§12.4), so it always
+    matches what learners see, with the session's Hints toggle. On desktop each card is drawn at the session card's exact size for the window and scaled
     down to fit the admin column (a true miniature: same text size, wrapping and spacing in proportion).
   - **Warnings** (badges; they never block saving):
     - not playable for a direction (no translation into X, or no explanation);

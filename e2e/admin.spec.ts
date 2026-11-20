@@ -53,14 +53,21 @@ test('admin creates an item, previews both directions, moves it to Trash and res
   await expect(page.getByText('Version 7')).toBeVisible();
   await expect(page.getByText('No warnings')).toBeVisible();
 
-  // Preview as learner: EN → HE (translation) and EN → EN (explanation), Hints and Flip working.
-  const cards = page.getByTestId('flip-card');
-  await expect(cards).toHaveCount(2);
-  const first = cards.first();
-  await page.getByRole('button', { name: 'Hints', exact: true }).first().click();
-  await expect(page.getByTestId('front-hints').first()).toBeVisible();
-  await page.getByRole('button', { name: 'Flip', exact: true }).first().click();
-  await expect(first).toHaveAttribute('data-side', 'back');
+  // Preview as learner: one card at a time. It opens on EN → HE (translation); the picker
+  // switches to EN → EN (explanation). Hints and Flip work.
+  const card = page.getByTestId('flip-card');
+  await expect(card).toHaveCount(1);
+  await expect(page.getByRole('heading', { name: 'English → Hebrew · Translation' })).toBeVisible();
+  await page.getByRole('button', { name: 'Hints', exact: true }).click();
+  await expect(page.getByTestId('front-hints')).toBeVisible();
+  await page.getByRole('button', { name: 'Flip', exact: true }).click();
+  await expect(card).toHaveAttribute('data-side', 'back');
+  await page.getByRole('button', { name: 'English, ready' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'English → English · Explanation' }),
+  ).toBeVisible();
+  await expect(card).toHaveCount(1);
+  await expect(card).toHaveAttribute('data-side', 'front');
 
   // Move to Trash (confirm dialog names the item).
   await page.getByRole('button', { name: 'Move to Trash' }).click();

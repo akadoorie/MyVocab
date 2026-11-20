@@ -130,7 +130,17 @@ export const adminStrings = {
     warnings: 'Warnings',
     noWarnings: 'No warnings',
     preview: 'Preview as learner',
-    previewNone: 'Not playable in any direction yet.',
+    previewIntro: 'A learner can see this item with the answer in each language below.',
+    previewAnswerIn: 'Show the answer in',
+    previewReady: 'ready',
+    previewNotReady: 'not shown yet',
+    previewTranslation: 'Translation',
+    previewExplanation: 'Explanation',
+    previewBackTranslation: (name: string) =>
+      `The back shows the ${name} parallel (if any), meaning and literal translation.`,
+    previewBackExplanation: (name: string) => `The back shows the ${name} explanation.`,
+    previewMissingMeaning: (name: string) => `Not shown to learners yet: add a ${name} meaning.`,
+    previewMissingExplanation: 'Not shown to learners yet: add an explanation.',
     deleteItem: 'Move to Trash',
     deleteTitle: (text: string) => `Move “${text}” to Trash?`,
     deleteBody:

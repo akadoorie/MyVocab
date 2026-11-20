@@ -153,6 +153,41 @@ describe('AdminApp', () => {
     expect(within(literal).getByRole('checkbox', { name: 'Same as the parallel' })).toBeChecked();
   });
 
+  it('preview: opens on the other language and says what a direction that is not ready needs', async () => {
+    render('/admin/items/7', { 'GET /api/admin/items/7': () => Response.json(ITEM) });
+    const picker = await screen.findByRole('group', { name: 'Show the answer in' });
+    const hebrew = within(picker).getByRole('button', { name: 'Hebrew, ready' });
+    const english = within(picker).getByRole('button', { name: 'English, not shown yet' });
+    // The translation language comes first and is chosen; the item's own language is last.
+    expect(within(picker).getAllByRole('button')).toEqual([hebrew, english]);
+    expect(hebrew).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('heading', { name: 'English → Hebrew · Translation' })).toBeVisible();
+
+    fireEvent.click(english);
+    expect(english).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('heading', { name: 'English → English · Explanation' })).toBeVisible();
+    expect(screen.getByText('Not shown to learners yet: add an explanation.')).toBeVisible();
+  });
+
+  it('preview: a Hebrew item opens on English', async () => {
+    const hebrewItem: AdminItem = {
+      ...ITEM,
+      lang: 'he',
+      text: 'פריט-לדוגמה',
+      meaning: { en: ['sample'] },
+      explanation: ['הסבר'],
+      warnings: [],
+      playableTargets: ['en', 'he'],
+    };
+    render('/admin/items/7', { 'GET /api/admin/items/7': () => Response.json(hebrewItem) });
+    const picker = await screen.findByRole('group', { name: 'Show the answer in' });
+    expect(within(picker).getByRole('button', { name: 'English, ready' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByRole('heading', { name: 'Hebrew → English · Translation' })).toBeVisible();
+  });
+
   it('settings: "Maximum amount" explains itself under the field', async () => {
     render('/admin/settings', { 'GET /api/admin/settings': () => Response.json({}) });
     const field = await screen.findByLabelText('Maximum amount');
