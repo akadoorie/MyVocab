@@ -183,8 +183,8 @@ private content repository. It never appears in the public code repo or any publ
   everyone (fetched once when the page opens; hidden if it fails to load, D-036) (when the page loads or is refreshed on Home, the first words
   fade in and "stick" drops in, bounces off twice and sticks on the third try with a soft squash and a faint shine, about
   3s; not when coming back to Home inside the app; a short fade with reduced motion, D-034, D-037), the app version (a small yellow "v1.N" next to the name, D-032), a short hero, a 3-step "How it works" section with a **"Buttons"** guide
-  (a small copy of each answer button, in its colour, and what it does; for guests the orange one is greyed out
-  and marked "sign-in to use"; the green one adds "(Sign-in and it won't show again.)", D-030), and the **Start card**.
+  (a small copy of each answer button, in its colour, and what it does; for guests the green one is dark, with a
+  small lock, and its line ends "(Sign-in to enable)", D-030, D-042), and the **Start card**.
   Desktop: hero and start card side by side. Mobile: stacked, with the **Start** button right under the hero text
   (and the guest sign-in note), above the start card's fields, so it can be pressed without scrolling (D-021).
 - **FR-L2** Start card fields and **defaults** (the defaults come from admin settings, §7.7):
@@ -289,9 +289,10 @@ private content repository. It never appears in the public code repo or any publ
   recorded** in the learner's known items (FR-L50), so the word stays in the pool and may be drawn again in any later
   session, at random (no schedule or waiting time).
   **Labels (D-030):** green **"I know it"** with the caption **"Don't show again"**; amber **"I know it"** with
-  **"Show again in future"**; red **"I don't know"** with **"Show again soon"**. Guests see all three: the green
-  caption reads **"Done for this session"** (their Knows are never stored, FR-L55), and the amber one is shown
-  **greyed out and disabled** ("Sign-in to use this"; its A shortcut does nothing).
+  **"Show again in future"**; red **"I don't know"** with **"Show again soon"**. Guests see all three, with the same
+  labels and captions (D-042): nothing is ever stored for them (FR-L55), so the amber one does for them exactly what
+  it says and is their "I know it", while the green **"Don't show again"** is shown **locked**: a darker green, a
+  small lock inside its top-right corner, disabled, titled "Sign-in to enable"; its K shortcut does nothing.
 - **FR-L28 Don't know** (available on either side while Deciding): adds the card to the next cycle. If the card is
   showing its front, it **flips automatically** to the back (answer + hints + synonyms). The phase becomes
   **Revealed**: the three answer pills stay in place but disable, **Next** enables and receives focus, and Flip
@@ -807,8 +808,9 @@ Buttons keep the pressable ledge, now glossy: a top-to-bottom gradient, a thin l
 and a colored glow around. The loop uses two shapes:
 - **Pills** (the three answers, FR-L27a, D-030): icon (✓ / ✕) + label inside ("I know it", "I know it", "I don't
   know"). On phones the three pills share the row and carry the label only. Each has a small italic muted caption
-  under it ("Don't show again" / "Done for this session" for guests, "Show again in future", "Show again soon"),
-  which may wrap onto two lines on a phone. For guests the amber pill is greyed out (grayscale) and disabled.
+  under it ("Don't show again", "Show again in future", "Show again soon"), which may wrap onto two lines on a
+  phone. For guests the green pill is locked: a darker green (dimmed, not grey), disabled, with a small lock inside
+  its top-right corner, shown on phones too where the pills hide their icons (D-042).
 - **Round buttons** (Stop, Hints, Next; Flip on the card): an icon in a circle (56px mobile, 64px desktop) with an
   italic muted caption underneath ("Stop", "Hints", "Next").
 Disabled buttons lose glow and ledge and look muted. Base mechanics:
@@ -929,8 +931,8 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   left; on the right, on desktop a "⌨ Keyboard shortcuts" link that opens a small popover listing the shortcuts, and
   "← Home" (asks before stopping the loop, FR-L30a).
 - **Loop buttons**: on desktop, one row under the card, in this order: `Stop · Hints · Back · I know it (green) ·
-  I know it (amber) · I don't know · Next` (round, round, round, pill, pill, pill, round; the amber pill greyed out
-  for guests); after I don't know the row stays the same, the answers disabled and Next pumping (D-031). Flip is
+  I know it (amber) · I don't know · Next` (round, round, round, pill, pill, pill, round; the green pill locked for
+  guests); after I don't know the row stays the same, the answers disabled and Next pumping (D-031). Flip is
   on the card itself.
 - **Loop (mobile, 360–767px)**: the flip card fills the space above; the buttons form a **sticky bottom bar** in the
   thumb zone, in two rows: the three answer pills on top (**I know it · I know it · I don't know**, three equal pills

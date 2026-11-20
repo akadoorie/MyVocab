@@ -39,9 +39,10 @@ export const strings = {
     buttonsTitle: 'Buttons',
     buttonGuide: {
       know: 'Don’t show it again. You can bring it back from My known words.',
-      knowGuest: 'Done for this session. (Sign-in and it won’t show again.)',
+      /** For guests the green button is locked (D-042). */
+      knowGuest:
+        'Don’t show it again. You can bring it back from My known words. (Sign-in to enable)',
       again: 'Done for this session; it shows up again in future sessions.',
-      againGuest: 'Done for this session; it shows up again in future sessions (sign-in to use).',
       dontKnow: 'It comes back later in this session, until you know it.',
     },
   },
@@ -171,17 +172,15 @@ export const strings = {
     know: 'I know it',
     dontKnow: 'I don’t know',
     knowCaption: 'Don’t show again',
-    knowCaptionGuest: 'Done for this session',
     againCaption: 'Show again in future',
     dontKnowCaption: 'Show again soon',
     /** Their accessible names: exactly the visible label + caption (axe label-content-name-mismatch). */
     knowName: 'I know it Don’t show again',
-    knowNameGuest: 'I know it Done for this session',
     againName: 'I know it Show again in future',
     dontKnowName: 'I don’t know Show again soon',
-    /** The orange button is shown to guests, but off. */
-    signInToUse: 'Sign-in to use this',
-    againNameGuest: 'I know it Show again in future (sign-in to use)',
+    /** The green button is shown to guests, but locked: only a signed-in Know is kept (D-042). */
+    signInToEnable: 'Sign-in to enable',
+    knowNameGuest: 'I know it Don’t show again (sign-in to enable)',
     hints: 'Hints',
     flip: 'Flip',
     flipTitle: 'Flip the card (F or Space)',

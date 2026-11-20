@@ -68,8 +68,10 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   await card(page).click();
   await expect(card(page)).toHaveAttribute('data-side', 'back');
 
-  // Know from the back side → next card, front side up.
-  await button(page, 'I know it Done for this session').click();
+  // Know from the back side → next card, front side up. A guest's Know is the orange one; the
+  // green "Don't show again" is locked (D-042).
+  await expect(button(page, 'I know it Don’t show again (sign-in to enable)')).toBeDisabled();
+  await button(page, 'I know it Show again in future').click();
   await expect(progress(page)).toHaveText('Cycle 1 · Card 2/5 · 1 known');
   await expect(card(page)).toHaveAttribute('data-side', 'front');
   // Back shows that card again (front up, with its answer); Don't know changes the answer.
@@ -85,7 +87,7 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   // Don't know → auto-flip → the answers stay but turn off, and Next pumps.
   await button(page, 'I don’t know Show again soon').click();
   await expect(card(page)).toHaveAttribute('data-side', 'back');
-  await expect(button(page, 'I know it Done for this session')).toBeDisabled();
+  await expect(button(page, 'I know it Show again in future')).toBeDisabled();
   await expect(button(page, 'I don’t know Show again soon')).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Next', exact: true })).toHaveClass(/is-urgent/);
   await button(page, 'Next').click();
@@ -100,7 +102,7 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
     if (await page.getByRole('heading', { name: 'Session completed' }).isVisible()) break;
     const cont = page.getByRole('button', { name: 'Continue' });
     if (await cont.isVisible()) await cont.click();
-    else await button(page, 'I know it Done for this session').click();
+    else await button(page, 'I know it Show again in future').click();
   }
   await expect(page.getByRole('heading', { name: 'Session completed' })).toBeVisible();
   await expect(page.getByText('Sign-in to remember these words')).toBeVisible();

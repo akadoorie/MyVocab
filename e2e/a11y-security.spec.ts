@@ -95,7 +95,7 @@ test('the loop works with the keyboard only', async ({ page }) => {
   await expect(page.getByTestId('front-hints')).toBeVisible();
   await page.keyboard.press('f'); // Flip
   await expect(page.getByTestId('flip-card')).toHaveAttribute('data-side', 'back');
-  await page.keyboard.press('k'); // Know
+  await page.keyboard.press('a'); // Know (a guest's: the orange one, D-042)
   await expect(progress).toHaveText(/Card 2\/\d+ · 1 known/);
   await page.keyboard.press('d'); // Don't know → revealed, Next focused
   await expect(page.getByRole('button', { name: 'Next', exact: true }).last()).toBeFocused();

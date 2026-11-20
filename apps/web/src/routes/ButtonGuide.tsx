@@ -3,7 +3,7 @@ import { strings } from '../strings';
 
 /**
  * "Buttons" under "How it works" (D-030): a small copy of each answer button, in its colour, and
- * what it does. Guests see the orange one greyed out, as in a session.
+ * what it does. Guests see the green one locked, as in a session (D-042).
  */
 export function ButtonGuide({ isGuest, headingId }: { isGuest: boolean; headingId: string }) {
   const g = strings.landing.buttonGuide;
@@ -13,14 +13,14 @@ export function ButtonGuide({ isGuest, headingId }: { isGuest: boolean; headingI
       icon: <CheckIcon />,
       label: strings.loop.know,
       text: isGuest ? g.knowGuest : g.know,
-      locked: false,
+      locked: isGuest,
     },
     {
       kind: 'again',
       icon: <CheckIcon />,
       label: strings.loop.know,
-      text: isGuest ? g.againGuest : g.again,
-      locked: isGuest,
+      text: g.again,
+      locked: false,
     },
     {
       kind: 'dontknow',
@@ -44,6 +44,7 @@ export function ButtonGuide({ isGuest, headingId }: { isGuest: boolean; headingI
             >
               {row.icon}
               {row.label}
+              {row.locked && <span className="mini-btn__lock">🔒</span>}
             </span>
             <span className={`text-sm ${row.locked ? 'text-muted' : ''}`}>
               {/* The button's name for screen readers, since the icon is decorative. */}

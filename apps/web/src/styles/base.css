@@ -247,10 +247,25 @@ body {
     opacity: 0.6;
   }
   /* Shown but not available (the orange Know for guests, D-030): grey instead of its colour. */
+  /* Shown but locked (the green Know for guests, D-042): a darker shade of its own colour, not
+     grey, with a small lock inside its top-right corner. */
+  .lbtn.is-locked {
+    position: relative;
+  }
   .lbtn.is-locked .lbtn__shape,
   .lbtn.is-locked .lbtn__icon,
   .lbtn.is-locked .lbtn__label {
-    filter: grayscale(1);
+    filter: brightness(0.7) saturate(0.85);
+  }
+  /* Inside the pill: a disabled pill sits 6px lower (pressed down), and the inset clears its
+     rounded end. */
+  .lbtn__lock {
+    position: absolute;
+    top: calc(6px + 8px);
+    right: 20px;
+    font-size: 12px;
+    line-height: 1;
+    pointer-events: none;
   }
   .lbtn--know {
     --top: var(--know-top);
@@ -469,8 +484,15 @@ body {
     --c-ledge: var(--dontknow-ledge);
   }
   .mini-btn.is-locked {
-    filter: grayscale(1);
-    opacity: 0.6;
+    position: relative;
+    filter: brightness(0.6) saturate(0.85);
+  }
+  .mini-btn__lock {
+    position: absolute;
+    top: 3px;
+    right: 8px;
+    font-size: 9px;
+    line-height: 1;
   }
 
   /* Glassy panel for cards and screens (PRD §9.1). */

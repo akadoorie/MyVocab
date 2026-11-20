@@ -82,7 +82,7 @@ describe('Know marks of a signed-in learner', () => {
     setup(true);
     await screen.findByTestId('flip-card');
     await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
-    fireEvent.click(button('I know it Done for this session'));
+    fireEvent.click(button('I know it Show again in future'));
     expect(window.localStorage.length).toBe(0);
   });
 });

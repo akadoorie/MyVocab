@@ -63,15 +63,19 @@ describe('Landing: the Buttons guide under How it works (D-030)', () => {
     expect(section.querySelector('.is-locked')).toBeNull();
   });
 
-  it('shows guests the orange button greyed out, and "Done for this session" for green', async () => {
+  it('shows guests the green button locked, with "(Sign-in to enable)" (D-042)', async () => {
     mockFetch({}, null);
     renderRoutes(routes, ['/']);
     const section = await guide();
     expect(section).toHaveTextContent(
-      'I know it: Done for this session. (Sign-in and it won’t show again.)',
+      'I know it: Don’t show it again. You can bring it back from My known words. (Sign-in to enable)',
     );
-    expect(section).toHaveTextContent('(sign-in to use)');
-    expect(section.querySelector('.mini-btn--again.is-locked')).not.toBeNull();
+    expect(section).toHaveTextContent(
+      'I know it: Done for this session; it shows up again in future sessions.',
+    );
+    expect(section).not.toHaveTextContent('sign-in to use');
+    expect(section.querySelector('.mini-btn--know.is-locked .mini-btn__lock')).not.toBeNull();
+    expect(section.querySelector('.mini-btn--again.is-locked')).toBeNull();
   });
 });
 

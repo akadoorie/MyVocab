@@ -40,7 +40,7 @@ export function LoopButton({
   disabled?: boolean;
   /** A toggle button's state (Hints): announced and styled as pressed. */
   pressed?: boolean;
-  /** Shown but not available (the orange Know for guests): greyed out. */
+  /** Shown but not available (the green Know for guests, D-042): dimmed, with a lock. */
   locked?: boolean;
   onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   title?: string;
@@ -58,6 +58,12 @@ export function LoopButton({
       <span className="lbtn__shape" aria-hidden="true" />
       <span className="lbtn__icon">{icon}</span>
       <span className={hideLabel ? 'sr-only' : 'lbtn__label'}>{label}</span>
+      {locked && (
+        // A small lock inside the corner: visible on phones too, where the pills hide their icons.
+        <span className="lbtn__lock" aria-hidden="true">
+          🔒
+        </span>
+      )}
       {/* A space, so the visible text reads "I know it Don't show again", not "itDon't" (axe). */}
       {caption && ' '}
       {caption && (
@@ -74,19 +80,20 @@ export function LoopButton({
  * Phones: the three answer pills on top, `Stop · Hints · Back · Next` below. After "I don't know"
  * the layout stays: the answers are off and Next pumps (D-031). Flip is on the card.
  * The answers (D-030): green "I know it · Don't show again", orange "I know it · Show again in
- * future" (FR-L27a) and red "I don't know · Show again soon". Guests (`askAgain` false) see the
- * orange one greyed out and off, and the green caption reads "Done for this session".
+ * future" (FR-L27a) and red "I don't know · Show again soon". Guests (`signedIn` false) see the
+ * green one locked: nothing is kept for them, so "Don't show again" needs signing in, while the
+ * orange one does for them exactly what it says (D-042).
  */
 export function ButtonBar({
   state,
   onAction,
   nextRef,
-  askAgain = false,
+  signedIn = false,
 }: {
   state: LoopState;
   onAction: (type: LoopActionType) => void;
   nextRef: Ref<HTMLButtonElement>;
-  askAgain?: boolean;
+  signedIn?: boolean;
 }) {
   const btn = (type: LoopActionType) => ({
     disabled: !canDispatch(state, type),
@@ -122,39 +129,39 @@ export function ButtonBar({
         label={strings.loop.back}
         {...btn('BACK')}
       />
-      <LoopButton
-        kind="know"
-        icon={<CheckIcon />}
-        label={strings.loop.know}
-        caption={askAgain ? strings.loop.knowCaption : strings.loop.knowCaptionGuest}
-        name={askAgain ? strings.loop.knowName : strings.loop.knowNameGuest}
-        className={`[grid-area:know] ${trio}`}
-        {...btn('KNOW')}
-      />
-      {askAgain ? (
+      {signedIn ? (
         <LoopButton
-          kind="again"
+          kind="know"
           icon={<CheckIcon />}
           label={strings.loop.know}
-          caption={strings.loop.againCaption}
-          name={strings.loop.againName}
-          className={`[grid-area:again] ${trio}`}
-          {...btn('KNOW_AGAIN')}
+          caption={strings.loop.knowCaption}
+          name={strings.loop.knowName}
+          className={`[grid-area:know] ${trio}`}
+          {...btn('KNOW')}
         />
       ) : (
-        // Guests see what signing in adds, greyed out and off (D-030).
+        // Guests see what signing in adds: the same button, locked (D-042).
         <LoopButton
-          kind="again"
+          kind="know"
           icon={<CheckIcon />}
           label={strings.loop.know}
-          caption={strings.loop.againCaption}
-          name={strings.loop.againNameGuest}
-          title={strings.loop.signInToUse}
-          className={`[grid-area:again] ${trio}`}
+          caption={strings.loop.knowCaption}
+          name={strings.loop.knowNameGuest}
+          title={strings.loop.signInToEnable}
+          className={`[grid-area:know] ${trio}`}
           locked
           disabled
         />
       )}
+      <LoopButton
+        kind="again"
+        icon={<CheckIcon />}
+        label={strings.loop.know}
+        caption={strings.loop.againCaption}
+        name={strings.loop.againName}
+        className={`[grid-area:again] ${trio}`}
+        {...btn('KNOW_AGAIN')}
+      />
       <LoopButton
         kind="dontknow"
         className={`[grid-area:dk] ${trio}`}

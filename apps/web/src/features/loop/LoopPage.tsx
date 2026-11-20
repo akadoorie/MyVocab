@@ -179,7 +179,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   const onShortcut = useCallback(
     (action: LoopActionType | 'ENTER') => {
       if (confirmLeave) return; // the "are you sure?" question is open
-      if (action === 'KNOW_AGAIN' && stored.isGuest) return; // signed-in learners only (FR-L27a)
+      if (action === 'KNOW' && stored.isGuest) return; // "Don't show again" needs signing in (D-042)
       if (action === 'ENTER') act(state.phase === 'cycleBreak' ? 'CONTINUE' : 'NEXT');
       else if (action === 'STOP') setConfirmLeave('stop');
       else act(action);
@@ -266,7 +266,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           </span>
         </p>
         <div className="flex items-center gap-2 md:gap-4">
-          <ShortcutsMenu askAgain={!stored.isGuest} />
+          <ShortcutsMenu signedIn={!stored.isGuest} />
           <button
             type="button"
             onClick={() => setConfirmLeave('home')}
@@ -321,7 +321,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           state={state}
           onAction={(type) => (type === 'STOP' ? setConfirmLeave('stop') : act(type))}
           nextRef={nextRef}
-          askAgain={!stored.isGuest}
+          signedIn={!stored.isGuest}
         />
       </div>
       {ghost}
