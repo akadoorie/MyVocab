@@ -14,6 +14,8 @@ const persistTo = path.join(apiDir, '.wrangler', 'e2e-state');
 const shell = process.platform === 'win32';
 const PORT = process.env.E2E_PORT ?? '8788';
 
+const quoteForShell = (arg) => (shell ? `"${arg}"` : arg);
+
 function run(cmd, args, cwd = root) {
   const res = spawnSync(cmd, args, { cwd, stdio: 'inherit', shell });
   if (res.status !== 0) throw new Error(`${cmd} ${args.join(' ')} failed`);
@@ -48,7 +50,10 @@ run(
     '--persist-to',
     persistTo,
     '--command',
-    `"INSERT INTO app_settings (key, value, updated_at) VALUES ('guests.loopsPerHour', '100', ${Date.now()})"`,
+    // With a shell (Windows) the SQL needs quotes to stay one argument; without one (CI) it must not.
+    quoteForShell(
+      `INSERT INTO app_settings (key, value, updated_at) VALUES ('guests.loopsPerHour', '100', ${Date.now()})`,
+    ),
   ],
   apiDir,
 );
