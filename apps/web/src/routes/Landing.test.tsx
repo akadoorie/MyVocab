@@ -87,3 +87,21 @@ describe('Landing: guest sign-in banner (FR-L9, D-033)', () => {
     );
   });
 });
+
+describe('Landing: registered users (D-036)', () => {
+  it('shows "Registered users: N" under the slogan', async () => {
+    mockFetch(
+      { 'GET /api/stats/registered-users': () => Response.json({ registeredUsers: 1234 }) },
+      null,
+    );
+    renderRoutes(routes, ['/']);
+    expect(await screen.findByText('Registered users: 1,234')).toBeVisible();
+  });
+
+  it('shows nothing when the count fails to load', async () => {
+    mockFetch({}, null);
+    renderRoutes(routes, ['/']);
+    await screen.findByRole('heading', { level: 1 });
+    await waitFor(() => expect(screen.queryByTestId('registered-users')).toBeNull());
+  });
+});

@@ -3,6 +3,7 @@ import {
   startLoopRequestSchema,
   type AvailableResponse,
   type MetaResponse,
+  type RegisteredUsersResponse,
   type StartLoopResponse,
 } from '@myvocab/contracts';
 import { resolveStartDefaults } from '@myvocab/core';
@@ -57,6 +58,10 @@ export const publicRoutes = new Hono<AppEnv>()
       maintenance: { enabled: s['maintenance.enabled'], message: s['maintenance.message'] },
       turnstileSiteKey: c.get('config').TURNSTILE_SITE_KEY,
     });
+  })
+  .get('/stats/registered-users', async (c) => {
+    const registeredUsers = await c.get('container').accounts.registeredUsers();
+    return c.json<RegisteredUsersResponse>({ registeredUsers });
   })
   .get('/loops/available', burstLimit('RL_AVAILABLE', ipKey), async (c) => {
     const q = parseOrThrow(availableQuerySchema, c.req.query());

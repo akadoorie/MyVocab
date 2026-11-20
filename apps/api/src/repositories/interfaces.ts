@@ -179,6 +179,8 @@ export interface AccountRepository {
   find(userId: string): Promise<AccountRow | null>;
   /** Admins that are not banned. */
   countActiveAdmins(): Promise<number>;
+  /** Accounts that are not admins and not banned (the home page count, D-036). */
+  countRegisteredUsers(): Promise<number>;
   /**
    * Deletes the user and everything that belongs to them in one batch: sessions, accounts and
    * known items (FK cascade), usage counters, plus an audit entry.

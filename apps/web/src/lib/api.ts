@@ -6,6 +6,7 @@ import {
   meResponseSchema,
   metaResponseSchema,
   postKnownResponseSchema,
+  registeredUsersResponseSchema,
   restoreKnownResponseSchema,
   socialSignInResponseSchema,
   startLoopResponseSchema,
@@ -66,6 +67,7 @@ const okSchema = z.object({ ok: z.literal(true) });
 
 export const api = {
   meta: () => request('/meta', metaResponseSchema),
+  registeredUsers: () => request('/stats/registered-users', registeredUsersResponseSchema),
   available: (q: AvailableQuery) => {
     const params = new URLSearchParams({ source: q.source, target: q.target, type: q.type });
     if (q.categoryId !== undefined) params.set('categoryId', String(q.categoryId));

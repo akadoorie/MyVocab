@@ -22,6 +22,12 @@ export const metaResponseSchema = z.object({
 });
 export type MetaResponse = z.infer<typeof metaResponseSchema>;
 
+/** GET /api/stats/registered-users: accounts that are not admins and not banned (D-036). */
+export const registeredUsersResponseSchema = z.object({
+  registeredUsers: z.number().int().nonnegative(),
+});
+export type RegisteredUsersResponse = z.infer<typeof registeredUsersResponseSchema>;
+
 /** Query of GET /api/loops/available. */
 export const availableQuerySchema = z
   .object({

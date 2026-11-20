@@ -1,4 +1,4 @@
-import { and, count, eq, inArray } from 'drizzle-orm';
+import { and, count, eq, inArray, ne } from 'drizzle-orm';
 import type { Db } from '../../db/client';
 import { auditLog, usageCounters, user } from '../../db/schema';
 import type { AccountRepository, AccountRow } from '../interfaces';
@@ -20,6 +20,15 @@ export class D1AccountRepository implements AccountRepository {
       .select({ n: count() })
       .from(user)
       .where(and(eq(user.role, 'admin'), eq(user.banned, false)))
+      .get();
+    return row?.n ?? 0;
+  }
+
+  async countRegisteredUsers(): Promise<number> {
+    const row = await this.db
+      .select({ n: count() })
+      .from(user)
+      .where(and(ne(user.role, 'admin'), eq(user.banned, false)))
       .get();
     return row?.n ?? 0;
   }

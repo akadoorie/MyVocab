@@ -62,7 +62,10 @@ export function Landing() {
         </div>
       )}
       <div className="flex flex-col gap-6">
-        <HeroTitle text={strings.landing.heroTitle} />
+        <div>
+          <HeroTitle text={strings.landing.heroTitle} />
+          <RegisteredUsers />
+        </div>
         <p className="text-lg text-muted">{strings.landing.heroBody}</p>
         {session.isGuest && !session.loading && (
           // A light runs round the frame two or three times, then the frame keeps a soft glow (D-033).
@@ -125,5 +128,27 @@ export function Landing() {
         <ButtonGuide isGuest={session.isGuest} headingId="buttons-title-m" />
       </section>
     </main>
+  );
+}
+
+/**
+ * "Registered users: N" under the slogan, for everyone (D-036). Fetched once when the home page
+ * opens (no refetching while it is open); the server keeps the count 30 minutes. Hidden until it
+ * loads, and if it fails.
+ */
+function RegisteredUsers() {
+  const users = useQuery({
+    queryKey: ['registered-users'],
+    queryFn: api.registeredUsers,
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,
+  });
+  if (users.data === undefined) return null;
+  return (
+    <p className="mt-2 text-sm text-muted" data-testid="registered-users">
+      {strings.landing.registeredUsers(users.data.registeredUsers)}
+    </p>
   );
 }
