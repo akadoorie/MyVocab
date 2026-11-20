@@ -47,17 +47,25 @@ describe('known items require a session', () => {
 });
 
 describe('POST /api/me/known', () => {
-  it('is an idempotent upsert that keeps the first mark', async () => {
+  it('is an idempotent upsert per direction that keeps the first mark (D-028)', async () => {
     const { cookie } = await signIn();
     const id = await itemId('fx-word-1');
     const first = await mark(cookie, [{ itemId: id, target: 'he', cycle: 1 }]);
     expect(await first.json()).toEqual({ saved: 1 });
     const before = await list(cookie);
-    const again = await mark(cookie, [{ itemId: id, target: 'en', cycle: 3 }]);
+    const again = await mark(cookie, [{ itemId: id, target: 'he', cycle: 3 }]);
     expect(await again.json()).toEqual({ saved: 0 });
     const after = await list(cookie);
+    expect(after.items).toHaveLength(1);
     expect(after.items[0]).toMatchObject({ knownTarget: 'he', knownInCycle: 1 });
     expect(after.items[0]?.knownAt).toBe(before.items[0]?.knownAt);
+    // The same item in another direction is a mark of its own: two rows, categories once each.
+    const other = await mark(cookie, [{ itemId: id, target: 'en', cycle: 2 }]);
+    expect(await other.json()).toEqual({ saved: 1 });
+    const rows = (await list(cookie)).items;
+    expect(rows.map((i) => i.knownTarget).sort()).toEqual(['en', 'he']);
+    for (const row of rows)
+      expect(row.categories).toEqual([{ id: expect.any(Number), name: 'Home' }]);
   });
 
   it('skips missing and trashed items and duplicates within a batch', async () => {
@@ -89,15 +97,19 @@ describe('POST /api/me/known', () => {
     }
   });
 
-  it('hides a known item in every direction, not other items (FR-L54)', async () => {
+  it('hides a known item only in the direction it was marked in (FR-L54, D-028)', async () => {
     const { cookie } = await signIn();
     const enEn = await available(cookie, 'en', 'en');
     const enHe = await available(cookie, 'en', 'he');
     const heEn = await available(cookie, 'he', 'en');
-    await mark(cookie, [{ itemId: await itemId('fx-word-1'), target: 'he', cycle: 1 }]);
+    const id = await itemId('fx-word-1');
+    await mark(cookie, [{ itemId: id, target: 'he', cycle: 1 }]);
     expect(await available(cookie, 'en', 'he')).toBe(enHe - 1);
-    expect(await available(cookie, 'en', 'en')).toBe(enEn - 1);
+    // Its explanation direction (EN → EN) is a direction of its own.
+    expect(await available(cookie, 'en', 'en')).toBe(enEn);
     expect(await available(cookie, 'he', 'en')).toBe(heEn);
+    await mark(cookie, [{ itemId: id, target: 'en', cycle: 1 }]);
+    expect(await available(cookie, 'en', 'en')).toBe(enEn - 1);
     // A guest's counts are not affected.
     const guest = await api('/loops/available?source=en&target=he&type=word');
     expect((await guest.json<{ available: number }>()).available).toBe(enHe);
@@ -105,14 +117,26 @@ describe('POST /api/me/known', () => {
 });
 
 describe('DELETE /api/me/known/:itemId and restore', () => {
-  it('removes one known item (undo / return to loops)', async () => {
+  it('undo removes one direction; without a target, every direction (D-028)', async () => {
     const { cookie } = await signIn();
     const id = await itemId('fx-word-1');
-    await mark(cookie, [{ itemId: id, target: 'he', cycle: 1 }]);
-    const res = await authed(cookie, `/me/known/${id}`, { method: 'DELETE' });
-    expect(await res.json()).toEqual({ removed: 1 });
+    const both = [
+      { itemId: id, target: 'he', cycle: 1 },
+      { itemId: id, target: 'en', cycle: 1 },
+    ];
+    await mark(cookie, both);
+    const one = await authed(cookie, `/me/known/${id}?target=he`, { method: 'DELETE' });
+    expect(await one.json()).toEqual({ removed: 1 });
+    expect((await list(cookie)).items.map((i) => i.knownTarget)).toEqual(['en']);
+
+    await mark(cookie, both);
+    const all = await authed(cookie, `/me/known/${id}`, { method: 'DELETE' });
+    expect(await all.json()).toEqual({ removed: 2 });
     expect(await count('user_known_items')).toBe(0);
     expect((await authed(cookie, '/me/known/abc', { method: 'DELETE' })).status).toBe(400);
+    expect((await authed(cookie, `/me/known/${id}?target=HE`, { method: 'DELETE' })).status).toBe(
+      400,
+    );
   });
 
   it("user A can't read or change user B's known items", async () => {
@@ -166,6 +190,50 @@ describe('DELETE /api/me/known/:itemId and restore', () => {
     });
     expect(bad.status).toBe(400);
   });
+
+  it('restores rows per direction, by rows or by a direction filter (D-028)', async () => {
+    const { cookie } = await signIn();
+    const [a, b] = await Promise.all(['fx-word-1', 'fx-word-2'].map((t) => itemId(t)));
+    const everything = [a!, b!].flatMap((id) => [
+      { itemId: id, target: 'he', cycle: 1 },
+      { itemId: id, target: 'en', cycle: 1 },
+    ]);
+    const rows = async () =>
+      (
+        await env.DB.prepare(
+          'SELECT item_id, known_target FROM user_known_items ORDER BY item_id, known_target',
+        ).all<{ item_id: number; known_target: string }>()
+      ).results.map((r) => `${r.item_id}:${r.known_target}`);
+
+    await mark(cookie, everything);
+    const byRows = await authed(cookie, '/me/known/restore', {
+      method: 'POST',
+      json: {
+        marks: [
+          { itemId: a, target: 'he' },
+          { itemId: a, target: 'he' },
+        ],
+      },
+    });
+    expect(await byRows.json()).toEqual({ restored: 1 });
+    expect(await rows()).toEqual([`${a}:en`, `${b}:en`, `${b}:he`]);
+
+    const byDirection = await authed(cookie, '/me/known/restore', {
+      method: 'POST',
+      json: { filter: { lang: 'en', target: 'en' } },
+    });
+    expect(await byDirection.json()).toEqual({ restored: 2 });
+    expect(await rows()).toEqual([`${b}:he`]);
+
+    // Item ids alone (an older client) mean every direction of those items.
+    await mark(cookie, everything);
+    const byIds = await authed(cookie, '/me/known/restore', {
+      method: 'POST',
+      json: { itemIds: [b] },
+    });
+    expect(await byIds.json()).toEqual({ restored: 2 });
+    expect(await rows()).toEqual([`${a}:en`, `${a}:he`]);
+  });
 });
 
 describe('GET /api/me/known (FR-L60–63)', () => {
@@ -205,6 +273,8 @@ describe('GET /api/me/known (FR-L60–63)', () => {
     expect(await names('?q=fx-he')).toEqual(['מילה-א']); // its English translation
     expect(await names('?q=%25')).toEqual([]); // LIKE wildcards are literal
     expect(await names('?lang=he')).toEqual(['מילה-א']);
+    expect(await names('?lang=en&target=he')).toEqual(['fx-expr-1', 'fx-word-1', 'fx-word-3']);
+    expect(await names('?target=en')).toEqual(['מילה-א']);
     expect(await names('?type=expr')).toEqual(['fx-expr-1']);
     expect(await names(`?categoryId=${await categoryId('nature')}`)).toEqual(['fx-word-3']);
     expect((await authed(cookie, '/me/known?sort=random')).status).toBe(400);
@@ -222,10 +292,11 @@ describe('GET /api/me/known (FR-L60–63)', () => {
 
   it('paginates 50 at a time with a cursor, in every sort order', async () => {
     const { cookie, userId } = await signIn();
-    // 120 synthetic items, known at distinct times.
+    // 60 synthetic items, each known in two directions at the same time: 120 rows whose ties are
+    // broken by item id and target (D-028).
     const now = Date.now();
     const stmts = [];
-    for (let i = 0; i < 120; i++) {
+    for (let i = 0; i < 60; i++) {
       const text = `bulk-${String(i).padStart(3, '0')}`;
       stmts.push(
         env.DB.prepare(
@@ -237,7 +308,8 @@ describe('GET /api/me/known (FR-L60–63)', () => {
     await env.DB.batch(stmts);
     await env.DB.prepare(
       `INSERT INTO user_known_items (user_id, item_id, known_target, known_in_cycle, known_at)
-       SELECT ?, id, 'he', 1, ? + id FROM items WHERE text LIKE 'bulk-%'`,
+       SELECT ?, i.id, t.value, 1, ? + i.id FROM items AS i, json_each('["en","he"]') AS t
+       WHERE i.text LIKE 'bulk-%'`,
     )
       .bind(userId, now)
       .run();
@@ -253,7 +325,7 @@ describe('GET /api/me/known (FR-L60–63)', () => {
         );
         if (pages === 0) expect(page.total).toBe(120);
         else expect(page.total).toBeNull();
-        seen.push(...page.items.map((i) => i.text));
+        seen.push(...page.items.map((i) => `${i.text}:${i.knownTarget}`));
         cursor = page.nextCursor;
         pages++;
       } while (cursor);

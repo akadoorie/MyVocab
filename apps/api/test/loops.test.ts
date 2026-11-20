@@ -287,7 +287,7 @@ describe('LoopService (learner path)', () => {
     expect(ok).toMatchObject({ requested: 10, returned: 6 });
   });
 
-  it('excludes known items in every direction', async () => {
+  it('excludes known items only in the direction they were marked in (D-028)', async () => {
     const loops = await service();
     await env.DB.prepare(
       `INSERT INTO user_known_items (user_id, item_id, known_target, known_in_cycle, known_at)
@@ -299,12 +299,13 @@ describe('LoopService (learner path)', () => {
         learner,
       ),
     ).toBe(4);
+    // Known into Hebrew only: the explanation direction still has all its words.
     expect(
       await loops.available(
         { source: 'en', target: 'en', type: 'word', categoryId: null },
         learner,
       ),
-    ).toBe(4);
+    ).toBe(6);
   });
 
   it('enforces the daily card cap with the remaining allowance; admins are exempt', async () => {

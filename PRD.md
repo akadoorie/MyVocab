@@ -58,9 +58,9 @@ optional). The parallel, when there is one, is the main answer with the meaning 
 otherwise the meaning is the main answer. Hints and synonyms can be revealed on the front and
 always appear on the back.
 
-**Known items memory.** For signed-in learners, every item they mark "Know" is remembered and never shown again in any
-future loop, **in any direction**. A "My known words" page lists those items and lets the learner return any of them
-to future loops.
+**Known items memory.** For signed-in learners, every item they mark "Know" is remembered and not shown again in future
+loops **in the direction it was marked in** (e.g. English → Hebrew; D-028). A "My known words" page lists those items
+and lets the learner return any of them to future loops.
 
 **Private vocabulary.** The vocabulary is the product's asset. It lives only in the app's private database and in a
 private content repository. It never appears in the public code repo or any public/third-party service (§14.2).
@@ -121,7 +121,7 @@ private content repository. It never appears in the public code repo or any publ
 | **Amount** | The number of cards in a loop (learners: 10/20/30/40/50; guests: always 5). |
 | **Loop** | One learning session over a group of cards. **In the UI it is called a "Session"** ("Configure your session", "Session completed", "New session"); "loop" stays the technical term in this spec and in the code (D-018). |
 | **Cycle** | One pass over the loop's remaining cards. |
-| **Known item** | An item a signed-in learner marked "Know" (in any direction). It is excluded from all their future loops, **in every direction**, until returned. |
+| **Known item** | An item a signed-in learner marked "Know" in one direction (e.g. EN → HE). It is excluded from their future loops **in that direction only** until returned (D-028); the explanation direction (EN → EN) is a direction of its own. |
 | **Category** | A topic (Home, Nature, …). An item can have many, or none. **General** is virtual: random across all items, including items without a category. |
 | **Content repo** | The **private** GitHub repo `MyVocab-Content` that holds vocabulary files (starter set, import batches, snapshots). |
 
@@ -357,21 +357,24 @@ different**:
   "My known words" shows the main answer only (the parallel, else the meaning).
 
 ### 6.4 Known items (signed-in learners only)
-- **FR-L50** Every Know (in any cycle) is recorded as `{itemId, target, cycle}` in a client-side **pending queue**
-  (`target` is kept for display only, FR-L60). **Know · ask again** (FR-L27a) is never queued or sent.
+- **FR-L50** Every Know (in any cycle) is recorded as `{itemId, target, cycle}` in a client-side **pending queue**.
+  `itemId` + `target` identify the mark: the item in that direction (D-028). **Know · ask again** (FR-L27a) is never queued or sent.
 - **FR-L51** An entry becomes **final** when its short waiting period expires (`undo.windowSeconds`, default 5, so a
   quick change of answer costs no request) or a newer Know happens. Final entries are sent in batches
   (`POST /api/me/known`, debounced ~2 s). On `pagehide`/`visibilitychange=hidden`, **all** entries (including ones
   still waiting) are flushed with `fetch(..., {keepalive: true})`.
-- **FR-L52** The queue is mirrored to `localStorage` (keyed by user id; item ids only, never item text) so unsent
+- **FR-L52** The queue is mirrored to `localStorage` (keyed by user id; item ids and target codes only, never item
+  text; a newer mark replaces only an older one of the same item **and** direction) so unsent
   entries survive a closed tab and are sent on the next app load. Sends retry with exponential backoff. The server
   upsert is **idempotent** (it keeps the earliest `known_at`).
 - **FR-L53** Changing a Know to Don't know or to Know · ask again (FR-L29a) removes the entry from the queue. If it
-  was already sent, the client calls `DELETE /api/me/known/:itemId`. Changing Don't know or Know · ask again to Know
+  was already sent, the client calls `DELETE /api/me/known/:itemId?target=<code>` (that direction only). Changing
+  Don't know or Know · ask again to Know
   queues a new entry.
-- **FR-L54** `POST /api/loops` for a signed-in user **excludes** all their known items, **in every direction**. Knowing
-  "Swift" in EN → HE also hides it from EN → EN. Separate items are not affected: the Hebrew item "מהיר" still appears
-  in HE → EN loops.
+- **FR-L54** `POST /api/loops` (and the available count) for a signed-in user **excludes** the items they know **in
+  that loop's direction** (D-028). Knowing "Swift" in EN → HE hides it from EN → HE only: it still appears in
+  EN → EN (the explanation direction) and in EN → AR. Separate items are not affected either: the Hebrew item "מהיר"
+  still appears in HE → EN loops.
 - **FR-L55** Guests: nothing is queued or stored.
 - **FR-L56 Failed sign-in** (owner request, 2026-11-18): the server rewrites Better Auth's error redirect to one of two
   neutral addresses, never carrying the error code or its description: `/?signin=refused` when the account may not
@@ -385,14 +388,17 @@ different**:
   refusing once it ends.
 
 ### 6.5 "My known words" page (`/known`, signed-in only)
-- **FR-L60** A paginated list (cursor, 50 per page) of the learner's known items: item text (with `dir`), language,
+- **FR-L60** A paginated list (cursor, 50 per page) of the learner's known items, **one row per item and direction**
+  (an item known in EN → HE and EN → EN is listed twice, D-028): item text (with `dir`), language,
   type label, the "◆" badge if it has multiple meanings, the answer in the direction where it was marked (e.g.
   "EN → HE: תאריך, תמר"), category chips, date known, and a badge **Already knew** (cycle 1) / **Learned here**
   (cycle ≥ 2).
-- **FR-L61** Search (item text and translations, case-insensitive), filters (language, type, category), and sort
+- **FR-L61** Search (item text and translations, case-insensitive), filters (**direction**, e.g. "English → Hebrew" or
+  "English → English (explanation)", from the active languages; type; category), and sort
   (newest first by default; oldest first; A→Z).
 - **FR-L62** **Return to loops**: per row; for selected rows (checkboxes); or "Return all N filtered" (with a confirm
-  dialog). Returned items immediately become available to future loops, in every direction.
+  dialog). A row returns the item in its direction only; returned items immediately become available to future loops
+  in that direction.
 - **FR-L63** Items in Trash are hidden from this list, and reappear if restored.
 - **FR-L64** An empty state explains how items get here.
 
@@ -1116,14 +1122,14 @@ CREATE TABLE item_categories (
 ) WITHOUT ROWID;
 CREATE INDEX ix_item_categories_cat ON item_categories(category_id, item_id);
 
--- Known memory: one row per user + item. It hides the item in every direction.
+-- Known memory: one row per user + item + direction. It hides the item only in that direction (D-028).
 CREATE TABLE user_known_items (
   user_id         TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   item_id         INTEGER NOT NULL REFERENCES items(id) ON DELETE CASCADE,
-  known_target    TEXT NOT NULL,                       -- target language it was marked in (display only)
+  known_target    TEXT NOT NULL,                       -- the direction's target language (= lang: explanation)
   known_in_cycle  INTEGER NOT NULL CHECK (known_in_cycle >= 1),
   known_at        INTEGER NOT NULL,
-  PRIMARY KEY (user_id, item_id)
+  PRIMARY KEY (user_id, item_id, known_target)
 ) WITHOUT ROWID;
 CREATE INDEX ix_known_item ON user_known_items(item_id);   -- for the ON DELETE CASCADE from items (purge)
 
@@ -1211,7 +1217,8 @@ WHERE i.lang = :src AND i.type = :type
   AND i.status = 'published' AND i.deleted_at IS NULL          -- served by ix_items_playable
   AND <answer condition>
   AND (:userId IS NULL OR NOT EXISTS (
-        SELECT 1 FROM user_known_items k WHERE k.user_id = :userId AND k.item_id = i.id))
+        SELECT 1 FROM user_known_items k
+        WHERE k.user_id = :userId AND k.item_id = i.id AND k.known_target = :tgt))  -- D-028
 ORDER BY RANDOM()
 LIMIT :n;
 
@@ -1288,10 +1295,10 @@ type CardView = {
 ### 12.3 Learner (requires a session)
 | Method | Path | Description |
 |---|---|---|
-| POST | `/me/known` | Body `{ items: { itemId, target, cycle }[] }` (≤ 100). Idempotent upsert, keeps the earliest `known_at` |
-| DELETE | `/me/known/:itemId` | Remove one (undo or return to loops) |
-| POST | `/me/known/restore` | Body `{ itemIds: number[] }` (≤ 500) **or** `{ filter: { q?, lang?, type?, categoryId? } }` → `{ restored }` |
-| GET | `/me/known?q&lang&type&categoryId&sort&cursor` | Paginated known items |
+| POST | `/me/known` | Body `{ items: { itemId, target, cycle }[] }` (≤ 100). Idempotent upsert per item + target, keeps the earliest `known_at` |
+| DELETE | `/me/known/:itemId?target=` | Undo one direction; without `target`, every direction of the item (older clients, D-028) |
+| POST | `/me/known/restore` | Body `{ marks: { itemId, target }[] }` (≤ 500), **or** `{ filter: { q?, lang?, target?, type?, categoryId? } }`, **or** `{ itemIds: number[] }` (every direction, older clients) → `{ restored }` |
+| GET | `/me/known?q&lang&target&type&categoryId&sort&cursor` | Paginated known items, one row per item + direction |
 
 `user_id` is **always** taken from the session, never from the request.
 

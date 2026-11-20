@@ -166,7 +166,7 @@ describe('LoopPage', () => {
     expect(sink.onKnow).toHaveBeenCalledTimes(1);
     fireEvent.click(btn('Back'));
     fireEvent.click(btn('Know, ask again'));
-    expect(sink.onUnknow).toHaveBeenCalledWith(sink.onKnow.mock.calls[0]![0].id);
+    expect(sink.onUnknow).toHaveBeenCalledWith(sink.onKnow.mock.calls[0]![0].id, 'he');
     expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known');
     fireEvent.click(btn('Back'));
     fireEvent.click(btn('Know, forever'));

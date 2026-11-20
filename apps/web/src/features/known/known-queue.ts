@@ -13,6 +13,8 @@ import { KNOWN_BATCH_MAX, knownMarkSchema, type KnownMarkInput } from '@myvocab/
  *   mark twice is harmless; entries leave the queue only after the server confirmed them.
  * - Undo removes the mark from the queue; if it may already have reached the server (sent by this
  *   tab, in flight, or sent by another tab), the queue also asks the server to delete it.
+ * - A mark is an item in one direction (D-028): the item id and target language together are the
+ *   key, so marking the same item in another direction never replaces or undoes the first.
  */
 
 type Entry = {
@@ -23,13 +25,17 @@ type Entry = {
   /** unique per entry, so a confirmed send never removes a newer mark of the same item */ n: number;
 };
 
+/** An item in one direction (D-028). */
+const keyOf = (itemId: number, target: string) => `${itemId}:${target}`;
+const entryKey = (e: Entry) => keyOf(e.i, e.t);
+
 type KeyValueStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
 export type SendFailure = 'unauthorized' | 'rejected' | 'retry';
 
 export type KnownTransport = {
   send(items: KnownMarkInput[], keepalive: boolean): Promise<unknown>;
-  remove(itemId: number): Promise<unknown>;
+  remove(itemId: number, target: string): Promise<unknown>;
 };
 
 export type KnownQueueOptions = {
@@ -73,11 +79,11 @@ export class KnownQueue {
   private readonly key: string;
   private storage: KeyValueStorage | null;
   private memory: Entry[] = [];
-  private readonly undoTimers = new Map<number, ReturnType<typeof setTimeout>>();
+  private readonly undoTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private flushTimer: ReturnType<typeof setTimeout> | null = null;
   private regularSend: Promise<void> | null = null;
-  private readonly inFlight = new Map<Promise<void>, Set<number>>();
-  private readonly sent = new Set<number>();
+  private readonly inFlight = new Map<Promise<void>, Set<string>>();
+  private readonly sent = new Set<string>();
   private backoff = 0;
   private paused = false;
   private stopped = false;
@@ -111,32 +117,34 @@ export class KnownQueue {
     if (this.stopped || !knownMarkSchema.safeParse(mark).success) return;
     for (const timer of this.undoTimers.values()) clearTimeout(timer);
     this.undoTimers.clear();
+    const key = keyOf(mark.itemId, mark.target);
     const entries: Entry[] = this.read()
-      .filter((e) => e.i !== mark.itemId)
+      .filter((e) => entryKey(e) !== key)
       .map((e) => ({ ...e, f: 1 }));
     entries.push({ i: mark.itemId, t: mark.target, c: mark.cycle, f: 0, n: nextNonce() });
     this.write(entries);
-    this.sent.delete(mark.itemId);
+    this.sent.delete(key);
     this.undoTimers.set(
-      mark.itemId,
-      setTimeout(() => this.finalize(mark.itemId), undoWindowMs),
+      key,
+      setTimeout(() => this.finalize(key), undoWindowMs),
     );
     if (entries.some((e) => e.f === 1)) this.schedule(this.debounceMs);
   }
 
-  /** Undo of the latest Know (FR-L53). */
-  undo(itemId: number): void {
-    const timer = this.undoTimers.get(itemId);
+  /** Undo of a Know in one direction (FR-L53, D-028). */
+  undo(itemId: number, target: string): void {
+    const key = keyOf(itemId, target);
+    const timer = this.undoTimers.get(key);
     if (timer !== undefined) clearTimeout(timer);
-    this.undoTimers.delete(itemId);
+    this.undoTimers.delete(key);
     const entries = this.read();
-    const queued = entries.some((e) => e.i === itemId);
-    if (queued) this.write(entries.filter((e) => e.i !== itemId));
-    const inFlight = [...this.inFlight].filter(([, ids]) => ids.has(itemId)).map(([p]) => p);
-    if (queued && inFlight.length === 0 && !this.sent.has(itemId)) return;
+    const queued = entries.some((e) => entryKey(e) === key);
+    if (queued) this.write(entries.filter((e) => entryKey(e) !== key));
+    const inFlight = [...this.inFlight].filter(([, keys]) => keys.has(key)).map(([p]) => p);
+    if (queued && inFlight.length === 0 && !this.sent.has(key)) return;
     // It may be on the server already: delete it there once any send carrying it has settled.
-    this.sent.delete(itemId);
-    void Promise.allSettled(inFlight).then(() => this.removeWithRetry(itemId, 0));
+    this.sent.delete(key);
+    void Promise.allSettled(inFlight).then(() => this.removeWithRetry(itemId, target, 0));
   }
 
   /** All pending marks become final (e.g. when the loop screen closes: Undo is gone). */
@@ -188,11 +196,11 @@ export class KnownQueue {
 
   // -------------------------------------------------------------------------------------------
 
-  private finalize(itemId: number): void {
-    this.undoTimers.delete(itemId);
+  private finalize(key: string): void {
+    this.undoTimers.delete(key);
     const entries = this.read();
-    if (!entries.some((e) => e.i === itemId && e.f === 0)) return;
-    this.write(entries.map((e) => (e.i === itemId ? { ...e, f: 1 } : e)));
+    if (!entries.some((e) => entryKey(e) === key && e.f === 0)) return;
+    this.write(entries.map((e) => (entryKey(e) === key ? { ...e, f: 1 } : e)));
     this.schedule(this.debounceMs);
   }
 
@@ -205,13 +213,13 @@ export class KnownQueue {
   }
 
   private send(batch: Entry[], keepalive: boolean): Promise<void> {
-    const ids = new Set(batch.map((e) => e.i));
+    const keys = new Set(batch.map(entryKey));
     const promise = (async () => {
       try {
         await this.opts.transport.send(batch.map(toMark), keepalive);
         const confirmed = new Set(batch.map((e) => e.n));
         this.write(this.read().filter((e) => !confirmed.has(e.n)));
-        for (const id of ids) this.sent.add(id);
+        for (const key of keys) this.sent.add(key);
         this.backoff = 0;
         this.opts.onSent?.();
         if (this.read().some((e) => e.f === 1)) this.schedule(0);
@@ -233,19 +241,19 @@ export class KnownQueue {
         }
       }
     })();
-    this.inFlight.set(promise, ids);
+    this.inFlight.set(promise, keys);
     void promise.finally(() => this.inFlight.delete(promise));
     return promise;
   }
 
-  private async removeWithRetry(itemId: number, attempt: number): Promise<void> {
+  private async removeWithRetry(itemId: number, target: string, attempt: number): Promise<void> {
     if (this.stopped) return;
     try {
-      await this.opts.transport.remove(itemId);
+      await this.opts.transport.remove(itemId, target);
     } catch (error) {
       if (classifyFailure(error) !== 'retry' || attempt >= 5) return;
       const delay = Math.min(this.debounceMs * 2 ** attempt, this.maxBackoffMs);
-      setTimeout(() => void this.removeWithRetry(itemId, attempt + 1), delay);
+      setTimeout(() => void this.removeWithRetry(itemId, target, attempt + 1), delay);
     }
   }
 

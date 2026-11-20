@@ -33,6 +33,7 @@ type ListRow = {
 function filterConditions(userId: string, f: KnownFilterInput): SQL[] {
   const conds: SQL[] = [sql`k.user_id = ${userId}`, sql`i.deleted_at IS NULL`];
   if (f.lang) conds.push(sql`i.lang = ${f.lang}`);
+  if (f.target) conds.push(sql`k.known_target = ${f.target}`);
   if (f.type) conds.push(sql`i.type = ${f.type}`);
   if (f.categoryId !== undefined) {
     conds.push(
@@ -47,26 +48,28 @@ function filterConditions(userId: string, f: KnownFilterInput): SQL[] {
   return conds;
 }
 
+// A row is an item in one direction (D-028): item id and target break ties in every order.
 const ORDER: Record<KnownSortKey, SQL> = {
-  newest: sql`k.known_at DESC, k.item_id DESC`,
-  oldest: sql`k.known_at ASC, k.item_id ASC`,
-  az: sql`i.normalized_text ASC, k.item_id ASC`,
+  newest: sql`k.known_at DESC, k.item_id DESC, k.known_target DESC`,
+  oldest: sql`k.known_at ASC, k.item_id ASC, k.known_target ASC`,
+  az: sql`i.normalized_text ASC, k.item_id ASC, k.known_target ASC`,
 };
 
+/** Rows after the cursor, in the same order as ORDER (SQLite row-value comparison). */
 function cursorCondition(sort: KnownSortKey, c: KnownCursor): SQL {
   switch (sort) {
     case 'newest':
-      return sql`(k.known_at < ${c.key} OR (k.known_at = ${c.key} AND k.item_id < ${c.itemId}))`;
+      return sql`(k.known_at, k.item_id, k.known_target) < (${c.key}, ${c.itemId}, ${c.target})`;
     case 'oldest':
-      return sql`(k.known_at > ${c.key} OR (k.known_at = ${c.key} AND k.item_id > ${c.itemId}))`;
+      return sql`(k.known_at, k.item_id, k.known_target) > (${c.key}, ${c.itemId}, ${c.target})`;
     case 'az':
-      return sql`(i.normalized_text > ${c.key} OR (i.normalized_text = ${c.key} AND k.item_id > ${c.itemId}))`;
+      return sql`(i.normalized_text, k.item_id, k.known_target) > (${c.key}, ${c.itemId}, ${c.target})`;
   }
 }
 
-/** A user's visible known item ids matching a filter (subquery for deletes). */
-function visibleIds(userId: string, f: KnownFilterInput): SQL {
-  return sql`SELECT k.item_id FROM user_known_items AS k JOIN items AS i ON i.id = k.item_id
+/** A user's visible known rows (item + target) matching a filter (subquery for deletes). */
+function visibleKeys(userId: string, f: KnownFilterInput): SQL {
+  return sql`SELECT k.item_id, k.known_target FROM user_known_items AS k JOIN items AS i ON i.id = k.item_id
     WHERE ${sql.join(filterConditions(userId, f), sql` AND `)}`;
 }
 
@@ -82,15 +85,31 @@ export class D1KnownRepository implements KnownRepository {
       FROM json_each(${JSON.stringify(marks)}) AS m
       JOIN items AS i ON i.id = json_extract(m.value, '$.itemId')
       WHERE i.deleted_at IS NULL
-      ON CONFLICT (user_id, item_id) DO NOTHING
+      ON CONFLICT (user_id, item_id, known_target) DO NOTHING
     `);
     return res.meta.changes;
   }
 
-  async remove(userId: string, itemId: number): Promise<number> {
+  async remove(userId: string, itemId: number, target?: string): Promise<number> {
+    const direction = target === undefined ? sql`` : sql`AND known_target = ${target}`;
     const res = await this.db.run(
-      sql`DELETE FROM user_known_items WHERE user_id = ${userId} AND item_id = ${itemId}`,
+      sql`DELETE FROM user_known_items WHERE user_id = ${userId} AND item_id = ${itemId} ${direction}`,
     );
+    return res.meta.changes;
+  }
+
+  async removeKeys(
+    userId: string,
+    keys: readonly { itemId: number; target: string }[],
+  ): Promise<number> {
+    const res = await this.db.run(sql`
+      DELETE FROM user_known_items
+      WHERE user_id = ${userId} AND (item_id, known_target) IN (
+        SELECT i.id, json_extract(j.value, '$.target')
+        FROM json_each(${JSON.stringify(keys)}) AS j
+        JOIN items AS i ON i.id = json_extract(j.value, '$.itemId')
+        WHERE i.deleted_at IS NULL)
+    `);
     return res.meta.changes;
   }
 
@@ -108,7 +127,7 @@ export class D1KnownRepository implements KnownRepository {
   async removeByFilter(userId: string, filter: KnownFilterInput): Promise<number> {
     const res = await this.db.run(sql`
       DELETE FROM user_known_items
-      WHERE user_id = ${userId} AND item_id IN (${visibleIds(userId, filter)})
+      WHERE user_id = ${userId} AND (item_id, known_target) IN (${visibleKeys(userId, filter)})
     `);
     return res.meta.changes;
   }

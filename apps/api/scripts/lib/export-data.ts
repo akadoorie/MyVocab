@@ -162,7 +162,8 @@ const TABLE_NOTES: Record<string, string> = {
   items:
     'One row per word or expression. `translation_parallel` (the equivalent word or expression), `translation_meaning` (what it means) and `translation_literal` (word for word) are objects `{ "<lang>": [entries] }`; `explanation`, `synonyms` and `hints` are arrays in the item language. `deleted_at` set = in Trash.',
   item_categories: 'Item ↔ category links (many-to-many).',
-  user_known_items: 'Which user knows which item (hides it in every direction).',
+  user_known_items:
+    'Which user knows which item in which direction (target language); hides it only there.',
   usage_counters: 'Anti-scraping counters (hashed IPs or user ids; never raw IPs). Kept 48 hours.',
   app_settings: 'Runtime settings (`value` is JSON).',
   audit_log: 'Append-only history of admin actions; `details` holds before/after and snapshots.',

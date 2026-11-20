@@ -6,7 +6,11 @@ export const KNOWN_BATCH_MAX = 100;
 export const KNOWN_RESTORE_IDS_MAX = 500;
 export const KNOWN_PAGE_SIZE = 50;
 
-/** One Know mark. `target` is kept for display only (FR-L50). */
+/**
+ * One Know mark. With `itemId`, `target` names the direction: the mark hides the item only in
+ * sessions into that language (FR-L50, D-028). Target = the item's language is the explanation
+ * direction.
+ */
 export const knownMarkSchema = z
   .object({
     itemId: itemIdSchema,
@@ -23,8 +27,10 @@ export const postKnownRequestSchema = z
 export type PostKnownRequest = z.infer<typeof postKnownRequestSchema>;
 export const postKnownResponseSchema = z.object({ saved: z.number().int().nonnegative() });
 
-/** DELETE /api/me/known/:itemId. */
+/** DELETE /api/me/known/:itemId[?target=he]. */
 export const knownItemParamSchema = z.object({ itemId: z.coerce.number().int().positive() });
+/** Without `target` (an older client), the item's marks in every direction are removed (D-028). */
+export const knownDeleteQuerySchema = z.object({ target: langCodeSchema.optional() }).strict();
 export const deleteKnownResponseSchema = z.object({ removed: z.number().int().nonnegative() });
 
 const searchText = z.string().trim().max(100);
@@ -34,16 +40,26 @@ export const knownFilterSchema = z
   .object({
     q: searchText.optional(),
     lang: langCodeSchema.optional(),
+    /** The direction's target language (D-028); with `lang`, one direction. */
+    target: langCodeSchema.optional(),
     type: itemTypeSchema.optional(),
     categoryId: itemIdSchema.optional(),
   })
   .strict();
 export type KnownFilter = z.infer<typeof knownFilterSchema>;
 
-/** POST /api/me/known/restore: by ids or by filter (FR-L62). */
+/** One row of "My known words": an item in one direction (D-028). */
+export const knownKeySchema = z.object({ itemId: itemIdSchema, target: langCodeSchema }).strict();
+export type KnownKey = z.infer<typeof knownKeySchema>;
+
+/**
+ * POST /api/me/known/restore (FR-L62): by rows (item + direction), by filter, or by item ids (an
+ * older client: every direction of those items, D-028).
+ */
 export const restoreKnownRequestSchema = z.union([
-  z.object({ itemIds: z.array(itemIdSchema).min(1).max(KNOWN_RESTORE_IDS_MAX) }).strict(),
+  z.object({ marks: z.array(knownKeySchema).min(1).max(KNOWN_RESTORE_IDS_MAX) }).strict(),
   z.object({ filter: knownFilterSchema }).strict(),
+  z.object({ itemIds: z.array(itemIdSchema).min(1).max(KNOWN_RESTORE_IDS_MAX) }).strict(),
 ]);
 export type RestoreKnownRequest = z.infer<typeof restoreKnownRequestSchema>;
 export const restoreKnownResponseSchema = z.object({ restored: z.number().int().nonnegative() });
@@ -56,6 +72,7 @@ export const knownListQuerySchema = z
   .object({
     q: searchText.optional(),
     lang: langCodeSchema.optional(),
+    target: langCodeSchema.optional(),
     type: itemTypeSchema.optional(),
     categoryId: z.coerce.number().int().positive().optional(),
     sort: knownSortSchema.default('newest'),
@@ -72,6 +89,7 @@ export const knownItemSchema = z.object({
   dir: dirSchema,
   type: itemTypeSchema,
   multipleMeanings: z.boolean(),
+  /** The direction's target language: the row is the item known in this direction (D-028). */
   knownTarget: langCodeSchema,
   /** The answer in the direction where it was marked (may be empty if the item changed since). */
   answer: z.object({

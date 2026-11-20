@@ -1,4 +1,10 @@
-import type { KnownFilter, KnownItem, KnownSort, RestoreKnownRequest } from '@myvocab/contracts';
+import type {
+  KnownFilter,
+  KnownItem,
+  KnownKey,
+  KnownSort,
+  RestoreKnownRequest,
+} from '@myvocab/contracts';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useId, useMemo, useState } from 'react';
 import { Button3D } from '../../components/Button3D';
@@ -27,6 +33,11 @@ export function KnownPage() {
   );
 }
 
+/** A row is an item known in one direction (D-028). */
+const rowKey = (item: { itemId: number; knownTarget: string }) =>
+  `${item.itemId}:${item.knownTarget}`;
+const keyOf = (item: KnownItem): KnownKey => ({ itemId: item.itemId, target: item.knownTarget });
+
 const selectClass =
   'min-h-11 w-full rounded-[10px] border border-border bg-surface-2 px-3 text-base focus-visible:ring-2 focus-visible:ring-accent outline-none';
 
@@ -35,26 +46,33 @@ function KnownList() {
   const queue = useKnownQueue();
   const toast = useToast();
   const meta = useQuery({ queryKey: ['meta'], queryFn: api.meta, staleTime: 60_000 });
-  const ids = { search: useId(), lang: useId(), type: useId(), category: useId(), sort: useId() };
+  const ids = {
+    search: useId(),
+    direction: useId(),
+    type: useId(),
+    category: useId(),
+    sort: useId(),
+  };
 
   const [search, setSearch] = useState('');
-  const [lang, setLang] = useState('');
+  /** "from:to", e.g. "en:he" (D-028); empty = every direction. */
+  const [direction, setDirection] = useState('');
   const [type, setType] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [sort, setSort] = useState<KnownSort>('newest');
   const q = useDebounced(search.trim(), 300);
-  const [selected, setSelected] = useState<ReadonlySet<number>>(new Set());
+  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [confirming, setConfirming] = useState(false);
 
-  const filter: KnownFilter = useMemo(
-    () => ({
+  const filter: KnownFilter = useMemo(() => {
+    const [lang, target] = direction ? direction.split(':') : [];
+    return {
       ...(q ? { q } : {}),
-      ...(lang ? { lang } : {}),
+      ...(lang && target ? { lang, target } : {}),
       ...(type === 'word' || type === 'expr' ? { type } : {}),
       ...(categoryId ? { categoryId: Number(categoryId) } : {}),
-    }),
-    [q, lang, type, categoryId],
-  );
+    };
+  }, [q, direction, type, categoryId]);
   const hasFilters = Object.keys(filter).length > 0;
 
   // Marks still in the queue would be missing from the list: send them first.
@@ -71,7 +89,7 @@ function KnownList() {
   });
   const items = list.data?.pages.flatMap((p) => p.items) ?? [];
   const total = list.data?.pages[0]?.total ?? 0;
-  const selectedVisible = items.filter((i) => selected.has(i.itemId)).map((i) => i.itemId);
+  const selectedVisible = items.filter((i) => selected.has(rowKey(i))).map(keyOf);
 
   const restore = useMutation({
     mutationFn: (body: RestoreKnownRequest) => api.restoreKnown(body),
@@ -85,16 +103,27 @@ function KnownList() {
     onError: () => toast.show({ message: strings.known.returnFailed }),
   });
 
-  const toggle = (itemId: number) =>
+  const toggle = (key: string) =>
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(itemId)) next.delete(itemId);
-      else next.add(itemId);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
 
+  const languages = meta.data?.languages ?? [];
   const languageName = (code: string) =>
-    meta.data?.languages.find((l) => l.code === code)?.name ?? code.toUpperCase();
+    languages.find((l) => l.code === code)?.name ?? code.toUpperCase();
+  // Every direction between the active languages; "English → English" is the explanation one.
+  const directions = languages.flatMap((from) =>
+    languages.map((to) => ({
+      value: `${from.code}:${to.code}`,
+      label:
+        from.code === to.code
+          ? strings.known.directionExplanation(from.name)
+          : strings.known.directionOption(from.name, to.name),
+    })),
+  );
 
   return (
     <>
@@ -107,8 +136,8 @@ function KnownList() {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 rounded-[14px] border border-border bg-surface p-4 md:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))]">
-        <div className="col-span-2 flex flex-col gap-1.5 md:col-span-1">
+      <div className="grid grid-cols-2 gap-3 rounded-[14px] border border-border bg-surface p-4 md:grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))]">
+        <div className="col-span-2 flex flex-col gap-1.5 md:col-span-4">
           <label htmlFor={ids.search} className="text-sm text-muted">
             {strings.known.search}
           </label>
@@ -122,11 +151,16 @@ function KnownList() {
             className={selectClass}
           />
         </div>
-        <FilterSelect id={ids.lang} label={strings.known.language} value={lang} onChange={setLang}>
+        <FilterSelect
+          id={ids.direction}
+          label={strings.known.direction}
+          value={direction}
+          onChange={setDirection}
+        >
           <option value="">{strings.known.all}</option>
-          {meta.data?.languages.map((l) => (
-            <option key={l.code} value={l.code}>
-              {l.name}
+          {directions.map((d) => (
+            <option key={d.value} value={d.value}>
+              {d.label}
             </option>
           ))}
         </FilterSelect>
@@ -166,7 +200,7 @@ function KnownList() {
             <>
               <Button3D
                 disabled={restore.isPending}
-                onClick={() => restore.mutate({ itemIds: selectedVisible })}
+                onClick={() => restore.mutate({ marks: selectedVisible })}
               >
                 {strings.known.returnSelected(selectedVisible.length)}
               </Button3D>
@@ -215,12 +249,12 @@ function KnownList() {
         <ul className="flex flex-col gap-3" aria-label={strings.known.title}>
           {items.map((item) => (
             <KnownRow
-              key={item.itemId}
+              key={rowKey(item)}
               item={item}
               languageName={languageName}
-              selected={selected.has(item.itemId)}
-              onToggle={() => toggle(item.itemId)}
-              onReturn={() => restore.mutate({ itemIds: [item.itemId] })}
+              selected={selected.has(rowKey(item))}
+              onToggle={() => toggle(rowKey(item))}
+              onReturn={() => restore.mutate({ marks: [keyOf(item)] })}
               busy={restore.isPending}
             />
           ))}
@@ -315,7 +349,10 @@ function KnownRow({
         type="checkbox"
         checked={selected}
         onChange={onToggle}
-        aria-label={strings.known.selectRow(item.text)}
+        aria-label={strings.known.selectRow(
+          item.text,
+          `${item.lang.toUpperCase()} → ${item.knownTarget.toUpperCase()}`,
+        )}
         className="mt-1.5 h-5 w-5 shrink-0 accent-[var(--accent)]"
       />
       <div className="min-w-0">

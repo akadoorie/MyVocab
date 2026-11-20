@@ -24,7 +24,7 @@ export function KnownQueueProvider({ children }: { children: ReactNode }) {
             userId,
             transport: {
               send: (items, keepalive) => api.markKnown(items, keepalive),
-              remove: (itemId) => api.unmarkKnown(itemId),
+              remove: (itemId, target) => api.unmarkKnown(itemId, target),
             },
             onSent: () => {
               void queryClient.invalidateQueries({ queryKey: ['available'] });

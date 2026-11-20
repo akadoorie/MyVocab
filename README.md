@@ -14,7 +14,7 @@ specification is in [`PRD.md`](./PRD.md); implementation decisions are in
 - **Learners** pick languages, a topic and a type (or just press Start), then go through flip
   cards: Hints on the front, Flip to see the answer, Know / Don't know. Guests get 5 cards per
   loop; signed-in learners (Google) choose 10–50 and their known words are remembered and kept out
-  of future loops, in every direction. "My known words" lets them bring words back.
+  of future loops in the direction they were marked in. "My known words" lets them bring words back.
 - **Admins** manage items (translations, explanation, synonyms, hints, multiple meanings),
   categories, languages, users and settings, import CSV files, restore from Trash and read the
   audit log. The admin area is protected by **two locks**: the admin role and Cloudflare Access.

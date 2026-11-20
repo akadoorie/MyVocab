@@ -67,7 +67,7 @@ describe('KnownQueue', () => {
 
   it('undo before sending removes the mark without calling the server', async () => {
     queue.add(mark(1), UNDO);
-    queue.undo(1);
+    queue.undo(1, 'he');
     await vi.advanceTimersByTimeAsync(UNDO + 5000);
     expect(t.send).not.toHaveBeenCalled();
     expect(t.remove).not.toHaveBeenCalled();
@@ -77,9 +77,9 @@ describe('KnownQueue', () => {
     queue.add(mark(1), UNDO);
     await queue.flush({ all: true, keepalive: true }); // e.g. the tab was hidden
     expect(t.send).toHaveBeenCalledWith([mark(1)], true);
-    queue.undo(1);
+    queue.undo(1, 'he');
     await vi.advanceTimersByTimeAsync(0);
-    expect(t.remove).toHaveBeenCalledWith(1);
+    expect(t.remove).toHaveBeenCalledWith(1, 'he');
   });
 
   it('undo while the mark is in flight deletes it after the send settles', async () => {
@@ -87,20 +87,20 @@ describe('KnownQueue', () => {
     t.send.mockImplementationOnce(() => new Promise<void>((r) => (release = r)));
     queue.add(mark(1), UNDO);
     const flushing = queue.flush({ all: true });
-    queue.undo(1);
+    queue.undo(1, 'he');
     expect(t.remove).not.toHaveBeenCalled();
     release();
     await flushing;
     await vi.advanceTimersByTimeAsync(0);
-    expect(t.remove).toHaveBeenCalledWith(1);
+    expect(t.remove).toHaveBeenCalledWith(1, 'he');
   });
 
   it('undo of a mark another tab already sent still deletes it on the server', async () => {
     queue.add(mark(1), UNDO);
     storage.data.delete(queueStorageKey('u1')); // the other tab sent and removed it
-    queue.undo(1);
+    queue.undo(1, 'he');
     await vi.advanceTimersByTimeAsync(0);
-    expect(t.remove).toHaveBeenCalledWith(1);
+    expect(t.remove).toHaveBeenCalledWith(1, 'he');
   });
 
   it('keeps unsent marks in storage (ids only) and sends them on the next start', async () => {
@@ -114,6 +114,25 @@ describe('KnownQueue', () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(t.send).toHaveBeenCalledWith([mark(7, 2)], false);
     next.stop();
+  });
+
+  it('keeps two directions of the same item apart (D-028)', async () => {
+    queue.add({ itemId: 1, target: 'he', cycle: 1 }, UNDO);
+    queue.add({ itemId: 1, target: 'ar', cycle: 1 }, UNDO); // finalizes the Hebrew mark
+    expect(queue.pending()).toEqual([
+      { itemId: 1, target: 'he', cycle: 1 },
+      { itemId: 1, target: 'ar', cycle: 1 },
+    ]);
+    queue.undo(1, 'ar'); // undoes only the Arabic mark
+    expect(queue.pending()).toEqual([{ itemId: 1, target: 'he', cycle: 1 }]);
+    await vi.advanceTimersByTimeAsync(UNDO + 2000);
+    expect(t.send.mock.calls.map((c) => c[0])).toEqual([[{ itemId: 1, target: 'he', cycle: 1 }]]);
+    expect(t.remove).not.toHaveBeenCalled();
+
+    // Undo of the sent Hebrew mark asks the server to delete that direction only.
+    queue.undo(1, 'he');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(t.remove).toHaveBeenCalledWith(1, 'he');
   });
 
   it('keeps each user’s queue separate', () => {

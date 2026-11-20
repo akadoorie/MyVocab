@@ -71,7 +71,7 @@ describe('POST /api/loops (signed-in learner)', () => {
     const known = await itemId('fx-word-1');
     await authed(cookie, '/me/known', {
       method: 'POST',
-      json: { items: [{ itemId: known, target: 'en', cycle: 1 }] },
+      json: { items: [{ itemId: known, target: 'he', cycle: 1 }] },
     });
     const res = await authed(cookie, '/loops', { method: 'POST', json: { ...body, size: 20 } });
     expect(res.status).toBe(200);

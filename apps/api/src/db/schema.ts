@@ -232,7 +232,11 @@ export const itemCategories = sqliteTable(
   ],
 );
 
-/** Known memory: one row per user + item. It hides the item in every direction (FR-L54). */
+/**
+ * Known memory: one row per user + item + target language. It hides the item only in the
+ * direction it was marked in (FR-L54, D-028); the explanation direction (target = the item's own
+ * language) is a direction of its own.
+ */
 export const userKnownItems = sqliteTable(
   'user_known_items',
   {
@@ -247,7 +251,7 @@ export const userKnownItems = sqliteTable(
     knownAt: integer('known_at').notNull(),
   },
   (t) => [
-    primaryKey({ columns: [t.userId, t.itemId] }),
+    primaryKey({ columns: [t.userId, t.itemId, t.knownTarget] }),
     index('ix_known_item').on(t.itemId),
     check('ck_known_cycle', sql`known_in_cycle >= 1`),
   ],

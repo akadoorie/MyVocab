@@ -27,8 +27,8 @@ import { useSwipe } from './useSwipe';
 export type KnownSink = {
   /** A Know was made (signed-in learners queue it, PRD §6.4). */
   onKnow(mark: KnownMark, target: string): void;
-  /** A Know was changed to Don't know on a card reached with Back (FR-L29a). */
-  onUnknow(itemId: number): void;
+  /** A Know was changed to Don't know on a card reached with Back (FR-L29a); in that direction. */
+  onUnknow(itemId: number, target: string): void;
 };
 
 const noopSink: KnownSink = { onKnow: () => undefined, onUnknow: () => undefined };
@@ -48,7 +48,7 @@ export function LoopPage({ knownSink }: { knownSink?: KnownSink }) {
     return {
       onKnow: (mark, target) => queue.add({ itemId: mark.id, target, cycle: mark.cycle }, delayMs),
       // Drops a pending mark, or deletes it on the server if it was already sent (FR-L53).
-      onUnknow: (itemId) => queue.undo(itemId),
+      onUnknow: (itemId, target) => queue.undo(itemId, target),
     };
   }, [knownSink, queue, stored]);
 
@@ -104,7 +104,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
       const before = id === null ? null : answerOf(state, id);
       // Know · ask again is never recorded (FR-L27a): leaving a Know for it drops the Know.
       if ((type === 'DONT_KNOW' || type === 'KNOW_AGAIN') && id !== null && before === 'know')
-        knownSink.onUnknow(id);
+        knownSink.onUnknow(id, cards.get(id)?.direction.target ?? '');
       if ((type === 'KNOW' || type === 'KNOW_AGAIN') && id !== null) {
         const mark = { id, cycle: state.cycle };
         if (type === 'KNOW' && before !== 'know')

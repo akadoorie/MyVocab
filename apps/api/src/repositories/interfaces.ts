@@ -105,7 +105,7 @@ export type LoopSelection = {
   target: string;
   type: ItemType;
   categoryId: number | null;
-  /** Signed-in learner: their known items are excluded (every direction). */
+  /** Signed-in learner: their items known in this direction (`target`) are excluded (D-028). */
   userId: string | null;
 };
 
@@ -120,14 +120,18 @@ export type KnownMarkRow = { itemId: number; target: string; cycle: number };
 export type KnownFilterInput = {
   q?: string | undefined;
   lang?: string | undefined;
+  target?: string | undefined;
   type?: ItemType | undefined;
   categoryId?: number | undefined;
 };
 
 export type KnownSortKey = 'newest' | 'oldest' | 'az';
 
-/** Position after the last row of a page: the sort value + item id (keyset pagination). */
-export type KnownCursor = { key: number | string; itemId: number };
+/**
+ * Position after the last row of a page: the sort value, then item id and target language, which
+ * together identify a row (keyset pagination, D-028).
+ */
+export type KnownCursor = { key: number | string; itemId: number; target: string };
 
 export type KnownListRow = {
   itemId: number;
@@ -145,11 +149,17 @@ export type KnownListRow = {
 };
 
 export interface KnownRepository {
-  /** Idempotent: existing rows are kept (earliest `known_at`); missing or trashed items skipped. */
+  /**
+   * Idempotent per item + target (D-028): existing rows are kept (earliest `known_at`); missing or
+   * trashed items skipped.
+   */
   insertMany(userId: string, marks: readonly KnownMarkRow[], now: number): Promise<number>;
-  remove(userId: string, itemId: number): Promise<number>;
-  /** Removes the given items (only ones not in Trash). */
+  /** One direction of an item, or every direction when `target` is undefined. */
+  remove(userId: string, itemId: number, target?: string): Promise<number>;
+  /** Removes the given items in every direction (only ones not in Trash). */
   removeMany(userId: string, itemIds: readonly number[]): Promise<number>;
+  /** Removes the given rows: an item in one direction each (only items not in Trash). */
+  removeKeys(userId: string, keys: readonly { itemId: number; target: string }[]): Promise<number>;
   /** Removes every known item matching the filter (not in Trash). */
   removeByFilter(userId: string, filter: KnownFilterInput): Promise<number>;
   list(

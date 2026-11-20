@@ -84,8 +84,11 @@ export const api = {
   // Known items (PRD §12.3)
   markKnown: (items: KnownMarkInput[], keepalive = false) =>
     request('/me/known', postKnownResponseSchema, json('POST', { items }, { keepalive })),
-  unmarkKnown: (itemId: number) =>
-    request(`/me/known/${itemId}`, deleteKnownResponseSchema, { method: 'DELETE' }),
+  /** Undo of a Know in one direction (D-028). */
+  unmarkKnown: (itemId: number, target: string) =>
+    request(`/me/known/${itemId}?target=${encodeURIComponent(target)}`, deleteKnownResponseSchema, {
+      method: 'DELETE',
+    }),
   restoreKnown: (body: RestoreKnownRequest) =>
     request('/me/known/restore', restoreKnownResponseSchema, json('POST', body)),
   knownList: (q: KnownListQuery) => {

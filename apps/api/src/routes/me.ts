@@ -1,5 +1,6 @@
 import {
   deleteMeRequestSchema,
+  knownDeleteQuerySchema,
   knownItemParamSchema,
   knownListQuerySchema,
   postKnownRequestSchema,
@@ -68,6 +69,7 @@ export const meRoutes = new Hono<AppEnv>()
   .delete('/me/known/:itemId', async (c) => {
     const user = await requireUser(c);
     const { itemId } = parseOrThrow(knownItemParamSchema, c.req.param());
-    const removed = await c.get('container').known.unmark(user.id, itemId);
+    const { target } = parseOrThrow(knownDeleteQuerySchema, c.req.query());
+    const removed = await c.get('container').known.unmark(user.id, itemId, target);
     return c.json({ removed });
   });

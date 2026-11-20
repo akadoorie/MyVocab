@@ -21,6 +21,38 @@ describe('schema', () => {
     for (const r of results) expect(r.sql, r.name).toMatch(/WITHOUT ROWID\s*$/i);
   });
 
+  it('keys known items by user, item and target language, and cascades from items (D-028)', async () => {
+    const { results } = await env.DB.prepare(
+      `SELECT name, pk FROM pragma_table_info('user_known_items') WHERE pk > 0 ORDER BY pk`,
+    ).all<{ name: string; pk: number }>();
+    expect(results.map((r) => r.name)).toEqual(['user_id', 'item_id', 'known_target']);
+    const index = await env.DB.prepare(
+      `SELECT 1 AS ok FROM sqlite_master WHERE type = 'index' AND name = 'ix_known_item'`,
+    ).first();
+    expect(index).toEqual({ ok: 1 });
+
+    await insertItem('en', 'Cascade', '{"he":["מפל"]}');
+    await env.DB.prepare(
+      `INSERT INTO "user" (id, name, email, email_verified, created_at, updated_at)
+       VALUES ('u-cascade', 'U', 'cascade@example.test', 1, ?, ?)`,
+    )
+      .bind(now, now)
+      .run();
+    const known = (target: string) =>
+      env.DB.prepare(
+        `INSERT INTO user_known_items (user_id, item_id, known_target, known_in_cycle, known_at)
+         SELECT 'u-cascade', id, ?, 1, ? FROM items WHERE text = 'Cascade'`,
+      )
+        .bind(target, now)
+        .run();
+    await known('he');
+    await known('en');
+    await expect(known('he')).rejects.toThrow(/UNIQUE|PRIMARY KEY/);
+    await env.DB.prepare(`DELETE FROM items WHERE text = 'Cascade'`).run();
+    const left = await env.DB.prepare('SELECT COUNT(*) AS n FROM user_known_items').first();
+    expect(left).toEqual({ n: 0 });
+  });
+
   it('seeds English and Hebrew', async () => {
     const { results } = await env.DB.prepare(
       'SELECT code, dir, script FROM languages ORDER BY sort_order',

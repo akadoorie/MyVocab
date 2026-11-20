@@ -34,7 +34,7 @@ async function openKnownWords(page: Page) {
   await expect(page).toHaveURL(/\/known$/);
 }
 
-test('Know → My known words (ask again is not kept) → hidden in every direction → Return to loops', async ({
+test('Know → My known words (ask again is not kept) → hidden only in that direction → Return to loops', async ({
   page,
   baseURL,
 }, testInfo) => {
@@ -78,13 +78,22 @@ test('Know → My known words (ask again is not kept) → hidden in every direct
   await expect(row.getByText('EN → HE:', { exact: false })).toBeVisible();
   await expect(page.getByRole('main').getByText(askAgain, { exact: true })).toHaveCount(0);
 
-  // …and is no longer offered in either direction (EN → HE and EN → EN).
+  // …and is no longer offered in EN → HE, but still is in EN → EN (its own direction, D-028).
   await expect.poll(() => available(page.request, 'en', 'he')).toBe(enHe - 1);
-  expect(await available(page.request, 'en', 'en')).toBe(enEn - 1);
+  expect(await available(page.request, 'en', 'en')).toBe(enEn);
 
-  // Return to loops: available again everywhere.
+  // The Direction filter: listed under English → Hebrew, not under the explanation direction.
+  const direction = page.getByLabel('Direction');
+  await direction.selectOption({ label: 'English → English (explanation)' });
+  await expect(page.getByText('Nothing matches these filters.')).toBeVisible();
+  await direction.selectOption({ label: 'English → Hebrew' });
+  await expect(row).toBeVisible();
+
+  // Return to loops: available again.
   await row.getByRole('button', { name: 'Return to practice' }).click();
   await expect(page.getByText('1 word is back in practice')).toBeVisible();
+  await expect(page.getByText('Nothing matches these filters.')).toBeVisible();
+  await direction.selectOption({ label: 'All' });
   await expect(page.getByText('No known words yet')).toBeVisible();
   expect(await available(page.request, 'en', 'he')).toBe(enHe);
   expect(await available(page.request, 'en', 'en')).toBe(enEn);

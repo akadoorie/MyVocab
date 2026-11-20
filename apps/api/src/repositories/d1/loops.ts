@@ -27,7 +27,9 @@ function whereClause(s: LoopSelection): SQL {
       ? sql`json_array_length(i.explanation) > 0`
       : sql`COALESCE(json_array_length(i.translation_meaning, '$."' || ${s.target} || '"'), 0) > 0`;
   const known = s.userId
-    ? sql`AND NOT EXISTS (SELECT 1 FROM user_known_items k WHERE k.user_id = ${s.userId} AND k.item_id = i.id)`
+    ? // Known only in this direction hides it (D-028); the primary key covers the lookup.
+      sql`AND NOT EXISTS (SELECT 1 FROM user_known_items k
+          WHERE k.user_id = ${s.userId} AND k.item_id = i.id AND k.known_target = ${s.target})`
     : sql``;
   return sql`i.lang = ${s.source} AND i.type = ${s.type}
     AND i.status = 'published' AND i.deleted_at IS NULL
