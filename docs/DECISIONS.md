@@ -420,3 +420,28 @@ Format: date · context · decision · consequences.
   language has a parallel and no literal entries; ticked, it replaces the list.
 - **Rollout:** the live code before D-026 would show the marker as text, so the marker rows are
   applied only after the D-026 code is deployed.
+
+## D-027 · 2026-11-20 · Adding languages from the admin area (owner request)
+
+- **Why:** new languages (Arabic first) were added by migration only, and the editor and CSV
+  import accepted only active languages, so a language had to be visible to learners before any
+  content existed for it.
+- **Add:** `POST /api/admin/languages` with code, name, native name, direction and script. The
+  Languages tab has an "Add a language" form: a dropdown of common languages fills the fields
+  (still editable), "Other" leaves them to type. A new language starts **inactive** and goes last
+  in the order. The code, direction and script are fixed afterwards; `PATCH` can rename (name,
+  native name) and toggle Active. No delete: items and translations refer to the code.
+- **Validation:** the code uses the existing language-code pattern and must be new (409
+  otherwise, and the insert itself skips an existing code). The script must be a 4-letter ISO
+  15924 code that Unicode regular expressions know (`isSupportedScript` in core), because the
+  mixed-script check builds `\p{Script=…}` from it; mixtures such as `Jpan` are refused.
+- **Inactive means hidden from learners, not from admins:** the item editor (translation blocks,
+  item language), CSV import and its template, the preview and the Items filters work with every
+  known language; inactive ones are marked. Learner-facing rules stay active-only: `/api/meta`,
+  sessions, and the "not playable" warnings and filter (so a new language doesn't flag every
+  item). `AdminItem.playableTargets` now covers every language, for the preview picker.
+- **Arabic text:** matching (`normalize`) also drops Arabic short-vowel and Quranic marks and the
+  tatweel, like Hebrew niqqud. Only Arabic characters are affected, so stored normalized texts of
+  existing items don't change. Rubik already has Arabic letters: the app now imports Rubik's
+  per-weight files, whose subsets each have a `unicode-range` (the single-subset files have none,
+  so every imported one was downloaded on every page).

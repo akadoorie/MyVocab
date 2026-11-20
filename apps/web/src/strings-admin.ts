@@ -139,8 +139,15 @@ export const adminStrings = {
     previewBackTranslation: (name: string) =>
       `The back shows the ${name} parallel (if any), meaning and literal translation.`,
     previewBackExplanation: (name: string) => `The back shows the ${name} explanation.`,
-    previewMissingMeaning: (name: string) => `Not shown to learners yet: add a ${name} meaning.`,
+    previewMissingMeaning: (name: string) => `Not shown to learners yet: add a meaning in ${name}.`,
     previewMissingExplanation: 'Not shown to learners yet: add an explanation.',
+    previewInactive: 'inactive',
+    previewInactiveNote: (name: string) =>
+      `${name} is inactive: learners won’t see this card until it is switched on in Languages.`,
+    /** Inactive languages in the editor (D-027). */
+    inactiveOption: (name: string) => `${name} (inactive)`,
+    inactiveLanguageNote: (name: string) =>
+      `${name} is inactive: learners don’t see it yet. Switch it on in Languages when its content is ready.`,
     deleteItem: 'Move to Trash',
     deleteTitle: (text: string) => `Move “${text}” to Trash?`,
     deleteBody:
@@ -204,10 +211,30 @@ export const adminStrings = {
   },
   languages: {
     title: 'Languages',
-    help: 'Inactive languages are hidden from the start card and the editor; their data is kept. New languages are added by migration or seed.',
+    help: 'Learners see only active languages. An inactive language stays available here, in the editor and in CSV import, so its content can be prepared first; its data is kept.',
     direction: 'Direction',
     script: 'Script',
     activeLabel: (name: string) => `${name} active`,
+    addTitle: 'Add a language',
+    addHelp:
+      'A new language starts inactive. Add its translations and items, check them in the preview, then tick Active.',
+    preset: 'Language',
+    presetChoose: 'Choose a language…',
+    presetOther: 'Other (type the details)',
+    code: 'Code',
+    codeHelp: 'Lowercase ISO 639 code, e.g. ar, fr, pt-br. It can’t be changed later.',
+    codeInvalid: 'Use 2–3 lowercase letters, optionally with a region (pt-br).',
+    codeTaken: (name: string) => `Already used by ${name}.`,
+    name: 'Name (in English)',
+    nativeName: 'Native name',
+    dirLtr: 'Left to right',
+    dirRtl: 'Right to left',
+    scriptHelp: '4-letter ISO 15924 code, e.g. Latn, Hebr, Arab, Cyrl. It can’t be changed later.',
+    scriptInvalid: 'Unknown script code. Use one such as Latn, Hebr, Arab or Cyrl.',
+    add: 'Add language',
+    adding: 'Adding…',
+    added: (name: string) => `${name} added (inactive)`,
+    renamed: 'Language renamed',
   },
   users: {
     title: 'Users',

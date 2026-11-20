@@ -1,7 +1,7 @@
 import { csvHeader, serializeCsv } from '@myvocab/core';
 
 /**
- * The CSV template (FR-A60, PRD §8.3): the header for the active languages and the two
+ * The CSV template (FR-A60, PRD §8.3): the header for every language (D-027) and the
  * illustrative rows (the second shows the three kinds of translation). UTF-8 with BOM so Excel shows Hebrew correctly.
  */
 const EXAMPLES: Record<string, string>[] = [
@@ -45,9 +45,9 @@ const EXAMPLES: Record<string, string>[] = [
   },
 ];
 
-export function importTemplateCsv(activeLanguages: readonly string[]): string {
-  const header = csvHeader(activeLanguages);
-  const rows = EXAMPLES.filter((e) => activeLanguages.includes(e.lang ?? '')).map((e) =>
+export function importTemplateCsv(languages: readonly string[]): string {
+  const header = csvHeader(languages);
+  const rows = EXAMPLES.filter((e) => languages.includes(e.lang ?? '')).map((e) =>
     header.map((column) => e[column] ?? ''),
   );
   return serializeCsv([header, ...rows], { bom: true });

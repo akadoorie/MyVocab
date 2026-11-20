@@ -16,7 +16,6 @@ import {
   normalize,
   playableTargets,
   toLanguageMap,
-  TRANSLATION_KINDS,
   validateItem,
   type CardView,
   type ItemContent,
@@ -41,6 +40,8 @@ export const PURGE_BATCH = 100;
 type LanguageContext = {
   all: LanguageRow[];
   allMap: LanguageMap;
+  allCodes: string[];
+  /** Learner-facing checks (the "not playable" warnings, the list filter) use active ones only. */
   activeCodes: string[];
 };
 
@@ -117,6 +118,7 @@ export class ItemAdminService {
     return {
       all,
       allMap: toLanguageMap(all),
+      allCodes: all.map((l) => l.code),
       activeCodes: all.filter((l) => l.isActive).map((l) => l.code),
     };
   }
@@ -175,7 +177,8 @@ export class ItemAdminService {
       createdAt: rec.createdAt,
       updatedAt: rec.updatedAt,
       warnings: this.warnings(rec, ctx),
-      playableTargets: playableTargets(rec, ctx.activeCodes),
+      // Every language, inactive ones too, for the editor's preview picker (D-027).
+      playableTargets: playableTargets(rec, ctx.allCodes),
     };
   }
 
@@ -225,8 +228,8 @@ export class ItemAdminService {
 
   async create(input: AdminItemCreate, actor: Actor): Promise<AdminItem> {
     const ctx = await this.languageContext();
-    const activeMap = toLanguageMap(ctx.all.filter((l) => l.isActive));
-    const { value, errors } = validateItem(input, { languages: activeMap });
+    // Any known language, active or not: an inactive one is prepared before learners see it (D-027).
+    const { value, errors } = validateItem(input, { languages: ctx.allMap });
     if (errors.length > 0) throw new ValidationError('Invalid item', errors);
     const categoryIds = (await this.checkCategories(input.categoryIds)) ?? [];
     const normalizedText = normalize(value.text);
@@ -257,21 +260,8 @@ export class ItemAdminService {
     const [rec, ctx] = await Promise.all([this.live(id), this.languageContext()]);
     if (rec.version !== patch.version) throw staleError();
 
-    // New translations of any kind only into active languages; existing data of inactive ones is
-    // kept.
-    for (const list of TRANSLATION_KINDS) {
-      for (const code of Object.keys(patch[list] ?? {})) {
-        if (!ctx.activeCodes.includes(code) && !(code in rec[list])) {
-          throw new ValidationError('Invalid item', [
-            {
-              path: `${list}.${code}`,
-              code: 'UNKNOWN_LANGUAGE',
-              message: `Inactive or unknown language "${code}"`,
-            },
-          ]);
-        }
-      }
-    }
+    // Translations into any known language, active or not (D-027); validateItem refuses unknown
+    // codes.
     const { value, errors } = validateItem(
       {
         lang: rec.lang,
@@ -348,12 +338,13 @@ export class ItemAdminService {
     return this.get(id);
   }
 
-  /** Cards for every playable direction, from the same builder as `POST /loops` (FR-A11). */
+  /**
+   * Cards for every playable direction, from the same builder as `POST /loops` (FR-A11),
+   * including inactive languages so their cards can be checked before learners see them (D-027).
+   */
   async preview(id: number): Promise<CardView[]> {
     const [rec, ctx] = await Promise.all([this.live(id), this.languageContext()]);
-    return playableTargets(rec, ctx.activeCodes).map((target) =>
-      buildCard(rec, target, ctx.allMap),
-    );
+    return playableTargets(rec, ctx.allCodes).map((target) => buildCard(rec, target, ctx.allMap));
   }
 
   /** FR-A13: soft delete to Trash. */

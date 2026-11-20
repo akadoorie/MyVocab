@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:test';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { api, authed, categoryId, count, seedFixtures, signIn } from './helpers';
+import { api, authed, categoryId, count, itemId, seedFixtures, signIn } from './helpers';
 
 let admin: { cookie: string; userId: string };
 
@@ -79,6 +79,122 @@ describe('languages (FR-A35)', () => {
       (await req('/admin/languages/xx', { method: 'PATCH', json: { isActive: true } })).status,
     ).toBe(404);
     expect(await actions()).toEqual(['language.update']);
+  });
+
+  type Lang = { code: string; name: string; nativeName: string; isActive: boolean };
+  const ARABIC = { code: 'ar', name: 'Arabic', nativeName: 'العربية', dir: 'rtl', script: 'Arab' };
+  const addArabic = () => req('/admin/languages', { method: 'POST', json: ARABIC });
+  const metaCodes = async () =>
+    (await (await api('/meta')).json<{ languages: { code: string }[] }>()).languages.map(
+      (l) => l.code,
+    );
+
+  it('adds a language inactive and last, audited; learners see it only once activated (D-027)', async () => {
+    const res = await addArabic();
+    expect(res.status).toBe(201);
+    const { languages } = await res.json<{ languages: (Lang & { sortOrder: number })[] }>();
+    expect(languages.map((l) => l.code)).toEqual(['en', 'he', 'ar']);
+    expect(languages[2]).toMatchObject({ ...ARABIC, isActive: false, sortOrder: 3 });
+    expect(await metaCodes()).toEqual(['en', 'he']);
+
+    const on = await req('/admin/languages/ar', { method: 'PATCH', json: { isActive: true } });
+    expect(on.status).toBe(200);
+    expect(await metaCodes()).toEqual(['en', 'he', 'ar']);
+    expect(await actions()).toEqual(['language.create', 'language.update']);
+  });
+
+  it('refuses a duplicate code, an unknown script and badly formed fields', async () => {
+    expect((await addArabic()).status).toBe(201);
+    const dup = await addArabic();
+    expect(dup.status).toBe(409);
+    expect(await dup.json()).toMatchObject({ error: { details: { reason: 'duplicate' } } });
+    expect(
+      (await req('/admin/languages', { method: 'POST', json: { ...ARABIC, code: 'he' } })).status,
+    ).toBe(409);
+
+    for (const bad of [
+      { ...ARABIC, code: 'fr', script: 'Abcd' }, // well formed, but Unicode doesn't know it
+      { ...ARABIC, code: 'fr', script: 'arab' },
+      { ...ARABIC, code: 'FR' },
+      { ...ARABIC, code: 'fr', name: '   ' },
+      { ...ARABIC, code: 'fr', dir: 'up' },
+      { ...ARABIC, code: 'fr', isActive: true }, // a new language always starts inactive
+    ]) {
+      expect((await req('/admin/languages', { method: 'POST', json: bad })).status).toBe(400);
+    }
+    expect(await actions()).toEqual(['language.create']);
+  });
+
+  it('renames a language; the code, direction and script cannot change', async () => {
+    await addArabic();
+    const res = await req('/admin/languages/ar', {
+      method: 'PATCH',
+      json: { name: 'Arabic (MSA)', nativeName: 'العربية الفصحى' },
+    });
+    const ar = (await res.json<{ languages: Lang[] }>()).languages.find((l) => l.code === 'ar');
+    expect(ar).toMatchObject({ name: 'Arabic (MSA)', nativeName: 'العربية الفصحى' });
+    for (const json of [{ dir: 'ltr' }, { script: 'Latn' }, { code: 'xx' }, {}]) {
+      expect((await req('/admin/languages/ar', { method: 'PATCH', json })).status).toBe(400);
+    }
+  });
+
+  it('an inactive language can be edited, imported and previewed, but stays hidden from learners', async () => {
+    await addArabic();
+    const id = await itemId('fx-word-1');
+    type Item = {
+      version: number;
+      meaning: Record<string, string[]>;
+      warnings: { message: string }[];
+      playableTargets: string[];
+    };
+    const before = await (await req(`/admin/items/${id}`)).json<Item>();
+    const patched = await req(`/admin/items/${id}`, {
+      method: 'PATCH',
+      json: { version: before.version, meaning: { ...before.meaning, ar: ['كَلِمَة'] } },
+    });
+    expect(patched.status).toBe(200);
+    const item = await patched.json<Item>();
+    expect(item.meaning.ar).toEqual(['كَلِمَة']);
+    expect(item.playableTargets).toContain('ar');
+    // "Not playable" warnings are about what learners see: none for an inactive language.
+    expect(item.warnings.map((w) => w.message).join(' ')).not.toMatch(/Arabic/);
+
+    const preview = await (
+      await req(`/admin/items/${id}/preview`)
+    ).json<{ direction: { target: string } }[]>();
+    expect(preview.map((c) => c.direction.target)).toContain('ar');
+
+    // A new item in the inactive language, and a CSV with its columns.
+    const created = await req('/admin/items', {
+      method: 'POST',
+      json: { lang: 'ar', text: 'كلمة-تجربة', type: 'word', meaning: { en: ['test-word'] } },
+    });
+    expect(created.status).toBe(201);
+    const csv = [
+      'lang,text,type,translation_meaning_ar,translation_meaning_he',
+      'en,ar-import-word,word,كلمة-مستوردة,מילה-מיובאת',
+    ].join('\n');
+    const form = new FormData();
+    form.append('file', new File([csv], 'ar.csv', { type: 'text/csv' }));
+    const report = await (
+      await req('/admin/import?dryRun=true', { method: 'POST', body: form })
+    ).json<{ errors: unknown[]; totals: { newItems: number } }>();
+    expect(report.errors).toEqual([]);
+    expect(report.totals.newItems).toBe(1);
+
+    const template = await (await req('/admin/import/template')).text();
+    expect(template.split(/\r?\n/)[0]).toContain('translation_meaning_ar');
+
+    expect(await metaCodes()).toEqual(['en', 'he']);
+  });
+
+  it('still refuses translations into a language that does not exist', async () => {
+    const id = await itemId('fx-word-1');
+    const res = await req(`/admin/items/${id}`, {
+      method: 'PATCH',
+      json: { version: 1, meaning: { xx: ['nope'] } },
+    });
+    expect(res.status).toBe(400);
   });
 });
 

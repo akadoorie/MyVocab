@@ -1,9 +1,16 @@
-import type { AdminCategory, AdminLanguage } from '@myvocab/contracts';
-import { ConflictError, NotFoundError } from '../../middleware/errors';
+import type {
+  AdminCategory,
+  AdminLanguage,
+  LanguageCreate,
+  LanguagePatch,
+} from '@myvocab/contracts';
+import { isSupportedScript } from '@myvocab/core';
+import { ConflictError, NotFoundError, ValidationError } from '../../middleware/errors';
 import type {
   Actor,
   AdminCategoryRepository,
   AdminLanguageRepository,
+  LanguageChanges,
   LanguageRepository,
 } from '../../repositories/interfaces';
 
@@ -118,16 +125,45 @@ export class CatalogAdminService {
     }));
   }
 
-  /** At least one language stays active (the start card needs one). */
-  async setLanguageActive(code: string, isActive: boolean, actor: Actor): Promise<AdminLanguage[]> {
+  /**
+   * Adds a language (D-027). It starts inactive, so its content can be prepared before learners
+   * see it. The code, direction and script are fixed from then on.
+   */
+  async createLanguage(input: LanguageCreate, actor: Actor): Promise<AdminLanguage[]> {
+    if (!isSupportedScript(input.script)) {
+      throw new ValidationError('Invalid language', [
+        {
+          path: 'script',
+          message: `Unknown script "${input.script}". Use a code such as Latn, Hebr, Arab or Cyrl.`,
+        },
+      ]);
+    }
+    const all = await this.deps.languages.listAll();
+    const taken = () =>
+      new ConflictError(`The language code "${input.code}" is already used`, {
+        reason: 'duplicate',
+      });
+    if (all.some((l) => l.code === input.code)) throw taken();
+    const created = await this.deps.adminLanguages.create(input, actor, this.now());
+    if (!created) throw taken();
+    return this.listLanguages();
+  }
+
+  /** Activate / deactivate or rename. At least one language stays active (the start card needs one). */
+  async updateLanguage(code: string, patch: LanguagePatch, actor: Actor): Promise<AdminLanguage[]> {
     const all = await this.deps.languages.listAll();
     const language = all.find((l) => l.code === code);
     if (!language) throw new NotFoundError('Language not found');
-    if (language.isActive === isActive) return this.listLanguages();
-    if (!isActive && all.filter((l) => l.isActive).length <= 1) {
+    const changes: LanguageChanges = {};
+    for (const key of ['name', 'nativeName', 'isActive'] as const) {
+      const value = patch[key];
+      if (value !== undefined && value !== language[key]) Object.assign(changes, { [key]: value });
+    }
+    if (Object.keys(changes).length === 0) return this.listLanguages();
+    if (changes.isActive === false && all.filter((l) => l.isActive).length <= 1) {
       throw new ConflictError('At least one language must stay active');
     }
-    await this.deps.adminLanguages.setActive(code, isActive, actor, this.now());
+    await this.deps.adminLanguages.update(code, changes, actor, this.now());
     return this.listLanguages();
   }
 }

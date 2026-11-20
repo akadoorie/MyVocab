@@ -17,6 +17,21 @@ function scriptRegex(script: string): RegExp {
   return re;
 }
 
+/**
+ * True when `script` is a 4-letter ISO 15924 code that Unicode regular expressions know (e.g.
+ * 'Latn', 'Hebr', 'Arab', 'Cyrl'), so the mixed-script check can use it. Codes for mixtures such as
+ * 'Jpan' or 'Kore' are not Unicode script properties and are refused (D-027).
+ */
+export function isSupportedScript(script: string): boolean {
+  if (!SCRIPT_CODE.test(script)) return false;
+  try {
+    scriptRegex(script);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Returns the distinct letters in `text` that are not in `script` (empty if none). */
 export function foreignLetters(text: string, script: string): string[] {
   const allowed = scriptRegex(script);

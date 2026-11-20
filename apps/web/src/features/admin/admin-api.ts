@@ -18,6 +18,7 @@ import {
   type AdminItemPatch,
   type AdminUserPatch,
   type AuditQuery,
+  type LanguageCreate,
   type SettingsUpdate,
 } from '@myvocab/contracts';
 import { z } from 'zod';
@@ -104,6 +105,10 @@ export const adminApi = {
   languages: () => adminRequest('/languages', adminLanguageListSchema),
   setLanguageActive: (code: string, isActive: boolean) =>
     adminRequest(`/languages/${code}`, adminLanguageListSchema, json('PATCH', { isActive })),
+  createLanguage: (body: LanguageCreate) =>
+    adminRequest('/languages', adminLanguageListSchema, json('POST', body)),
+  renameLanguage: (code: string, body: { name: string; nativeName: string }) =>
+    adminRequest(`/languages/${code}`, adminLanguageListSchema, json('PATCH', body)),
 
   users: (q: { q?: string; cursor?: string }) =>
     adminRequest(`/users${query(q)}`, adminUserListResponseSchema),

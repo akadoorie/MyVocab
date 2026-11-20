@@ -205,7 +205,34 @@ export const adminLanguageSchema = z.object({
 });
 export type AdminLanguage = z.infer<typeof adminLanguageSchema>;
 export const adminLanguageListSchema = z.object({ languages: z.array(adminLanguageSchema) });
-export const languagePatchSchema = z.object({ isActive: z.boolean() }).strict();
+const languageName = z.string().trim().min(1, 'Required').max(40);
+/** ISO 15924, e.g. 'Arab'. The server also checks that Unicode knows it (core isSupportedScript). */
+export const scriptCodeSchema = z
+  .string()
+  .regex(/^[A-Z][a-z]{3}$/, 'Use a 4-letter ISO 15924 script code, e.g. Latn, Hebr, Arab');
+
+/** POST /api/admin/languages (D-027). A new language always starts inactive. */
+export const languageCreateSchema = z
+  .object({
+    code: langCodeSchema,
+    name: languageName,
+    nativeName: languageName,
+    dir: dirSchema,
+    script: scriptCodeSchema,
+  })
+  .strict();
+export type LanguageCreate = z.infer<typeof languageCreateSchema>;
+
+/** PATCH /api/admin/languages/:code: activate, or rename (the code, direction and script stay). */
+export const languagePatchSchema = z
+  .object({
+    isActive: z.boolean().optional(),
+    name: languageName.optional(),
+    nativeName: languageName.optional(),
+  })
+  .strict()
+  .refine((v) => Object.keys(v).length > 0, 'Nothing to change');
+export type LanguagePatch = z.infer<typeof languagePatchSchema>;
 
 // ---------------------------------------------------------------------------------------------
 // Users (FR-A40–42)

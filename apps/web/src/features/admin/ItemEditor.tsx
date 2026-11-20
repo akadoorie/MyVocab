@@ -147,6 +147,7 @@ export function NewItemPage() {
   const { languages, categories, ready } = useCatalog();
   const active = languages.filter((l) => l.isActive);
   const langId = useId();
+  const langNoteId = useId();
   const [lang, setLang] = useState('');
   const [header, setHeader] = useState<Header>({
     text: '',
@@ -197,14 +198,22 @@ export function NewItemPage() {
             value={chosenLang}
             onChange={(e) => setLang(e.target.value)}
             className={inputClass}
+            aria-describedby={langNoteId}
           >
-            {active.map((l) => (
+            {/* Inactive languages too, so their items can be prepared (D-027). */}
+            {languages.map((l) => (
               <option key={l.code} value={l.code}>
-                {l.name}
+                {l.isActive ? l.name : s.editor.inactiveOption(l.name)}
               </option>
             ))}
           </select>
-          <p className="text-xs text-muted">{s.editor.languageFixed}</p>
+          <p id={langNoteId} className="text-xs text-muted">
+            {languages.find((l) => l.code === chosenLang)?.isActive === false
+              ? s.editor.inactiveLanguageNote(
+                  languages.find((l) => l.code === chosenLang)?.name ?? chosenLang,
+                )
+              : s.editor.languageFixed}
+          </p>
         </div>
         <HeaderFields
           value={header}
@@ -300,7 +309,8 @@ function Editor({
 
   const itemLang = languages.find((l) => l.code === item.lang);
   const itemDir = itemLang?.dir ?? 'ltr';
-  const targets = languages.filter((l) => l.isActive && l.code !== item.lang);
+  // Every other language, inactive ones too (marked), so their content can be prepared (D-027).
+  const targets = languages.filter((l) => l.code !== item.lang);
 
   function save(patch: Omit<AdminItemPatch, 'version'>): Promise<boolean> {
     const run = queue.current.then(async () => {
@@ -404,6 +414,9 @@ function Editor({
           <p className="text-sm text-muted">{s.editor.language}</p>
           <p className="font-medium">{itemLang?.name ?? item.lang}</p>
           <p className="text-xs text-muted">{s.editor.languageFixed}</p>
+          {itemLang && !itemLang.isActive && (
+            <p className="mt-1 text-xs text-hint">{s.editor.inactiveLanguageNote(itemLang.name)}</p>
+          )}
         </div>
         <HeaderFields value={header} onChange={setHeader} categories={categories} errors={{}} />
         <div className="md:col-span-2">
@@ -438,6 +451,11 @@ function Editor({
       <div className="flex flex-col gap-6">
         {targets.map((target) => (
           <div key={target.code} className="rounded-[14px] border border-border bg-surface p-5">
+            {!target.isActive && (
+              <p className="mb-4 rounded-[10px] border border-hint px-3 py-2 text-sm text-hint">
+                {s.editor.inactiveLanguageNote(target.name)}
+              </p>
+            )}
             {/* The three kinds of translation (PRD §8.1, D-024): parallel, meaning, literal. */}
             {TRANSLATION_KINDS.map((kind, i) => (
               <div key={kind} className={i > 0 ? 'mt-5 border-t border-border pt-5' : ''}>
@@ -540,7 +558,8 @@ const PICKER_BUTTONS_MAX = 6;
  * chooses the answer language: the other languages first (translation cards), then the item's own
  * language (explanation card). Each choice is marked ready or not, and one that isn't ready says
  * what to add. It opens on the first ready translation language (Hebrew item → English, English
- * item → Hebrew).
+ * item → Hebrew), active languages before inactive ones. Inactive languages are listed and marked,
+ * so their cards can be checked before learners see them (D-027).
  */
 function Preview({ item, languages }: { item: AdminItem; languages: AdminLanguage[] }) {
   const preview = useQuery({
@@ -548,11 +567,11 @@ function Preview({ item, languages }: { item: AdminItem; languages: AdminLanguag
     queryFn: () => adminApi.preview(item.itemId),
   });
   const pickerId = useId();
-  const active = languages.filter((l) => l.isActive);
-  const own = active.find((l) => l.code === item.lang);
-  const options = [...active.filter((l) => l.code !== item.lang), ...(own ? [own] : [])];
+  const own = languages.find((l) => l.code === item.lang);
+  const options = [...languages.filter((l) => l.code !== item.lang), ...(own ? [own] : [])];
   const ready = (code: string) => item.playableTargets.includes(code);
-  const fallback = options.find((l) => l.code !== item.lang && ready(l.code)) ?? options[0];
+  const translations = options.filter((l) => l.code !== item.lang && ready(l.code));
+  const fallback = translations.find((l) => l.isActive) ?? translations[0] ?? options[0];
   const [chosen, setChosen] = useState<string | null>(null);
   const target = options.find((l) => l.code === chosen) ?? fallback;
   if (!target) return null;
@@ -561,7 +580,13 @@ function Preview({ item, languages }: { item: AdminItem; languages: AdminLanguag
   const isExplanation = target.code === item.lang;
   const card = preview.data?.find((c) => c.direction.target === target.code);
   const mark = (code: string) => (ready(code) ? '✓' : '✗');
-  const status = (code: string) => (ready(code) ? s.editor.previewReady : s.editor.previewNotReady);
+  const status = (l: AdminLanguage) => {
+    const parts: string[] = [ready(l.code) ? s.editor.previewReady : s.editor.previewNotReady];
+    if (!l.isActive) parts.push(s.editor.previewInactive);
+    return parts.join(', ');
+  };
+  const label = (l: AdminLanguage) =>
+    l.isActive ? l.name : `${l.name} (${s.editor.previewInactive})`;
 
   return (
     <section aria-label={s.editor.preview} className="flex flex-col gap-4">
@@ -583,7 +608,7 @@ function Preview({ item, languages }: { item: AdminItem; languages: AdminLanguag
           >
             {options.map((l) => (
               <option key={l.code} value={l.code}>
-                {`${l.name} ${mark(l.code)}`}
+                {`${label(l)} ${mark(l.code)}`}
               </option>
             ))}
           </select>
@@ -601,11 +626,11 @@ function Preview({ item, languages }: { item: AdminItem; languages: AdminLanguag
                   key={l.code}
                   type="button"
                   aria-pressed={on}
-                  aria-label={`${l.name}, ${status(l.code)}`}
+                  aria-label={`${l.name}, ${status(l)}`}
                   onClick={() => setChosen(l.code)}
-                  className={`min-h-10 rounded-full border px-3 text-sm ${on ? 'border-accent bg-accent-strong text-[var(--on-color)]' : 'border-border text-muted hover:text-text'}`}
+                  className={`min-h-10 rounded-full border px-3 text-sm ${on ? 'border-accent bg-accent-strong text-[var(--on-color)]' : 'border-border text-muted hover:text-text'} ${l.isActive ? '' : 'border-dashed'}`}
                 >
-                  {l.name}{' '}
+                  {label(l)}{' '}
                   <span
                     aria-hidden="true"
                     className={on ? '' : ready(l.code) ? 'text-know' : 'text-dontknow'}
@@ -633,6 +658,9 @@ function Preview({ item, languages }: { item: AdminItem; languages: AdminLanguag
               ? s.editor.previewMissingExplanation
               : s.editor.previewMissingMeaning(target.name)}
         </p>
+        {!target.isActive && (
+          <p className="text-sm text-hint">{s.editor.previewInactiveNote(target.name)}</p>
+        )}
       </div>
       {ready(target.code) && card && <PreviewCard key={target.code} card={card} />}
     </section>

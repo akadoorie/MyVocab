@@ -82,7 +82,9 @@ export class CsvImportService {
     }
 
     const allLanguages = await this.deps.languages.listAll();
-    const languages = toLanguageMap(allLanguages.filter((l) => l.isActive));
+    // Every known language, inactive ones too, so content can be prepared before learners see it
+    // (D-027).
+    const languages = toLanguageMap(allLanguages);
     const parsed = parseImportCsv(input.csvText, {
       languages,
       ...(limits ? { maxRows: limits.maxRows } : {}),

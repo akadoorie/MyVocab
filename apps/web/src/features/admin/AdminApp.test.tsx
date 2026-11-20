@@ -188,6 +188,42 @@ describe('AdminApp', () => {
     expect(screen.getByRole('heading', { name: 'Hebrew → English · Translation' })).toBeVisible();
   });
 
+  it('editor: an inactive language gets its own marked block and preview button (D-027)', async () => {
+    const withArabic = {
+      languages: [
+        ...LANGUAGES.languages,
+        {
+          code: 'ar',
+          name: 'Arabic',
+          nativeName: 'العربية',
+          dir: 'rtl',
+          script: 'Arab',
+          isActive: false,
+          sortOrder: 2,
+        },
+      ],
+    };
+    render('/admin/items/7', {
+      'GET /api/admin/items/7': () => Response.json(ITEM),
+      'GET /api/admin/languages': () => Response.json(withArabic),
+    });
+    expect(await screen.findByRole('heading', { name: 'Arabic meaning (required)' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Hebrew meaning (required)' })).toBeVisible();
+    expect(screen.getByText(/^Arabic is inactive: learners don’t see it yet\./)).toBeVisible();
+
+    const picker = screen.getByRole('group', { name: 'Show the answer in' });
+    const arabic = within(picker).getByRole('button', { name: 'Arabic, not shown yet, inactive' });
+    // The active, ready translation language is still the default.
+    expect(within(picker).getByRole('button', { name: 'Hebrew, ready' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    fireEvent.click(arabic);
+    expect(screen.getByRole('heading', { name: 'English → Arabic · Translation' })).toBeVisible();
+    expect(screen.getByText('Not shown to learners yet: add a meaning in Arabic.')).toBeVisible();
+    expect(screen.getByText(/^Arabic is inactive: learners won’t see this card/)).toBeVisible();
+  });
+
   it('settings: "Maximum amount" explains itself under the field', async () => {
     render('/admin/settings', { 'GET /api/admin/settings': () => Response.json({}) });
     const field = await screen.findByLabelText('Maximum amount');

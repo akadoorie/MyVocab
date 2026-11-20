@@ -36,7 +36,7 @@ type Report = {
 };
 
 describe('GET /api/admin/import/template', () => {
-  it('serves a UTF-8 (BOM) template for the active languages that imports cleanly', async () => {
+  it('serves a UTF-8 (BOM) template for every language that imports cleanly', async () => {
     const res = await authed(admin.cookie, '/admin/import/template');
     expect(res.headers.get('Content-Type')).toContain('text/csv');
     expect(res.headers.get('Content-Disposition')).toContain('attachment');

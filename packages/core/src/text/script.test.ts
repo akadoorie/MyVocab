@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { foreignLetters, hasForeignLetters } from './script';
+import { foreignLetters, hasForeignLetters, isSupportedScript } from './script';
 
 describe('foreignLetters', () => {
   it('finds a Hebrew letter inside English text', () => {
@@ -25,5 +25,22 @@ describe('foreignLetters', () => {
 
   it('rejects an invalid script code', () => {
     expect(() => foreignLetters('x', 'latin}')).toThrow(/Invalid/);
+  });
+});
+
+describe('isSupportedScript (D-027)', () => {
+  it('accepts ISO 15924 codes that are Unicode script properties', () => {
+    for (const code of ['Latn', 'Hebr', 'Arab', 'Cyrl', 'Grek', 'Deva', 'Hani', 'Thai'])
+      expect(isSupportedScript(code)).toBe(true);
+  });
+
+  it('refuses unknown codes, mixtures and badly formed values', () => {
+    for (const code of ['Abcd', 'Jpan', 'Kore', 'latn', 'LATN', 'Lat', 'Latn}', ''])
+      expect(isSupportedScript(code)).toBe(false);
+  });
+
+  it('finds Latin letters inside Arabic text', () => {
+    expect(foreignLetters('كتاب x', 'Arab')).toEqual(['x']);
+    expect(foreignLetters('كِتَابٌ', 'Arab')).toEqual([]);
   });
 });

@@ -1,4 +1,4 @@
-import type { ItemType } from '@myvocab/core';
+import type { ItemType, TextDir } from '@myvocab/core';
 import { and, count, eq, sql, type SQL } from 'drizzle-orm';
 import { AFTER_ONE_CHANGE, auditInsert, runBatch } from '../../db/batch';
 import type { Db } from '../../db/client';
@@ -16,6 +16,7 @@ import type {
   AuditRow,
   CategoryRow,
   CategoryWithCount,
+  LanguageChanges,
   StatsRepository,
 } from '../interfaces';
 import { likePattern } from './shared';
@@ -184,16 +185,46 @@ export class D1AdminLanguageRepository implements AdminLanguageRepository {
     private readonly d1: D1Database,
   ) {}
 
-  async setActive(code: string, isActive: boolean, actor: Actor, now: number): Promise<boolean> {
+  async create(
+    input: { code: string; name: string; nativeName: string; dir: TextDir; script: string },
+    actor: Actor,
+    now: number,
+  ): Promise<boolean> {
     const [result] = await runBatch(this.d1, [
-      this.db.update(languages).set({ isActive }).where(eq(languages.code, code)),
+      sql`INSERT INTO languages (code, name, native_name, dir, script, is_active, sort_order)
+          SELECT ${input.code}, ${input.name}, ${input.nativeName}, ${input.dir}, ${input.script}, 0,
+                 COALESCE((SELECT MAX(sort_order) FROM languages), 0) + 1
+          WHERE NOT EXISTS (SELECT 1 FROM languages WHERE code = ${input.code})`,
+      auditInsert(
+        {
+          actor,
+          action: 'language.create',
+          entityType: 'language',
+          entityId: input.code,
+          details: { after: { ...input, isActive: false } },
+        },
+        now,
+        AFTER_ONE_CHANGE,
+      ),
+    ]);
+    return result?.meta.changes === 1;
+  }
+
+  async update(
+    code: string,
+    changes: LanguageChanges,
+    actor: Actor,
+    now: number,
+  ): Promise<boolean> {
+    const [result] = await runBatch(this.d1, [
+      this.db.update(languages).set(changes).where(eq(languages.code, code)),
       auditInsert(
         {
           actor,
           action: 'language.update',
           entityType: 'language',
           entityId: code,
-          details: { isActive },
+          details: changes,
         },
         now,
         AFTER_ONE_CHANGE,

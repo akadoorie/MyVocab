@@ -1,10 +1,18 @@
-import { categorySlugSchema, type AdminCategory } from '@myvocab/contracts';
+import {
+  categorySlugSchema,
+  langCodeSchema,
+  type AdminCategory,
+  type AdminLanguage,
+  type LanguageCreate,
+} from '@myvocab/contracts';
+import { isSupportedScript } from '@myvocab/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useId, useState } from 'react';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { useToast } from '../../components/Toast';
 import { adminStrings as s } from '../../strings-admin';
 import { adminApi, errorMessage } from './admin-api';
+import { LANGUAGE_PRESETS } from './language-presets';
 import { Badge, ErrorState, Field, ghostButton, inputClass, Loading, PageTitle } from './ui';
 
 /**
@@ -273,20 +281,40 @@ export function CategoriesPage() {
   );
 }
 
-/** `/admin/languages` (FR-A35). */
+/** `/admin/languages` (FR-A35): activate, rename and add languages (D-027). */
 export function LanguagesPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
   const list = useQuery({ queryKey: ['admin', 'languages'], queryFn: adminApi.languages });
+  const [editing, setEditing] = useState<{
+    code: string;
+    name: string;
+    nativeName: string;
+  } | null>(null);
+  const applied = (data: { languages: AdminLanguage[] }) => {
+    queryClient.setQueryData(['admin', 'languages'], data);
+    void queryClient.invalidateQueries({ queryKey: ['meta'] });
+  };
+  const fail = (e: unknown) =>
+    toast.show({ message: errorMessage(e, s.common.genericError), durationMs: 8000 });
   const toggle = useMutation({
     mutationFn: (v: { code: string; isActive: boolean }) =>
       adminApi.setLanguageActive(v.code, v.isActive),
-    onSuccess: (data) => {
-      queryClient.setQueryData(['admin', 'languages'], data);
-      void queryClient.invalidateQueries({ queryKey: ['meta'] });
-    },
-    onError: (e) => toast.show({ message: errorMessage(e, s.common.genericError) }),
+    onSuccess: applied,
+    onError: fail,
   });
+  const rename = useMutation({
+    mutationFn: (v: { code: string; name: string; nativeName: string }) =>
+      adminApi.renameLanguage(v.code, { name: v.name, nativeName: v.nativeName }),
+    onSuccess: (data) => {
+      applied(data);
+      setEditing(null);
+      toast.show({ message: s.languages.renamed });
+    },
+    onError: fail,
+  });
+  const languages = list.data?.languages ?? [];
+
   return (
     <div className="flex flex-col gap-4">
       <PageTitle>{s.languages.title}</PageTitle>
@@ -296,39 +324,308 @@ export function LanguagesPage() {
       ) : list.isError ? (
         <ErrorState onRetry={() => void list.refetch()} />
       ) : (
-        <ul className="flex flex-col gap-2" aria-label={s.languages.title}>
-          {list.data.languages.map((l) => (
-            <li
-              key={l.code}
-              className="flex flex-wrap items-center gap-3 rounded-[14px] border border-border bg-surface p-4"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="font-medium">
-                  {l.name}{' '}
-                  <span lang={l.code} dir={l.dir} className="text-muted">
-                    ({l.nativeName})
-                  </span>
-                </p>
-                <p className="text-xs text-muted">
-                  {l.code} · {s.languages.direction}: {l.dir.toUpperCase()} · {s.languages.script}:{' '}
-                  {l.script}
-                </p>
-              </div>
-              <label className="flex min-h-11 items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={l.isActive}
-                  aria-label={s.languages.activeLabel(l.name)}
-                  disabled={toggle.isPending}
-                  onChange={(e) => toggle.mutate({ code: l.code, isActive: e.target.checked })}
-                  className="h-5 w-5 accent-[var(--accent)]"
-                />
-                {l.isActive ? s.common.active : s.common.inactive}
-              </label>
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="flex flex-col gap-2" aria-label={s.languages.title}>
+            {languages.map((l) => (
+              <li
+                key={l.code}
+                className="flex flex-wrap items-center gap-3 rounded-[14px] border border-border bg-surface p-4"
+              >
+                {editing?.code === l.code ? (
+                  <form
+                    className="flex flex-1 flex-wrap gap-2"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      rename.mutate({
+                        code: l.code,
+                        name: editing.name.trim(),
+                        nativeName: editing.nativeName.trim(),
+                      });
+                    }}
+                  >
+                    <input
+                      autoComplete="off"
+                      aria-label={s.languages.name}
+                      value={editing.name}
+                      maxLength={40}
+                      onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                      className={`${inputClass} md:w-56`}
+                    />
+                    <input
+                      autoComplete="off"
+                      aria-label={s.languages.nativeName}
+                      lang={l.code}
+                      dir={l.dir}
+                      value={editing.nativeName}
+                      maxLength={40}
+                      onChange={(e) => setEditing({ ...editing, nativeName: e.target.value })}
+                      className={`${inputClass} md:w-56`}
+                    />
+                    <button
+                      type="submit"
+                      className={ghostButton}
+                      disabled={
+                        !editing.name.trim() || !editing.nativeName.trim() || rename.isPending
+                      }
+                    >
+                      {s.common.save}
+                    </button>
+                    <button type="button" className={ghostButton} onClick={() => setEditing(null)}>
+                      {s.common.cancel}
+                    </button>
+                  </form>
+                ) : (
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium">
+                      {l.name}{' '}
+                      <span lang={l.code} dir={l.dir} className="text-muted">
+                        ({l.nativeName})
+                      </span>
+                    </p>
+                    <p className="text-xs text-muted">
+                      {l.code} · {s.languages.direction}: {l.dir.toUpperCase()} ·{' '}
+                      {s.languages.script}: {l.script}
+                    </p>
+                  </div>
+                )}
+                <label className="flex min-h-11 items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={l.isActive}
+                    aria-label={s.languages.activeLabel(l.name)}
+                    disabled={toggle.isPending}
+                    onChange={(e) => toggle.mutate({ code: l.code, isActive: e.target.checked })}
+                    className="h-5 w-5 accent-[var(--accent)]"
+                  />
+                  {l.isActive ? s.common.active : <Badge>{s.common.inactive}</Badge>}
+                </label>
+                {editing?.code !== l.code && (
+                  <button
+                    type="button"
+                    className={ghostButton}
+                    aria-label={`${s.common.edit} ${l.name}`}
+                    onClick={() =>
+                      setEditing({ code: l.code, name: l.name, nativeName: l.nativeName })
+                    }
+                  >
+                    {s.common.edit}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+          <AddLanguageForm languages={languages} onAdded={applied} onError={fail} />
+        </>
       )}
     </div>
+  );
+}
+
+const EMPTY_LANGUAGE: LanguageCreate = {
+  code: '',
+  name: '',
+  nativeName: '',
+  dir: 'ltr',
+  script: '',
+};
+
+/**
+ * "Add a language" (D-027): a preset fills the details (still editable); "Other" leaves them for
+ * the admin to type. The language is created inactive.
+ */
+function AddLanguageForm({
+  languages,
+  onAdded,
+  onError,
+}: {
+  languages: AdminLanguage[];
+  onAdded: (data: { languages: AdminLanguage[] }) => void;
+  onError: (e: unknown) => void;
+}) {
+  const toast = useToast();
+  const ids = {
+    preset: useId(),
+    code: useId(),
+    codeNote: useId(),
+    name: useId(),
+    nativeName: useId(),
+    script: useId(),
+    scriptNote: useId(),
+  };
+  const [preset, setPreset] = useState('');
+  const [form, setForm] = useState<LanguageCreate>(EMPTY_LANGUAGE);
+  const set = <K extends keyof LanguageCreate>(key: K, value: LanguageCreate[K]) =>
+    setForm((f) => ({ ...f, [key]: value }));
+  const existing = new Set(languages.map((l) => l.code));
+  const presets = LANGUAGE_PRESETS.filter((p) => !existing.has(p.code));
+
+  const create = useMutation({
+    mutationFn: (body: LanguageCreate) => adminApi.createLanguage(body),
+    onSuccess: (data, body) => {
+      onAdded(data);
+      toast.show({ message: s.languages.added(body.name) });
+      setPreset('');
+      setForm(EMPTY_LANGUAGE);
+    },
+    onError,
+  });
+
+  const code = form.code.trim();
+  const script = form.script.trim();
+  const takenBy = languages.find((l) => l.code === code);
+  const codeError = !code
+    ? null
+    : !langCodeSchema.safeParse(code).success
+      ? s.languages.codeInvalid
+      : takenBy
+        ? s.languages.codeTaken(takenBy.name)
+        : null;
+  const scriptError = script && !isSupportedScript(script) ? s.languages.scriptInvalid : null;
+  const body: LanguageCreate = {
+    ...form,
+    code,
+    script,
+    name: form.name.trim(),
+    nativeName: form.nativeName.trim(),
+  };
+  const canAdd =
+    !!code &&
+    !!script &&
+    !!body.name &&
+    !!body.nativeName &&
+    !codeError &&
+    !scriptError &&
+    !create.isPending;
+
+  return (
+    <section
+      aria-labelledby={`${ids.preset}-title`}
+      className="flex flex-col gap-4 rounded-[14px] border border-border bg-surface p-5"
+    >
+      <div className="flex flex-col gap-1">
+        <h2 id={`${ids.preset}-title`} className="text-lg font-semibold">
+          {s.languages.addTitle}
+        </h2>
+        <p className="text-sm text-muted">{s.languages.addHelp}</p>
+      </div>
+      <form
+        className="grid gap-3 md:grid-cols-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (canAdd) create.mutate(body);
+        }}
+      >
+        <Field id={ids.preset} label={s.languages.preset} className="md:col-span-2">
+          <select
+            id={ids.preset}
+            value={preset}
+            onChange={(e) => {
+              const next = e.target.value;
+              setPreset(next);
+              const chosen = presets.find((p) => p.code === next);
+              setForm(chosen ?? EMPTY_LANGUAGE);
+            }}
+            className={inputClass}
+          >
+            <option value="">{s.languages.presetChoose}</option>
+            {presets.map((p) => (
+              <option key={p.code} value={p.code}>
+                {p.name} ({p.nativeName})
+              </option>
+            ))}
+            <option value="other">{s.languages.presetOther}</option>
+          </select>
+        </Field>
+        {preset !== '' && (
+          <>
+            <Field id={ids.code} label={s.languages.code}>
+              <input
+                autoComplete="off"
+                id={ids.code}
+                value={form.code}
+                maxLength={12}
+                onChange={(e) => set('code', e.target.value.toLowerCase())}
+                className={inputClass}
+                placeholder="ar"
+                aria-invalid={codeError ? true : undefined}
+                aria-describedby={ids.codeNote}
+              />
+              <p
+                id={ids.codeNote}
+                className={`text-sm ${codeError ? 'text-dontknow' : 'text-muted'}`}
+                aria-live="polite"
+              >
+                {codeError ?? s.languages.codeHelp}
+              </p>
+            </Field>
+            <Field id={ids.script} label={s.languages.script}>
+              <input
+                autoComplete="off"
+                id={ids.script}
+                value={form.script}
+                maxLength={4}
+                onChange={(e) => set('script', e.target.value)}
+                className={inputClass}
+                placeholder="Arab"
+                aria-invalid={scriptError ? true : undefined}
+                aria-describedby={ids.scriptNote}
+              />
+              <p
+                id={ids.scriptNote}
+                className={`text-sm ${scriptError ? 'text-dontknow' : 'text-muted'}`}
+                aria-live="polite"
+              >
+                {scriptError ?? s.languages.scriptHelp}
+              </p>
+            </Field>
+            <Field id={ids.name} label={s.languages.name}>
+              <input
+                autoComplete="off"
+                id={ids.name}
+                value={form.name}
+                maxLength={40}
+                onChange={(e) => set('name', e.target.value)}
+                className={inputClass}
+              />
+            </Field>
+            <Field id={ids.nativeName} label={s.languages.nativeName}>
+              <input
+                autoComplete="off"
+                id={ids.nativeName}
+                value={form.nativeName}
+                maxLength={40}
+                lang={code || undefined}
+                dir={form.dir}
+                onChange={(e) => set('nativeName', e.target.value)}
+                className={inputClass}
+              />
+            </Field>
+            <fieldset className="md:col-span-2">
+              <legend className="mb-2 text-sm text-muted">{s.languages.direction}</legend>
+              <div className="flex flex-wrap gap-4">
+                {(['rtl', 'ltr'] as const).map((dir) => (
+                  <label key={dir} className="flex min-h-11 items-center gap-2">
+                    <input
+                      type="radio"
+                      name={`${ids.preset}-dir`}
+                      value={dir}
+                      checked={form.dir === dir}
+                      onChange={() => set('dir', dir)}
+                      className="h-5 w-5 accent-[var(--accent)]"
+                    />
+                    {dir === 'rtl' ? s.languages.dirRtl : s.languages.dirLtr}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <div className="md:col-span-2">
+              <button type="submit" className={ghostButton} disabled={!canAdd}>
+                + {create.isPending ? s.languages.adding : s.languages.add}
+              </button>
+            </div>
+          </>
+        )}
+      </form>
+    </section>
   );
 }

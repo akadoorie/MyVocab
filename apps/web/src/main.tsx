@@ -1,9 +1,9 @@
-import '@fontsource/rubik/latin-400.css';
-import '@fontsource/rubik/hebrew-400.css';
-import '@fontsource/rubik/latin-500.css';
-import '@fontsource/rubik/hebrew-500.css';
-import '@fontsource/rubik/latin-600.css';
-import '@fontsource/rubik/hebrew-600.css';
+// Rubik, every subset it has (Latin, Hebrew, Arabic, Cyrillic) (D-027). The per-weight files give
+// each subset a unicode-range, so the browser downloads only the subsets a page actually shows
+// (the single-subset files have no range, so every one of them would be downloaded).
+import '@fontsource/rubik/400.css';
+import '@fontsource/rubik/500.css';
+import '@fontsource/rubik/600.css';
 import './styles/base.css';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

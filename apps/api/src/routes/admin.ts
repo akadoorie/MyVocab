@@ -11,6 +11,7 @@ import {
   IMPORT_MAX_FILE_BYTES,
   importQuerySchema,
   langCodeSchema,
+  languageCreateSchema,
   languagePatchSchema,
   purgeRequestSchema,
   settingsUpdateSchema,
@@ -109,13 +110,18 @@ export const adminRoutes = new Hono<AppEnv>()
   .get('/languages', async (c) =>
     c.json({ languages: await c.get('container').admin.catalog.listLanguages() }),
   )
+  .post('/languages', async (c) => {
+    const body = parseOrThrow(languageCreateSchema, await readJson(c.req));
+    return c.json(
+      { languages: await c.get('container').admin.catalog.createLanguage(body, c.get('actor')) },
+      201,
+    );
+  })
   .patch('/languages/:code', async (c) => {
     const { code } = parseOrThrow(codeParam, c.req.param());
-    const { isActive } = parseOrThrow(languagePatchSchema, await readJson(c.req));
+    const patch = parseOrThrow(languagePatchSchema, await readJson(c.req));
     return c.json({
-      languages: await c
-        .get('container')
-        .admin.catalog.setLanguageActive(code, isActive, c.get('actor')),
+      languages: await c.get('container').admin.catalog.updateLanguage(code, patch, c.get('actor')),
     });
   })
 
@@ -139,9 +145,8 @@ export const adminRoutes = new Hono<AppEnv>()
 
   // CSV import (PRD §8.3, FR-A60): template, dry run, commit. Same service as `pnpm db:seed`.
   .get('/import/template', async (c) => {
-    const languages = (await c.get('container').languages.listAll())
-      .filter((l) => l.isActive)
-      .map((l) => l.code);
+    // Every language, inactive ones too, so their content can be prepared (D-027).
+    const languages = (await c.get('container').languages.listAll()).map((l) => l.code);
     return c.body(importTemplateCsv(languages), 200, {
       'Content-Type': 'text/csv; charset=utf-8',
       'Content-Disposition': 'attachment; filename="myvocab-import-template.csv"',

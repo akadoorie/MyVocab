@@ -31,6 +31,14 @@ describe('normalize', () => {
     expect(normalize('שָׁלוֹם')).toBe('שלום');
   });
 
+  it('removes Arabic harakat and the tatweel so vowelled, stretched and plain text match (D-027)', () => {
+    expect(normalize('كَتَبَ')).toBe('كتب');
+    expect(normalize('كـــتب')).toBe('كتب');
+    expect(normalize('مُدَرِّسٌ')).toBe(normalize('مدرس'));
+    // The letters themselves are kept: different words stay different.
+    expect(normalize('كتب')).not.toBe(normalize('كلب'));
+  });
+
   it('treats NFC and NFD forms as equal', () => {
     expect(normalize('Café')).toBe(normalize('Café'));
   });

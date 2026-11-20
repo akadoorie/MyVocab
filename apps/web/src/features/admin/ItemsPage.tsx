@@ -43,7 +43,8 @@ export function ItemsPage() {
 
   const languages = useQuery({ queryKey: ['admin', 'languages'], queryFn: adminApi.languages });
   const categories = useQuery({ queryKey: ['admin', 'categories'], queryFn: adminApi.categories });
-  const activeLangs = languages.data?.languages.filter((l) => l.isActive) ?? [];
+  // Every language, inactive ones too: "Missing Arabic meaning" helps prepare a new one (D-027).
+  const allLangs = languages.data?.languages ?? [];
 
   const params: AdminItemListQuery = {
     sort,
@@ -161,7 +162,7 @@ export function ItemsPage() {
             className={inputClass}
           >
             <option value="">{s.items.gapNone}</option>
-            {activeLangs.map((l) => (
+            {allLangs.map((l) => (
               <option key={l.code} value={`missing:${l.code}`}>
                 {s.items.gapMissing(l.name)}
               </option>
@@ -225,7 +226,7 @@ export function ItemsPage() {
                     )}
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5">
-                    {activeLangs
+                    {allLangs
                       .filter((l) => l.code !== item.lang)
                       .map((l) => (
                         <Badge

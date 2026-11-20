@@ -424,8 +424,9 @@ so learners never download it. All admin pages work on mobile (tables collapse i
     categories (multi-select chips). The **language is chosen at creation and then fixed** (to change it, create a new
     item); this keeps an existing translation from becoming a same-language translation. Save validates uniqueness
     (same language + normalized text + type among non-deleted items).
-  - **Translations**: per active language **other than the item's language** (an English item shows "Hebrew"; a
-    Hebrew item shows "English"), three inline list editors in display order: **meaning (required)**, **parallel** and
+  - **Translations**: per language **other than the item's language** (an English item shows "Hebrew"; a
+    Hebrew item shows "English"), stacked one under the other. An inactive language gets its block too, marked
+    "inactive: learners don't see it yet", so its content can be prepared before it is switched on (D-027); three inline list editors in display order: **meaning (required)**, **parallel** and
     **literal translation** (D-024, D-025). A missing meaning shows the "not playable" warning. Where the language
     has a parallel and no literal entries, a **"Same as the parallel"** checkbox stores the marker (D-026) instead of
     a list; an expression with a parallel but an empty literal shows a "No literal translation" warning. The item's own language is never offered (§8.1).
@@ -433,12 +434,12 @@ so learners never download it. All admin pages work on mobile (tables collapse i
   - **Synonyms**: an inline list editor.
   - **Hints**: an inline list editor.
   - **Preview as learner**: renders the **flip card** exactly as the loop would (Hints and Flip working), one
-    direction at a time. A **"Show the answer in"** picker lists each other active language (translation card) and
-    then the item's own language (explanation card), each marked ✓ (learners see it) or ✗ (not yet); past six
-    languages it is a dropdown. It opens on the first ready translation language (a Hebrew item on English, an
-    English item on Hebrew). Above the card, a heading names the direction and the kind ("English → Hebrew ·
+    direction at a time. A **"Show the answer in"** picker lists each other language (translation card) and
+    then the item's own language (explanation card), each marked ✓ (ready) or ✗ (not yet), and inactive ones marked
+    "inactive" (D-027); past six languages it is a dropdown. It opens on the first ready translation language,
+    active ones first (a Hebrew item on English, an English item on Hebrew). Above the card, a heading names the direction and the kind ("English → Hebrew ·
     Translation") with one line on what the back shows; a direction that isn't ready shows what to add instead of a
-    card ("add a Hebrew meaning", "add an explanation"). It uses the server's card builder (§12.4), so it always
+    card ("add a meaning in Hebrew", "add an explanation"). It uses the server's card builder (§12.4), so it always
     matches what learners see, with the session's Hints toggle. On desktop each card is drawn at the session card's exact size for the window and scaled
     down to fit the admin column (a true miniature: same text size, wrapping and spacing in proportion).
   - **Warnings** (badges; they never block saving):
@@ -477,9 +478,18 @@ so learners never download it. All admin pages work on mobile (tables collapse i
   items is blocked: deactivate it instead, or remove it from those items first.
 
 ### 7.5 Languages (`/admin/languages`)
-- **FR-A35** Lists languages (code, name, native name, direction, script) with an **active** toggle. Inactive languages
-  are hidden from the start card and the editor, and their translations are not used; the data is kept. Adding new
-  languages is done by migration or seed in v1 (data only, no code).
+- **FR-A35** Lists languages (code, name, native name, direction, script) with an **active** toggle and an **Edit**
+  button (name and native name; the code, direction and script are fixed). Learners see only active languages: an
+  inactive one is hidden from the start card and never used in a session, and its data is kept. At least one language
+  stays active.
+- **FR-A36** **Add a language** (D-027): a form under the list. A **Language** dropdown of common languages (those not
+  added yet) fills the code, name, native name, direction and script, all still editable; **"Other"** leaves them to
+  type. The code (ISO 639, e.g. `ar`, `pt-br`) must be new; the script (ISO 15924, e.g. `Arab`) must be one Unicode
+  knows, since the mixed-script check uses it. Both are checked while typing and again by the server. A new language
+  starts **inactive** and goes last in the order. While inactive, its content can be prepared: the item editor
+  shows its translation block and offers it as an item language, CSV import and the template accept its columns,
+  the preview shows its cards, and the Items filters include it ("Missing Arabic meaning"). Ticking Active makes it
+  available to learners.
 
 ### 7.6 Users (`/admin/users`)
 - **FR-A40** List: avatar, name, email, role, **Owner** badge, created, last seen (from the latest session refresh, day
@@ -549,7 +559,7 @@ This JSON shape is used by the API, the admin editor and the JSON export (illust
 |---|---|
 | `text` | Required, ≤ 200 chars. Always the front of the card |
 | `type` | `word` or `expr` |
-| `lang` | An active language. **Fixed after creation** |
+| `lang` | A known language, active or not (D-027). **Fixed after creation** |
 | `multipleMeanings` | Boolean, default `false` |
 | `categories` | 0..N category slugs (ids in the admin API). An item without categories appears only under General |
 | `parallel` | Column `translation_parallel`. An object whose keys are language codes **other than `lang`**; each value is a non-empty ordered list (≤ 10 entries, each ≤ 200 chars): the equivalent word or expression in that language. For a plain word, this is simply its translation. The main answer of a card |
@@ -571,14 +581,16 @@ This JSON shape is used by the API, the admin editor and the JSON export (illust
   §8.2).
 - Hebrew → English cards need **Hebrew items** (the `text` is always the front). The English item "Swift" and the
   Hebrew item "מהיר" are separate items, each with its own lists and known marks.
-- **Adding a language later**: activate it, add translations into it on existing items (new
-  `translation_parallel_<code>` / `translation_meaning_<code>` / `translation_literal_<code>` CSV columns), and create
-  items whose `lang` is the new language.
+- **Adding a language later** (FR-A36, D-027): add it in Languages (it starts inactive), add translations into it on
+  existing items (in the editor, or new `translation_parallel_<code>` / `translation_meaning_<code>` /
+  `translation_literal_<code>` CSV columns), create items whose `lang` is the new language, check the cards in the
+  preview, then activate it.
 
 ### 8.2 Text normalization (`packages/core`)
 `normalized_text` is used for uniqueness and merge matching (never shown):
 Unicode **NFC** → trim → collapse internal whitespace to one space → lowercase (`toLowerCase()`, locale-independent)
-→ remove Hebrew niqqud/cantillation marks (U+0591–U+05C7) → strip leading/trailing punctuation.
+→ remove Hebrew niqqud/cantillation marks (U+0591–U+05C7) → remove Arabic short-vowel and Quranic marks (harakat,
+superscript alef, small high signs) and the tatweel (U+0640) (D-027) → strip leading/trailing punctuation.
 The same normalization (case-insensitive, NFC) is used to de-duplicate entries within each list.
 
 ### 8.3 CSV format (used by import, seed, and the vocabulary export)
@@ -591,7 +603,7 @@ The same normalization (case-insensitive, NFC) is used to de-duplicate entries w
 
 | Column | Required | Description |
 |---|---|---|
-| `lang` | yes | Active language code (`en`, `he`) |
+| `lang` | yes | A known language code (`en`, `he`), active or not (D-027) |
 | `text` | yes | Item text (≤ 200 chars) |
 | `type` | yes | `word` or `expr` |
 | `multiple_meanings` | no | `true` / `false` (default `false`) |
@@ -867,7 +879,9 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   security check (if any) and error messages appear next to it.
 
 ### 9.6 Typography
-- **Rubik** (Latin + Hebrew), self-hosted via `@fontsource/rubik` (no external font requests; keeps the CSP strict).
+- **Rubik** (Latin, Hebrew, Arabic and Cyrillic), self-hosted via `@fontsource/rubik` (no external font requests;
+  keeps the CSP strict). The per-weight files give each subset a `unicode-range`, so a browser downloads only the
+  subsets a page shows (D-027).
 - Item text (front): `clamp(2rem, 6vw, 3.5rem)`, weight 600. Answer lines (back): `clamp(1.5rem, 4.5vw, 2.25rem)`;
   long explanation lines step down to `1.125rem–1.25rem`. Hints, synonyms and the literal translation: 1.125rem on every screen (raised from 1rem on phones at the owner's request), `--text-muted`.
 - Every piece of content text gets `dir` and `lang` from its language (`he` → `rtl`). The UI chrome stays LTR English.
@@ -1295,7 +1309,7 @@ type CardView = {
 | DELETE | `/admin/trash/:id` | Purge now (body `{ confirm: "PURGE" }`) |
 | GET / POST / PATCH / DELETE | `/admin/categories[/:id]` | CRUD (delete blocked if in use) |
 | PUT | `/admin/categories/order` | `{ ids: number[] }` |
-| GET / PATCH | `/admin/languages[/:code]` | List / toggle `isActive` |
+| GET / POST / PATCH | `/admin/languages[/:code]` | List / add (starts inactive) / toggle `isActive` or rename (D-027) |
 | GET | `/admin/users?q&cursor` | List users |
 | PATCH | `/admin/users/:id` | `{ role?: 'user' \| 'admin', banned?: boolean, banReason?: string }` (rules in FR-A41/42) |
 | GET / PUT | `/admin/settings` | Typed settings object |

@@ -5,6 +5,7 @@ import type {
   ItemData,
   ItemType,
   LanguageInfo,
+  TextDir,
 } from '@myvocab/core';
 
 /**
@@ -338,8 +339,16 @@ export interface AdminCategoryRepository {
   reorder(ids: readonly number[], actor: Actor, now: number): Promise<void>;
 }
 
+export type LanguageChanges = Partial<{ name: string; nativeName: string; isActive: boolean }>;
+
 export interface AdminLanguageRepository {
-  setActive(code: string, isActive: boolean, actor: Actor, now: number): Promise<boolean>;
+  /** Inserts an inactive language at the end of the order (D-027); false if the code exists. */
+  create(
+    input: { code: string; name: string; nativeName: string; dir: TextDir; script: string },
+    actor: Actor,
+    now: number,
+  ): Promise<boolean>;
+  update(code: string, changes: LanguageChanges, actor: Actor, now: number): Promise<boolean>;
 }
 
 export type AdminUserRow = {
