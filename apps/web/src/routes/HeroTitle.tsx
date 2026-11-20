@@ -5,29 +5,11 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from
 const BASE =
   'text-3xl leading-tight font-bold tracking-tight text-balance [font-kerning:none] md:text-5xl';
 const GRADIENT = 'bg-gradient-to-br from-text to-[#b9a6ff] bg-clip-text text-transparent';
-const SHOWN_KEY = 'myvocab.sloganShown';
 /** The last letter starts at 0.9s and takes 0.7s; swap to plain text just after. */
 const SNOW_MS = 1700;
 
-let shownThisTab = false;
-
-function shownBefore(): boolean {
-  if (shownThisTab) return true;
-  try {
-    return sessionStorage.getItem(SHOWN_KEY) !== null;
-  } catch {
-    return false;
-  }
-}
-
-function markShown(): void {
-  shownThisTab = true;
-  try {
-    sessionStorage.setItem(SHOWN_KEY, '1');
-  } catch {
-    // Storage blocked: the module flag still covers this tab until a reload.
-  }
-}
+/** Played already since the page loaded (in memory only, so a refresh plays it again). */
+let shown = false;
 
 function motionOK(): boolean {
   return window.matchMedia?.('(prefers-reduced-motion: no-preference)').matches ?? false;
@@ -36,19 +18,19 @@ function motionOK(): boolean {
 type Mode = 'snow' | 'fade' | 'still';
 
 /**
- * The home page slogan (D-034). The first time the home page opens in a tab, its letters fall
- * in like snow: tiny soft specks that drift down, sharpen into letters and settle in a scattered
- * order, about 1.6s in all. Later visits in the same tab show it in place. Reduced motion: a
+ * The home page slogan (D-034). When the page loads (or is refreshed) on Home, its letters
+ * fall in like snow: tiny soft specks that drift down, sharpen into letters and settle in a
+ * scattered order, about 1.6s in all. Coming back to Home inside the app shows it in place. Reduced motion: a
  * short fade. Each falling letter carries its own slice of the gradient, so the end matches the
  * plain slogan, which then replaces the letters.
  */
 export function HeroTitle({ text }: { text: string }) {
-  const [mode] = useState<Mode>(() => (shownBefore() ? 'still' : motionOK() ? 'snow' : 'fade'));
+  const [mode] = useState<Mode>(() => (shown ? 'still' : motionOK() ? 'snow' : 'fade'));
   const [done, setDone] = useState(mode !== 'snow');
   const ref = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
-    if (mode !== 'still') markShown();
+    shown = true;
     if (mode !== 'snow') return;
     const timer = window.setTimeout(() => setDone(true), SNOW_MS);
     return () => window.clearTimeout(timer);

@@ -530,11 +530,12 @@ Format: date · context · decision · consequences.
 
 ## D-034 · 2026-11-20 · The slogan falls in like snow
 
-- **What:** the first time the home page opens in a browser tab, the letters of "Learn words
+- **What:** when the page loads or is refreshed on Home, the letters of "Learn words
   until they stick" start as tiny soft white specks, drift down with a slight sway, sharpen and
   settle in a scattered order, warming into the slogan's gradient. About 1.6s in all, once.
-- **Once per tab:** later visits to Home in the same tab (and refreshes) show it in place; a
-  repeated entrance becomes something to wait through.
+- **When:** on every page load or refresh of Home. Coming back to Home inside the app (from a
+  session or another page) shows it in place; a repeated entrance becomes something to wait
+  through.
 - **Reduced motion:** a 0.6s fade, no movement. Screen readers hear the slogan once as text.
 - **How:** each letter carries its own slice of the slogan-wide gradient, so the end state
   matches the plain heading, which then replaces the letters. CSS only, no library.
