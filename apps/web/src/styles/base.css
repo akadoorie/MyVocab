@@ -483,10 +483,11 @@ body {
     box-shadow: var(--card-shadow);
   }
 
-  /* The home page slogan (D-034): each letter falls in like snow, a soft white speck that
-     drifts down, sways, sharpens and settles. It carries its own slice of the slogan-wide
-     gradient (--w/--h: the heading's size; --x/--y: the letter's offset, set by HeroTitle). */
-  .slogan-letter {
+  /* The home page slogan (D-037): the first words fade in; "stick" drops in, bounces off twice
+     and sticks on the third try with a soft squash, then a faint shine runs across it. Each word
+     carries its own slice of the slogan-wide gradient (--w/--h: the heading's size; --x/--y: the
+     word's offset, set by HeroTitle). */
+  .slogan-word {
     display: inline-block;
     background-image: linear-gradient(to bottom right in oklab, var(--text), #b9a6ff);
     background-size: var(--w, 100%) var(--h, 100%);
@@ -495,23 +496,79 @@ body {
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    animation: slogan-snow 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) var(--d, 0ms) both;
   }
-  @keyframes slogan-snow {
+  .slogan-rest {
+    animation: slogan-fade 0.5s ease both;
+  }
+  .slogan-stick {
+    position: relative;
+    transform-origin: 50% 100%;
+    animation: slogan-tries 1.9s linear 0.35s both;
+  }
+  @keyframes slogan-tries {
     0% {
       opacity: 0;
-      transform: translate(var(--sx), -0.7em) scale(0.2);
-      filter: blur(6px) brightness(2.2);
+      transform: translateY(-1.6em);
+      animation-timing-function: cubic-bezier(0.5, 0, 1, 0.6);
     }
-    45% {
-      opacity: 0.9;
-      transform: translate(calc(var(--sx) * -0.5), -0.15em) scale(0.7);
-      filter: blur(2px) brightness(1.6);
+    8% {
+      opacity: 1;
+    }
+    24% {
+      transform: translateY(0) scale(1.12, 0.84);
+      animation-timing-function: cubic-bezier(0, 0.4, 0.5, 1);
+    }
+    40% {
+      transform: translateY(-0.7em) rotate(-4deg);
+      animation-timing-function: cubic-bezier(0.5, 0, 1, 0.6);
+    }
+    55% {
+      transform: translateY(0) scale(1.1, 0.87);
+      animation-timing-function: cubic-bezier(0, 0.4, 0.5, 1);
+    }
+    66% {
+      transform: translateY(-0.28em) rotate(2deg);
+      animation-timing-function: cubic-bezier(0.5, 0, 1, 0.6);
+    }
+    76% {
+      transform: translateY(0) scale(1.16, 0.8);
+      animation-timing-function: ease-out;
+    }
+    88% {
+      transform: scale(0.97, 1.04);
     }
     100% {
       opacity: 1;
       transform: none;
-      filter: none;
+    }
+  }
+  /* The faint light that sweeps across "stick" once it has stuck. */
+  .slogan-shine {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(
+      100deg,
+      transparent 35%,
+      rgba(255, 255, 255, 0.95) 50%,
+      transparent 65%
+    );
+    background-size: 250% 100%;
+    background-position: 120% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    pointer-events: none;
+    opacity: 0;
+    animation: slogan-shine 0.7s ease-out 2.25s;
+  }
+  @keyframes slogan-shine {
+    from {
+      opacity: 1;
+      background-position: 120% 0;
+    }
+    to {
+      opacity: 1;
+      background-position: -30% 0;
     }
   }
   /* Reduced motion: the slogan only fades in. */

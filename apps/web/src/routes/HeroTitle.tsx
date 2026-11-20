@@ -1,12 +1,12 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 /** The slogan's look: a white-to-violet gradient clipped to the text (PRD §9.7). */
-// No kerning: the falling letters are separate boxes, so the plain heading must match them.
+// No kerning: the animated words are separate boxes, so the plain heading must match them.
 const BASE =
   'text-3xl leading-tight font-bold tracking-tight text-balance [font-kerning:none] md:text-5xl';
 const GRADIENT = 'bg-gradient-to-br from-text to-[#b9a6ff] bg-clip-text text-transparent';
-/** The last letter starts at 0.9s and takes 0.7s; swap to plain text just after. */
-const SNOW_MS = 1700;
+/** The tries end at 2.25s and the shine at 2.95s; swap to plain text just after. */
+const TRIES_MS = 3000;
 
 /** Played already since the page loaded (in memory only, so a refresh plays it again). */
 let shown = false;
@@ -15,87 +15,64 @@ function motionOK(): boolean {
   return window.matchMedia?.('(prefers-reduced-motion: no-preference)').matches ?? false;
 }
 
-type Mode = 'snow' | 'fade' | 'still';
+type Mode = 'tries' | 'fade' | 'still';
 
 /**
- * The home page slogan (D-034). When the page loads (or is refreshed) on Home, its letters
- * fall in like snow: tiny soft specks that drift down, sharpen into letters and settle in a
- * scattered order, about 1.6s in all. Coming back to Home inside the app shows it in place. Reduced motion: a
- * short fade. Each falling letter carries its own slice of the gradient, so the end matches the
- * plain slogan, which then replaces the letters.
+ * The home page slogan (D-037). When the page loads (or is refreshed) on Home, the first words
+ * fade in and the last word drops in, bounces off twice and sticks on the third try with a soft
+ * squash, then a faint shine runs across it: "until they stick". Coming back to Home inside the
+ * app shows it in place. Reduced motion: a short fade. Each animated word carries its own slice
+ * of the gradient, so the end matches the plain slogan, which then replaces the words.
  */
 export function HeroTitle({ text }: { text: string }) {
-  const [mode] = useState<Mode>(() => (shown ? 'still' : motionOK() ? 'snow' : 'fade'));
-  const [done, setDone] = useState(mode !== 'snow');
+  const [mode] = useState<Mode>(() => (shown ? 'still' : motionOK() ? 'tries' : 'fade'));
+  const [done, setDone] = useState(mode !== 'tries');
   const ref = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     shown = true;
-    if (mode !== 'snow') return;
-    const timer = window.setTimeout(() => setDone(true), SNOW_MS);
+    if (mode !== 'tries') return;
+    const timer = window.setTimeout(() => setDone(true), TRIES_MS);
     return () => window.clearTimeout(timer);
   }, [mode]);
 
-  // Give each letter the part of the slogan-wide gradient that lies under it.
+  // Give each word the part of the slogan-wide gradient that lies under it.
   useLayoutEffect(() => {
     const h1 = ref.current;
     if (done || !h1) return;
     h1.style.setProperty('--w', `${h1.clientWidth}px`);
     h1.style.setProperty('--h', `${h1.clientHeight}px`);
-    for (const el of h1.querySelectorAll<HTMLElement>('.slogan-letter')) {
+    for (const el of h1.querySelectorAll<HTMLElement>('.slogan-word')) {
       el.style.setProperty('--x', `${-el.offsetLeft}px`);
       el.style.setProperty('--y', `${-el.offsetTop}px`);
     }
   }, [done]);
-
-  const [letters] = useState(() => scatter(text));
 
   if (done) {
     return (
       <h1 className={`${BASE} ${GRADIENT} ${mode === 'fade' ? 'slogan-fade' : ''}`}>{text}</h1>
     );
   }
-  let i = 0;
+  const words = text.split(' ');
+  const last = words.length - 1;
   return (
     <h1 ref={ref} className={`${BASE} relative`}>
       <span className="sr-only">{text}</span>
       <span aria-hidden="true">
-        {text.split(' ').map((word, w) => (
+        {words.map((word, w) => (
           <span key={w}>
             {w > 0 && ' '}
-            <span className="inline-block whitespace-nowrap">
-              {[...word].map((ch) => {
-                const { delay, sway } = letters[i++]!;
-                return (
-                  <span
-                    key={i}
-                    className="slogan-letter"
-                    style={{ '--d': `${delay}ms`, '--sx': `${sway}em` } as CSSProperties}
-                  >
-                    {ch}
-                  </span>
-                );
-              })}
-            </span>
+            {w < last ? (
+              <span className="slogan-word slogan-rest">{word}</span>
+            ) : (
+              <span className="slogan-word slogan-stick">
+                {word}
+                <span className="slogan-shine">{word}</span>
+              </span>
+            )}
           </span>
         ))}
       </span>
     </h1>
   );
-}
-
-/** A start time (0–900ms, in a random order) and a small sideways sway for each letter. */
-function scatter(text: string): { delay: number; sway: number }[] {
-  const n = text.replaceAll(' ', '').length;
-  const order = Array.from({ length: n }, (_, k) => k);
-  for (let k = n - 1; k > 0; k--) {
-    const j = Math.floor(Math.random() * (k + 1));
-    [order[k], order[j]] = [order[j]!, order[k]!];
-  }
-  const rank = new Array<number>(n);
-  order.forEach((letter, r) => (rank[letter] = r));
-  return rank.map((r) => ({
-    delay: Math.round((r / Math.max(1, n - 1)) * 900),
-    sway: Math.round((Math.random() * 0.7 - 0.35) * 100) / 100,
-  }));
 }
