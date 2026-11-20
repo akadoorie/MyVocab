@@ -80,6 +80,24 @@ describe('FlipCard', () => {
     expect(literal).toHaveClass('text-muted');
   });
 
+  it('when the literal is the parallel: "Parallel (also literally)" and no Literally section (D-026)', () => {
+    const base = makeCard(11);
+    const card = makeCard(11, {
+      type: 'expr',
+      answer: {
+        ...base.answer,
+        main: 'parallel',
+        meaning: ['משמעות-11'],
+        literal: [],
+        literalSameAsParallel: true,
+      },
+    });
+    render(<FlipCard card={card} side="back" hintsShown={false} onFlip={vi.fn()} />);
+    expect(screen.getByText('Parallel (also literally)')).toBeInTheDocument();
+    expect(screen.queryByTestId('literal')).not.toBeInTheDocument();
+    expect(screen.getByTestId('meaning')).toHaveTextContent('Meaningמשמעות-11');
+  });
+
   it('without a parallel (e.g. a plain word): the meaning is the main answer, headed "Meaning" (D-025)', () => {
     render(<FlipCard card={makeCard(9)} side="back" hintsShown={false} onFlip={vi.fn()} />);
     expect(screen.getAllByText('Meaning')[0]).toBeInTheDocument();
@@ -110,6 +128,7 @@ describe('FlipCard', () => {
         numbered: true,
         meaning: [],
         literal: [],
+        literalSameAsParallel: false,
         lang: 'en',
         dir: 'ltr',
       },

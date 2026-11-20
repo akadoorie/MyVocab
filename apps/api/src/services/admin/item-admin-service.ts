@@ -10,6 +10,7 @@ import {
 } from '@myvocab/contracts';
 import {
   buildCard,
+  missingLiteralWarnings,
   mixedScriptWarnings,
   multipleMeaningsWarnings,
   normalize,
@@ -150,6 +151,7 @@ export class ItemAdminService {
       ...notPlayable,
       ...multipleMeaningsWarnings(item),
       ...mixedScriptWarnings(item, ctx.allMap),
+      ...missingLiteralWarnings(item),
     ];
   }
 

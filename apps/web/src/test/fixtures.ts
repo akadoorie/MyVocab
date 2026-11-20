@@ -16,6 +16,7 @@ export function makeCard(id: number, over: Partial<CardView> = {}): CardView {
       numbered: false,
       meaning: [],
       literal: [],
+      literalSameAsParallel: false,
       lang: 'he',
       dir: 'rtl',
     },

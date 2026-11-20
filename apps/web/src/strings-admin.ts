@@ -119,6 +119,10 @@ export const adminStrings = {
         help: 'Optional word-for-word translation. Shown last, in a softer color. Usually empty for plain words.',
       },
     },
+    /** The literal is the parallel, word for word (D-026). */
+    literalSameAsParallel: 'Same as the parallel',
+    literalSameAsParallelNote:
+      'The parallel is also the word-for-word translation. The card shows “Parallel (also literally)”.',
     explanation: 'Explanation',
     explanationHelp: 'One entry per meaning, in the item’s language.',
     synonyms: 'Synonyms',

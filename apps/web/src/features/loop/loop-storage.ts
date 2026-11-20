@@ -57,18 +57,22 @@ export type StoredLoop = {
 };
 
 /**
- * Cards saved before D-024 have no `answer.main` / `answer.meaning`: fill them in place, so a
- * session running during the deploy resumes instead of being dropped. Their lines were the
- * translation (now the parallel) or the explanation.
+ * Cards saved by an older version lack newer answer fields: fill them in place, so a session
+ * running during a deploy resumes instead of being dropped. Before D-024 there was no
+ * `main` / `meaning` (the lines were the translation, now the parallel, or the explanation);
+ * before D-026 there was no `literalSameAsParallel`.
  */
 function upgradeCards(v: unknown): void {
   const cards = (v as { cards?: unknown } | null)?.cards;
   if (!Array.isArray(cards)) return;
   for (const card of cards) {
     const answer = (card as { answer?: Record<string, unknown> } | null)?.answer;
-    if (!answer || typeof answer !== 'object' || 'main' in answer) continue;
-    answer.main = answer.kind === 'explanation' ? 'explanation' : 'parallel';
-    answer.meaning = [];
+    if (!answer || typeof answer !== 'object') continue;
+    if (!('main' in answer)) {
+      answer.main = answer.kind === 'explanation' ? 'explanation' : 'parallel';
+      answer.meaning = [];
+    }
+    if (!('literalSameAsParallel' in answer)) answer.literalSameAsParallel = false;
   }
 }
 

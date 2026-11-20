@@ -398,3 +398,25 @@ Format: date · context · decision · consequences.
 - **Rollout:** existing words still hold their translation in `translation_parallel`, so the data is
   moved first, from a reviewed CSV with `pnpm db:update-translations`; the code that requires the
   meaning is deployed after that, so no item stops being playable in between.
+
+## D-026 · 2026-11-20 · "Same as the parallel" literal marker (owner request)
+
+- **Why:** for some idioms the literal translation is word for word the same as the parallel
+  ("there's no smoke without fire"). Storing it twice duplicates the text, and leaving it empty is
+  ambiguous: an empty literal can't say whether it is missing or the same.
+- **Model:** a marker inside the literal list, per language: `literal = {"en": ["=parallel"]}`.
+  No new column; the value stays a list of strings, so the DB CHECKs, the schemas, the CSV
+  (`translation_literal_en` cell `=parallel`) and the export are unchanged. An empty literal now
+  means "not filled in".
+- **Rules (core validation):** the marker must be the only literal entry for its language, and that
+  language must have a parallel. It is stored in one spelling, `LITERAL_SAME_AS_PARALLEL` in core.
+  The script check skips it. An expression with a parallel but no literal gets a
+  `MISSING_LITERAL` warning (not a block).
+- **Card:** `buildCard` is the only reader that resolves the marker. It sets
+  `answer.literalSameAsParallel` and leaves `answer.literal` empty, so the marker never reaches the
+  screen as text. The headline then reads "Parallel (also literally)", with no Literally section.
+  Saved sessions without the field load as `false`.
+- **Admin editor:** a "Same as the parallel" checkbox on the literal list, offered where the
+  language has a parallel and no literal entries; ticked, it replaces the list.
+- **Rollout:** the live code before D-026 would show the marker as text, so the marker rows are
+  applied only after the D-026 code is deployed.

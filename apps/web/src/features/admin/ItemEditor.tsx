@@ -1,5 +1,11 @@
 import type { AdminCategory, AdminItem, AdminItemPatch, AdminLanguage } from '@myvocab/contracts';
-import { ITEM_LIMITS, TRANSLATION_KINDS, type CardView } from '@myvocab/core';
+import {
+  isLiteralSameAsParallel,
+  ITEM_LIMITS,
+  LITERAL_SAME_AS_PARALLEL,
+  TRANSLATION_KINDS,
+  type CardView,
+} from '@myvocab/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useId, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
@@ -332,6 +338,40 @@ function Editor({
 
   const headerDirty = JSON.stringify(header) !== JSON.stringify(headerOf(item));
 
+  /**
+   * The literal's "Same as the parallel" checkbox (D-026), offered when the language has a
+   * parallel and no literal entries of its own. Ticked, it stores the marker instead of a list.
+   */
+  async function toggleLiteralSame(code: string, same: boolean) {
+    const lists = { ...latest.current.literal };
+    if (same) lists[code] = [LITERAL_SAME_AS_PARALLEL];
+    else delete lists[code];
+    await save({ literal: lists });
+  }
+
+  function literalSameProps(target: { code: string; name: string }) {
+    const literal = item.literal[target.code] ?? [];
+    const same = isLiteralSameAsParallel(literal);
+    const hasParallel = (item.parallel[target.code]?.length ?? 0) > 0;
+    if (!same && (!hasParallel || literal.length > 0)) return {};
+    return {
+      control: (
+        <label className="flex min-h-11 items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={same}
+            onChange={(e) => void toggleLiteralSame(target.code, e.target.checked)}
+            className="h-5 w-5 accent-[var(--accent)]"
+          />
+          {s.editor.literalSameAsParallel}
+        </label>
+      ),
+      replacement: same ? (
+        <p className="text-sm text-muted">{s.editor.literalSameAsParallelNote}</p>
+      ) : undefined,
+    };
+  }
+
   async function saveHeader() {
     setSavingHeader(true);
     const base = headerOf(latest.current);
@@ -404,6 +444,7 @@ function Editor({
                 <ListEditor
                   label={s.editor.kinds[kind].label(target.name)}
                   help={s.editor.kinds[kind].help}
+                  {...(kind === 'literal' ? literalSameProps(target) : {})}
                   entries={item[kind][target.code] ?? []}
                   lang={target.code}
                   dir={target.dir}

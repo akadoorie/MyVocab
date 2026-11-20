@@ -122,6 +122,37 @@ describe('AdminApp', () => {
     expect(await within(hints).findByText('Changed elsewhere.')).toBeVisible();
   });
 
+  it('literal: "Same as the parallel" saves the marker and replaces the list (D-026)', async () => {
+    const IDIOM = {
+      ...ITEM,
+      type: 'expr',
+      meaning: { he: ['משמעות'] },
+      parallel: { he: ['מקבילה'] },
+      literal: {},
+    };
+    let current: typeof IDIOM = IDIOM;
+    const patches: unknown[] = [];
+    render('/admin/items/7', {
+      'GET /api/admin/items/7': () => Response.json(current),
+      'PATCH /api/admin/items/7': (init) => {
+        const body = JSON.parse(String(init?.body)) as { literal: Record<string, string[]> };
+        patches.push(body);
+        current = { ...current, literal: body.literal, version: current.version + 1 };
+        return Response.json(current);
+      },
+    });
+    const literal = (
+      await screen.findByRole('heading', { name: 'Hebrew literal translation' })
+    ).closest('section')!;
+    fireEvent.click(within(literal).getByRole('checkbox', { name: 'Same as the parallel' }));
+    await waitFor(() => expect(patches).toEqual([{ version: 1, literal: { he: ['=parallel'] } }]));
+    expect(
+      await within(literal).findByText(/The parallel is also the word-for-word translation/),
+    ).toBeVisible();
+    expect(within(literal).queryByLabelText(/Add to/)).toBeNull();
+    expect(within(literal).getByRole('checkbox', { name: 'Same as the parallel' })).toBeChecked();
+  });
+
   it('settings: "Maximum amount" explains itself under the field', async () => {
     render('/admin/settings', { 'GET /api/admin/settings': () => Response.json({}) });
     const field = await screen.findByLabelText('Maximum amount');

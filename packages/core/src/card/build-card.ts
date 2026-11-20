@@ -1,5 +1,5 @@
 import type { LangCode, LanguageMap, TextDir } from '../lang/languages';
-import type { ItemData } from '../item/types';
+import { isLiteralSameAsParallel, type ItemData } from '../item/types';
 import { mainTranslation, strategyFor } from './strategies';
 import type { CardView, LangDir } from './types';
 
@@ -25,6 +25,9 @@ export function buildCard(item: ItemData, target: LangCode, languages: LanguageM
   const translation = strategy.kind === 'translation';
   const main = translation ? mainTranslation(item, target) : 'explanation';
   const own = langDir(source, languages);
+  const literal = translation ? (item.literal[target] ?? []) : [];
+  // The marker is resolved here only, so it never reaches the screen as text (D-026).
+  const marker = isLiteralSameAsParallel(literal);
   return {
     itemId: item.id,
     type: item.type,
@@ -37,7 +40,8 @@ export function buildCard(item: ItemData, target: LangCode, languages: LanguageM
       lines,
       numbered: strategy.numbered(lines),
       meaning: main === 'parallel' ? [...(item.meaning[target] ?? [])] : [],
-      literal: translation ? [...(item.literal[target] ?? [])] : [],
+      literal: marker ? [] : [...literal],
+      literalSameAsParallel: marker && main === 'parallel',
       ...langDir(target, languages),
     },
     hints: [...item.hints],

@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useToast } from '../../components/Toast';
 import { adminStrings as s } from '../../strings-admin';
 
@@ -20,6 +20,8 @@ export function ListEditor({
   onSave,
   help,
   numbered = false,
+  control,
+  replacement,
 }: {
   label: string;
   entries: readonly string[];
@@ -30,6 +32,10 @@ export function ListEditor({
   onSave: (next: string[]) => Promise<boolean>;
   help?: string;
   numbered?: boolean;
+  /** Shown under the help text (e.g. the literal's "Same as the parallel" checkbox). */
+  control?: ReactNode;
+  /** When set, shown instead of the entries and the add field. */
+  replacement?: ReactNode;
 }) {
   const toast = useToast();
   const headingId = useId();
@@ -115,13 +121,18 @@ export function ListEditor({
         <h3 id={headingId} className="font-semibold">
           {label}
         </h3>
-        <span className="text-xs text-muted">
-          {entries.length}/{maxEntries}
-        </span>
+        {replacement === undefined && (
+          <span className="text-xs text-muted">
+            {entries.length}/{maxEntries}
+          </span>
+        )}
       </div>
       {help && <p className="text-sm text-muted">{help}</p>}
+      {control}
 
-      {entries.length === 0 ? (
+      {replacement !== undefined ? (
+        replacement
+      ) : entries.length === 0 ? (
         <p className="text-sm text-muted">{s.list.empty}</p>
       ) : (
         <ol className="flex flex-col gap-1.5" aria-labelledby={headingId}>
@@ -228,7 +239,7 @@ export function ListEditor({
         </ol>
       )}
 
-      {entries.length < maxEntries ? (
+      {replacement !== undefined ? null : entries.length < maxEntries ? (
         <div className="flex gap-2">
           <label htmlFor={addId} className="sr-only">
             {s.list.addPlaceholder(label)}

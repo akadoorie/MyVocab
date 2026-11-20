@@ -5,6 +5,7 @@ import { foreignLetters } from '../text/script';
 import { ITEM_LIMITS, type ListName } from './limits';
 import {
   ITEM_TYPES,
+  LITERAL_SAME_AS_PARALLEL,
   OWN_LANGUAGE_LISTS,
   TRANSLATION_KINDS,
   type ItemContent,
@@ -27,7 +28,9 @@ export type ItemIssueCode =
   | 'UNKNOWN_LANGUAGE'
   | 'SAME_LANGUAGE_TRANSLATION'
   | 'MULTIPLE_MEANINGS_SINGLE_ENTRY'
-  | 'MIXED_SCRIPT';
+  | 'MIXED_SCRIPT'
+  | 'LITERAL_MARKER'
+  | 'MISSING_LITERAL';
 
 /** Separates list entries in a CSV cell, so it can't appear inside an entry (PRD §8.3). */
 export const LIST_SEPARATOR = '|';
@@ -131,7 +134,12 @@ function cleanPerLanguage(
       errors.push({ path, code: 'UNKNOWN_LANGUAGE', message: `Unknown language "${code}"` });
       continue;
     }
-    const cleaned = cleanList(entries, list, path, errors);
+    let cleaned = cleanList(entries, list, path, errors);
+    // The "same as the parallel" marker is written in any case; store it in one spelling (D-026).
+    if (list === 'literal')
+      cleaned = cleaned.map((e) =>
+        e.toLowerCase() === LITERAL_SAME_AS_PARALLEL ? LITERAL_SAME_AS_PARALLEL : e,
+      );
     if (cleaned.length > 0) out[code] = cleaned;
   }
   return out;
@@ -169,6 +177,7 @@ export function validateItem(input: ItemInput, ctx: ItemValidationContext): Item
   const parallel = cleanPerLanguage(input.parallel, 'parallel', lang, ctx, errors);
   const meaning = cleanPerLanguage(input.meaning, 'meaning', lang, ctx, errors);
   const literal = cleanPerLanguage(input.literal, 'literal', lang, ctx, errors);
+  errors.push(...literalMarkerErrors(parallel, literal));
 
   const explanation = cleanList(input.explanation, 'explanation', 'explanation', errors);
   const synonyms = cleanList(input.synonyms, 'synonyms', 'synonyms', errors);
@@ -187,8 +196,53 @@ export function validateItem(input: ItemInput, ctx: ItemValidationContext): Item
     hints,
   };
 
-  warnings.push(...multipleMeaningsWarnings(value), ...mixedScriptWarnings(value, ctx.languages));
+  warnings.push(
+    ...multipleMeaningsWarnings(value),
+    ...mixedScriptWarnings(value, ctx.languages),
+    ...missingLiteralWarnings(value),
+  );
   return { value, errors, warnings };
+}
+
+/**
+ * The "same as the parallel" marker (D-026) must be the only literal entry for its language, and
+ * that language must have a parallel.
+ */
+function literalMarkerErrors(parallel: Translations, literal: Translations): ItemIssue[] {
+  const issues: ItemIssue[] = [];
+  for (const [code, entries] of Object.entries(literal)) {
+    if (!entries.includes(LITERAL_SAME_AS_PARALLEL)) continue;
+    const path = `literal.${code}`;
+    if (entries.length > 1) {
+      issues.push({
+        path,
+        code: 'LITERAL_MARKER',
+        message: `"${LITERAL_SAME_AS_PARALLEL}" must be the only literal translation`,
+      });
+    } else if ((parallel[code as LangCode]?.length ?? 0) === 0) {
+      issues.push({
+        path,
+        code: 'LITERAL_MARKER',
+        message: `"${LITERAL_SAME_AS_PARALLEL}" needs a parallel in the same language`,
+      });
+    }
+  }
+  return issues;
+}
+
+/**
+ * An expression with a parallel but no literal translation for that language (D-026): either
+ * the literal was forgotten, or it should be marked as the same as the parallel.
+ */
+export function missingLiteralWarnings(item: ItemContent): ItemIssue[] {
+  if (item.type !== 'expr') return [];
+  return Object.entries(item.parallel)
+    .filter(([code, entries]) => entries.length > 0 && !item.literal[code as LangCode]?.length)
+    .map(([code]) => ({
+      path: `literal.${code}`,
+      code: 'MISSING_LITERAL' as const,
+      message: 'No literal translation (or mark it as the same as the parallel)',
+    }));
 }
 
 /**
@@ -235,9 +289,10 @@ export function mixedScriptWarnings(item: ItemContent, languages: LanguageMap): 
   for (const list of TRANSLATION_KINDS) {
     for (const [code, entries] of Object.entries(item[list])) {
       const script = languages[code as LangCode]?.script;
-      entries.forEach((entry, i) =>
-        issues.push(...scriptIssue(`${list}.${code}[${i}]`, entry, script)),
-      );
+      entries.forEach((entry, i) => {
+        if (list === 'literal' && entry === LITERAL_SAME_AS_PARALLEL) return; // the marker, not text
+        issues.push(...scriptIssue(`${list}.${code}[${i}]`, entry, script));
+      });
     }
   }
   return issues;

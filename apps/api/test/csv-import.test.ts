@@ -119,6 +119,21 @@ describe('CsvImportService', () => {
     expect(links.results.map((r) => r.slug)).toEqual(['food', 'home', 'travel']);
   });
 
+  it('imports the "same as the parallel" literal marker as is (D-026)', async () => {
+    const header =
+      'lang,text,type,translation_meaning_he,translation_parallel_he,translation_literal_he';
+    const report = await run({
+      csvText: `${header}
+en,marker-expression,expr,משמעות,מקבילה,=parallel`,
+    });
+    expect(report.errors).toEqual([]);
+    expect(report.warnings).toEqual([]);
+    const row = await env.DB.prepare(
+      "SELECT translation_literal AS l FROM items WHERE text = 'marker-expression'",
+    ).first<{ l: string }>();
+    expect(row?.l).toBe('{"he":["=parallel"]}');
+  });
+
   it('refuses to commit a file with errors and reports them with row and column', async () => {
     const report = await run({
       csvText: csv('en,ok-word,word,,,מילה,,,,,', 'en,bad,word,,,,ok,,,,'),

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { LANGS } from '../test-fixtures';
 import { itemIdentityKey } from './identity';
+import { isLiteralSameAsParallel, LITERAL_SAME_AS_PARALLEL } from './types';
 import {
+  missingLiteralWarnings,
   mixedScriptWarnings,
   multipleMeaningsWarnings,
   validateItem,
@@ -152,5 +154,55 @@ describe('itemIdentityKey', () => {
   it('distinguishes language and type', () => {
     expect(itemIdentityKey('en', 'Swift', 'word')).not.toBe(itemIdentityKey('en', 'Swift', 'expr'));
     expect(itemIdentityKey('en', 'Swift', 'word')).not.toBe(itemIdentityKey('he', 'Swift', 'word'));
+  });
+});
+
+describe('"same as the parallel" literal marker (D-026)', () => {
+  const idiom: ItemInput = {
+    lang: 'he',
+    text: 'ביטוי-לדוגמה',
+    type: 'expr',
+    meaning: { en: ['sample meaning'] },
+    parallel: { en: ['sample parallel'] },
+  };
+
+  it('is accepted alone where the language has a parallel, in one spelling', () => {
+    const r = validateItem({ ...idiom, literal: { en: ['  =Parallel '] } }, ctx);
+    expect(r.errors).toEqual([]);
+    expect(r.value.literal).toEqual({ en: [LITERAL_SAME_AS_PARALLEL] });
+    expect(isLiteralSameAsParallel(r.value.literal.en)).toBe(true);
+    // Not text: no mixed-script warning, and the literal counts as filled in.
+    expect(r.warnings).toEqual([]);
+  });
+
+  it('must be the only literal entry', () => {
+    const r = validateItem({ ...idiom, literal: { en: ['=parallel', 'word for word'] } }, ctx);
+    expect(r.errors).toEqual([
+      expect.objectContaining({ path: 'literal.en', code: 'LITERAL_MARKER' }),
+    ]);
+  });
+
+  it('needs a parallel in the same language', () => {
+    const r = validateItem({ ...idiom, parallel: {}, literal: { en: ['=parallel'] } }, ctx);
+    expect(r.errors).toEqual([
+      expect.objectContaining({ path: 'literal.en', code: 'LITERAL_MARKER' }),
+    ]);
+  });
+
+  it('a real literal is never mistaken for the marker', () => {
+    expect(isLiteralSameAsParallel(['= parallel'])).toBe(false);
+    expect(isLiteralSameAsParallel(['=parallel', 'x'])).toBe(false);
+    expect(isLiteralSameAsParallel(undefined)).toBe(false);
+  });
+
+  it('warns about an expression with a parallel but no literal, never about a word', () => {
+    const r = validateItem(idiom, ctx);
+    expect(r.warnings).toEqual([
+      expect.objectContaining({ path: 'literal.en', code: 'MISSING_LITERAL' }),
+    ]);
+    const word = validateItem({ ...idiom, type: 'word' }, ctx).value;
+    expect(missingLiteralWarnings(word)).toEqual([]);
+    const noParallel = validateItem({ ...idiom, parallel: {} }, ctx).value;
+    expect(missingLiteralWarnings(noParallel)).toEqual([]);
   });
 });

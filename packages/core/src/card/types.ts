@@ -25,6 +25,8 @@ export type CardView = {
     meaning: string[];
     /** Word-for-word translation in the answer language; only for translations (may be empty). */
     literal: string[];
+    /** The parallel is also the word-for-word translation (D-026); `literal` is then empty. */
+    literalSameAsParallel: boolean;
   } & LangDir;
   hints: string[];
   synonyms: string[];

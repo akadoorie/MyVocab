@@ -109,6 +109,42 @@ describe('PATCH /api/admin/items/:id (optimistic concurrency)', () => {
     expect(await cleared.json<Item>()).toMatchObject({ version: 3, literal: {} });
   });
 
+  it('stores the "same as the parallel" literal marker, only next to a parallel (D-026)', async () => {
+    const res = await create({
+      lang: 'en',
+      text: 'marker-sample',
+      type: 'expr',
+      meaning: { he: ['משמעות'] },
+      parallel: { he: ['מקבילה'] },
+      literal: { he: ['=parallel'] },
+    });
+    expect(res.status).toBe(201);
+    const item = await res.json<Item & { literal: Record<string, string[]> }>();
+    expect(item.literal).toEqual({ he: ['=parallel'] });
+    // The literal counts as filled in: no missing-literal warning.
+    expect(item.warnings.map((w) => w.code)).not.toContain('MISSING_LITERAL');
+    const row = await env.DB.prepare('SELECT translation_literal AS l FROM items WHERE id = ?')
+      .bind(item.itemId)
+      .first<{ l: string }>();
+    expect(row?.l).toBe('{"he":["=parallel"]}');
+    // The card shows the flag, never the marker as text.
+    const cards = await (
+      await req(`/admin/items/${item.itemId}/preview`)
+    ).json<
+      {
+        direction: { target: string };
+        answer: { literal: string[]; literalSameAsParallel: boolean };
+      }[]
+    >();
+    expect(cards.find((c) => c.direction.target === 'he')?.answer).toMatchObject({
+      literal: [],
+      literalSameAsParallel: true,
+    });
+    // Removing the parallel while the marker stays is refused.
+    const bad = await patch(item.itemId, { version: 1, parallel: {} });
+    expect(bad.status).toBe(400);
+  });
+
   it('a stale version gets 409 and writes nothing, even after another edit bumped the version', async () => {
     const id = await itemId('fx-word-1');
     const nature = await categoryId('nature');

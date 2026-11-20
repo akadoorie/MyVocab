@@ -15,7 +15,9 @@ function mainHeadline(card: CardView): string {
   const { main } = card.answer;
   if (main === 'explanation') return strings.card.explanation;
   if (main === 'meaning') return strings.card.meaning;
-  return strings.card.parallel;
+  return card.answer.literalSameAsParallel
+    ? strings.card.parallelAlsoLiteral
+    : strings.card.parallel;
 }
 
 /** A labelled group of answer entries; two or more are numbered (D-024). */

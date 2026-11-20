@@ -236,7 +236,8 @@ private content repository. It never appears in the public code repo or any publ
     language's `dir`. If the item has no hints and no synonyms, the section shows "Hint is not available".
   - **Back**: for a translation, labelled sections (D-024, D-025): the main answer in large text under a small
     headline ("Parallel" when the item has one, otherwise "Meaning"); under a parallel, a **"Meaning"** section in a
-    medium size; then a **"Literally"** section, small and muted. Each section is in the answer language's `dir`; two
+    medium size; then a **"Literally"** section, small and muted. When the literal is marked as the same as the
+    parallel (D-026), the headline reads **"Parallel (also literally)"** and there is no Literally section. Each section is in the answer language's `dir`; two
     or more entries in a section are numbered; a kind with no entries isn't shown. For the same language: the
     "Explanation" chip and the explanation lines; a thin divider; then the Hints section and the Synonyms line, **always** (whether or not
     Hints was pressed), or "Hint is not available".
@@ -425,7 +426,9 @@ so learners never download it. All admin pages work on mobile (tables collapse i
     (same language + normalized text + type among non-deleted items).
   - **Translations**: per active language **other than the item's language** (an English item shows "Hebrew"; a
     Hebrew item shows "English"), three inline list editors in display order: **meaning (required)**, **parallel** and
-    **literal translation** (D-024, D-025). A missing meaning shows the "not playable" warning. The item's own language is never offered (§8.1).
+    **literal translation** (D-024, D-025). A missing meaning shows the "not playable" warning. Where the language
+    has a parallel and no literal entries, a **"Same as the parallel"** checkbox stores the marker (D-026) instead of
+    a list; an expression with a parallel but an empty literal shows a "No literal translation" warning. The item's own language is never offered (§8.1).
   - **Explanation**: an inline list editor, one entry per meaning, in the item's language.
   - **Synonyms**: an inline list editor.
   - **Hints**: an inline list editor.
@@ -547,7 +550,7 @@ This JSON shape is used by the API, the admin editor and the JSON export (illust
 | `categories` | 0..N category slugs (ids in the admin API). An item without categories appears only under General |
 | `parallel` | Column `translation_parallel`. An object whose keys are language codes **other than `lang`**; each value is a non-empty ordered list (≤ 10 entries, each ≤ 200 chars): the equivalent word or expression in that language. For a plain word, this is simply its translation. The main answer of a card |
 | `meaning` | Column `translation_meaning`. Same shape (≤ 10 entries, each ≤ 300 chars): what the item means, in that language. Shown under the parallel, or as the main answer when there is no parallel |
-| `literal` | Column `translation_literal`. Same shape (≤ 5 entries, each ≤ 200 chars): the word-for-word translation, shown last in a muted color. Left empty when it would only repeat the parallel |
+| `literal` | Column `translation_literal`. Same shape (≤ 5 entries, each ≤ 200 chars): the word-for-word translation, shown last in a muted color. When it is word for word the same as the parallel, the list holds only the marker `=parallel` (D-026), allowed only where that language has a parallel; an empty list means "not filled in" |
 | `explanation` | Ordered list in `lang` (≤ 10 entries, each ≤ 500 chars), one entry per meaning |
 | `synonyms` | Ordered list in `lang` (≤ 20 entries, each ≤ 100 chars) |
 | `hints` | Ordered list in `lang` (≤ 20 entries, each ≤ 500 chars) |
@@ -591,7 +594,7 @@ The same normalization (case-insensitive, NFC) is used to de-duplicate entries w
 | `categories` | no | Category slugs, `|`-separated |
 | `translation_parallel_<code>` | no | One column per language, e.g. `translation_parallel_he`: the parallel (equivalent word or expression) in that language, `|`-separated. The column of the row's own `lang` must be empty |
 | `translation_meaning_<code>` | no | One column per language: the meaning in that language, `|`-separated. The row's own `lang` column must be empty |
-| `translation_literal_<code>` | no | One column per language: the literal (word-for-word) translation in that language, `|`-separated. The row's own `lang` column must be empty |
+| `translation_literal_<code>` | no | One column per language: the literal (word-for-word) translation in that language, `|`-separated, or `=parallel` when it is the same as the parallel (D-026). The row's own `lang` column must be empty |
 | `explanation` | no | Explanation entries in the row's language, `|`-separated |
 | `synonyms` | no | `|`-separated |
 | `hints` | no | `|`-separated |
@@ -644,7 +647,8 @@ he,מהיר,word,false,,,fast|quick,"שנע או פועל במהירות רבה"
   the item's language). `multiple_meanings` is set where a word truly has several meanings, with one translation and
   one explanation entry per meaning. Every item has its translation in
   `translation_meaning_<code>`; idioms also put their equivalent expression in the other language, when one exists, in
-  `translation_parallel_<code>`, and the word-for-word translation in `translation_literal_<code>`.
+  `translation_parallel_<code>`, and the word-for-word translation in `translation_literal_<code>` (`=parallel` when it
+  is the same as the parallel, D-026).
 - ⚠️ **The owner reviews the Hebrew and English content before it is seeded into production.**
 
 ### 8.5 Private content repository and data flow
@@ -785,7 +789,8 @@ Disabled buttons lose glow and ledge and look muted. Base mechanics:
 - **Back**: for a translation, centered sections, each under a small uppercase headline (D-024, D-025): the main
   answer, large and bold ("Parallel", or "Meaning" when there is no parallel); under a parallel, **"Meaning"** in
   `--text`, semibold, a size below the answer; then **"Literally"** in `--text-muted` at the hints' size, the least
-  emphasized. Two or more entries in a section are numbered ("1.", "2."). For the same language: the "Explanation"
+  emphasized. When the literal is the parallel (D-026), the main headline reads "Parallel (also literally)" and the
+  Literally section is left out. Two or more entries in a section are numbered ("1.", "2."). For the same language: the "Explanation"
   chip and the explanation lines (numbered when there are two or more, smaller when long). Then a thin divider;
   then
   **Hints** as a muted list and a "Synonyms: …" line (or "Hint is not available").
@@ -1064,7 +1069,7 @@ CREATE TABLE items (
   multiple_meanings  INTEGER NOT NULL DEFAULT 0 CHECK (multiple_meanings IN (0,1)),
   translation_parallel TEXT NOT NULL DEFAULT '{}', -- JSON object { "<lang>": ["…", …] }; never the item's own lang (D-024)
   translation_meaning  TEXT NOT NULL DEFAULT '{}', -- same shape: what it means (D-024); never own lang
-  translation_literal  TEXT NOT NULL DEFAULT '{}', -- same shape: word for word (D-016, D-024); never own lang
+  translation_literal  TEXT NOT NULL DEFAULT '{}', -- same shape: word for word (D-016, D-024), or ["=parallel"] (D-026); never own lang
   explanation        TEXT NOT NULL DEFAULT '[]',   -- JSON array of strings, item's language
   synonyms           TEXT NOT NULL DEFAULT '[]',   -- JSON array of strings, item's language
   hints              TEXT NOT NULL DEFAULT '[]',   -- JSON array of strings, item's language
@@ -1235,6 +1240,7 @@ type CardView = {
     numbered: boolean;                                    // explanation with 2+ lines
     meaning: string[];                                    // meaning[target] under a parallel, else []
     literal: string[];                                    // literal[target] for a translation, else [] (D-016)
+    literalSameAsParallel: boolean;                       // literal[target] is the "=parallel" marker (D-026)
     lang: LangCode; dir: Dir;
   };
   hints: string[];                                        // item language, in order

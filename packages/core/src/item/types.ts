@@ -39,3 +39,15 @@ export type OwnLanguageList = (typeof OWN_LANGUAGE_LISTS)[number];
 /** The per-language translation fields, in display order (PRD §8.1). */
 export const TRANSLATION_KINDS = ['meaning', 'parallel', 'literal'] as const;
 export type TranslationKind = (typeof TRANSLATION_KINDS)[number];
+
+/**
+ * The marker for "the literal translation into this language is the same as its parallel"
+ * (D-026): the only entry of `literal[lang]`, so the text is never stored twice and an empty
+ * literal still means "not filled in".
+ */
+export const LITERAL_SAME_AS_PARALLEL = '=parallel';
+
+/** True when a literal list is the "same as the parallel" marker. */
+export function isLiteralSameAsParallel(entries: readonly string[] | undefined): boolean {
+  return entries?.length === 1 && entries[0] === LITERAL_SAME_AS_PARALLEL;
+}

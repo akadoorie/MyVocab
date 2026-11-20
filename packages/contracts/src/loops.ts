@@ -65,6 +65,7 @@ export const cardViewSchema = z.object({
     numbered: z.boolean(),
     meaning: z.array(z.string()),
     literal: z.array(z.string()),
+    literalSameAsParallel: z.boolean(),
     ...langDir,
   }),
   hints: z.array(z.string()),

@@ -51,6 +51,7 @@ describe('buildCard', () => {
         numbered: false,
         meaning: [],
         literal: [],
+        literalSameAsParallel: false,
         lang: 'he',
         dir: 'rtl',
       },
@@ -102,6 +103,28 @@ describe('buildCard', () => {
       main: 'explanation',
       meaning: [],
       literal: [],
+    });
+  });
+
+  it('resolves the "same as the parallel" marker into a flag, never into text (D-026)', () => {
+    const item = makeItem({
+      type: 'expr',
+      multipleMeanings: false,
+      parallel: { he: ['מקבילה-1'] },
+      meaning: { he: ['משמעות-1'] },
+      literal: { he: ['=parallel'] },
+    });
+    expect(buildCard(item, 'he', LANGS).answer).toMatchObject({
+      main: 'parallel',
+      literal: [],
+      literalSameAsParallel: true,
+    });
+    // Same-language cards and real literals never set the flag.
+    expect(buildCard(item, 'en', LANGS).answer.literalSameAsParallel).toBe(false);
+    const real = makeItem({ ...item, literal: { he: ['מילולי-1'] } });
+    expect(buildCard(real, 'he', LANGS).answer).toMatchObject({
+      literal: ['מילולי-1'],
+      literalSameAsParallel: false,
     });
   });
 

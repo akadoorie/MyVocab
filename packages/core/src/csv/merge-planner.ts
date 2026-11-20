@@ -7,7 +7,11 @@ import {
   type ItemStatus,
   type Translations,
 } from '../item/types';
-import { mixedScriptWarnings, multipleMeaningsWarnings } from '../item/validate';
+import {
+  missingLiteralWarnings,
+  mixedScriptWarnings,
+  multipleMeaningsWarnings,
+} from '../item/validate';
 import { normalize } from '../text/normalize';
 import { CSV_COLUMNS, translationColumn } from './columns';
 import { toCsvIssue, type CsvIssue, type ParsedRow } from './parse-rows';
@@ -233,6 +237,7 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
       const itemWarnings = [
         ...multipleMeaningsWarnings(content),
         ...mixedScriptWarnings(content, ctx.languages),
+        ...missingLiteralWarnings(content),
       ];
       plan.warnings.push(...itemWarnings.map((w) => toCsvIssue(first.row, w)));
     }
