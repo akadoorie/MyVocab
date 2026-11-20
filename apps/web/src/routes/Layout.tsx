@@ -41,7 +41,7 @@ export function Layout() {
           </Link>
           {onHome && version && (
             // The version, so a refresh shows at a glance whether a new one is live (D-032).
-            <span className="text-xs text-muted" data-testid="app-version">
+            <span className="text-xs text-hint" data-testid="app-version">
               <span className="sr-only">{strings.nav.version} </span>
               <span aria-hidden="true">v</span>
               {version}
