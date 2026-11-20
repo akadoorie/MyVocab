@@ -483,6 +483,20 @@ body {
     box-shadow: var(--card-shadow);
   }
 
+  /* The guests' Topic dropdown (D-038, D-041): desktop browsers draw the open list with the
+     page's colours, where a disabled option is barely dimmer; make the locked entries clearly
+     grey and keep "Sample set" bright. Phones draw their own picker and ignore this. */
+  .topic-locked option {
+    color: var(--text);
+    background-color: var(--surface-2);
+  }
+  .topic-locked option:disabled {
+    color: #6a6290;
+  }
+  .topic-locked option.topic-heading {
+    font-weight: 600;
+  }
+
   /* The home page slogan (D-037): the first words fade in; "stick" drops in, bounces off twice
      and sticks on the third try with a soft squash, then a faint shine runs across it. Each word
      carries its own slice of the slogan-wide gradient (--w/--h: the heading's size; --x/--y: the

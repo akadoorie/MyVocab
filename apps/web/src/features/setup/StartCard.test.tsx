@@ -186,7 +186,7 @@ describe('StartCard', () => {
   describe('the sample set (D-038)', () => {
     const topic = () => screen.getByLabelText('Topic', { exact: true }) as HTMLSelectElement;
     const option = (name: string) =>
-      [...topic().options].find((o) => o.textContent === name) as HTMLOptionElement;
+      [...topic().options].find((o) => o.textContent?.trim() === name) as HTMLOptionElement;
 
     it('guests get the Sample set, with every other topic greyed out and locked', () => {
       mockApi();

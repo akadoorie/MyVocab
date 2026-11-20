@@ -20,6 +20,8 @@ import { useDebounced } from './useDebounced';
 import { useStartLoop } from './useStartLoop';
 
 const GUEST_TOAST_FLAG = 'myvocab.guestAmountToast';
+/** Three non-breaking spaces: indents a topic under the guests' "Topics" heading (D-041). */
+const INDENT = String.fromCharCode(160).repeat(3);
 
 export type { LoopStartNotice } from './useStartLoop';
 
@@ -224,7 +226,7 @@ export function StartCard({
                   <div className="relative">
                     <select
                       id={id}
-                      className={`${className} pr-9`}
+                      className={`${className} topic-locked pr-9`}
                       value="sample"
                       onChange={() => {}}
                       aria-describedby={`${id}-locked`}
@@ -233,13 +235,17 @@ export function StartCard({
                       <option value="" disabled>
                         {strings.setup.general}
                       </option>
-                      <optgroup label={strings.setup.topicsGroup} disabled>
-                        {meta.topics.map((c) => (
-                          <option key={c.id} value={c.id} disabled>
-                            {c.name}
-                          </option>
-                        ))}
-                      </optgroup>
+                      {/* No optgroup here: desktop Chrome draws disabled options inside a group in
+                          its own light grey and ignores ours (D-041). A disabled "Topics" entry
+                          stands in for the heading, and the topics are indented under it. */}
+                      <option value="topics-heading" disabled className="topic-heading">
+                        {strings.setup.topicsGroup}
+                      </option>
+                      {meta.topics.map((c) => (
+                        <option key={c.id} value={c.id} disabled>
+                          {INDENT + c.name}
+                        </option>
+                      ))}
                     </select>
                     <span
                       aria-hidden="true"
