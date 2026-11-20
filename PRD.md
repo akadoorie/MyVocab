@@ -165,7 +165,7 @@ private content repository. It never appears in the public code repo or any publ
 | Card UI | A glassy, violet-glowing **flip card** with a 3D flip animation and a round **Flip** button on both sides |
 | Hints | A **Hints** toggle button shows or hides hints + synonyms on the front. Flipping always shows them on the back |
 | Flip | The round **Flip** button on the card (front and back), a tap/click on the card, or Space/F. It toggles front ↔ back any number of times and never affects grading |
-| Known memory | **Any** "Know" (any cycle) is remembered per **item** and hides the item in **every** direction. **Know · ask again** (amber, signed-in learners) is not remembered: the word stays in the pool (FR-L27a) |
+| Known memory | **Any** green "I know it" (any cycle) is remembered per **item and direction** and hides the item in that direction (D-028). The orange "I know it · Show again in future" (signed-in learners) is not remembered: the word stays in the pool (FR-L27a) |
 | Known list | "My known words": search/filter/sort; return items to loops (single, selected, all filtered) |
 | Know tap | Advances immediately; Back (or swipe right) returns to the card, and its answer can be changed (FR-L29a) |
 | Categories | Many-to-many. "General" = all items |
@@ -179,7 +179,9 @@ private content repository. It never appears in the public code repo or any publ
 ## 6. Functional requirements: Learner
 
 ### 6.1 Landing page and start card
-- **FR-L1** The landing page (`/`) shows a short hero, a 3-step "How it works" section, and the **Start card**.
+- **FR-L1** The landing page (`/`) shows a short hero, a 3-step "How it works" section with a **"Buttons"** guide
+  (a small copy of each answer button, in its colour, and what it does; for guests the orange one is greyed out
+  and marked "sign in to use", D-030), and the **Start card**.
   Desktop: hero and start card side by side. Mobile: stacked, with the **Start** button right under the hero text
   (and the guest sign-in note), above the start card's fields, so it can be pressed without scrolling (D-021).
 - **FR-L2** Start card fields and **defaults** (the defaults come from admin settings, §7.7):
@@ -274,9 +276,11 @@ private content repository. It never appears in the public code repo or any publ
   button between Know and Don't know. Inside the session it is exactly Know: the card leaves the loop, counts in
   "N known" and in the summary, plays the Know animation, and the next card shows. The difference: it is **not
   recorded** in the learner's known items (FR-L50), so the word stays in the pool and may be drawn again in any later
-  session, at random (no schedule or waiting time). Under the green Know a small caption reads **"forever"**, under
-  the amber one **"ask again"**. Guests see only the single Know, without a caption (their Knows are never stored,
-  FR-L55).
+  session, at random (no schedule or waiting time).
+  **Labels (D-030):** green **"I know it"** with the caption **"Don't show again"**; amber **"I know it"** with
+  **"Show again in future"**; red **"I don't know"** with **"Show again soon"**. Guests see all three: the green
+  caption reads **"Done for this session"** (their Knows are never stored, FR-L55), and the amber one is shown
+  **greyed out and disabled** ("Sign in to use this"; its A shortcut does nothing).
 - **FR-L28 Don't know** (available on either side while Deciding): adds the card to the next cycle. If the card is
   showing its front, it **flips automatically** to the back (answer + hints + synonyms). The phase becomes
   **Revealed**: Know and Don't know disable, **Next** enables and receives focus, and Flip stays available. In this
@@ -784,9 +788,10 @@ glossy, glowing pressable buttons.
 ### 9.2 Pressable-ledge 3D buttons
 Buttons keep the pressable ledge, now glossy: a top-to-bottom gradient, a thin light top edge, the ledge underneath
 and a colored glow around. The loop uses two shapes:
-- **Pills** (Know, Know · ask again, Don't know): icon (✓ / ✕) + label inside. On phones, when all three pills
-  share the row (signed-in learners), they carry the label only. Signed-in learners also see a small italic muted
-  caption under the two Knows: "forever" and "ask again" (FR-L27a).
+- **Pills** (the three answers, FR-L27a, D-030): icon (✓ / ✕) + label inside ("I know it", "I know it", "I don't
+  know"). On phones the three pills share the row and carry the label only. Each has a small italic muted caption
+  under it ("Don't show again" / "Done for this session" for guests, "Show again in future", "Show again soon"),
+  which may wrap onto two lines on a phone. For guests the amber pill is greyed out (grayscale) and disabled.
 - **Round buttons** (Stop, Hints, Next; Flip on the card): an icon in a circle (56px mobile, 64px desktop) with an
   italic muted caption underneath ("Stop", "Hints", "Next").
 Disabled buttons lose glow and ledge and look muted. Base mechanics:
@@ -900,17 +905,18 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
 ### 9.7 Layouts
 - **Landing**: header (logo "MyVocab", sign-in / avatar, an "Admin" link for admins as a full-page navigation); hero
   ("Learn words until they stick"); How it works (1. Pick languages and a topic, or just press Start ·
-  2. Use Hints or Flip, then mark what you know · 3. Repeat until nothing is left); Start card; footer (Privacy,
+  2. Use Hints or Flip, then mark what you know · 3. Repeat until nothing is left), then "Buttons" (the three answer
+  buttons as small coloured icons, each with one line on what it does); Start card; footer (Privacy,
   GitHub). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
 - **Loop header**: the MyVocab logo mark (two stacked cards) and the progress `Cycle 1 • Card 2/10 • 1 known` on the
   left; on the right, on desktop a "⌨ Keyboard shortcuts" link that opens a small popover listing the shortcuts, and
   "← Home" (asks before stopping the loop, FR-L30a).
-- **Loop buttons**: on desktop, one row under the card, in this order: `Stop · Hints · Back · Know · Don't know ·
-  Next` (round, round, round, pill, pill, round), and for signed-in learners `Stop · Hints · Back · Know · Know (ask
-  again) · Don't know · Next`; after Don't know, `Stop · Hints · Back · [Next ›]`. Flip is on the card itself.
+- **Loop buttons**: on desktop, one row under the card, in this order: `Stop · Hints · Back · I know it (green) ·
+  I know it (amber) · I don't know · Next` (round, round, round, pill, pill, pill, round; the amber pill greyed out
+  for guests); after I don't know, `Stop · Hints · Back · [Next ›]`. Flip is on the card itself.
 - **Loop (mobile, 360–767px)**: the flip card fills the space above; the buttons form a **sticky bottom bar** in the
-  thumb zone, in two rows: the wide **Know** and **Don't know** pills (with their labels) on top (signed-in learners:
-  **Know · Know (ask again) · Don't know**, three equal pills), and the round
+  thumb zone, in two rows: the three answer pills on top (**I know it · I know it · I don't know**, three equal pills
+  with their captions), and the round
   `Stop · Hints · Back · Next` (with captions) below, so the two main actions stay big. After Don't know, one wide
   "Next ›" pill replaces Know / Don't know, with `Stop · Hints · Back` below (FR-L28, FR-L29a).
 - **Loop (desktop ≥ 768px)**: a centered column of about 1100px; the card is wide (≈ 2.3 : 1) and the pills carry

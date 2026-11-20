@@ -45,23 +45,25 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   await expect(card(page)).toHaveAttribute('data-side', 'back');
 
   // Know from the back side → next card, front side up.
-  await button(page, 'Know').click();
+  await button(page, 'I know it Done for this session').click();
   await expect(progress(page)).toHaveText('Cycle 1 · Card 2/5 · 1 known');
   await expect(card(page)).toHaveAttribute('data-side', 'front');
   // Back shows that card again (front up, with its answer); Don't know changes the answer.
   await button(page, 'Back').click();
   await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 1 known');
   await expect(card(page)).toHaveAttribute('data-side', 'front');
-  await expect(page.getByTestId('answer-chip')).toHaveText(/Your answer: Know/);
-  await button(page, 'Don’t know').click();
+  await expect(page.getByTestId('answer-chip')).toHaveText(/Your answer: I know it/);
+  await button(page, 'I don’t know Show again soon').click();
   await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 0 known');
   await button(page, 'Next').click();
   await expect(progress(page)).toHaveText('Cycle 1 · Card 2/5 · 0 known');
 
   // Don't know → auto-flip → one big Next in place of Know / Don't know.
-  await button(page, 'Don’t know').click();
+  await button(page, 'I don’t know Show again soon').click();
   await expect(card(page)).toHaveAttribute('data-side', 'back');
-  await expect(page.getByRole('button', { name: 'Know', exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'I know it Done for this session', exact: true }),
+  ).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Next', exact: true })).toHaveCount(1);
   await button(page, 'Next').click();
   await expect(progress(page)).toHaveText('Cycle 1 · Card 3/5 · 0 known');
@@ -75,7 +77,7 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
     if (await page.getByRole('heading', { name: 'Session completed' }).isVisible()) break;
     const cont = page.getByRole('button', { name: 'Continue' });
     if (await cont.isVisible()) await cont.click();
-    else await button(page, 'Know').click();
+    else await button(page, 'I know it Done for this session').click();
   }
   await expect(page.getByRole('heading', { name: 'Session completed' })).toBeVisible();
   await expect(page.getByText('Sign in to remember these words')).toBeVisible();
@@ -115,7 +117,7 @@ test('on touch, swipe left is Next and swipe right is Back', async ({ page }) =>
   // Not answered yet: swiping left does nothing.
   await swipe(page, -160);
   await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 0 known');
-  await button(page, 'Don’t know').click();
+  await button(page, 'I don’t know Show again soon').click();
   await swipe(page, -160);
   await expect(progress(page)).toHaveText('Cycle 1 · Card 2/5 · 0 known');
   await expect(card(page)).toHaveAttribute('data-side', 'front');

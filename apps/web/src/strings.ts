@@ -30,6 +30,15 @@ export const strings = {
       'Repeat until nothing is left',
     ],
     guestBanner: 'Sign in with Google to remember the words you know and choose bigger sessions.',
+    /** The answer buttons, explained under "How it works" (D-030). */
+    buttonsTitle: 'Buttons',
+    buttonGuide: {
+      know: 'Don’t show it again. You can bring it back from My known words.',
+      knowGuest: 'Done for this session.',
+      again: 'Done for this session; it shows up again in future sessions.',
+      againGuest: 'Done for this session; it shows up again in future sessions (sign in to use).',
+      dontKnow: 'It comes back later in this session, until you know it.',
+    },
   },
   setup: {
     title: 'Configure your session',
@@ -147,14 +156,21 @@ export const strings = {
   },
   types: { word: 'Words', expr: 'Expressions' } as Record<'word' | 'expr', string>,
   loop: {
-    know: 'Know',
-    dontKnow: 'Don’t know',
-    /** The captions under the two Knows, for signed-in learners (FR-L27a). */
-    knowForever: 'forever',
-    knowAskAgain: 'ask again',
-    /** Their accessible names. */
-    knowForeverName: 'Know, forever',
-    knowAskAgainName: 'Know, ask again',
+    /** The three answer buttons and the captions under them (FR-L27a, D-030). */
+    know: 'I know it',
+    dontKnow: 'I don’t know',
+    knowCaption: 'Don’t show again',
+    knowCaptionGuest: 'Done for this session',
+    againCaption: 'Show again in future',
+    dontKnowCaption: 'Show again soon',
+    /** Their accessible names: exactly the visible label + caption (axe label-content-name-mismatch). */
+    knowName: 'I know it Don’t show again',
+    knowNameGuest: 'I know it Done for this session',
+    againName: 'I know it Show again in future',
+    dontKnowName: 'I don’t know Show again soon',
+    /** The orange button is shown to guests, but off. */
+    signInToUse: 'Sign in to use this',
+    againNameGuest: 'I know it Show again in future (sign in to use)',
     hints: 'Hints',
     flip: 'Flip',
     flipTitle: 'Flip the card (F or Space)',
@@ -176,9 +192,9 @@ export const strings = {
     no: 'No',
     shortcutsTitle: 'Keyboard shortcuts',
     shortcuts: [
-      ['K', 'Know'],
-      ['A', 'Know (ask again)'],
-      ['D', 'Don’t know'],
+      ['K', 'I know it'],
+      ['A', 'I know it, show again in future'],
+      ['D', 'I don’t know'],
       ['H', 'Hints'],
       ['F / Space', 'Flip'],
       ['←', 'Back'],
@@ -204,9 +220,9 @@ export const strings = {
     showingAnswer: 'Showing answer',
     hintsShown: 'Hints shown',
     hintsHidden: 'Hints hidden',
-    answeredKnow: 'Your answer: Know',
-    answeredKnowAgain: 'Your answer: Know (ask again)',
-    answeredDontKnow: 'Your answer: Don’t know',
+    answeredKnow: 'Your answer: I know it',
+    answeredKnowAgain: 'Your answer: I know it (show again in future)',
+    answeredDontKnow: 'Your answer: I don’t know',
     /** Announced when Back lands on a card (screen readers). */
     backTo: (card: number, size: number, answer: string | null) =>
       `Card ${card} of ${size}${answer ? `. ${answer}` : ''}`,

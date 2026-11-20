@@ -485,3 +485,19 @@ Format: date · context · decision · consequences.
   learner). The button waits while `/api/meta` loads (fetched when the loop page opens, usually
   already cached); if it fails, the old behaviour (start card, pre-filled) is the fallback. One
   Summary component throughout, so the celebration never restarts.
+
+## D-030 · 2026-11-20 · Clearer answer buttons, and a "Buttons" guide (owner request)
+
+- **Why:** "Know · forever", "Know · ask again" and "Don't know" said how long a word is
+  remembered, not what happens next.
+- **Labels:** green "I know it · Don't show again", amber "I know it · Show again in future", red
+  "I don't know · Show again soon". The two Knows share their main text so the caption carries
+  the difference. No colour changes. The keyboard-shortcut list and the "Your answer: …" chip use
+  the same words.
+- **Guests:** they see all three buttons, so the session looks like a signed-in one. Their green
+  caption is "Done for this session" (nothing is stored for them); the amber button is greyed out
+  (grayscale) and disabled, titled "Sign in to use this", and the A shortcut stays off.
+- **Guide:** "How it works" on the home page gains a "Buttons" section: a small copy of each
+  button in its colour and one line on what it does; guests see the amber one greyed out with
+  "(sign in to use)".
+- **Phone width:** the three captions may wrap onto two short lines under the pills.

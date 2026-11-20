@@ -44,7 +44,10 @@ test('guest pages: no accessibility violations and no CSP violations', async ({ 
     .click();
   await expect(page).toHaveURL(/\/loop$/);
   await expectNoViolations(page, 'loop (front)');
-  await page.getByRole('button', { name: 'Don’t know', exact: true }).last().click();
+  await page
+    .getByRole('button', { name: 'I don’t know Show again soon', exact: true })
+    .last()
+    .click();
   await expectNoViolations(page, 'loop (revealed)');
 
   await page.goto('/privacy');

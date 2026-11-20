@@ -22,13 +22,14 @@ export function LoopButton({
   className = '',
   hideLabel = false,
   pressed,
+  locked = false,
   ref,
   ...rest
 }: {
   kind: Kind;
   icon: ReactNode;
   label: string;
-  /** A small caption under a pill ("forever" / "ask again", FR-L27a). */
+  /** A small caption under a pill (what the answer does, FR-L27a, D-030). */
   caption?: string;
   /** The accessible name, when it differs from the visible label + caption. */
   name?: string;
@@ -39,6 +40,8 @@ export function LoopButton({
   disabled?: boolean;
   /** A toggle button's state (Hints): announced and styled as pressed. */
   pressed?: boolean;
+  /** Shown but not available (the orange Know for guests): greyed out. */
+  locked?: boolean;
   onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   title?: string;
 }) {
@@ -47,7 +50,7 @@ export function LoopButton({
     <button
       ref={ref}
       type="button"
-      className={`lbtn ${shape} lbtn--${kind} ${caption ? 'has-caption' : ''} ${pressed ? 'is-pressed' : ''} ${className}`}
+      className={`lbtn ${shape} lbtn--${kind} ${caption ? 'has-caption' : ''} ${pressed ? 'is-pressed' : ''} ${locked ? 'is-locked' : ''} ${className}`}
       aria-pressed={pressed}
       aria-label={name}
       {...rest}
@@ -55,6 +58,8 @@ export function LoopButton({
       <span className="lbtn__shape" aria-hidden="true" />
       <span className="lbtn__icon">{icon}</span>
       <span className={hideLabel ? 'sr-only' : 'lbtn__label'}>{label}</span>
+      {/* A space, so the visible text reads "I know it Don't show again", not "itDon't" (axe). */}
+      {caption && ' '}
       {caption && (
         <span className="lbtn__caption" aria-hidden="true">
           {caption}
@@ -65,11 +70,12 @@ export function LoopButton({
 }
 
 /**
- * Loop buttons (PRD FR-L24, §9.7). Desktop: one row `Stop · Hints · Back · Know · Don't know · Next`.
- * Phones: the wide Know / Don't know pills on top, `Stop · Hints · Back · Next` below. After Don't
- * know, one wide Next pill takes the place of Know / Don't know. Flip is on the card.
- * With `askAgain` (signed-in learners, FR-L27a) the amber "Know · ask again" pill sits between
- * Know and Don't know, and the two Knows get their "forever" / "ask again" captions.
+ * Loop buttons (PRD FR-L24, §9.7). Desktop: one row `Stop · Hints · Back · three answers · Next`.
+ * Phones: the three answer pills on top, `Stop · Hints · Back · Next` below. After "I don't know",
+ * one wide Next pill takes their place. Flip is on the card.
+ * The answers (D-030): green "I know it · Don't show again", orange "I know it · Show again in
+ * future" (FR-L27a) and red "I don't know · Show again soon". Guests (`askAgain` false) see the
+ * orange one greyed out and off, and the green caption reads "Done for this session".
  */
 export function ButtonBar({
   state,
@@ -91,21 +97,17 @@ export function ButtonBar({
   // (On an earlier card reached with Back, Next is allowed too, but Know / Don't know stay.)
   const revealed = state.phase === 'revealed';
   // Three pills on a phone carry their label only (base.css).
-  const trio = askAgain ? 'lbtn--trio' : '';
+  const trio = 'lbtn--trio';
   return (
     <div
       className={[
         'grid items-start gap-x-3 gap-y-5 pb-1',
         revealed
           ? "grid-cols-6 [grid-template-areas:'pills_pills_pills_pills_pills_pills'_'stop_stop_hints_hints_back_back']"
-          : askAgain
-            ? "grid-cols-12 [grid-template-areas:'know_know_know_know_again_again_again_again_dk_dk_dk_dk'_'stop_stop_stop_hints_hints_hints_back_back_back_next_next_next']"
-            : "grid-cols-8 [grid-template-areas:'know_know_know_know_dk_dk_dk_dk'_'stop_stop_hints_hints_back_back_next_next']",
+          : "grid-cols-12 [grid-template-areas:'know_know_know_know_again_again_again_again_dk_dk_dk_dk'_'stop_stop_stop_hints_hints_hints_back_back_back_next_next_next']",
         revealed
           ? "md:grid-cols-[auto_auto_auto_1fr] md:gap-x-6 md:[grid-template-areas:'stop_hints_back_pills']"
-          : askAgain
-            ? "md:grid-cols-[auto_auto_auto_1fr_1fr_1.1fr_auto] md:gap-x-6 md:[grid-template-areas:'stop_hints_back_know_again_dk_next']"
-            : "md:grid-cols-[auto_auto_auto_1fr_1.2fr_auto] md:gap-x-6 md:[grid-template-areas:'stop_hints_back_know_dk_next']",
+          : "md:grid-cols-[auto_auto_auto_1fr_1fr_1.1fr_auto] md:gap-x-6 md:[grid-template-areas:'stop_hints_back_know_again_dk_next']",
       ].join(' ')}
     >
       <LoopButton
@@ -145,21 +147,33 @@ export function ButtonBar({
             kind="know"
             icon={<CheckIcon />}
             label={strings.loop.know}
+            caption={askAgain ? strings.loop.knowCaption : strings.loop.knowCaptionGuest}
+            name={askAgain ? strings.loop.knowName : strings.loop.knowNameGuest}
             className={`[grid-area:know] ${trio}`}
-            {...(askAgain
-              ? { caption: strings.loop.knowForever, name: strings.loop.knowForeverName }
-              : {})}
             {...btn('KNOW')}
           />
-          {askAgain && (
+          {askAgain ? (
             <LoopButton
               kind="again"
               icon={<CheckIcon />}
               label={strings.loop.know}
-              caption={strings.loop.knowAskAgain}
-              name={strings.loop.knowAskAgainName}
+              caption={strings.loop.againCaption}
+              name={strings.loop.againName}
               className={`[grid-area:again] ${trio}`}
               {...btn('KNOW_AGAIN')}
+            />
+          ) : (
+            // Guests see what signing in adds, greyed out and off (D-030).
+            <LoopButton
+              kind="again"
+              icon={<CheckIcon />}
+              label={strings.loop.know}
+              caption={strings.loop.againCaption}
+              name={strings.loop.againNameGuest}
+              title={strings.loop.signInToUse}
+              className={`[grid-area:again] ${trio}`}
+              locked
+              disabled
             />
           )}
           <LoopButton
@@ -167,6 +181,8 @@ export function ButtonBar({
             className={`[grid-area:dk] ${trio}`}
             icon={<CrossIcon />}
             label={strings.loop.dontKnow}
+            caption={strings.loop.dontKnowCaption}
+            name={strings.loop.dontKnowName}
             {...btn('DONT_KNOW')}
           />
           <LoopButton

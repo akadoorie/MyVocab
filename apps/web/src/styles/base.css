@@ -239,6 +239,12 @@ body {
   .lbtn:disabled .lbtn__caption {
     opacity: 0.6;
   }
+  /* Shown but not available (the orange Know for guests, D-030): grey instead of its colour. */
+  .lbtn.is-locked .lbtn__shape,
+  .lbtn.is-locked .lbtn__icon,
+  .lbtn.is-locked .lbtn__label {
+    filter: grayscale(1);
+  }
   .lbtn--know {
     --top: var(--know-top);
     --bottom: var(--know-bottom);
@@ -367,6 +373,52 @@ body {
     .lbtn--trio .lbtn__label {
       font-size: clamp(0.95rem, 4.3vw, 1.125rem);
     }
+    /* Three captions side by side: they may wrap onto two short lines. */
+    .lbtn--trio .lbtn__caption {
+      white-space: normal;
+      line-height: 1.25;
+      text-align: center;
+    }
+  }
+
+  /* The small answer-button icons under "How it works" (D-030): the same colours as the pills. */
+  .mini-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 7.5rem;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--top), var(--bottom));
+    box-shadow: 0 3px 0 var(--c-ledge);
+    color: var(--on-color);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .mini-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+  .mini-btn--know {
+    --top: var(--know-top);
+    --bottom: var(--know-bottom);
+    --c-ledge: var(--know-ledge);
+  }
+  .mini-btn--again {
+    --top: var(--again-top);
+    --bottom: var(--again-bottom);
+    --c-ledge: var(--again-ledge);
+  }
+  .mini-btn--dontknow {
+    --top: var(--dontknow-top);
+    --bottom: var(--dontknow-bottom);
+    --c-ledge: var(--dontknow-ledge);
+  }
+  .mini-btn.is-locked {
+    filter: grayscale(1);
+    opacity: 0.6;
   }
 
   /* Glassy panel for cards and screens (PRD §9.1). */

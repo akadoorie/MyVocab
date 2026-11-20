@@ -64,16 +64,26 @@ describe('LoopPage', () => {
     expect(progress()).toBe('Cycle 1 · Card 1/3 · 0 known');
     expect(side()).toBe('front');
     expect(btn('Next')).toBeDisabled();
-    for (const name of ['Know', 'Don’t know', 'Hints', 'Flip']) expect(btn(name)).toBeEnabled();
+    for (const name of [
+      'I know it Done for this session',
+      'I don’t know Show again soon',
+      'Hints',
+      'Flip',
+    ])
+      expect(btn(name)).toBeEnabled();
   });
 
   it('Don’t know flips to the back, swaps Know/Don’t know for a big Next and focuses it', () => {
     setup();
-    fireEvent.click(btn('Don’t know'));
+    fireEvent.click(btn('I don’t know Show again soon'));
     expect(side()).toBe('back');
     // Know / Don't know give way to one wide Next pill.
-    expect(screen.queryByRole('button', { name: 'Know' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Don’t know' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'I know it Done for this session' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'I don’t know Show again soon' }),
+    ).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Next' })).toHaveLength(1);
     expect(btn('Next')).toHaveClass('lbtn--next');
     expect(btn('Next')).toBeEnabled();
@@ -101,19 +111,19 @@ describe('LoopPage', () => {
   it('Back shows the previous card front side up with its answer; Next steps forward again', () => {
     setup();
     expect(btn('Back')).toBeDisabled(); // first card of the cycle
-    fireEvent.click(btn('Know'));
-    fireEvent.click(btn('Don’t know'));
+    fireEvent.click(btn('I know it Done for this session'));
+    fireEvent.click(btn('I don’t know Show again soon'));
     expect(side()).toBe('back');
     fireEvent.click(btn('Back'));
     expect(progress()).toBe('Cycle 1 · Card 1/3 · 1 known');
     expect(side()).toBe('front');
-    expect(screen.getByTestId('answer-chip')).toHaveTextContent('Your answer: Know');
-    expect(screen.getByText('Card 1 of 3. Your answer: Know')).toHaveClass('sr-only');
+    expect(screen.getByTestId('answer-chip')).toHaveTextContent('Your answer: I know it');
+    expect(screen.getByText('Card 1 of 3. Your answer: I know it')).toHaveClass('sr-only');
     expect(btn('Next')).toBeEnabled(); // answered, so Next skips ahead without answering again
     fireEvent.click(btn('Next'));
     expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known');
     expect(side()).toBe('front'); // even though it was showing its back when we left it
-    expect(screen.getByTestId('answer-chip')).toHaveTextContent('Your answer: Don’t know');
+    expect(screen.getByTestId('answer-chip')).toHaveTextContent('Your answer: I don’t know');
     fireEvent.click(btn('Next'));
     expect(screen.queryByTestId('answer-chip')).not.toBeInTheDocument(); // not answered yet
     expect(btn('Next')).toBeDisabled();
@@ -122,30 +132,35 @@ describe('LoopPage', () => {
   it('changing an answer: Know → Don’t know unmarks it, Don’t know → Know marks it', () => {
     const sink = { onKnow: vi.fn(), onUnknow: vi.fn() };
     setup(sink);
-    fireEvent.click(btn('Know'));
+    fireEvent.click(btn('I know it Done for this session'));
     expect(sink.onKnow).toHaveBeenCalledTimes(1);
     expect(sink.onKnow).toHaveBeenCalledWith(expect.objectContaining({ cycle: 1 }), 'he');
     fireEvent.click(btn('Back'));
-    fireEvent.click(btn('Don’t know'));
+    fireEvent.click(btn('I don’t know Show again soon'));
     expect(sink.onUnknow).toHaveBeenCalledTimes(1);
     expect(progress()).toBe('Cycle 1 · Card 1/3 · 0 known');
     expect(side()).toBe('back');
     fireEvent.click(btn('Next'));
     fireEvent.click(btn('Back'));
-    fireEvent.click(btn('Know'));
+    fireEvent.click(btn('I know it Done for this session'));
     expect(sink.onKnow).toHaveBeenCalledTimes(2);
     expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known');
     // Know again on a card already known changes nothing in the queue.
     fireEvent.click(btn('Back'));
-    fireEvent.click(btn('Know'));
+    fireEvent.click(btn('I know it Done for this session'));
     expect(sink.onKnow).toHaveBeenCalledTimes(2);
   });
 
-  it('guests have a single Know, without captions, and the A key does nothing', () => {
+  it('guests see all three answers, the orange one greyed out and off; A does nothing (D-030)', () => {
     setup();
-    expect(screen.getAllByRole('button', { name: /^Know/ })).toHaveLength(1);
-    expect(screen.queryByText('forever')).not.toBeInTheDocument();
-    expect(screen.queryByText('ask again')).not.toBeInTheDocument();
+    expect(btn('I know it Done for this session')).toBeEnabled();
+    expect(screen.getByText('Done for this session')).toBeInTheDocument();
+    const again = btn('I know it Show again in future (sign in to use)');
+    expect(again).toBeDisabled();
+    expect(again).toHaveClass('lbtn--again', 'is-locked');
+    expect(again).toHaveAttribute('title', 'Sign in to use this');
+    expect(screen.getByText('Show again in future')).toBeInTheDocument();
+    expect(screen.getByText('Show again soon')).toBeInTheDocument();
     fireEvent.keyDown(window, { key: 'a' });
     expect(progress()).toBe('Cycle 1 · Card 1/3 · 0 known');
   });
@@ -157,18 +172,28 @@ describe('LoopPage', () => {
       .getAllByRole('button')
       .map((b) => b.getAttribute('aria-label') ?? b.textContent)
       .filter((n) => /know/i.test(n ?? ''));
-    expect(names).toEqual(['Know, forever', 'Know, ask again', 'Don’t know']);
-    expect(btn('Know, ask again')).toHaveClass('lbtn--again');
-    expect(screen.getByText('forever')).toBeInTheDocument();
-    expect(screen.getByText('ask again')).toBeInTheDocument();
+    expect(names).toEqual([
+      'I know it Don’t show again',
+      'I know it Show again in future',
+      'I don’t know Show again soon',
+    ]);
+    expect(btn('I know it Show again in future')).toHaveClass('lbtn--again');
+    expect(btn('I know it Show again in future')).not.toHaveClass('is-locked');
+    expect(screen.getByText('Don’t show again')).toBeInTheDocument();
+    expect(screen.getByText('Show again in future')).toBeInTheDocument();
+    expect(screen.getByText('Show again soon')).toBeInTheDocument();
 
-    fireEvent.click(btn('Know, ask again'));
+    fireEvent.click(btn('I know it Show again in future'));
     expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known'); // counts like Know in the session
     expect(sink.onKnow).not.toHaveBeenCalled();
     expect(loadLoop()?.state.known[0]?.again).toBe(true); // a refresh keeps it
     fireEvent.click(btn('Back'));
-    expect(screen.getByTestId('answer-chip')).toHaveTextContent('Your answer: Know (ask again)');
-    expect(screen.getByText('Card 1 of 3. Your answer: Know (ask again)')).toHaveClass('sr-only');
+    expect(screen.getByTestId('answer-chip')).toHaveTextContent(
+      'Your answer: I know it (show again in future)',
+    );
+    expect(
+      screen.getByText('Card 1 of 3. Your answer: I know it (show again in future)'),
+    ).toHaveClass('sr-only');
 
     fireEvent.keyDown(window, { key: 'a' }); // the same answer: nothing changes
     expect(sink.onKnow).not.toHaveBeenCalled();
@@ -178,19 +203,19 @@ describe('LoopPage', () => {
   it('signed-in: switching between the two Knows records and unrecords the word', () => {
     const sink = { onKnow: vi.fn(), onUnknow: vi.fn() };
     setup(sink, { isGuest: false });
-    fireEvent.click(btn('Know, forever'));
+    fireEvent.click(btn('I know it Don’t show again'));
     expect(sink.onKnow).toHaveBeenCalledTimes(1);
     fireEvent.click(btn('Back'));
-    fireEvent.click(btn('Know, ask again'));
+    fireEvent.click(btn('I know it Show again in future'));
     expect(sink.onUnknow).toHaveBeenCalledWith(sink.onKnow.mock.calls[0]![0].id, 'he');
     expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known');
     fireEvent.click(btn('Back'));
-    fireEvent.click(btn('Know, forever'));
+    fireEvent.click(btn('I know it Don’t show again'));
     expect(sink.onKnow).toHaveBeenCalledTimes(2);
     fireEvent.click(btn('Back'));
-    fireEvent.click(btn('Know, ask again'));
+    fireEvent.click(btn('I know it Show again in future'));
     fireEvent.click(btn('Back'));
-    fireEvent.click(btn('Don’t know')); // from ask again: nothing was recorded, nothing to undo
+    fireEvent.click(btn('I don’t know Show again soon')); // from ask again: nothing was recorded, nothing to undo
     expect(sink.onUnknow).toHaveBeenCalledTimes(2);
     expect(sink.onKnow).toHaveBeenCalledTimes(2);
   });
@@ -211,7 +236,7 @@ describe('LoopPage', () => {
       .mockImplementation(() => Promise.resolve());
     const pause = vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
     setup();
-    for (let i = 0; i < 3; i++) fireEvent.click(btn('Know'));
+    for (let i = 0; i < 3; i++) fireEvent.click(btn('I know it Done for this session'));
     expect(play).toHaveBeenCalledTimes(1);
     const toggle = screen.getByRole('button', { name: /Sound on/ });
     expect(toggle).toHaveAttribute('aria-pressed', 'true');
@@ -232,7 +257,7 @@ describe('LoopPage', () => {
       .mockImplementation(() => Promise.resolve());
     vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
     setup();
-    for (let i = 0; i < 3; i++) fireEvent.click(btn('Know'));
+    for (let i = 0; i < 3; i++) fireEvent.click(btn('I know it Done for this session'));
     expect(play).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('crown')).toBeInTheDocument(); // reduced motion here: no flight
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
@@ -252,22 +277,22 @@ describe('LoopPage', () => {
       .mockImplementation(() => Promise.resolve());
     vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
     setup();
-    for (let i = 0; i < 3; i++) fireEvent.click(btn('Know'));
+    for (let i = 0; i < 3; i++) fireEvent.click(btn('I know it Done for this session'));
     expect(play).toHaveBeenCalledTimes(1);
     // Back, change the last card to Don't know, then Back to Know again: no new cycle, no repeat.
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
-    fireEvent.click(btn('Don’t know'));
+    fireEvent.click(btn('I don’t know Show again soon'));
     fireEvent.click(btn('Back')); // to card 2
     fireEvent.click(btn('Next')); // card 3 again, answered Don't know
-    fireEvent.click(btn('Know')); // changed back: the session is completed again
+    fireEvent.click(btn('I know it Done for this session')); // changed back: the session is completed again
     expect(screen.getByRole('heading', { name: 'Session completed' })).toBeInTheDocument();
     expect(play).toHaveBeenCalledTimes(1);
     // Now a real new cycle: Back, Don't know, Next → cycle break → Continue → Know → completed.
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
-    fireEvent.click(btn('Don’t know'));
+    fireEvent.click(btn('I don’t know Show again soon'));
     fireEvent.click(btn('Next'));
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
-    fireEvent.click(btn('Know'));
+    fireEvent.click(btn('I know it Done for this session'));
     expect(screen.getByRole('heading', { name: 'Session completed' })).toBeInTheDocument();
     expect(play).toHaveBeenCalledTimes(2);
     vi.restoreAllMocks();
@@ -275,14 +300,14 @@ describe('LoopPage', () => {
 
   it('the cycle break and the summary go back to the last card', () => {
     setup();
-    fireEvent.click(btn('Know'));
-    fireEvent.click(btn('Know'));
-    fireEvent.click(btn('Know'));
+    fireEvent.click(btn('I know it Done for this session'));
+    fireEvent.click(btn('I know it Done for this session'));
+    fireEvent.click(btn('I know it Done for this session'));
     expect(screen.getByRole('heading', { name: 'Session completed' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
     expect(progress()).toBe('Cycle 1 · Card 3/3 · 3 known');
     expect(loadLoop()).not.toBeNull(); // the session is alive again
-    fireEvent.click(btn('Don’t know'));
+    fireEvent.click(btn('I don’t know Show again soon'));
     fireEvent.click(btn('Next'));
     expect(screen.getByRole('heading', { name: 'Cycle 2 · 1 card left' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
@@ -308,14 +333,14 @@ describe('LoopPage', () => {
 
   it('reaches a cycle break, continues, and ends with a summary', () => {
     setup();
-    fireEvent.click(btn('Know'));
-    fireEvent.click(btn('Know'));
-    fireEvent.click(btn('Don’t know'));
+    fireEvent.click(btn('I know it Done for this session'));
+    fireEvent.click(btn('I know it Done for this session'));
+    fireEvent.click(btn('I don’t know Show again soon'));
     fireEvent.click(btn('Next'));
     expect(screen.getByRole('heading', { name: 'Cycle 2 · 1 card left' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
     expect(progress()).toBe('Cycle 2 · Card 1/1 · 2 known');
-    fireEvent.click(btn('Know'));
+    fireEvent.click(btn('I know it Done for this session'));
     const summary = screen
       .getByRole('heading', { name: 'Session completed' })
       .closest('section') as HTMLElement;
@@ -326,8 +351,8 @@ describe('LoopPage', () => {
 
   describe('New session on the summary (FR-L32)', () => {
     const finish = () => {
-      // Signed-in learners have two Knows; "forever" is the recorded one.
-      for (let i = 0; i < 3; i++) fireEvent.click(btn('Know, forever'));
+      // Signed-in learners have two Knows; the green one is recorded.
+      for (let i = 0; i < 3; i++) fireEvent.click(btn('I know it Don’t show again'));
       expect(screen.getByRole('heading', { name: 'Session completed' })).toBeInTheDocument();
     };
 
@@ -396,7 +421,7 @@ describe('LoopPage', () => {
 
   it('saves progress so a refresh resumes; Stop asks, then clears it and goes home', async () => {
     const router = setup();
-    fireEvent.click(btn('Know'));
+    fireEvent.click(btn('I know it Done for this session'));
     expect(loadLoop()?.state.index).toBe(1);
     fireEvent.click(screen.getAllByRole('button', { name: /Stop/ })[0] as HTMLElement);
     // Stop asks first, like Home; No keeps the session.

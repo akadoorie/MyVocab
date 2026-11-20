@@ -6,6 +6,7 @@ import { StartCard } from '../features/setup/StartCard';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
 import { strings } from '../strings';
+import { ButtonGuide } from './ButtonGuide';
 
 /**
  * Landing page (PRD FR-L1): hero, "How it works" and the start card. It never shows real
@@ -81,6 +82,7 @@ export function Landing() {
               </li>
             ))}
           </ol>
+          <ButtonGuide isGuest={session.isGuest} headingId="buttons-title" />
         </section>
       </div>
 
@@ -111,6 +113,7 @@ export function Landing() {
             <li key={step}>{step}</li>
           ))}
         </ol>
+        <ButtonGuide isGuest={session.isGuest} headingId="buttons-title-m" />
       </section>
     </main>
   );
