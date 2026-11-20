@@ -52,9 +52,9 @@ function content(d1: D1Database) {
       `SELECT i.lang, i.text, i.type, i.multiple_meanings, i.translation_parallel,
               i.translation_meaning, i.translation_literal, i.explanation,
               i.synonyms, i.hints, i.status,
-              (SELECT group_concat(slug, '|') FROM (SELECT c.slug FROM item_categories ic
-                 JOIN categories c ON c.id = ic.category_id WHERE ic.item_id = i.id ORDER BY c.slug))
-                AS categories
+              (SELECT group_concat(slug, '|') FROM (SELECT c.slug FROM item_topics ic
+                 JOIN topics c ON c.id = ic.topic_id WHERE ic.item_id = i.id ORDER BY c.slug))
+                AS topics
        FROM items i WHERE i.deleted_at IS NULL ORDER BY i.lang, i.normalized_text, i.type`,
     )
     .all()

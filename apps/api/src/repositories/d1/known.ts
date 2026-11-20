@@ -9,7 +9,7 @@ import type {
   KnownRepository,
   KnownSortKey,
 } from '../interfaces';
-import { categoriesForItems, itemSearchCondition } from './shared';
+import { topicsForItems, itemSearchCondition } from './shared';
 
 type ListRow = {
   item_id: number;
@@ -35,9 +35,9 @@ function filterConditions(userId: string, f: KnownFilterInput): SQL[] {
   if (f.lang) conds.push(sql`i.lang = ${f.lang}`);
   if (f.target) conds.push(sql`k.known_target = ${f.target}`);
   if (f.type) conds.push(sql`i.type = ${f.type}`);
-  if (f.categoryId !== undefined) {
+  if (f.topicId !== undefined) {
     conds.push(
-      sql`EXISTS (SELECT 1 FROM item_categories ic WHERE ic.item_id = i.id AND ic.category_id = ${f.categoryId})`,
+      sql`EXISTS (SELECT 1 FROM item_topics ic WHERE ic.item_id = i.id AND ic.topic_id = ${f.topicId})`,
     );
   }
   if (f.q) {
@@ -174,7 +174,7 @@ export class D1KnownRepository implements KnownRepository {
     return row?.n ?? 0;
   }
 
-  categoriesFor(itemIds: readonly number[]): Promise<Map<number, { id: number; name: string }[]>> {
-    return categoriesForItems(this.db, itemIds);
+  topicsFor(itemIds: readonly number[]): Promise<Map<number, { id: number; name: string }[]>> {
+    return topicsForItems(this.db, itemIds);
   }
 }

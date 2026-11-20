@@ -19,14 +19,14 @@ const toDraft = (v: Settings): Draft => ({
 export function SettingsPage() {
   const settings = useQuery({ queryKey: ['admin', 'settings'], queryFn: adminApi.settings });
   const languages = useQuery({ queryKey: ['admin', 'languages'], queryFn: adminApi.languages });
-  const categories = useQuery({ queryKey: ['admin', 'categories'], queryFn: adminApi.categories });
+  const topics = useQuery({ queryKey: ['admin', 'topics'], queryFn: adminApi.topics });
   if (settings.isError) return <ErrorState onRetry={() => void settings.refetch()} />;
-  if (!settings.data || !languages.data || !categories.data) return <Loading />;
+  if (!settings.data || !languages.data || !topics.data) return <Loading />;
   return (
     <SettingsForm
       initial={settings.data}
       languages={languages.data.languages.filter((l) => l.isActive)}
-      categories={categories.data.categories.filter((c) => c.isActive)}
+      topics={topics.data.topics.filter((c) => c.isActive)}
     />
   );
 }
@@ -34,11 +34,11 @@ export function SettingsPage() {
 function SettingsForm({
   initial,
   languages,
-  categories,
+  topics,
 }: {
   initial: Settings;
   languages: { code: string; name: string }[];
-  categories: { id: number; name: string }[];
+  topics: { id: number; name: string }[];
 }) {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -123,14 +123,14 @@ function SettingsForm({
           options={languages.map((l) => [l.code, l.name])}
         />
         <SelectField
-          id="defaults.categoryId"
-          label={label('defaults.categoryId')}
-          error={errors['defaults.categoryId']}
-          value={draft['defaults.categoryId'] === null ? '' : String(draft['defaults.categoryId'])}
-          onChange={(v) => set('defaults.categoryId', v === '' ? null : Number(v))}
+          id="defaults.topicId"
+          label={label('defaults.topicId')}
+          error={errors['defaults.topicId']}
+          value={draft['defaults.topicId'] === null ? '' : String(draft['defaults.topicId'])}
+          onChange={(v) => set('defaults.topicId', v === '' ? null : Number(v))}
           options={[
             ['', s.settings.general],
-            ...categories.map((c) => [String(c.id), c.name] as [string, string]),
+            ...topics.map((c) => [String(c.id), c.name] as [string, string]),
           ]}
         />
         <SelectField

@@ -16,7 +16,7 @@ kept in a private log.
   loop; signed-in learners (Google) choose 10–50 and their known words are remembered and kept out
   of future loops in the direction they were marked in. "My known words" lets them bring words back.
 - **Admins** manage items (translations, explanation, synonyms, hints, multiple meanings),
-  categories, languages, users and settings, import CSV files, restore from Trash and read the
+  topics, languages, users and settings, import CSV files, restore from Trash and read the
   audit log. The admin area is protected by **two locks**: the admin role and Cloudflare Access.
 
 ## Architecture
@@ -184,7 +184,7 @@ To load it into another D1 database instead:
 
 The `json/` files work with any database. The export's own `README.md` contains a complete worked
 example: `CREATE TABLE` statements (item lists as `jsonb`) and a short Node script that reads
-`json/languages.json`, `json/categories.json`, `json/items.json` and `json/item_categories.json`
+`json/languages.json`, `json/topics.json`, `json/items.json` and `json/item_topics.json`
 and inserts them with the `pg` package:
 
 ```sh
@@ -202,7 +202,7 @@ git commit -m "Vocabulary snapshot"
 git push
 ```
 
-The snapshot holds only the vocabulary (items, categories, lists, flags, statuses): no users,
+The snapshot holds only the vocabulary (items, topics, lists, flags, statuses): no users,
 known lists, audit log or settings.
 
 ### Restore a snapshot (or load any CSV)

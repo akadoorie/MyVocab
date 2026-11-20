@@ -43,6 +43,13 @@
       "when": 1795203599535,
       "tag": "0005_sample_set",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1795210090428,
+      "tag": "0006_topics",
+      "breakpoints": true
     }
   ]
 }

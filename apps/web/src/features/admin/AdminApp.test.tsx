@@ -13,8 +13,8 @@ const ITEM: AdminItem = {
   type: 'word',
   lang: 'en',
   multipleMeanings: false,
-  categoryIds: [],
-  categories: [],
+  topicIds: [],
+  topics: [],
   parallel: {},
   meaning: { he: ['מילה'] },
   literal: {},
@@ -59,7 +59,7 @@ function render(path: string, routes: Parameters<typeof mockFetch>[0], user: Ses
   mockFetch(
     {
       'GET /api/admin/languages': () => Response.json(LANGUAGES),
-      'GET /api/admin/categories': () => Response.json({ categories: [] }),
+      'GET /api/admin/topics': () => Response.json({ topics: [] }),
       'GET /api/admin/items/7/preview': () => Response.json([]),
       ...routes,
     },

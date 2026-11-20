@@ -74,7 +74,7 @@ private content repository. It never appears in the public code repo or any publ
 - A frictionless start: every start option has a sensible default, so anyone can press **Start** immediately. Guests
   can run short (5-card) loops right from the landing page.
 - Google sign-in for learners who want larger loops and their known words remembered.
-- An admin panel for content (items with their translations, explanations, synonyms and hints; categories), users and
+- An admin panel for content (items with their translations, explanations, synonyms and hints; topics), users and
   settings, plus CSV bulk import.
 - A full database export so the data can move to another database easily.
 - Vocabulary privacy, with protection against bulk scraping.
@@ -107,7 +107,7 @@ private content repository. It never appears in the public code repo or any publ
 ## 4. Glossary
 | Term | Definition |
 |---|---|
-| **Item** | The basic content unit: one word or expression in its **language** (e.g. English "Swift"). It holds its type, the multiple-meanings flag, categories, translations, explanation, synonyms and hints (§8.1). Its `text` is always what the front of the card shows. |
+| **Item** | The basic content unit: one word or expression in its **language** (e.g. English "Swift"). It holds its type, the multiple-meanings flag, topics, translations, explanation, synonyms and hints (§8.1). Its `text` is always what the front of the card shows. |
 | **Type** | `word` or `expr`, shown as **Words** / **Expressions**. Set by the admin on each item; the learner picks one on the start card. |
 | **Translation** | For each **other** language, up to three ordered lists (D-024, D-025): the **meaning** (`translation_meaning`, required to play into that language: what it means, e.g. "The truth came out"; for a plain word, simply its translation, e.g. `he: ["מהיר", "סנונית"]`), the **parallel** (`translation_parallel`, optional: an equivalent expression, e.g. "The cat is out of the bag") and the **literal translation** (`translation_literal`, optional: word for word, e.g. "The awl came out of the sack"). A plain word keeps only the meaning. An item never has a translation of any kind into its own language. |
 | **Explanation** | An ordered list of explanations **in the item's own language**, one entry per meaning. |
@@ -122,7 +122,7 @@ private content repository. It never appears in the public code repo or any publ
 | **Loop** | One learning session over a group of cards. **In the UI it is called a "Session"** ("Configure your session", "Session completed", "New session"); "loop" stays the technical term in this spec and in the code (D-018). |
 | **Cycle** | One pass over the loop's remaining cards. |
 | **Known item** | An item a signed-in learner marked "Know" in one direction (e.g. EN → HE). It is excluded from their future loops **in that direction only** until returned (D-028); the explanation direction (EN → EN) is a direction of its own. |
-| **Category** | A topic (Home, Nature, …). An item can have many, or none. **General** is virtual: random across all items, including items without a category. |
+| **Topic** | A topic (Home, Nature, …). An item can have many, or none. **All topics** (formerly "General") is virtual: every item, including items without a topic (D-039). |
 | **Content repo** | The **private** GitHub repo `MyVocab-Content` that holds vocabulary files (starter set, import batches, snapshots). |
 
 **How the back of the card is chosen** (illustrative items):
@@ -154,7 +154,7 @@ private content repository. It never appears in the public code repo or any publ
 | Deleting content | 1-day restorable **Trash**, then auto-purge. A full snapshot is kept permanently in the audit log |
 | Auth | Better Auth, **Google sign-in only**. `role` = `user` or `admin` |
 | Admin protection | Server-side role check **+ mandatory Cloudflare Access** (emailed one-time code) on `/admin*` and `/api/admin/*` |
-| Start defaults | Source **English**, Target **Hebrew**, Category **General**, Type **Words**, Amount **10**, shown in a muted "default" style |
+| Start defaults | Source **English**, Target **Hebrew**, Topic **All topics**, Type **Words**, Amount **10**, shown in a muted "default" style |
 | Amount | Learners: **10 / 20 / 30 / 40 / 50** (default 10). Guests: **always 5**, locked, with a "please register" toast |
 | Guests | Can run 5-card loops after an invisible **Turnstile** bot check. Their Know marks are **not** remembered |
 | Anti-scraping | Turnstile for guests + strict limits (guests ~10 loops/hour per IP; learners ~500 cards/day) + `noindex` + no third-party content exposure |
@@ -168,7 +168,7 @@ private content repository. It never appears in the public code repo or any publ
 | Known memory | **Any** green "I know it" (any cycle) is remembered per **item and direction** and hides the item in that direction (D-028). The orange "I know it · Show again in future" (signed-in learners) is not remembered: the word stays in the pool (FR-L27a) |
 | Known list | "My known words": search/filter/sort; return items to loops (single, selected, all filtered) |
 | Know tap | Advances immediately; Back (or swipe right) returns to the card, and its answer can be changed (FR-L29a) |
-| Categories | Many-to-many. "General" = all items |
+| Topics | Many-to-many. "All topics" = all items |
 | Content sources | Agent-written starter set (in the private content repo) → then admins add manually or by CSV bulk upload |
 | UI language | English only (strings centralized for future i18n). Hebrew content renders RTL |
 | Look | Dark only. Near-black + violet palette. "Pressable ledge" 3D buttons |
@@ -193,7 +193,7 @@ private content repository. It never appears in the public code repo or any publ
 |---|---|---|
 | Source language | Active languages | **English** |
 | Target language | Active languages | **Hebrew** |
-| Category | "General" + active categories (by `sort_order`) | **General** |
+| Topic | "All topics" + active topics (by `sort_order`) | **All topics** |
 | Type | Words / Expressions | **Words** |
 | Amount (signed-in) | **10 / 20 / 30 / 40 / 50** (segmented control) | **10** |
 | Amount (guest) | **5**, fixed and locked | **5** |
@@ -217,7 +217,7 @@ private content repository. It never appears in the public code repo or any publ
   - every time the guest taps/clicks the locked Amount field.
   The server **enforces** 5 for guests regardless of the request (§12.1).
 - **FR-L6a Guest topic: the Sample set** (D-038): guests play only items marked **"Include in Sample set"**, across
-  every topic. Their Topic dropdown shows **"Sample set"** selected, with "General" and every topic listed below it
+  every topic. Their Topic dropdown shows **"Sample set"** selected, with "All topics" and every topic listed below it
   **greyed out and unselectable**, a lock icon on the field, and the note "Sign-in to choose any topic." They still
   choose the languages and the type, and the "N new cards available" count only counts the sample set. The server
   **enforces** it for guests whatever the request says (both the count and starting a session). Signed-in learners
@@ -411,10 +411,10 @@ different**:
 - **FR-L60** A paginated list (cursor, 50 per page) of the learner's known items, **one row per item and direction**
   (an item known in EN → HE and EN → EN is listed twice, D-028): item text (with `dir`), language,
   type label, the "◆" badge if it has multiple meanings, the answer in the direction where it was marked (e.g.
-  "EN → HE: תאריך, תמר"), category chips, date known, and a badge **Already knew** (cycle 1) / **Learned here**
+  "EN → HE: תאריך, תמר"), topic chips, date known, and a badge **Already knew** (cycle 1) / **Learned here**
   (cycle ≥ 2).
 - **FR-L61** Search (item text and translations, case-insensitive), filters (**direction**, e.g. "English → Hebrew" or
-  "English → English (explanation)", from the active languages; type; category), and sort
+  "English → English (explanation)", from the active languages; type; topic), and sort
   (newest first by default; oldest first; A→Z).
 - **FR-L62** **Return to loops**: per row; for selected rows (checkboxes); or "Return all N filtered" (with a confirm
   dialog). A row returns the item in its direction only; returned items immediately become available to future loops
@@ -443,15 +443,15 @@ so learners never download it. All admin pages work on mobile (tables collapse i
   D-038).
 
 ### 7.2 Items (`/admin/items`, `/admin/items/new`, `/admin/items/:id`)
-- **FR-A10** List: search (text and translations), filters (language, type, category, status, Sample set (in / not
+- **FR-A10** List: search (text and translations), filters (language, type, topic, status, Sample set (in / not
   in), multiple meanings,
   "missing translation into X", "missing explanation", "no hints", "not playable"), sort, pagination (50 per page).
-  Columns: text, language, type, ◆, a "Sample" badge, categories, translation badges per language, explanation ✓, hint
+  Columns: text, language, type, ◆, a "Sample" badge, topics, translation badges per language, explanation ✓, hint
   count, status, updated.
 - **FR-A11** **Item editor**:
   - **Header**: language, text, type (word/expr), **Multiple meanings** (toggle), **Include in Sample set** (toggle,
     off for new items, D-038), status (draft/published),
-    categories (multi-select chips). The **language is chosen at creation and then fixed** (to change it, create a new
+    topics (multi-select chips). The **language is chosen at creation and then fixed** (to change it, create a new
     item); this keeps an existing translation from becoming a same-language translation. Save validates uniqueness
     (same language + normalized text + type among non-deleted items).
   - **Translations**: per language **other than the item's language** (an English item shows "Hebrew"; a
@@ -497,14 +497,14 @@ so learners never download it. All admin pages work on mobile (tables collapse i
   restoring brings them back.
 - **FR-A22** **Purge now**: permanent delete (typed confirmation).
 - **FR-A23** **Auto-purge**: a Worker Cron Trigger runs hourly and permanently deletes items whose `deleted_at` is older
-  than `trash.retentionHours` (default **24**). Purge cascades to category links and users' known marks.
+  than `trash.retentionHours` (default **24**). Purge cascades to topic links and users' known marks.
 - **FR-A24** Every delete, restore and purge writes an audit entry containing a **full JSON snapshot** of the item
-  (all fields and lists + category slugs) that is **kept permanently**.
+  (all fields and lists + topic slugs) that is **kept permanently**.
 
-### 7.4 Categories (`/admin/categories`)
+### 7.4 Topics (`/admin/topics`)
 - **FR-A30** CRUD: slug (lowercase, `a-z0-9-`), name, active, sort order (reorder). The add form fills the slug from
   the name as it is typed ("Home & Garden" → `home-garden`) until the admin edits the slug; a hint under the field says
-  what it is for, and an invalid or already-used slug is reported under the field while typing (Add stays disabled). Deleting a category that still has
+  what it is for, and an invalid or already-used slug is reported under the field while typing (Add stays disabled). Deleting a topic that still has
   items is blocked: deactivate it instead, or remove it from those items first.
 
 ### 7.5 Languages (`/admin/languages`)
@@ -534,7 +534,7 @@ so learners never download it. All admin pages work on mobile (tables collapse i
 |---|---|---|---|
 | `defaults.sourceLang` | lang code | `"en"` | Start card default source |
 | `defaults.targetLang` | lang code | `"he"` | Start card default target |
-| `defaults.categoryId` | int \| null | `null` (General) | Start card default category |
+| `defaults.topicId` | int \| null | `null` (All topics) | Start card default topic |
 | `defaults.type` | `"word"` \| `"expr"` | `"word"` | Start card default type |
 | `loop.sizeOptions` | int[] | `[10,20,30,40,50]` | Amount choices for signed-in learners |
 | `loop.defaultSize` | int | `10` | Default amount (must be in `sizeOptions`) |
@@ -554,7 +554,7 @@ so learners never download it. All admin pages work on mobile (tables collapse i
 ### 7.8 CSV import (`/admin/import`): see §8.3
 - **FR-A60** Download the template; upload a CSV; **dry run** shows the counts, per-row errors and warnings; **Commit**
   applies it (allowed with warnings, refused with errors).
-- **FR-A61** The option "Create missing categories" (default off).
+- **FR-A61** The option "Create missing topics" (default off).
 
 ### 7.9 Audit log (`/admin/audit`)
 - **FR-A70** A read-only list: time, actor, action, entity type/id, summary. Filters: actor, action, entity type, date
@@ -574,7 +574,7 @@ This JSON shape is used by the API, the admin editor and the JSON export (illust
   "type": "word",
   "lang": "en",
   "multipleMeanings": true,
-  "categories": ["food"],
+  "topics": ["food"],
   "parallel": {},
   "meaning": { "he": ["תאריך", "תמר"] },
   "literal": {},
@@ -591,7 +591,7 @@ This JSON shape is used by the API, the admin editor and the JSON export (illust
 | `type` | `word` or `expr` |
 | `lang` | A known language, active or not (D-027). **Fixed after creation** |
 | `multipleMeanings` | Boolean, default `false` |
-| `categories` | 0..N category slugs (ids in the admin API). An item without categories appears only under General |
+| `topics` | 0..N topic slugs (ids in the admin API). An item without topics appears only under All topics |
 | `parallel` | Column `translation_parallel`. An object whose keys are language codes **other than `lang`**; each value is a non-empty ordered list (≤ 10 entries, each ≤ 200 chars): the equivalent word or expression in that language. For a plain word, this is simply its translation. The main answer of a card |
 | `meaning` | Column `translation_meaning`. Same shape (≤ 10 entries, each ≤ 300 chars): what the item means, in that language. Shown under the parallel, or as the main answer when there is no parallel |
 | `literal` | Column `translation_literal`. Same shape (≤ 5 entries, each ≤ 200 chars): the word-for-word translation, shown last in a muted color. When it is word for word the same as the parallel, the list holds only the marker `=parallel` (D-026), allowed only where that language has a parallel; an empty list means "not filled in" |
@@ -638,7 +638,7 @@ The same normalization (case-insensitive, NFC) is used to de-duplicate entries w
 | `text` | yes | Item text (≤ 200 chars) |
 | `type` | yes | `word` or `expr` |
 | `multiple_meanings` | no | `true` / `false` (default `false`) |
-| `categories` | no | Category slugs, `|`-separated |
+| `topics` | no | Topic slugs, `|`-separated. Older files may call this column `categories` (still read, D-039) |
 | `translation_parallel_<code>` | no | One column per language, e.g. `translation_parallel_he`: the parallel (equivalent word or expression) in that language, `|`-separated. The column of the row's own `lang` must be empty |
 | `translation_meaning_<code>` | no | One column per language: the meaning in that language, `|`-separated. The row's own `lang` column must be empty |
 | `translation_literal_<code>` | no | One column per language: the literal (word-for-word) translation in that language, `|`-separated, or `=parallel` when it is the same as the parallel (D-026). The row's own `lang` column must be empty |
@@ -657,13 +657,13 @@ Rules:
   `literal_<code>` the literal translation. An old and a new name for the same list in one file is a duplicate column.
 - **Merge semantics** (an import never deletes or overwrites):
   - An item matches an existing **non-deleted** item on (`lang`, normalized `text`, `type`); otherwise it is created.
-  - Categories are unioned. Parallel, meaning and literal entries (per language), explanation entries, synonyms and hints are appended
+  - Topics are unioned. Parallel, meaning and literal entries (per language), explanation entries, synonyms and hints are appended
     if not already present (normalized compare).
   - `multiple_meanings = true` turns the flag on; `false` or empty never turns it off.
   - `status` applies only to newly created items (an existing item's status isn't changed by import).
   - Rows in the same file that refer to the same item are merged together.
-- Unknown category slugs → a row error, unless **Create missing categories** is ticked (the slug becomes the
-  name in Title Case). `pnpm db:seed` always creates missing categories.
+- Unknown topic slugs → a row error, unless **Create missing topics** is ticked (the slug becomes the
+  name in Title Case). `pnpm db:seed` always creates missing topics.
 - **Warnings** (shown in the dry run; they don't block the commit): multiple meanings with a single-entry list; mixed
   scripts (FR-A11).
 - **Dry run** (`dryRun=true`): parses and validates everything and returns totals (new items, merged items, new
@@ -673,14 +673,14 @@ Rules:
   (transactional). If D1 limits require it, the write is chunked by item with a precise report of what was written.
   It writes one `csv.import` audit entry with totals and the file name/SHA-256 (never the file contents).
 - **Round-trip guarantee**: exporting the vocabulary to CSV (§8.6) and importing that CSV into an empty database
-  produces identical content (items, categories, all lists in order, flags, statuses). The export writes a
+  produces identical content (items, topics, all lists in order, flags, statuses). The export writes a
   `translation_parallel_<code>`, `translation_meaning_<code>` and `translation_literal_<code>` column for every
   language present. No cell escaping that would alter values is applied.
 
 **Example** (illustrative only; the template also has a synthetic expression row with all three kinds). Only the
 columns a file needs are required; the others may be left out.
 ```csv
-lang,text,type,multiple_meanings,categories,translation_meaning_he,translation_meaning_en,explanation,synonyms,hints,status
+lang,text,type,multiple_meanings,topics,translation_meaning_he,translation_meaning_en,explanation,synonyms,hints,status
 en,Swift,word,true,,מהיר|סנונית,,"Moving or able to move very fast|A small bird that flies very fast",fast|quick|rapid,"He gave a swift reply.|A swift nested under the roof.",published
 he,מהיר,word,false,,,fast|quick,"שנע או פועל במהירות רבה",זריז,"הרכבת המהירה הגיעה בזמן.",published
 ```
@@ -688,8 +688,8 @@ he,מהיר,word,false,,,fast|quick,"שנע או פועל במהירות רבה"
 ### 8.4 Starter set
 - Written by the implementing agent into the **private content repo folder** (`../MyVocab-Content/starter.csv`),
   **never** into the public code repo.
-- 6 categories: `home`, `nature`, `electronics-devices`, `food`, `business`, `travel` (+ `general-idioms` for idioms).
-- About 15 items per category **per language** (English and Hebrew), plus about 10 idioms (`expr`) per language.
+- 6 topics: `home`, `nature`, `electronics-devices`, `food`, `business`, `travel` (+ `general-idioms` for idioms).
+- About 15 items per topic **per language** (English and Hebrew), plus about 10 idioms (`expr`) per language.
 - Every English item has a **Hebrew translation** and an **English explanation**. Every Hebrew item has an **English
   translation** and a **Hebrew explanation**. Synonyms where natural; 1–2 hints per item (natural usage sentences in
   the item's language). `multiple_meanings` is set where a word truly has several meanings, with one translation and
@@ -900,7 +900,7 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
 
 ### 9.5 Start card (look)
 - Five fields stacked on mobile (2-column grid on desktop), each with a label and either a select (languages,
-  category) or a segmented control (type: 2 options; amount).
+  topic) or a segmented control (type: 2 options; amount).
 - **Default style** (value unchanged): looks chosen (bright value text, filled selected option), subtle solid
   outline, a small violet "Default" tag on the right. **Selected style** (user changed it): the same, with a solid
   `--accent` outline and no tag.
@@ -1016,10 +1016,10 @@ MyVocab/
 │     │  ├─ middleware/           session, requireUser, requireAdmin, rateLimit, securityHeaders, noindex, errors
 │     │  ├─ routes/               public.ts, me.ts, admin/*.ts
 │     │  ├─ services/             LoopService, KnownItemsService, ItemAdminService, CsvImportService,
-│     │  │                        CategoryService, UserAdminService, SettingsService, AuditService, TrashService,
+│     │  │                        TopicService, UserAdminService, SettingsService, AuditService, TrashService,
 │     │  │                        UsageLimitService
 │     │  ├─ repositories/
-│     │  │  ├─ interfaces/        ItemRepository, KnownItemRepository, CategoryRepository, UsageRepository, …
+│     │  │  ├─ interfaces/        ItemRepository, KnownItemRepository, TopicRepository, UsageRepository, …
 │     │  │  └─ d1/                Drizzle implementations
 │     │  └─ db/schema.ts
 │     ├─ migrations/              generated SQL
@@ -1101,7 +1101,7 @@ CREATE TABLE languages (
   sort_order   INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE TABLE categories (
+CREATE TABLE topics (
   id          INTEGER PRIMARY KEY,
   slug        TEXT NOT NULL UNIQUE,
   name        TEXT NOT NULL,
@@ -1143,12 +1143,12 @@ CREATE UNIQUE INDEX ux_items_identity ON items(lang, normalized_text, type) WHER
 CREATE INDEX ix_items_playable ON items(lang, type) WHERE status = 'published' AND deleted_at IS NULL;
 CREATE INDEX ix_items_trash    ON items(deleted_at) WHERE deleted_at IS NOT NULL;
 
-CREATE TABLE item_categories (
+CREATE TABLE item_topics (
   item_id      INTEGER NOT NULL REFERENCES items(id) ON DELETE CASCADE,
-  category_id  INTEGER NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
-  PRIMARY KEY (item_id, category_id)
+  topic_id  INTEGER NOT NULL REFERENCES topics(id) ON DELETE RESTRICT,
+  PRIMARY KEY (item_id, topic_id)
 ) WITHOUT ROWID;
-CREATE INDEX ix_item_categories_cat ON item_categories(category_id, item_id);
+CREATE INDEX ix_item_topics_topic ON item_topics(topic_id, item_id);
 
 -- Known memory: one row per user + item + direction. It hides the item only in that direction (D-028).
 CREATE TABLE user_known_items (
@@ -1211,14 +1211,14 @@ follow these rules:
 2. **Cards are not stored.** A card is computed from the item and the chosen target language at loop time.
 3. **Only the indexes the queries need** (listed in §11.1, nothing else):
    - partial indexes hold only matching rows (published and not deleted; or trashed), so they cost writes only for those;
-   - `item_categories`, `user_known_items` and `usage_counters` are `WITHOUT ROWID`, so the primary key *is* the table
+   - `item_topics`, `user_known_items` and `usage_counters` are `WITHOUT ROWID`, so the primary key *is* the table
      (one write instead of two);
    - every child column used by `ON DELETE CASCADE` has an index (otherwise SQLite scans the whole child table for each
-     deleted parent): `item_categories` via its primary key, `user_known_items.item_id` via `ix_known_item`;
+     deleted parent): `item_topics` via its primary key, `user_known_items.item_id` via `ix_known_item`;
    - if Drizzle/drizzle-kit can't express `WITHOUT ROWID` reliably (including when it rebuilds a table in a later
      migration), use normal tables and record it in the decisions log.
-4. **Loop selection reads as little as possible** (§11.3): it uses `ix_items_playable`, starts from `item_categories`
-   when a category is chosen, checks playability on the candidate row itself (no extra lookups), and returns the
+4. **Loop selection reads as little as possible** (§11.3): it uses `ix_items_playable`, starts from `item_topics`
+   when a topic is chosen, checks playability on the candidate row itself (no extra lookups), and returns the
    chosen cards' data in the same query (no second round trip).
 5. **No writes from blocked or unverified requests**: a guest's Turnstile token is verified before any D1 write;
    usage caps are checked before incrementing, so an over-limit request writes nothing; `limit.exceeded` is audited
@@ -1235,7 +1235,7 @@ thousands of Know marks per day on the free tier.
 
 ### 11.3 Loop selection query (shape)
 ```sql
--- General (no category). The service inserts the answer condition from the AnswerStrategy (§10.4):
+-- All topics (no topic filter). The service inserts the answer condition from the AnswerStrategy (§10.4):
 --   different languages:  json_array_length(i.translation_meaning, '$."' || :tgt || '"') > 0   (D-025)
 --   same language:        json_array_length(i.explanation) > 0
 SELECT i.id, i.text, i.lang, i.type, i.multiple_meanings, i.translation_parallel, i.translation_meaning,
@@ -1250,9 +1250,9 @@ WHERE i.lang = :src AND i.type = :type
 ORDER BY RANDOM()
 LIMIT :n;
 
--- With a category, start from its links so only that category's items are read:
---   FROM item_categories ic JOIN items i ON i.id = ic.item_id
---   WHERE ic.category_id = :categoryId AND <the same conditions>
+-- With a topic, start from its links so only that topic's items are read:
+--   FROM item_topics ic JOIN items i ON i.id = ic.item_id
+--   WHERE ic.topic_id = :topicId AND <the same conditions>
 ```
 - `GET /loops/available` uses the same conditions with `COUNT(*)`.
 - `ORDER BY RANDOM()` is fine at the expected scale (thousands of items per language). **Scaling path** (documented,
@@ -1274,10 +1274,10 @@ LIMIT :n;
 | Method | Path | Description |
 |---|---|---|
 | GET | `/health` | `{ ok: true, version }` |
-| GET | `/meta` | `{ languages[], categories[], types: [{ id: 'word', label: 'Words' }, { id: 'expr', label: 'Expressions' }], defaults: { sourceLang, targetLang, categoryId, type, size }, sizeOptions, guest: { enabled, loopSize }, undoWindowSeconds, maintenance, turnstileSiteKey }` |
+| GET | `/meta` | `{ languages[], topics[], types: [{ id: 'word', label: 'Words' }, { id: 'expr', label: 'Expressions' }], defaults: { sourceLang, targetLang, topicId, type, size }, sizeOptions, guest: { enabled, loopSize }, undoWindowSeconds, maintenance, turnstileSiteKey }` |
 | GET | `/stats/registered-users` | `{ registeredUsers: number }`: accounts that are not admins and not banned; kept 30 minutes per Worker instance (D-036) |
-| GET | `/loops/available?source&target&type&categoryId&sample` | `{ available: number }` (excludes known items if signed in; guests always count the Sample set, admins with `sample=true`, D-038) |
-| POST | `/loops` | Body `{ source, target, type: 'word' \| 'expr', categoryId: number \| null, size?, sample?, turnstileToken? }` (guests always get the Sample set; admins with `sample: true`, D-038) → `{ requested, returned, cards: CardView[] }` |
+| GET | `/loops/available?source&target&type&topicId&sample` | `{ available: number }` (excludes known items if signed in; guests always count the Sample set, admins with `sample=true`, D-038) |
+| POST | `/loops` | Body `{ source, target, type: 'word' \| 'expr', topicId: number \| null, size?, sample?, turnstileToken? }` (guests always get the Sample set; admins with `sample: true`, D-038) → `{ requested, returned, cards: CardView[] }` |
 
 ```ts
 type Dir = 'ltr' | 'rtl';
@@ -1310,7 +1310,7 @@ type CardView = {
 - **Learner**: `size` must be one of `loop.sizeOptions` (≤ `loop.maxSize`). The returned card count is added to
   `users.cardsPerDay` for the current UTC day. If the request would exceed the cap → 429 with the remaining allowance.
   Admins are exempt.
-- Common: languages active; category active (or null); `guests.enabled` / maintenance respected; `EntitlementService`
+- Common: languages active; topic active (or null); `guests.enabled` / maintenance respected; `EntitlementService`
   consulted. Over-limit requests write nothing; the first one per subject and period writes a `limit.exceeded` audit
   entry (subject hash/user id only) (§11.2 rule 5).
 
@@ -1326,8 +1326,8 @@ type CardView = {
 |---|---|---|
 | POST | `/me/known` | Body `{ items: { itemId, target, cycle }[] }` (≤ 100). Idempotent upsert per item + target, keeps the earliest `known_at` |
 | DELETE | `/me/known/:itemId?target=` | Undo one direction; without `target`, every direction of the item (older clients, D-028) |
-| POST | `/me/known/restore` | Body `{ marks: { itemId, target }[] }` (≤ 500), **or** `{ filter: { q?, lang?, target?, type?, categoryId? } }`, **or** `{ itemIds: number[] }` (every direction, older clients) → `{ restored }` |
-| GET | `/me/known?q&lang&target&type&categoryId&sort&cursor` | Paginated known items, one row per item + direction |
+| POST | `/me/known/restore` | Body `{ marks: { itemId, target }[] }` (≤ 500), **or** `{ filter: { q?, lang?, target?, type?, topicId? } }`, **or** `{ itemIds: number[] }` (every direction, older clients) → `{ restored }` |
+| GET | `/me/known?q&lang&target&type&topicId&sort&cursor` | Paginated known items, one row per item + direction |
 
 `user_id` is **always** taken from the session, never from the request.
 
@@ -1335,22 +1335,22 @@ type CardView = {
 | Method | Path | Description |
 |---|---|---|
 | GET | `/admin/stats` | Dashboard counts |
-| GET / POST | `/admin/items` | List (filters, pagination) / create `{ lang, text, type, multipleMeanings?, status?, categoryIds?, translation?, explanation?, synonyms?, hints? }` |
-| GET | `/admin/items/:id` | The full item (§8.1 shape) + `version` + `categoryIds` + warnings |
-| PATCH | `/admin/items/:id` | `{ version, text?, type?, multipleMeanings?, status?, categoryIds?, translation?, explanation?, synonyms?, hints? }`. A list field replaces that whole list (`translation` replaces the whole object). `lang` is not accepted. → the updated item with its new `version`; 409 `CONFLICT` on a stale `version` |
+| GET / POST | `/admin/items` | List (filters, pagination) / create `{ lang, text, type, multipleMeanings?, status?, topicIds?, translation?, explanation?, synonyms?, hints? }` |
+| GET | `/admin/items/:id` | The full item (§8.1 shape) + `version` + `topicIds` + warnings |
+| PATCH | `/admin/items/:id` | `{ version, text?, type?, multipleMeanings?, status?, topicIds?, translation?, explanation?, synonyms?, hints? }`. A list field replaces that whole list (`translation` replaces the whole object). `lang` is not accepted. → the updated item with its new `version`; 409 `CONFLICT` on a stale `version` |
 | DELETE | `/admin/items/:id` | Soft delete → Trash |
 | GET | `/admin/items/:id/preview` | `CardView[]` for every direction (the same `buildCard` as `POST /loops`) |
 | GET | `/admin/trash` | Trashed items, with purge times |
 | POST | `/admin/trash/:id/restore` | Restore (409 if a duplicate exists) |
 | DELETE | `/admin/trash/:id` | Purge now (body `{ confirm: "PURGE" }`) |
-| GET / POST / PATCH / DELETE | `/admin/categories[/:id]` | CRUD (delete blocked if in use) |
-| PUT | `/admin/categories/order` | `{ ids: number[] }` |
+| GET / POST / PATCH / DELETE | `/admin/topics[/:id]` | CRUD (delete blocked if in use) |
+| PUT | `/admin/topics/order` | `{ ids: number[] }` |
 | GET / POST / PATCH | `/admin/languages[/:code]` | List / add (starts inactive) / toggle `isActive` or rename (D-027) |
 | GET | `/admin/users?q&cursor` | List users |
 | PATCH | `/admin/users/:id` | `{ role?: 'user' \| 'admin', banned?: boolean, banReason?: string }` (rules in FR-A41/42) |
 | GET / PUT | `/admin/settings` | Typed settings object |
 | GET | `/admin/import/template` | CSV template download (header + 2 illustrative rows) |
-| POST | `/admin/import?dryRun=true\|false&createMissingCategories=true\|false` | multipart `file` → report |
+| POST | `/admin/import?dryRun=true\|false&createMissingTopics=true\|false` | multipart `file` → report |
 | GET | `/admin/audit?actor&action&entityType&from&to&cursor` | Audit entries |
 
 Every admin mutation writes an `audit_log` row in the **same D1 batch** as the change.
@@ -1530,11 +1530,11 @@ Cloudflare Access: free for ≤ 50 users. Turnstile: free.
 | Level | Tooling | Must cover |
 |---|---|---|
 | Unit | Vitest | Every `loopReducer` transition: Know/Don't know/Show hints/Flip/Next/Continue/Stop; `FLIP` toggles `side` any number of times in both phases and never changes grading; `TOGGLE_HINTS` works only on the front, toggles on and off, resets on the next card and never changes grading; `DONT_KNOW` on the front sets `side = back`; new cards start on the front with hints hidden; cycle building; the **order differs** rule (seeded RNG); Back card by card (front up, never into an earlier cycle) and from the cycle break / summary; Next only on answered cards; changing an answer both ways (no duplicates in the next cycle). Answer strategies (translation vs explanation chosen by same/different languages, playability, line order, numbering); `buildCard` output; item validation (no same-language translation, list limits, duplicates, `lang` absent from the update schema); multiple-meanings warnings; the mixed-script check; `normalize`; CSV row validation (incl. the three `translation_<kind>_<code>` columns, the old column names, and the own-language column rule), merge planning (incl. the `multiple_meanings` OR rule), **CSV serializer**; start-card defaults resolution (settings → defaults; guest size = 5) |
-| Integration | Vitest + `@cloudflare/vitest-pool-workers` (local D1, migrations applied) | Loop selection by type/category/direction (translation vs explanation playability; the SQL rule agrees with `isPlayable` on fixtures); known items excluded **in every direction**; the DB CHECK rejects a same-language translation even through a direct repository write; item PATCH with a stale `version` → 409 and **no** audit row; **guest size forced to 5 even if a larger size is sent**; **guest without/with an invalid Turnstile token → 403 and zero D1 writes**; guest hourly cap → 429 with zero writes after the first `limit.exceeded` entry; learner daily cap → 429 with remaining allowance; admin exempt from caps; learner size must be in `sizeOptions`; admin endpoints → 401 guest / 403 user / 403 admin without an Access JWT in production mode / 403 on an email mismatch; item create/update + audit rows (before/after of changed lists); Trash: delete hides from loops and known lists, restore brings known marks back, restore blocked on a duplicate, purge cascades + snapshot; CSV dry run vs commit, merge rules, error and warning rows; idempotent `POST /me/known`; user A can't touch user B's known rows; `/api/*` responses carry `noindex` + `no-store` headers; settings validation (defaults must be active languages, etc.) |
+| Integration | Vitest + `@cloudflare/vitest-pool-workers` (local D1, migrations applied) | Loop selection by type/topic/direction (translation vs explanation playability; the SQL rule agrees with `isPlayable` on fixtures); known items excluded **in every direction**; the DB CHECK rejects a same-language translation even through a direct repository write; item PATCH with a stale `version` → 409 and **no** audit row; **guest size forced to 5 even if a larger size is sent**; **guest without/with an invalid Turnstile token → 403 and zero D1 writes**; guest hourly cap → 429 with zero writes after the first `limit.exceeded` entry; learner daily cap → 429 with remaining allowance; admin exempt from caps; learner size must be in `sizeOptions`; admin endpoints → 401 guest / 403 user / 403 admin without an Access JWT in production mode / 403 on an email mismatch; item create/update + audit rows (before/after of changed lists); Trash: delete hides from loops and known lists, restore brings known marks back, restore blocked on a duplicate, purge cascades + snapshot; CSV dry run vs commit, merge rules, error and warning rows; idempotent `POST /me/known`; user A can't touch user B's known rows; `/api/*` responses carry `noindex` + `no-store` headers; settings validation (defaults must be active languages, etc.) |
 | Scripts | Vitest (Node) against a local D1 | `db:seed` falls back to `seed/sample.csv` when `CONTENT_DIR` is missing; **export round-trip**: seed → `db:export --local --content-only` → import into an empty D1 → identical content; full export produces `manifest.json` row counts that match the tables, valid JSON per table (item lists as real arrays/objects), and a `schema.sql` that recreates the schema in a fresh SQLite |
 | Guard | CI | `check:no-vocabulary` fails on a committed non-fixture `.csv`/`.sql`/export, or a `seed/sample.csv` over 20 rows |
 | Component | Vitest + Testing Library | Button states per phase (incl. Hints only while the front shows, and its pressed state); FlipCard (button/tap/keyboard toggling, hints section on the front after Hints and always on the back, multiple-meanings badge, numbered explanation lines, hidden face `inert`, live-region text, reduced-motion path); start card default vs selected styling + "Reset to defaults" + same-language note; guest locked amount + toast (auto once per session, on tap); Back, the "Your answer" chip, ← / →, and answer changes reaching the Know queue; ListEditor add/edit/delete/reorder + 409 handling; RTL rendering on both faces |
-| E2E | Playwright (mobile 390×844 + desktop 1280×800) | Guest: landing → press Start without changing anything (defaults EN→HE, General, Words) → 5-card loop to the summary (incl. Hints on the front, then Flip showing hints on the back, Flip back and forth by button and by tapping the card, Know from the back side, Don't know → auto-flip → Next, Know → Back → Don't know; touch swipes left = Next and right = Back); guest sees the register toast and can't change the amount. Signed-in (test session): choose 20 → loop; Know → appears in My known words → no longer offered in the other direction → Return to loops → available again. Admin: create an item with translations, explanation, synonyms, hints and multiple meanings; preview both directions; delete to Trash; restore. CSV: dry run with errors and warnings, then commit |
+| E2E | Playwright (mobile 390×844 + desktop 1280×800) | Guest: landing → press Start without changing anything (defaults EN→HE, All topics, Words) → 5-card loop to the summary (incl. Hints on the front, then Flip showing hints on the back, Flip back and forth by button and by tapping the card, Know from the back side, Don't know → auto-flip → Next, Know → Back → Don't know; touch swipes left = Next and right = Back); guest sees the register toast and can't change the amount. Signed-in (test session): choose 20 → loop; Know → appears in My known words → no longer offered in the other direction → Return to loops → available again. Admin: create an item with translations, explanation, synonyms, hints and multiple meanings; preview both directions; delete to Trash; restore. CSV: dry run with errors and warnings, then commit |
 | Manual (post-deploy) | Phone + desktop | Play a loop (check the flip and hints feel on a real phone); guest Turnstile works invisibly; sign in; known list; `/admin` → Cloudflare Access asks for a one-time code; a non-admin email is refused by Access; a normal user calling `/api/admin/*` → 403; `pnpm db:export` and `--content-only` work from the owner's machine; the D1 dashboard shows rows read/written well within the free tier |
 
 CI fails on lint, type or test errors, a guard failure, or if `packages/core` coverage < 90%.
@@ -1549,7 +1549,7 @@ CI fails on lint, type or test errors, a guard failure, or if `packages/core` co
 | M2 | Database & content | Drizzle schema + migrations per §11 (JSON list columns + CHECKs, partial indexes, `WITHOUT ROWID` where supported, cascade indexes), repositories, `CsvImportService`, `seed/sample.csv` (synthetic), `pnpm db:seed` (`CONTENT_DIR` + fallback), the starter set + README written to `../MyVocab-Content/` (private, outside the public repo) |
 | M3 | Learning experience | `/meta`, `/loops/available`, `/loops` (guest rules, Turnstile before writes, usage limits); landing, start card (defaults, default/selected styling, same-language note, guest lock + toast), **FlipCard** with Hints + loop screen, cycle break, summary; guest E2E |
 | M4 | Auth & known items | Better Auth Google, `/me`, known endpoints (per item), known queue + Undo, My known words, account deletion, privacy page, learner amounts + daily cap |
-| M5 | Admin | Both locks, dashboard, item editor (fixed language, translations per other language, explanation, synonyms, hints, multiple meanings, warnings) + ListEditor + optimistic concurrency + flip-card preview, categories, languages, users, settings (incl. defaults and limits), audit log, Trash + cron |
+| M5 | Admin | Both locks, dashboard, item editor (fixed language, translations per other language, explanation, synonyms, hints, multiple meanings, warnings) + ListEditor + optimistic concurrency + flip-card preview, topics, languages, users, settings (incl. defaults and limits), audit log, Trash + cron |
 | M6 | CSV import UI & export | Import UI (template, upload, dry-run report with errors/warnings, commit); `pnpm db:export` (full + `--content-only`) with round-trip tests; README "Export & migrate your data" |
 | M7 | Hardening & release | Security headers/CSP, `noindex`/`robots.txt`, burst rate limits, write-discipline checks (§11.2), a11y pass, full E2E, deploy workflow + approval env, ruleset, CodeQL, Dependabot, README setup + restore guide |
 
@@ -1580,7 +1580,7 @@ Detailed acceptance criteria are in `AGENT_PROMPT.md` (local only, git-ignored).
 
 ## 20. Future roadmap
 - **Monetization**: plans/subscriptions behind `EntitlementService` (e.g. a free tier with limited loop sizes or
-  categories). Provider candidates: Paddle or Lemon Squeezy (merchant of record, which handles VAT) or Stripe.
+  topics). Provider candidates: Paddle or Lemon Squeezy (merchant of record, which handles VAT) or Stripe.
 - **AI content**: `ContentGenerator` using the Claude API to suggest items, translations, explanations, hints and
   synonyms as `draft`s for admin review (an explicit owner decision about sending content to an AI provider).
 - **More languages**: insert into `languages` + content; UI localization via an i18n library replacing `strings.ts`.

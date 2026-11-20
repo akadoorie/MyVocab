@@ -25,7 +25,7 @@ import { ConflictError, NotFoundError, ValidationError } from '../../middleware/
 import type {
   Actor,
   AdminItemRepository,
-  CategoryRepository,
+  TopicRepository,
   ItemChanges,
   ItemRecord,
   LanguageRepository,
@@ -64,7 +64,7 @@ export function itemSnapshot(rec: ItemRecord) {
     type: rec.type,
     lang: rec.lang,
     multipleMeanings: rec.multipleMeanings,
-    categories: rec.categorySlugs,
+    topics: rec.topicSlugs,
     parallel: rec.parallel,
     meaning: rec.meaning,
     literal: rec.literal,
@@ -104,7 +104,7 @@ export class ItemAdminService {
     private readonly deps: {
       items: AdminItemRepository;
       languages: LanguageRepository;
-      categories: CategoryRepository;
+      topics: TopicRepository;
       settings: SettingsService;
       now?: () => number;
     },
@@ -124,14 +124,14 @@ export class ItemAdminService {
     };
   }
 
-  private async checkCategories(ids: readonly number[] | undefined): Promise<number[] | undefined> {
+  private async checkTopics(ids: readonly number[] | undefined): Promise<number[] | undefined> {
     if (ids === undefined) return undefined;
     const unique = [...new Set(ids)].sort((a, b) => a - b);
-    const known = new Set((await this.deps.categories.listAll()).map((c) => c.id));
+    const known = new Set((await this.deps.topics.listAll()).map((c) => c.id));
     const missing = unique.filter((id) => !known.has(id));
     if (missing.length > 0) {
-      throw new ValidationError('Unknown category', [
-        { path: 'categoryIds', message: `Unknown category: ${missing.join(', ')}` },
+      throw new ValidationError('Unknown topic', [
+        { path: 'topicIds', message: `Unknown topic: ${missing.join(', ')}` },
       ]);
     }
     return unique;
@@ -165,8 +165,8 @@ export class ItemAdminService {
       type: rec.type,
       lang: rec.lang,
       multipleMeanings: rec.multipleMeanings,
-      categoryIds: rec.categoryIds,
-      categories: rec.categorySlugs,
+      topicIds: rec.topicIds,
+      topics: rec.topicSlugs,
       parallel: rec.parallel,
       meaning: rec.meaning,
       literal: rec.literal,
@@ -204,7 +204,7 @@ export class ItemAdminService {
       ADMIN_PAGE_SIZE,
       (page - 1) * ADMIN_PAGE_SIZE,
     );
-    const categories = await this.deps.items.categoriesFor(rows.map((r) => r.id));
+    const topics = await this.deps.items.topicsFor(rows.map((r) => r.id));
     return {
       items: rows.map((r) => ({
         itemId: r.id,
@@ -213,7 +213,7 @@ export class ItemAdminService {
         dir: ctx.allMap[r.lang]?.dir ?? 'ltr',
         type: r.type,
         multipleMeanings: r.multipleMeanings,
-        categories: categories.get(r.id) ?? [],
+        topics: topics.get(r.id) ?? [],
         // Per language: parallel + meaning entries (either one answers a card, FR-L40).
         translationCounts: translationCounts(r.parallel, r.meaning),
         explanationCount: r.explanationCount,
@@ -234,7 +234,7 @@ export class ItemAdminService {
     // Any known language, active or not: an inactive one is prepared before learners see it (D-027).
     const { value, errors } = validateItem(input, { languages: ctx.allMap });
     if (errors.length > 0) throw new ValidationError('Invalid item', errors);
-    const categoryIds = (await this.checkCategories(input.categoryIds)) ?? [];
+    const topicIds = (await this.checkTopics(input.topicIds)) ?? [];
     const normalizedText = normalize(value.text);
     const duplicate = await this.deps.items.findDuplicate(value.lang, normalizedText, value.type);
     if (duplicate !== null) throw duplicateError(duplicate);
@@ -245,11 +245,11 @@ export class ItemAdminService {
     let id: number;
     try {
       id = await this.deps.items.create(
-        { ...value, normalizedText, status, inSampleSet, categoryIds },
+        { ...value, normalizedText, status, inSampleSet, topicIds },
         actor,
         {
           action: 'item.create',
-          details: { after: { ...value, status, inSampleSet, categoryIds } },
+          details: { after: { ...value, status, inSampleSet, topicIds } },
         },
         this.now(),
       );
@@ -286,7 +286,7 @@ export class ItemAdminService {
       { languages: ctx.allMap },
     );
     if (errors.length > 0) throw new ValidationError('Invalid item', errors);
-    const categoryIds = await this.checkCategories(patch.categoryIds);
+    const topicIds = await this.checkTopics(patch.topicIds);
 
     const changes: ItemChanges = {};
     const audit: Record<string, { before: unknown; after: unknown }> = {};
@@ -316,8 +316,8 @@ export class ItemAdminService {
       changes.inSampleSet = patch.inSampleSet;
       audit.inSampleSet = { before: rec.inSampleSet, after: patch.inSampleSet };
     }
-    const categoriesChanged = categoryIds !== undefined && !same(categoryIds, rec.categoryIds);
-    if (categoriesChanged) audit.categoryIds = { before: rec.categoryIds, after: categoryIds };
+    const topicsChanged = topicIds !== undefined && !same(topicIds, rec.topicIds);
+    if (topicsChanged) audit.topicIds = { before: rec.topicIds, after: topicIds };
     if (Object.keys(audit).length === 0) return this.view(rec, ctx);
 
     if (changes.text !== undefined || changes.type !== undefined) {
@@ -337,7 +337,7 @@ export class ItemAdminService {
         id,
         patch.version,
         changes,
-        categoriesChanged ? categoryIds : undefined,
+        topicsChanged ? topicIds : undefined,
         actor,
         { action: 'item.update', details: { changes: audit } },
         this.now(),
@@ -426,7 +426,7 @@ export class ItemAdminService {
     if (!ok) throw staleError();
   }
 
-  /** FR-A22: permanent delete (cascades to category links and known marks). */
+  /** FR-A22: permanent delete (cascades to topic links and known marks). */
   async purge(id: number, actor: Actor): Promise<void> {
     const rec = await this.trashed(id);
     const ok = await this.deps.items.purge(

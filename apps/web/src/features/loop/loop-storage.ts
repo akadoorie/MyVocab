@@ -38,7 +38,7 @@ const storedLoopSchema = z.object({
   selection: z.object({
     sourceLang: z.string(),
     targetLang: z.string(),
-    categoryId: z.number().int().nullable(),
+    topicId: z.number().int().nullable(),
     type: z.enum(['word', 'expr']),
     size: z.number().int(),
     sample: z.boolean().optional(),
@@ -77,8 +77,18 @@ function upgradeCards(v: unknown): void {
   }
 }
 
+/** A session saved before D-039 keeps its topic under the old name `categoryId`. */
+function upgradeSelection(v: unknown): void {
+  const selection = (v as { selection?: Record<string, unknown> } | null)?.selection;
+  if (selection && typeof selection === 'object' && !('topicId' in selection)) {
+    selection.topicId = selection.categoryId ?? null;
+    delete selection.categoryId;
+  }
+}
+
 const isStoredLoop = (v: unknown): v is StoredLoop => {
   upgradeCards(v);
+  upgradeSelection(v);
   const parsed = storedLoopSchema.safeParse(v);
   if (!parsed.success) return false;
   const cardIds = new Set(parsed.data.cards.map((c) => c.itemId));

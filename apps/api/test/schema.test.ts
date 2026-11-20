@@ -12,10 +12,10 @@ const insertItem = (lang: string, text: string, translation: string, extra = '')
     .run();
 
 describe('schema', () => {
-  it('keeps item_categories, user_known_items and usage_counters WITHOUT ROWID (D-010)', async () => {
+  it('keeps item_topics, user_known_items and usage_counters WITHOUT ROWID (D-010)', async () => {
     const { results } = await env.DB.prepare(
       `SELECT name, sql FROM sqlite_master WHERE type = 'table'
-       AND name IN ('item_categories', 'user_known_items', 'usage_counters')`,
+       AND name IN ('item_topics', 'user_known_items', 'usage_counters')`,
     ).all<{ name: string; sql: string }>();
     expect(results).toHaveLength(3);
     for (const r of results) expect(r.sql, r.name).toMatch(/WITHOUT ROWID\s*$/i);

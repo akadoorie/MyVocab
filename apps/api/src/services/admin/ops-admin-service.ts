@@ -5,7 +5,7 @@ import type {
   AdminSettingsRepository,
   AuditFilter,
   AuditQueryRepository,
-  CategoryRepository,
+  TopicRepository,
   LanguageRepository,
   StatsRepository,
 } from '../../repositories/interfaces';
@@ -23,7 +23,7 @@ export class OpsAdminService {
       audit: AuditQueryRepository;
       stats: StatsRepository;
       languages: LanguageRepository;
-      categories: CategoryRepository;
+      topics: TopicRepository;
       now?: () => number;
     },
   ) {}
@@ -42,9 +42,9 @@ export class OpsAdminService {
     const next: Settings = { ...current, ...patch } as Settings;
     next['loop.sizeOptions'] = [...new Set(next['loop.sizeOptions'])].sort((a, b) => a - b);
 
-    const [languages, categories] = await Promise.all([
+    const [languages, topics] = await Promise.all([
       this.deps.languages.listAll(),
-      this.deps.categories.listAll(),
+      this.deps.topics.listAll(),
     ]);
     const active = new Set(languages.filter((l) => l.isActive).map((l) => l.code));
     const problems: { path: string; message: string }[] = [];
@@ -55,9 +55,9 @@ export class OpsAdminService {
     if (!active.has(next['defaults.targetLang'])) {
       problem('defaults.targetLang', 'Must be an active language');
     }
-    const categoryId = next['defaults.categoryId'];
-    if (categoryId !== null && !categories.some((c) => c.id === categoryId && c.isActive)) {
-      problem('defaults.categoryId', 'Must be an active category or General');
+    const topicId = next['defaults.topicId'];
+    if (topicId !== null && !topics.some((c) => c.id === topicId && c.isActive)) {
+      problem('defaults.topicId', 'Must be an active topic or All topics');
     }
     if (!next['loop.sizeOptions'].includes(next['loop.defaultSize'])) {
       problem('loop.defaultSize', 'Must be one of the amount choices');

@@ -53,7 +53,7 @@ test('Know → My known words (ask again is not kept) → hidden only in that di
   await expect(amount20).toHaveAttribute('aria-checked', 'true');
   await startCard.getByRole('button', { name: 'Start' }).click();
   await expect(page).toHaveURL(/\/loop$/);
-  await expect(page.getByText(`Only ${enHe} new cards in General`)).toBeVisible();
+  await expect(page.getByText(`Only ${enHe} new cards in All topics`)).toBeVisible();
   await expect(page.getByTestId('progress')).toHaveText(`Cycle 1 · Card 1/${enHe} · 0 known`);
 
   // Know the first card, then stop the loop.

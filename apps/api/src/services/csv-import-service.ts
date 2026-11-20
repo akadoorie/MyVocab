@@ -8,7 +8,7 @@ import {
 } from '@myvocab/core';
 import type {
   Actor,
-  CategoryRepository,
+  TopicRepository,
   ImportWriter,
   ItemRepository,
   LanguageRepository,
@@ -22,7 +22,7 @@ export type ImportInput = {
   csvText: string;
   fileName: string;
   dryRun: boolean;
-  createMissingCategories: boolean;
+  createMissingTopics: boolean;
   actor: Actor;
   limits?: { maxBytes: number; maxRows: number } | null;
 };
@@ -51,7 +51,7 @@ export class CsvImportService {
   constructor(
     private readonly deps: {
       languages: LanguageRepository;
-      categories: CategoryRepository;
+      topics: TopicRepository;
       items: ItemRepository;
       writer: ImportWriter;
     },
@@ -97,15 +97,15 @@ export class CsvImportService {
       type: r.content.type,
       normalizedText: normalize(r.content.text),
     }));
-    const [existing, categories] = await Promise.all([
+    const [existing, topics] = await Promise.all([
       this.deps.items.findByIdentities(keys),
-      this.deps.categories.listAll(),
+      this.deps.topics.listAll(),
     ]);
     const plan = planImport(parsed.rows, {
       languages,
       existing,
-      knownCategories: new Set(categories.map((c) => c.slug)),
-      createMissingCategories: input.createMissingCategories,
+      knownTopics: new Set(topics.map((c) => c.slug)),
+      createMissingTopics: input.createMissingTopics,
     });
     report.errors.push(...plan.errors);
     report.errors.sort((a, b) => a.row - b.row);

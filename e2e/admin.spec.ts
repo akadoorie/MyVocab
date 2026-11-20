@@ -110,7 +110,7 @@ test('CSV import: a dry run with errors and warnings, then a commit', async ({
   });
   const suffix = `${testInfo.project.name}-${Date.now()}`;
   const header =
-    'lang,text,type,multiple_meanings,categories,translation_he,translation_en,explanation,synonyms,hints,status';
+    'lang,text,type,multiple_meanings,topics,translation_he,translation_en,explanation,synonyms,hints,status';
   // Synthetic rows: one error (own-language translation), one with multiple-meanings warnings.
   const okRow = `en,csv-ok-${suffix},word,true,,מילה-סינתטית,,Only one synthetic meaning,,,published`;
   const bad = [header, `en,csv-bad-${suffix},word,false,,,own-language,,,,published`, okRow].join(

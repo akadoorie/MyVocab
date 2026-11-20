@@ -3,7 +3,7 @@
  *
  * Notes:
  * - Item lists live inside the item row as JSON (PRD §11.2 rule 1), guarded by CHECK constraints.
- * - `item_categories`, `user_known_items` and `usage_counters` are WITHOUT ROWID. Drizzle can't
+ * - `item_topics`, `user_known_items` and `usage_counters` are WITHOUT ROWID. Drizzle can't
  *   express that, so the generated migration is edited by hand and a test asserts it (D-010).
  * - Better Auth tables use camelCase property names (the adapter maps by property name) and
  *   snake_case column names.
@@ -111,7 +111,7 @@ export const languages = sqliteTable(
   () => [check('ck_languages_dir', sql`dir IN ('ltr','rtl')`)],
 );
 
-export const categories = sqliteTable('categories', {
+export const topics = sqliteTable('topics', {
   id: integer('id').primaryKey(),
   slug: text('slug').notNull().unique(),
   name: text('name').notNull(),
@@ -218,19 +218,19 @@ export const items = sqliteTable(
   ],
 );
 
-export const itemCategories = sqliteTable(
-  'item_categories',
+export const itemTopics = sqliteTable(
+  'item_topics',
   {
     itemId: integer('item_id')
       .notNull()
       .references(() => items.id, { onDelete: 'cascade' }),
-    categoryId: integer('category_id')
+    topicId: integer('topic_id')
       .notNull()
-      .references(() => categories.id, { onDelete: 'restrict' }),
+      .references(() => topics.id, { onDelete: 'restrict' }),
   },
   (t) => [
-    primaryKey({ columns: [t.itemId, t.categoryId] }),
-    index('ix_item_categories_cat').on(t.categoryId, t.itemId),
+    primaryKey({ columns: [t.itemId, t.topicId] }),
+    index('ix_item_topics_topic').on(t.topicId, t.itemId),
   ],
 );
 

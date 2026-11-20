@@ -70,7 +70,7 @@ export const api = {
   registeredUsers: () => request('/stats/registered-users', registeredUsersResponseSchema),
   available: (q: AvailableQuery) => {
     const params = new URLSearchParams({ source: q.source, target: q.target, type: q.type });
-    if (q.categoryId !== undefined) params.set('categoryId', String(q.categoryId));
+    if (q.topicId !== undefined) params.set('topicId', String(q.topicId));
     if (q.sample !== undefined) params.set('sample', q.sample);
     return request(`/loops/available?${params}`, availableResponseSchema);
   },

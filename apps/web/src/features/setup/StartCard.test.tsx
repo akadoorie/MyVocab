@@ -160,7 +160,7 @@ describe('StartCard', () => {
       source: 'en',
       target: 'he',
       type: 'word',
-      categoryId: null,
+      topicId: null,
       turnstileToken: 'test-token',
     });
     expect(loadLoop()?.cards).toHaveLength(2);
@@ -193,7 +193,7 @@ describe('StartCard', () => {
       setup();
       expect(topic().value).toBe('sample');
       expect(option('Sample set').disabled).toBe(false);
-      expect(option('General').disabled).toBe(true);
+      expect(option('All topics').disabled).toBe(true);
       expect(option('Home').disabled).toBe(true);
       expect(topic()).toHaveAccessibleDescription('Sign-in to choose any topic.');
     });
@@ -221,7 +221,7 @@ describe('StartCard', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Start' }));
       await waitFor(() => expect(router.state.location.pathname).toBe('/loop'));
       const post = fetchSpy.mock.calls.find(([u]) => u === '/api/loops');
-      expect(JSON.parse(String(post?.[1]?.body))).toMatchObject({ categoryId: null, sample: true });
+      expect(JSON.parse(String(post?.[1]?.body))).toMatchObject({ topicId: null, sample: true });
       expect(loadLoop()?.selection.sample).toBe(true);
     });
   });

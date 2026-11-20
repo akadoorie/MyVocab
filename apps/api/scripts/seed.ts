@@ -101,7 +101,7 @@ async function main() {
       csvText: readFileSync(csvPath, 'utf8'),
       fileName: path.basename(csvPath),
       dryRun: false,
-      createMissingCategories: true,
+      createMissingTopics: true,
       actor: null,
       limits: null,
     });

@@ -8,8 +8,9 @@ import {
 } from '../item/types';
 import { validateItem, type ItemIssue } from '../item/validate';
 import {
-  CATEGORY_SLUG,
+  TOPIC_SLUG,
   CSV_COLUMNS,
+  OLD_COLUMN_NAMES,
   REQUIRED_COLUMNS,
   splitList,
   translationColumn,
@@ -23,7 +24,7 @@ export type CsvIssue = { row: number; column: string; message: string };
 export type ParsedRow = {
   row: number;
   content: ItemContent;
-  categories: string[];
+  topics: string[];
   /** Only set when the cell had a value; applies to newly created items. */
   status?: ItemStatus;
   /** Only set when the cell had a value: puts the item in or out of the sample set (D-038). */
@@ -92,7 +93,9 @@ export function parseImportCsv(text: string, opts: ParseRowsOptions): ParseRowsR
     return result;
   }
 
-  const columns = header.map((h) => h.trim().toLowerCase());
+  const inFile = header.map((h) => h.trim().toLowerCase());
+  // An older name (`categories`) reads as its new one (`topics`, D-039).
+  const columns = inFile.map((c) => OLD_COLUMN_NAMES[c] ?? c);
   const perLanguageColumns = new Map<number, { kind: TranslationKind; lang: LangCode }>();
   // Errors name the column as it is in the file (an old name stays the old name).
   const asInFile = new Map<string, string>();
@@ -102,11 +105,12 @@ export function parseImportCsv(text: string, opts: ParseRowsOptions): ParseRowsR
     // An old and a new name for the same list (`translation_he` + `translation_meaning_he`)
     // count as a duplicate too.
     const key = perLanguage ? translationColumn(perLanguage.kind, perLanguage.lang) : col;
+    const original = inFile[i] ?? col;
     if (seen.has(key)) {
-      result.errors.push({ row: 1, column: col, message: `Duplicate column "${col}"` });
+      result.errors.push({ row: 1, column: original, message: `Duplicate column "${original}"` });
     }
     seen.add(key);
-    asInFile.set(key, col);
+    asInFile.set(key, original);
     if (perLanguage) {
       if (!opts.languages[perLanguage.lang]) {
         result.errors.push({
@@ -174,15 +178,13 @@ export function parseImportCsv(text: string, opts: ParseRowsOptions): ParseRowsR
       else rowErrors.push({ row, column: CSV_COLUMNS.sample, message: 'Use true or false' });
     }
 
-    const categories = [
-      ...new Set(splitList(cell(CSV_COLUMNS.categories)).map((c) => c.toLowerCase())),
-    ];
-    for (const slug of categories) {
-      if (!CATEGORY_SLUG.test(slug)) {
+    const topics = [...new Set(splitList(cell(CSV_COLUMNS.topics)).map((c) => c.toLowerCase()))];
+    for (const slug of topics) {
+      if (!TOPIC_SLUG.test(slug)) {
         rowErrors.push({
           row,
-          column: CSV_COLUMNS.categories,
-          message: `Invalid category slug "${slug}"`,
+          column: asInFile.get(CSV_COLUMNS.topics) ?? CSV_COLUMNS.topics,
+          message: `Invalid topic slug "${slug}"`,
         });
       }
     }
@@ -231,7 +233,7 @@ export function parseImportCsv(text: string, opts: ParseRowsOptions): ParseRowsR
     result.rows.push({
       row,
       content: value,
-      categories,
+      topics,
       ...(status ? { status } : {}),
       ...(sample === undefined ? {} : { sample }),
     });

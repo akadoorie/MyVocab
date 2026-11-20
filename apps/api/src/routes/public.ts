@@ -15,11 +15,11 @@ import { burstLimit, ipKey } from '../middleware/burst-limit';
 /** Public endpoints (PRD §12.1). */
 export const publicRoutes = new Hono<AppEnv>()
   .get('/meta', async (c) => {
-    const { settings, languages, categories } = c.get('container');
+    const { settings, languages, topics } = c.get('container');
     const [s, langs, cats] = await Promise.all([
       settings.get(),
       languages.listAll(),
-      categories.listAll(),
+      topics.listAll(),
     ]);
     const activeLangs = langs.filter((l) => l.isActive);
     const activeCats = cats.filter((x) => x.isActive);
@@ -28,7 +28,7 @@ export const publicRoutes = new Hono<AppEnv>()
         defaults: {
           sourceLang: s['defaults.sourceLang'],
           targetLang: s['defaults.targetLang'],
-          categoryId: s['defaults.categoryId'],
+          topicId: s['defaults.topicId'],
           type: s['defaults.type'],
         },
         sizeOptions: s['loop.sizeOptions'],
@@ -36,7 +36,7 @@ export const publicRoutes = new Hono<AppEnv>()
         guestLoopSize: s['guests.loopSize'],
       },
       activeLanguages: activeLangs.map((l) => l.code),
-      activeCategoryIds: activeCats.map((x) => x.id),
+      activeTopicIds: activeCats.map((x) => x.id),
       isGuest: false,
     });
     return c.json<MetaResponse>({
@@ -46,7 +46,7 @@ export const publicRoutes = new Hono<AppEnv>()
         nativeName,
         dir,
       })),
-      categories: activeCats.map(({ id, slug, name }) => ({ id, slug, name })),
+      topics: activeCats.map(({ id, slug, name }) => ({ id, slug, name })),
       types: [
         { id: 'word', label: 'Words' },
         { id: 'expr', label: 'Expressions' },
@@ -70,7 +70,7 @@ export const publicRoutes = new Hono<AppEnv>()
         source: q.source,
         target: q.target,
         type: q.type,
-        categoryId: q.categoryId ?? null,
+        topicId: q.topicId ?? null,
         sample: q.sample === 'true',
       },
       await c.get('requester')(),

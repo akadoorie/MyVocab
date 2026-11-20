@@ -2,10 +2,10 @@ import type { ItemType, TextDir } from '@myvocab/core';
 import { and, count, eq, sql, type SQL } from 'drizzle-orm';
 import { AFTER_ONE_CHANGE, auditInsert, runBatch } from '../../db/batch';
 import type { Db } from '../../db/client';
-import { appSettings, categories, languages, session, user } from '../../db/schema';
+import { appSettings, topics, languages, session, user } from '../../db/schema';
 import type {
   Actor,
-  AdminCategoryRepository,
+  AdminTopicRepository,
   AdminLanguageRepository,
   AdminSettingsRepository,
   AdminUserRepository,
@@ -14,8 +14,8 @@ import type {
   AuditFilter,
   AuditQueryRepository,
   AuditRow,
-  CategoryRow,
-  CategoryWithCount,
+  TopicRow,
+  TopicWithCount,
   LanguageChanges,
   StatsRepository,
 } from '../interfaces';
@@ -24,13 +24,13 @@ import { likePattern } from './shared';
 type Statement = SQL | { toSQL(): { sql: string; params: unknown[] } };
 
 // ---------------------------------------------------------------------------------------------
-// Categories (FR-A30)
+// Topics (FR-A30)
 // ---------------------------------------------------------------------------------------------
 
-const CATEGORY_COLUMNS = sql`c.id, c.slug, c.name, c.is_active, c.sort_order,
-  (SELECT COUNT(*) FROM item_categories ic WHERE ic.category_id = c.id) AS item_count`;
+const TOPIC_COLUMNS = sql`c.id, c.slug, c.name, c.is_active, c.sort_order,
+  (SELECT COUNT(*) FROM item_topics ic WHERE ic.topic_id = c.id) AS item_count`;
 
-type CategoryDbRow = {
+type TopicDbRow = {
   id: number;
   slug: string;
   name: string;
@@ -39,7 +39,7 @@ type CategoryDbRow = {
   item_count: number;
 };
 
-const toCategory = (r: CategoryDbRow): CategoryWithCount => ({
+const toTopic = (r: TopicDbRow): TopicWithCount => ({
   id: r.id,
   slug: r.slug,
   name: r.name,
@@ -48,28 +48,28 @@ const toCategory = (r: CategoryDbRow): CategoryWithCount => ({
   itemCount: r.item_count,
 });
 
-export class D1AdminCategoryRepository implements AdminCategoryRepository {
+export class D1AdminTopicRepository implements AdminTopicRepository {
   constructor(
     private readonly db: Db,
     private readonly d1: D1Database,
   ) {}
 
-  async listWithCounts(): Promise<CategoryWithCount[]> {
-    const rows = await this.db.all<CategoryDbRow>(
-      sql`SELECT ${CATEGORY_COLUMNS} FROM categories AS c ORDER BY c.sort_order, c.name`,
+  async listWithCounts(): Promise<TopicWithCount[]> {
+    const rows = await this.db.all<TopicDbRow>(
+      sql`SELECT ${TOPIC_COLUMNS} FROM topics AS c ORDER BY c.sort_order, c.name`,
     );
-    return rows.map(toCategory);
+    return rows.map(toTopic);
   }
 
-  async get(id: number): Promise<CategoryWithCount | null> {
-    const row = await this.db.get<CategoryDbRow>(
-      sql`SELECT ${CATEGORY_COLUMNS} FROM categories AS c WHERE c.id = ${id}`,
+  async get(id: number): Promise<TopicWithCount | null> {
+    const row = await this.db.get<TopicDbRow>(
+      sql`SELECT ${TOPIC_COLUMNS} FROM topics AS c WHERE c.id = ${id}`,
     );
-    return row ? toCategory(row) : null;
+    return row ? toTopic(row) : null;
   }
 
-  async findBySlug(slug: string): Promise<CategoryRow | null> {
-    const row = await this.db.select().from(categories).where(eq(categories.slug, slug)).get();
+  async findBySlug(slug: string): Promise<TopicRow | null> {
+    const row = await this.db.select().from(topics).where(eq(topics.slug, slug)).get();
     return row
       ? {
           id: row.id,
@@ -87,22 +87,22 @@ export class D1AdminCategoryRepository implements AdminCategoryRepository {
     now: number,
   ): Promise<number> {
     await runBatch(this.d1, [
-      sql`INSERT INTO categories (slug, name, is_active, sort_order, created_at, updated_at)
+      sql`INSERT INTO topics (slug, name, is_active, sort_order, created_at, updated_at)
           SELECT ${input.slug}, ${input.name}, ${input.isActive ? 1 : 0},
-                 COALESCE((SELECT MAX(sort_order) FROM categories), 0) + 1, ${now}, ${now}`,
+                 COALESCE((SELECT MAX(sort_order) FROM topics), 0) + 1, ${now}, ${now}`,
       auditInsert(
         {
           actor,
-          action: 'category.create',
-          entityType: 'category',
-          entityId: sql`SELECT CAST(id AS TEXT) FROM categories WHERE slug = ${input.slug}`,
+          action: 'topic.create',
+          entityType: 'topic',
+          entityId: sql`SELECT CAST(id AS TEXT) FROM topics WHERE slug = ${input.slug}`,
           details: { after: input },
         },
         now,
       ),
     ]);
     const created = await this.findBySlug(input.slug);
-    if (!created) throw new Error('created category not found');
+    if (!created) throw new Error('created topic not found');
     return created.id;
   }
 
@@ -115,14 +115,14 @@ export class D1AdminCategoryRepository implements AdminCategoryRepository {
   ): Promise<boolean> {
     const [result] = await runBatch(this.d1, [
       this.db
-        .update(categories)
+        .update(topics)
         .set({ ...changes, updatedAt: now })
-        .where(eq(categories.id, id)),
+        .where(eq(topics.id, id)),
       auditInsert(
         {
           actor,
           action: audit.action,
-          entityType: 'category',
+          entityType: 'topic',
           entityId: String(id),
           details: audit.details,
         },
@@ -135,13 +135,13 @@ export class D1AdminCategoryRepository implements AdminCategoryRepository {
 
   async delete(id: number, actor: Actor, audit: AuditDetails, now: number): Promise<boolean> {
     const [result] = await runBatch(this.d1, [
-      sql`DELETE FROM categories WHERE id = ${id}
-          AND NOT EXISTS (SELECT 1 FROM item_categories WHERE category_id = ${id})`,
+      sql`DELETE FROM topics WHERE id = ${id}
+          AND NOT EXISTS (SELECT 1 FROM item_topics WHERE topic_id = ${id})`,
       auditInsert(
         {
           actor,
           action: audit.action,
-          entityType: 'category',
+          entityType: 'topic',
           entityId: String(id),
           details: audit.details,
         },
@@ -155,16 +155,16 @@ export class D1AdminCategoryRepository implements AdminCategoryRepository {
   async reorder(ids: readonly number[], actor: Actor, now: number): Promise<void> {
     const statements: Statement[] = ids.map((id, index) =>
       this.db
-        .update(categories)
+        .update(topics)
         .set({ sortOrder: index + 1, updatedAt: now })
-        .where(eq(categories.id, id)),
+        .where(eq(topics.id, id)),
     );
     statements.push(
       auditInsert(
         {
           actor,
-          action: 'category.reorder',
-          entityType: 'category',
+          action: 'topic.reorder',
+          entityType: 'topic',
           entityId: null,
           details: { ids },
         },

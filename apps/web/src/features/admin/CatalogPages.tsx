@@ -1,7 +1,7 @@
 import {
-  categorySlugSchema,
+  topicSlugSchema,
   langCodeSchema,
-  type AdminCategory,
+  type AdminTopic,
   type AdminLanguage,
   type LanguageCreate,
 } from '@myvocab/contracts';
@@ -16,7 +16,7 @@ import { LANGUAGE_PRESETS } from './language-presets';
 import { Badge, ErrorState, Field, ghostButton, inputClass, Loading, PageTitle } from './ui';
 
 /**
- * A slug suggestion from a category name: "Home & Garden" → "home-garden". Accents are dropped;
+ * A slug suggestion from a topic name: "Home & Garden" → "home-garden". Accents are dropped;
  * letters outside a–z (e.g. Hebrew) give nothing, so the admin types the slug themselves.
  */
 export function slugify(name: string): string {
@@ -29,51 +29,51 @@ export function slugify(name: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-/** `/admin/categories` (FR-A30). */
-export function CategoriesPage() {
+/** `/admin/topics` (FR-A30). */
+export function TopicsPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
   const ids = { slug: useId(), name: useId(), slugNote: useId() };
-  const list = useQuery({ queryKey: ['admin', 'categories'], queryFn: adminApi.categories });
+  const list = useQuery({ queryKey: ['admin', 'topics'], queryFn: adminApi.topics });
   const [slug, setSlug] = useState('');
   const [name, setName] = useState('');
   /** True while the slug follows the name; the admin typing in the slug field takes it over. */
   const [slugAuto, setSlugAuto] = useState(true);
   const [editing, setEditing] = useState<{ id: number; name: string; slug: string } | null>(null);
-  const [deleting, setDeleting] = useState<AdminCategory | null>(null);
+  const [deleting, setDeleting] = useState<AdminTopic | null>(null);
 
   const done = (message: string) => {
     toast.show({ message });
-    void queryClient.invalidateQueries({ queryKey: ['admin', 'categories'] });
+    void queryClient.invalidateQueries({ queryKey: ['admin', 'topics'] });
     void queryClient.invalidateQueries({ queryKey: ['meta'] });
   };
   const fail = (e: unknown) =>
     toast.show({ message: errorMessage(e, s.common.genericError), durationMs: 8000 });
 
   const create = useMutation({
-    mutationFn: () => adminApi.createCategory({ slug: slug.trim(), name: name.trim() }),
+    mutationFn: () => adminApi.createTopic({ slug: slug.trim(), name: name.trim() }),
     onSuccess: () => {
       setSlug('');
       setName('');
       setSlugAuto(true);
-      done(s.categories.created);
+      done(s.topics.created);
     },
     onError: fail,
   });
   const update = useMutation({
     mutationFn: (v: { id: number; body: { slug?: string; name?: string; isActive?: boolean } }) =>
-      adminApi.patchCategory(v.id, v.body),
+      adminApi.patchTopic(v.id, v.body),
     onSuccess: () => {
       setEditing(null);
-      done(s.categories.updated);
+      done(s.topics.updated);
     },
     onError: fail,
   });
   const remove = useMutation({
-    mutationFn: (id: number) => adminApi.deleteCategory(id),
+    mutationFn: (id: number) => adminApi.deleteTopic(id),
     onSuccess: () => {
       setDeleting(null);
-      done(s.categories.deleted);
+      done(s.topics.deleted);
     },
     onError: (e) => {
       setDeleting(null);
@@ -81,27 +81,27 @@ export function CategoriesPage() {
     },
   });
   const reorder = useMutation({
-    mutationFn: (order: number[]) => adminApi.reorderCategories(order),
-    onSuccess: () => done(s.categories.updated),
+    mutationFn: (order: number[]) => adminApi.reorderTopics(order),
+    onSuccess: () => done(s.topics.updated),
     onError: fail,
   });
 
-  const categories = list.data?.categories ?? [];
+  const topics = list.data?.topics ?? [];
 
   const slugValue = slug.trim();
-  const takenBy = categories.find((c) => c.slug === slugValue);
+  const takenBy = topics.find((c) => c.slug === slugValue);
   const slugError = !slugValue
     ? null
-    : !categorySlugSchema.safeParse(slugValue).success
-      ? s.categories.slugInvalid
+    : !topicSlugSchema.safeParse(slugValue).success
+      ? s.topics.slugInvalid
       : takenBy
-        ? s.categories.slugTaken(takenBy.name)
+        ? s.topics.slugTaken(takenBy.name)
         : null;
-  const slugNote = name.trim() && !slugValue ? s.categories.slugNeeded : s.categories.slugHelp;
+  const slugNote = name.trim() && !slugValue ? s.topics.slugNeeded : s.topics.slugHelp;
   const canAdd = !!slugValue && !!name.trim() && !slugError && !create.isPending;
 
   const move = (index: number, delta: number) => {
-    const order = categories.map((c) => c.id);
+    const order = topics.map((c) => c.id);
     const [id] = order.splice(index, 1);
     order.splice(index + delta, 0, id!);
     reorder.mutate(order);
@@ -109,7 +109,7 @@ export function CategoriesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageTitle>{s.categories.title}</PageTitle>
+      <PageTitle>{s.topics.title}</PageTitle>
       <form
         className="grid gap-3 rounded-[14px] border border-border bg-surface p-4 md:grid-cols-[1fr_1fr_auto] md:items-start"
         onSubmit={(e) => {
@@ -117,7 +117,7 @@ export function CategoriesPage() {
           if (canAdd) create.mutate();
         }}
       >
-        <Field id={ids.name} label={s.categories.name}>
+        <Field id={ids.name} label={s.topics.name}>
           <input
             autoComplete="off"
             id={ids.name}
@@ -130,7 +130,7 @@ export function CategoriesPage() {
             className={inputClass}
           />
         </Field>
-        <Field id={ids.slug} label={s.categories.slug}>
+        <Field id={ids.slug} label={s.topics.slug}>
           <input
             autoComplete="off"
             id={ids.slug}
@@ -156,7 +156,7 @@ export function CategoriesPage() {
           </p>
         </Field>
         <button type="submit" className={`${ghostButton} md:mt-[1.625rem]`} disabled={!canAdd}>
-          + {s.categories.add}
+          + {s.topics.add}
         </button>
       </form>
 
@@ -164,11 +164,11 @@ export function CategoriesPage() {
         <Loading />
       ) : list.isError ? (
         <ErrorState onRetry={() => void list.refetch()} />
-      ) : categories.length === 0 ? (
-        <p className="py-8 text-center text-muted">{s.categories.empty}</p>
+      ) : topics.length === 0 ? (
+        <p className="py-8 text-center text-muted">{s.topics.empty}</p>
       ) : (
-        <ul className="flex flex-col gap-2" aria-label={s.categories.title}>
-          {categories.map((c, index) => (
+        <ul className="flex flex-col gap-2" aria-label={s.topics.title}>
+          {topics.map((c, index) => (
             <li
               key={c.id}
               className="flex flex-wrap items-center gap-3 rounded-[14px] border border-border bg-surface p-3"
@@ -186,7 +186,7 @@ export function CategoriesPage() {
                 >
                   <input
                     autoComplete="off"
-                    aria-label={s.categories.name}
+                    aria-label={s.topics.name}
                     value={editing.name}
                     maxLength={60}
                     onChange={(e) => setEditing({ ...editing, name: e.target.value })}
@@ -194,7 +194,7 @@ export function CategoriesPage() {
                   />
                   <input
                     autoComplete="off"
-                    aria-label={s.categories.slug}
+                    aria-label={s.topics.slug}
                     value={editing.slug}
                     maxLength={50}
                     onChange={(e) => setEditing({ ...editing, slug: e.target.value.toLowerCase() })}
@@ -211,7 +211,7 @@ export function CategoriesPage() {
                 <div className="min-w-0 flex-1">
                   <p className="font-medium">{c.name}</p>
                   <p className="text-xs text-muted">
-                    {c.slug} · {s.categories.items(c.itemCount)}
+                    {c.slug} · {s.topics.items(c.itemCount)}
                   </p>
                 </div>
               )}
@@ -219,7 +219,7 @@ export function CategoriesPage() {
                 <input
                   type="checkbox"
                   checked={c.isActive}
-                  aria-label={s.categories.activeLabel(c.name)}
+                  aria-label={s.topics.activeLabel(c.name)}
                   onChange={(e) =>
                     update.mutate({ id: c.id, body: { isActive: e.target.checked } })
                   }
@@ -240,7 +240,7 @@ export function CategoriesPage() {
                 <button
                   type="button"
                   className={ghostButton}
-                  disabled={index === categories.length - 1 || reorder.isPending}
+                  disabled={index === topics.length - 1 || reorder.isPending}
                   aria-label={`${c.name} ↓`}
                   onClick={() => move(index, 1)}
                 >
@@ -267,8 +267,8 @@ export function CategoriesPage() {
       )}
       {deleting && (
         <ConfirmDialog
-          title={s.categories.deleteTitle(deleting.name)}
-          body={s.categories.deleteBody}
+          title={s.topics.deleteTitle(deleting.name)}
+          body={s.topics.deleteBody}
           confirmLabel={s.common.delete}
           cancelLabel={s.common.cancel}
           danger

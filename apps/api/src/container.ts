@@ -4,7 +4,7 @@ import { createDb, type Db } from './db/client';
 import { D1AccountRepository } from './repositories/d1/accounts';
 import { D1AdminItemRepository } from './repositories/d1/admin-items';
 import {
-  D1AdminCategoryRepository,
+  D1AdminTopicRepository,
   D1AdminLanguageRepository,
   D1AdminSettingsRepository,
   D1AdminUserRepository,
@@ -12,7 +12,7 @@ import {
   D1StatsRepository,
 } from './repositories/d1/admin-misc';
 import { D1AuditRepository } from './repositories/d1/audit';
-import { D1CategoryRepository } from './repositories/d1/categories';
+import { D1TopicRepository } from './repositories/d1/topics';
 import { D1ImportWriter } from './repositories/d1/import-writer';
 import { D1ItemRepository } from './repositories/d1/items';
 import { D1KnownRepository } from './repositories/d1/known';
@@ -39,7 +39,7 @@ export function createContainer(
 ) {
   const db: Db = createDb(d1);
   const languages = new D1LanguageRepository(db);
-  const categories = new D1CategoryRepository(db);
+  const topics = new D1TopicRepository(db);
   const items = new D1ItemRepository(db);
   const audit = new D1AuditRepository(db);
   const settings = new SettingsService(new D1SettingsRepository(db));
@@ -47,20 +47,20 @@ export function createContainer(
   const adminItems = new ItemAdminService({
     items: new D1AdminItemRepository(db, d1),
     languages,
-    categories,
+    topics,
     settings,
   });
   return {
     db,
     languages,
-    categories,
+    topics,
     items,
     audit,
     settings,
     limits,
     csvImport: new CsvImportService({
       languages,
-      categories,
+      topics,
       items,
       writer: new D1ImportWriter(db, d1),
     }),
@@ -68,7 +68,7 @@ export function createContainer(
     admin: {
       items: adminItems,
       catalog: new CatalogAdminService({
-        categories: new D1AdminCategoryRepository(db, d1),
+        topics: new D1AdminTopicRepository(db, d1),
         languages,
         adminLanguages: new D1AdminLanguageRepository(db, d1),
       }),
@@ -82,14 +82,14 @@ export function createContainer(
         audit: new D1AuditQueryRepository(db),
         stats: new D1StatsRepository(db),
         languages,
-        categories,
+        topics,
       }),
     },
     maintenance: new MaintenanceService({ db, items: adminItems }),
     accounts: new AccountService({ accounts: new D1AccountRepository(db) }),
     loops: new LoopService({
       languages,
-      categories,
+      topics,
       loops: new D1LoopRepository(db),
       settings,
       limits,

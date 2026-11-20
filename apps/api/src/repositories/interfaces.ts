@@ -27,7 +27,7 @@ export interface LanguageRepository {
   listAll(): Promise<LanguageRow[]>;
 }
 
-export type CategoryRow = {
+export type TopicRow = {
   id: number;
   slug: string;
   name: string;
@@ -35,8 +35,8 @@ export type CategoryRow = {
   sortOrder: number;
 };
 
-export interface CategoryRepository {
-  listAll(): Promise<CategoryRow[]>;
+export interface TopicRepository {
+  listAll(): Promise<TopicRow[]>;
 }
 
 export type IdentityKey = { lang: string; type: ItemType; normalizedText: string };
@@ -63,7 +63,7 @@ export type ImportAuditInfo = {
 
 export interface ImportWriter {
   /**
-   * Writes an import plan: new categories, new items, appended entries and category links, plus
+   * Writes an import plan: new topics, new items, appended entries and topic links, plus
    * one `csv.import` audit entry. `versions` holds the version each updated item was read at.
    */
   write(
@@ -104,7 +104,7 @@ export type LoopSelection = {
   source: string;
   target: string;
   type: ItemType;
-  categoryId: number | null;
+  topicId: number | null;
   /** Only items in the sample set (guests; admins checking it, D-038). */
   sampleOnly: boolean;
   /** Signed-in learner: their items known in this direction (`target`) are excluded (D-028). */
@@ -124,7 +124,7 @@ export type KnownFilterInput = {
   lang?: string | undefined;
   target?: string | undefined;
   type?: ItemType | undefined;
-  categoryId?: number | undefined;
+  topicId?: number | undefined;
 };
 
 export type KnownSortKey = 'newest' | 'oldest' | 'az';
@@ -172,7 +172,7 @@ export interface KnownRepository {
     limit: number,
   ): Promise<KnownListRow[]>;
   count(userId: string, filter: KnownFilterInput): Promise<number>;
-  categoriesFor(itemIds: readonly number[]): Promise<Map<number, { id: number; name: string }[]>>;
+  topicsFor(itemIds: readonly number[]): Promise<Map<number, { id: number; name: string }[]>>;
 }
 
 export type AccountRow = { id: string; role: string };
@@ -204,15 +204,15 @@ export type ItemRecord = ItemContent & {
   updatedAt: number;
   deletedAt: number | null;
   deletedBy: string | null;
-  categoryIds: number[];
-  categorySlugs: string[];
+  topicIds: number[];
+  topicSlugs: string[];
 };
 
 export type NewItem = ItemContent & {
   normalizedText: string;
   status: 'draft' | 'published';
   inSampleSet: boolean;
-  categoryIds: number[];
+  topicIds: number[];
 };
 
 /** The columns an update may change (never `lang`). */
@@ -235,7 +235,7 @@ export type AdminItemFilter = {
   q?: string | undefined;
   lang?: string | undefined;
   type?: ItemType | undefined;
-  categoryId?: number | undefined;
+  topicId?: number | undefined;
   status?: 'draft' | 'published' | undefined;
   multipleMeanings?: boolean | undefined;
   inSampleSet?: boolean | undefined;
@@ -289,15 +289,15 @@ export interface AdminItemRepository {
     limit: number,
     offset: number,
   ): Promise<{ rows: AdminItemListRow[]; total: number }>;
-  categoriesFor(itemIds: readonly number[]): Promise<Map<number, { id: number; name: string }[]>>;
-  /** Inserts the item, its category links and the audit entry; returns the new id. */
+  topicsFor(itemIds: readonly number[]): Promise<Map<number, { id: number; name: string }[]>>;
+  /** Inserts the item, its topic links and the audit entry; returns the new id. */
   create(item: NewItem, actor: Actor, audit: AuditDetails, now: number): Promise<number>;
   /** Optimistic update: false if `version` is stale (nothing written, no audit). */
   update(
     id: number,
     version: number,
     changes: ItemChanges,
-    categoryIds: number[] | undefined,
+    topicIds: number[] | undefined,
     actor: Actor,
     audit: AuditDetails,
     now: number,
@@ -334,12 +334,12 @@ export interface AdminItemRepository {
   ): Promise<number>;
 }
 
-export type CategoryWithCount = CategoryRow & { itemCount: number };
+export type TopicWithCount = TopicRow & { itemCount: number };
 
-export interface AdminCategoryRepository {
-  listWithCounts(): Promise<CategoryWithCount[]>;
-  get(id: number): Promise<CategoryWithCount | null>;
-  findBySlug(slug: string): Promise<CategoryRow | null>;
+export interface AdminTopicRepository {
+  listWithCounts(): Promise<TopicWithCount[]>;
+  get(id: number): Promise<TopicWithCount | null>;
+  findBySlug(slug: string): Promise<TopicRow | null>;
   create(
     input: { slug: string; name: string; isActive: boolean },
     actor: Actor,

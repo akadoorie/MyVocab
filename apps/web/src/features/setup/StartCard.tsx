@@ -88,7 +88,7 @@ export function StartCard({
       source: choices.sourceLang,
       target: choices.targetLang,
       type: choices.type,
-      categoryId: choices.categoryId,
+      topicId: choices.topicId,
       sample: choices.sample === true,
     },
     300,
@@ -100,7 +100,7 @@ export function StartCard({
         source: query.source,
         target: query.target,
         type: query.type,
-        ...(query.categoryId === null ? {} : { categoryId: query.categoryId }),
+        ...(query.topicId === null ? {} : { topicId: query.topicId }),
         ...(query.sample ? { sample: 'true' as const } : {}),
       }),
   });
@@ -213,8 +213,8 @@ export function StartCard({
             </p>
           )}
           <Field
-            label={strings.setup.category}
-            isDefault={isGuest || (defaultSet.has('categoryId') && !choices.sample)}
+            label={strings.setup.topic}
+            isDefault={isGuest || (defaultSet.has('topicId') && !choices.sample)}
           >
             {({ id, className }) =>
               isGuest ? (
@@ -233,7 +233,7 @@ export function StartCard({
                       <option value="" disabled>
                         {strings.setup.general}
                       </option>
-                      {meta.categories.map((c) => (
+                      {meta.topics.map((c) => (
                         <option key={c.id} value={c.id} disabled>
                           {c.name}
                         </option>
@@ -254,14 +254,14 @@ export function StartCard({
                 <select
                   id={id}
                   className={className}
-                  value={choices.sample ? 'sample' : (choices.categoryId ?? '')}
+                  value={choices.sample ? 'sample' : (choices.topicId ?? '')}
                   onChange={(e) => {
                     const v = e.target.value;
                     setError(null);
                     setChoices(({ sample: _sample, ...c }) =>
                       v === 'sample'
-                        ? { ...c, categoryId: null, sample: true }
-                        : { ...c, categoryId: v === '' ? null : Number(v) },
+                        ? { ...c, topicId: null, sample: true }
+                        : { ...c, topicId: v === '' ? null : Number(v) },
                     );
                   }}
                 >
@@ -270,7 +270,7 @@ export function StartCard({
                     <option value="sample">{strings.setup.sampleSet}</option>
                   )}
                   <option value="">{strings.setup.general}</option>
-                  {meta.categories.map((c) => (
+                  {meta.topics.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
                     </option>

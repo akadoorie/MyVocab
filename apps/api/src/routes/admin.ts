@@ -5,9 +5,9 @@ import {
   adminUserListQuerySchema,
   adminUserPatchSchema,
   auditQuerySchema,
-  categoryCreateSchema,
-  categoryOrderSchema,
-  categoryPatchSchema,
+  topicCreateSchema,
+  topicOrderSchema,
+  topicPatchSchema,
   IMPORT_MAX_FILE_BYTES,
   importQuerySchema,
   langCodeSchema,
@@ -81,28 +81,28 @@ export const adminRoutes = new Hono<AppEnv>()
     return c.json({ ok: true as const });
   })
 
-  // Categories
-  .get('/categories', async (c) =>
-    c.json({ categories: await c.get('container').admin.catalog.listCategories() }),
+  // Topics
+  .get('/topics', async (c) =>
+    c.json({ topics: await c.get('container').admin.catalog.listTopics() }),
   )
-  .post('/categories', async (c) => {
-    const body = parseOrThrow(categoryCreateSchema, await readJson(c.req));
-    return c.json(await c.get('container').admin.catalog.createCategory(body, c.get('actor')), 201);
+  .post('/topics', async (c) => {
+    const body = parseOrThrow(topicCreateSchema, await readJson(c.req));
+    return c.json(await c.get('container').admin.catalog.createTopic(body, c.get('actor')), 201);
   })
-  .put('/categories/order', async (c) => {
-    const { ids } = parseOrThrow(categoryOrderSchema, await readJson(c.req));
+  .put('/topics/order', async (c) => {
+    const { ids } = parseOrThrow(topicOrderSchema, await readJson(c.req));
     return c.json({
-      categories: await c.get('container').admin.catalog.reorderCategories(ids, c.get('actor')),
+      topics: await c.get('container').admin.catalog.reorderTopics(ids, c.get('actor')),
     });
   })
-  .patch('/categories/:id', async (c) => {
+  .patch('/topics/:id', async (c) => {
     const { id } = parseOrThrow(idParam, c.req.param());
-    const body = parseOrThrow(categoryPatchSchema, await readJson(c.req));
-    return c.json(await c.get('container').admin.catalog.updateCategory(id, body, c.get('actor')));
+    const body = parseOrThrow(topicPatchSchema, await readJson(c.req));
+    return c.json(await c.get('container').admin.catalog.updateTopic(id, body, c.get('actor')));
   })
-  .delete('/categories/:id', async (c) => {
+  .delete('/topics/:id', async (c) => {
     const { id } = parseOrThrow(idParam, c.req.param());
-    await c.get('container').admin.catalog.deleteCategory(id, c.get('actor'));
+    await c.get('container').admin.catalog.deleteTopic(id, c.get('actor'));
     return c.json({ ok: true as const });
   })
 
@@ -182,7 +182,7 @@ export const adminRoutes = new Hono<AppEnv>()
       csvText,
       fileName: file.name.slice(0, 200) || 'upload.csv',
       dryRun: q.dryRun,
-      createMissingCategories: q.createMissingCategories,
+      createMissingTopics: q.createMissingTopics,
       actor: c.get('actor'),
     });
     return c.json(report);

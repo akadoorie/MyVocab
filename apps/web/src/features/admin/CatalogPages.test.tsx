@@ -7,7 +7,7 @@ import { slugify } from './CatalogPages';
 
 const ADMIN: SessionUser = { ...TEST_USER, role: 'admin' };
 
-// Synthetic categories only.
+// Synthetic topics only.
 const EXISTING = {
   id: 1,
   slug: 'sample-one',
@@ -21,15 +21,15 @@ function setup() {
   const posts: unknown[] = [];
   mockFetch(
     {
-      'GET /api/admin/categories': () => Response.json({ categories: [EXISTING] }),
-      'POST /api/admin/categories': (init) => {
+      'GET /api/admin/topics': () => Response.json({ topics: [EXISTING] }),
+      'POST /api/admin/topics': (init) => {
         posts.push(JSON.parse(String(init?.body)));
         return Response.json({ ...EXISTING, id: 2, slug: 'x', name: 'x' }, { status: 201 });
       },
     },
     ADMIN,
   );
-  renderRoutes([{ path: '/admin/*', element: <AdminApp /> }], ['/admin/categories']);
+  renderRoutes([{ path: '/admin/*', element: <AdminApp /> }], ['/admin/topics']);
   return posts;
 }
 
@@ -43,8 +43,8 @@ describe('slugify', () => {
   });
 });
 
-describe('CategoriesPage add form (FR-A30)', () => {
-  it('fills the slug from the name and adds the category', async () => {
+describe('TopicsPage add form (FR-A30)', () => {
+  it('fills the slug from the name and adds the topic', async () => {
     const posts = setup();
     await screen.findByText('Sample One');
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Home & Garden' } });
@@ -53,7 +53,7 @@ describe('CategoriesPage add form (FR-A30)', () => {
       screen.getByText('Used in CSV files. Lowercase letters, digits and dashes.'),
     ).toBeVisible();
 
-    fireEvent.click(screen.getByRole('button', { name: '+ Add category' }));
+    fireEvent.click(screen.getByRole('button', { name: '+ Add topic' }));
     await waitFor(() => expect(posts).toEqual([{ slug: 'home-garden', name: 'Home & Garden' }]));
   });
 
@@ -70,7 +70,7 @@ describe('CategoriesPage add form (FR-A30)', () => {
     await screen.findByText('Sample One');
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Anything' } });
     const slugInput = screen.getByLabelText('Slug');
-    const add = screen.getByRole('button', { name: '+ Add category' });
+    const add = screen.getByRole('button', { name: '+ Add topic' });
 
     fireEvent.change(slugInput, { target: { value: 'home garden' } });
     expect(screen.getByText(/Use lowercase English letters/)).toBeVisible();
@@ -88,7 +88,7 @@ describe('CategoriesPage add form (FR-A30)', () => {
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'אוכל' } });
     expect(screen.getByLabelText('Slug')).toHaveValue('');
     expect(screen.getByText('Type a slug in English letters, e.g. food.')).toBeVisible();
-    expect(screen.getByRole('button', { name: '+ Add category' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '+ Add topic' })).toBeDisabled();
   });
 });
 

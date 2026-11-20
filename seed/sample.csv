@@ -1,4 +1,4 @@
-lang,text,type,multiple_meanings,categories,translation_meaning_he,translation_meaning_en,explanation,synonyms,hints,status,sample
+lang,text,type,multiple_meanings,topics,translation_meaning_he,translation_meaning_en,explanation,synonyms,hints,status,sample
 en,sample-word-1,word,false,home,מילה-לדוגמה-1,,Synthetic explanation for sample word one,sample-synonym-1,Synthetic hint sentence for sample word one.,published,true
 en,sample-word-2,word,true,home,מילה-לדוגמה-2א|מילה-לדוגמה-2ב,,First synthetic meaning of sample word two|Second synthetic meaning of sample word two,,Synthetic hint one for word two.|Synthetic hint two for word two.,published,true
 en,sample-word-3,word,false,nature,מילה-לדוגמה-3,,Synthetic explanation for sample word three,sample-synonym-3a|sample-synonym-3b,,published,true

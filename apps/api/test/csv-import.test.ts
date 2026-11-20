@@ -6,7 +6,7 @@ import type { ImportInput } from '../src/services/csv-import-service';
 
 // Synthetic content only (PRD §14.2).
 const HEADER =
-  'lang,text,type,multiple_meanings,categories,translation_he,translation_en,explanation,synonyms,hints,status';
+  'lang,text,type,multiple_meanings,topics,translation_he,translation_en,explanation,synonyms,hints,status';
 const ROWS = [
   'en,sample-word-1,word,true,home,מילה-א|מילה-ב,,"First meaning|Second meaning",alpha|beta,"Example one.|Example two.",published',
   'en,sample-expression-1,expr,false,,ביטוי-א,,,,,draft',
@@ -19,7 +19,7 @@ const run = (over: Partial<ImportInput>) =>
     csvText: csv(...ROWS),
     fileName: 'test.csv',
     dryRun: false,
-    createMissingCategories: true,
+    createMissingTopics: true,
     actor: null,
     ...over,
   });
@@ -31,17 +31,17 @@ describe('CsvImportService', () => {
   it('dry run reports totals and writes nothing', async () => {
     const report = await run({ dryRun: true });
     expect(report).toMatchObject({ dryRun: true, committed: false, errors: [] });
-    expect(report.totals).toMatchObject({ newItems: 3, newCategories: 2, newHints: 2 });
+    expect(report.totals).toMatchObject({ newItems: 3, newTopics: 2, newHints: 2 });
     expect(await count('items')).toBe(0);
     expect(await count('audit_log')).toBe(0);
   });
 
-  it('commit writes items, categories, links and one audit entry', async () => {
+  it('commit writes items, topics, links and one audit entry', async () => {
     const report = await run({});
     expect(report).toMatchObject({ committed: true, errors: [], batches: 1, skippedConcurrent: 0 });
     expect(await count('items')).toBe(3);
-    expect(await count('categories')).toBe(2);
-    expect(await count('item_categories')).toBe(2);
+    expect(await count('topics')).toBe(2);
+    expect(await count('item_topics')).toBe(2);
 
     const item = await env.DB.prepare(
       `SELECT text, multiple_meanings, translation_meaning AS translation, explanation, status, version FROM items WHERE text = 'sample-word-1'`,
@@ -57,7 +57,7 @@ describe('CsvImportService', () => {
       `SELECT status FROM items WHERE text = 'sample-expression-1'`,
     ).first();
     expect(draft).toEqual({ status: 'draft' });
-    const home = await env.DB.prepare(`SELECT name FROM categories WHERE slug = 'home'`).first();
+    const home = await env.DB.prepare(`SELECT name FROM topics WHERE slug = 'home'`).first();
     expect(home).toEqual({ name: 'Home' });
 
     const audit = await env.DB.prepare(`SELECT action, details FROM audit_log`).first<{
@@ -78,7 +78,7 @@ describe('CsvImportService', () => {
       newItems: 0,
       mergedItems: 3,
       newHints: 0,
-      newCategories: 0,
+      newTopics: 0,
     });
     expect(second.totals?.skippedDuplicates).toBeGreaterThan(0);
     expect(await count('items')).toBe(3);
@@ -86,7 +86,7 @@ describe('CsvImportService', () => {
     expect(v?.v).toBe(1); // unchanged items are not rewritten
   });
 
-  it('merges new entries and categories into existing items, bumping the version', async () => {
+  it('merges new entries and topics into existing items, bumping the version', async () => {
     await run({});
     const report = await run({
       csvText: csv('en,sample-word-1,word,,food|travel,מילה-ג,,,gamma,,draft'),
@@ -96,7 +96,7 @@ describe('CsvImportService', () => {
       mergedItems: 1,
       newMeaningEntries: 1,
       newSynonyms: 1,
-      newCategories: 1,
+      newTopics: 1,
     });
     const item = await env.DB.prepare(
       `SELECT id, translation_meaning AS translation, synonyms, status, version FROM items WHERE text = 'sample-word-1'`,
@@ -112,7 +112,7 @@ describe('CsvImportService', () => {
     expect(item?.status).toBe('published'); // status of an existing item is never changed
     expect(item?.version).toBe(2);
     const links = await env.DB.prepare(
-      `SELECT c.slug FROM item_categories ic JOIN categories c ON c.id = ic.category_id WHERE ic.item_id = ? ORDER BY c.slug`,
+      `SELECT c.slug FROM item_topics ic JOIN topics c ON c.id = ic.topic_id WHERE ic.item_id = ? ORDER BY c.slug`,
     )
       .bind(item?.id)
       .all();
@@ -143,10 +143,10 @@ en,marker-expression,expr,משמעות,מקבילה,=parallel`,
     expect(await count('items')).toBe(0);
   });
 
-  it('reports unknown categories unless "create missing" is ticked', async () => {
-    const report = await run({ createMissingCategories: false });
+  it('reports unknown topics unless "create missing" is ticked', async () => {
+    const report = await run({ createMissingTopics: false });
     expect(report.committed).toBe(false);
-    expect(report.errors.map((e) => e.column)).toEqual(['categories', 'categories']);
+    expect(report.errors.map((e) => e.column)).toEqual(['topics', 'topics']);
   });
 
   it('stops at file-level errors', async () => {
@@ -185,7 +185,7 @@ en,marker-expression,expr,משמעות,מקבילה,=parallel`,
       csvText: csv('en,sample-word-1,word,,,מילה-חדשה,,,,,'),
       fileName: 'x.csv',
       dryRun: false,
-      createMissingCategories: true,
+      createMissingTopics: true,
       actor: null,
     });
     expect(report).toMatchObject({ committed: true, skippedConcurrent: 1 });
@@ -208,7 +208,7 @@ describe('the sample column (D-038)', () => {
       csvText: `lang,text,type,explanation,sample\n${rows}`,
       fileName: 'sample.csv',
       dryRun: false,
-      createMissingCategories: false,
+      createMissingTopics: false,
       actor: null,
     });
 

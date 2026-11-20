@@ -8,7 +8,7 @@ import {
   ValidationError,
 } from '../middleware/errors';
 import type {
-  CategoryRepository,
+  TopicRepository,
   LanguageRepository,
   LoopRepository,
   LoopSelection,
@@ -24,7 +24,7 @@ export type LoopQuery = {
   source: string;
   target: string;
   type: ItemType;
-  categoryId: number | null;
+  topicId: number | null;
   /** Ask for the sample set only (D-038). Honoured for admins; guests always get it. */
   sample?: boolean | undefined;
 };
@@ -38,7 +38,7 @@ export class LoopService {
   constructor(
     private readonly deps: {
       languages: LanguageRepository;
-      categories: CategoryRepository;
+      topics: TopicRepository;
       loops: LoopRepository;
       settings: SettingsService;
       limits: UsageLimitService;
@@ -58,16 +58,16 @@ export class LoopService {
       throw new ValidationError('Unknown or inactive language');
     }
     const sampleOnly = requester.kind === 'guest' || (requester.isAdmin && q.sample === true);
-    const categoryId = sampleOnly ? null : q.categoryId;
-    if (categoryId !== null) {
-      const category = (await this.deps.categories.listAll()).find((c) => c.id === categoryId);
-      if (!category?.isActive) throw new ValidationError('Unknown or inactive category');
+    const topicId = sampleOnly ? null : q.topicId;
+    if (topicId !== null) {
+      const topic = (await this.deps.topics.listAll()).find((c) => c.id === topicId);
+      if (!topic?.isActive) throw new ValidationError('Unknown or inactive topic');
     }
     return {
       source: q.source,
       target: q.target,
       type: q.type,
-      categoryId,
+      topicId,
       sampleOnly,
       userId: requester.kind === 'learner' ? requester.userId : null,
     };

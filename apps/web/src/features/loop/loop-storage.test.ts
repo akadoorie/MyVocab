@@ -33,7 +33,7 @@ describe('loop storage', () => {
         ],
         state: createLoop([1, 2], 3),
         undoWindowSeconds: 4,
-        selection: { sourceLang: 'en', targetLang: 'he', categoryId: null, type: 'word', size: 5 },
+        selection: { sourceLang: 'en', targetLang: 'he', topicId: null, type: 'word', size: 5 },
         isGuest: true,
       }),
     );
@@ -54,13 +54,33 @@ describe('loop storage', () => {
         cards: [{ ...card, answer: oldAnswer }],
         state: createLoop([1], 3),
         undoWindowSeconds: 4,
-        selection: { sourceLang: 'en', targetLang: 'he', categoryId: null, type: 'word', size: 5 },
+        selection: { sourceLang: 'en', targetLang: 'he', topicId: null, type: 'word', size: 5 },
         isGuest: true,
       }),
     );
     expect(loadLoop()?.cards[0]?.answer).toMatchObject({
       main: 'meaning',
       literalSameAsParallel: false,
+    });
+  });
+
+  it('resumes a session saved before D-039 (its topic under the old name categoryId)', () => {
+    window.sessionStorage.setItem(
+      'myvocab.loop.v1',
+      JSON.stringify({
+        cards: [makeCard(1)],
+        state: createLoop([1], 3),
+        undoWindowSeconds: 4,
+        selection: { sourceLang: 'en', targetLang: 'he', categoryId: 3, type: 'word', size: 5 },
+        isGuest: false,
+      }),
+    );
+    expect(loadLoop()?.selection).toEqual({
+      sourceLang: 'en',
+      targetLang: 'he',
+      topicId: 3,
+      type: 'word',
+      size: 5,
     });
   });
 });

@@ -2,13 +2,13 @@ import { normalize, type ImportPlan } from '@myvocab/core';
 import { and, eq, isNull, sql, type SQL } from 'drizzle-orm';
 import { SQLiteAsyncDialect } from 'drizzle-orm/sqlite-core';
 import type { Db } from '../../db/client';
-import { auditLog, categories, items } from '../../db/schema';
+import { auditLog, topics, items } from '../../db/schema';
 import type { Actor, ImportAuditInfo, ImportWriteResult, ImportWriter } from '../interfaces';
 
 /** Statements per D1 batch. A batch is one transaction and one query (D1 limits). */
 export const STATEMENTS_PER_BATCH = 1000;
 
-/** "electronics-devices" → "Electronics Devices" (PRD §8.3, "Create missing categories"). */
+/** "electronics-devices" → "Electronics Devices" (PRD §8.3, "Create missing topics"). */
 export function slugToName(slug: string): string {
   return slug
     .split('-')
@@ -38,10 +38,10 @@ export class D1ImportWriter implements ImportWriter {
     const now = this.now();
     const stmts: Stmt[] = [];
 
-    for (const slug of plan.newCategories) {
+    for (const slug of plan.newTopics) {
       stmts.push({
         query: this.db
-          .insert(categories)
+          .insert(topics)
           .values({ slug, name: slugToName(slug), createdAt: now, updatedAt: now })
           .onConflictDoNothing()
           .toSQL(),
@@ -73,14 +73,14 @@ export class D1ImportWriter implements ImportWriter {
           })
           .toSQL(),
       });
-      if (create.categories.length > 0) {
+      if (create.topics.length > 0) {
         stmts.push({
           query: raw(sql`
-            INSERT OR IGNORE INTO item_categories (item_id, category_id)
-            SELECT i.id, c.id FROM items AS i, categories AS c
+            INSERT OR IGNORE INTO item_topics (item_id, topic_id)
+            SELECT i.id, c.id FROM items AS i, topics AS c
             WHERE i.lang = ${c.lang} AND i.type = ${c.type}
               AND i.normalized_text = ${normalize(c.text)} AND i.deleted_at IS NULL
-              AND c.slug IN (SELECT value FROM json_each(${JSON.stringify(create.categories)}))
+              AND c.slug IN (SELECT value FROM json_each(${JSON.stringify(create.topics)}))
           `),
         });
       }
@@ -115,13 +115,13 @@ export class D1ImportWriter implements ImportWriter {
           .where(where)
           .toSQL(),
       });
-      if (update.categoriesToAdd.length > 0) {
+      if (update.topicsToAdd.length > 0) {
         // Only links the item if the update above applied (same version check).
         stmts.push({
           query: raw(sql`
-            INSERT OR IGNORE INTO item_categories (item_id, category_id)
-            SELECT ${update.id}, c.id FROM categories AS c
-            WHERE c.slug IN (SELECT value FROM json_each(${JSON.stringify(update.categoriesToAdd)}))
+            INSERT OR IGNORE INTO item_topics (item_id, topic_id)
+            SELECT ${update.id}, c.id FROM topics AS c
+            WHERE c.slug IN (SELECT value FROM json_each(${JSON.stringify(update.topicsToAdd)}))
               AND EXISTS (SELECT 1 FROM items WHERE id = ${update.id} AND version = ${version + 1})
           `),
         });

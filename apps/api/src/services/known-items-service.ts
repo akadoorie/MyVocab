@@ -103,9 +103,9 @@ export class KnownItemsService {
     const page = rows.slice(0, KNOWN_PAGE_SIZE);
     const hasMore = rows.length > KNOWN_PAGE_SIZE;
 
-    const [categories, languages, total] = await Promise.all([
-      // An item known in two directions has two rows: look its categories up once (D-028).
-      this.deps.known.categoriesFor([...new Set(page.map((r) => r.itemId))]),
+    const [topics, languages, total] = await Promise.all([
+      // An item known in two directions has two rows: look its topics up once (D-028).
+      this.deps.known.topicsFor([...new Set(page.map((r) => r.itemId))]),
       this.deps.languages.listAll(),
       // The total is shown with "Return all N filtered"; computed on the first page only.
       cursor ? null : hasMore ? this.deps.known.count(userId, filter) : page.length,
@@ -135,7 +135,7 @@ export class KnownItemsService {
           lang: answerLang,
           dir: dir(answerLang),
         },
-        categories: categories.get(r.itemId) ?? [],
+        topics: topics.get(r.itemId) ?? [],
         knownAt: r.knownAt,
         knownInCycle: r.knownInCycle,
       };

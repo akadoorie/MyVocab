@@ -10,7 +10,7 @@ export const CSV_COLUMNS = {
   text: 'text',
   type: 'type',
   multipleMeanings: 'multiple_meanings',
-  categories: 'categories',
+  topics: 'topics',
   explanation: 'explanation',
   synonyms: 'synonyms',
   hints: 'hints',
@@ -18,6 +18,9 @@ export const CSV_COLUMNS = {
   /** true/false: in the sample set guests play (D-038). Empty = new items off, existing unchanged. */
   sample: 'sample',
 } as const;
+
+/** Older column names still read (D-039: `categories` became `topics`). */
+export const OLD_COLUMN_NAMES: Readonly<Record<string, string>> = { categories: 'topics' };
 
 export const REQUIRED_COLUMNS = [CSV_COLUMNS.lang, CSV_COLUMNS.text, CSV_COLUMNS.type] as const;
 
@@ -43,7 +46,7 @@ export function translationColumnOf(
   return match ? { kind: match.kind, lang: column.slice(match.prefix.length) } : undefined;
 }
 
-export const CATEGORY_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const TOPIC_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export const CSV_LIST_SEPARATOR = '|';
 

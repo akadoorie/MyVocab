@@ -5,7 +5,7 @@ import { serializeCsv } from './rfc4180';
 
 export type ExportItem = {
   content: ItemContent;
-  categories: readonly string[];
+  topics: readonly string[];
   status: ItemStatus;
   inSampleSet: boolean;
 };
@@ -32,7 +32,7 @@ export function csvHeader(translationLangs: readonly LangCode[]): string[] {
     CSV_COLUMNS.text,
     CSV_COLUMNS.type,
     CSV_COLUMNS.multipleMeanings,
-    CSV_COLUMNS.categories,
+    CSV_COLUMNS.topics,
     ...TRANSLATION_KINDS.flatMap((kind) => translationLangs.map((l) => translationColumn(kind, l))),
     CSV_COLUMNS.explanation,
     CSV_COLUMNS.synonyms,
@@ -51,12 +51,12 @@ export function serializeItemsCsv(
   languageOrder: readonly LangCode[],
 ): string {
   const langs = translationLanguages(items, languageOrder);
-  const rows = items.map(({ content, categories, status, inSampleSet }) => [
+  const rows = items.map(({ content, topics, status, inSampleSet }) => [
     content.lang,
     content.text,
     content.type,
     content.multipleMeanings ? 'true' : 'false',
-    joinList(categories),
+    joinList(topics),
     ...TRANSLATION_KINDS.flatMap((kind) => langs.map((l) => joinList(content[kind][l] ?? []))),
     joinList(content.explanation),
     joinList(content.synonyms),

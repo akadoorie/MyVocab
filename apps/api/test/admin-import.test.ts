@@ -10,7 +10,7 @@ beforeEach(async () => {
 });
 
 const HEADER =
-  'lang,text,type,multiple_meanings,categories,translation_he,translation_en,explanation,synonyms,hints,status';
+  'lang,text,type,multiple_meanings,topics,translation_he,translation_en,explanation,synonyms,hints,status';
 
 function upload(
   content: string | Uint8Array<ArrayBuffer>,
@@ -30,7 +30,7 @@ function upload(
 type Report = {
   dryRun: boolean;
   committed: boolean;
-  totals: { newItems: number; mergedItems: number; newCategories: number } | null;
+  totals: { newItems: number; mergedItems: number; newTopics: number } | null;
   errors: { row: number; column: string; message: string }[];
   warnings: unknown[];
 };
@@ -91,14 +91,12 @@ describe('POST /api/admin/import', () => {
     expect(await count('audit_log')).toBe(0);
   });
 
-  it('creates missing categories only when asked', async () => {
+  it('creates missing topics only when asked', async () => {
     const csv = [HEADER, 'en,cat-row,word,false,brand-new,מילה,,,,,published'].join('\n');
     const refused = await (await upload(csv, '?dryRun=true')).json<Report>();
     expect(refused.errors.length).toBeGreaterThan(0);
-    const ok = await (
-      await upload(csv, '?dryRun=false&createMissingCategories=true')
-    ).json<Report>();
-    expect(ok).toMatchObject({ committed: true, totals: { newCategories: 1 } });
+    const ok = await (await upload(csv, '?dryRun=false&createMissingTopics=true')).json<Report>();
+    expect(ok).toMatchObject({ committed: true, totals: { newTopics: 1 } });
   });
 
   it('rejects non-UTF-8, missing and oversized files', async () => {

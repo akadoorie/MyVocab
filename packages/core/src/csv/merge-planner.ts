@@ -24,7 +24,7 @@ import { toCsvIssue, type CsvIssue, type ParsedRow } from './parse-rows';
 export type ExistingItem = {
   id: number;
   content: ItemContent;
-  categories: readonly string[];
+  topics: readonly string[];
   /** In the sample set guests play (D-038). */
   inSampleSet: boolean;
 };
@@ -33,13 +33,13 @@ export type PlanContext = {
   languages: LanguageMap;
   /** Existing non-deleted items, keyed by `itemIdentityKey`. */
   existing: ReadonlyMap<string, ExistingItem>;
-  knownCategories: ReadonlySet<string>;
-  createMissingCategories: boolean;
+  knownTopics: ReadonlySet<string>;
+  createMissingTopics: boolean;
 };
 
 export type PlannedCreate = {
   content: ItemContent;
-  categories: string[];
+  topics: string[];
   status: ItemStatus;
   /** From the `sample` column; off when the file doesn't say (D-038). */
   inSampleSet: boolean;
@@ -50,7 +50,7 @@ export type PlannedUpdate = {
   id: number;
   /** The full merged content (existing entries first, new ones appended). */
   content: ItemContent;
-  categoriesToAdd: string[];
+  topicsToAdd: string[];
   /**
    * Set only when the `sample` column changes the item's sample-set membership (D-038). The one
    * exception to append-only: the column is an explicit instruction, so it can also turn it off.
@@ -70,7 +70,7 @@ export type ImportTotals = {
   newExplanationEntries: number;
   newSynonyms: number;
   newHints: number;
-  newCategories: number;
+  newTopics: number;
   skippedDuplicates: number;
   /** Existing items put in or taken out of the sample set (D-038). */
   sampleSetChanges: number;
@@ -79,7 +79,7 @@ export type ImportTotals = {
 export type ImportPlan = {
   creates: PlannedCreate[];
   updates: PlannedUpdate[];
-  newCategories: string[];
+  newTopics: string[];
   totals: ImportTotals;
   errors: CsvIssue[];
   warnings: CsvIssue[];
@@ -133,7 +133,7 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
   const plan: ImportPlan = {
     creates: [],
     updates: [],
-    newCategories: [],
+    newTopics: [],
     totals: {
       newItems: 0,
       mergedItems: 0,
@@ -143,7 +143,7 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
       newExplanationEntries: 0,
       newSynonyms: 0,
       newHints: 0,
-      newCategories: 0,
+      newTopics: 0,
       skippedDuplicates: 0,
       sampleSetChanges: 0,
     },
@@ -159,7 +159,7 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
     else groups.set(key, [row]);
   }
 
-  const newCategories = new Set<string>();
+  const newTopics = new Set<string>();
   for (const [key, group] of groups) {
     const first = group[0] as ParsedRow;
     const existing = ctx.existing.get(key);
@@ -173,8 +173,8 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
       hints: { added: 0, skipped: 0 },
     } satisfies Record<ListName, Counts>;
     let flagTurnedOn = false;
-    const categories = new Set<string>(existing?.categories ?? []);
-    const categoriesToAdd: string[] = [];
+    const topics = new Set<string>(existing?.topics ?? []);
+    const topicsToAdd: string[] = [];
 
     for (const row of group) {
       for (const kind of TRANSLATION_KINDS) {
@@ -190,22 +190,22 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
         content.multipleMeanings = true;
         flagTurnedOn = true;
       }
-      for (const slug of row.categories) {
-        if (!ctx.knownCategories.has(slug)) {
-          if (ctx.createMissingCategories) {
-            newCategories.add(slug);
+      for (const slug of row.topics) {
+        if (!ctx.knownTopics.has(slug)) {
+          if (ctx.createMissingTopics) {
+            newTopics.add(slug);
           } else {
             plan.errors.push({
               row: row.row,
-              column: CSV_COLUMNS.categories,
-              message: `Unknown category "${slug}" (tick "Create missing categories" to add it)`,
+              column: CSV_COLUMNS.topics,
+              message: `Unknown topic "${slug}" (tick "Create missing topics" to add it)`,
             });
             continue;
           }
         }
-        if (!categories.has(slug)) {
-          categories.add(slug);
-          categoriesToAdd.push(slug);
+        if (!topics.has(slug)) {
+          topics.add(slug);
+          topicsToAdd.push(slug);
         }
       }
     }
@@ -256,7 +256,7 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
       !existing ||
       added > 0 ||
       flagTurnedOn ||
-      categoriesToAdd.length > 0 ||
+      topicsToAdd.length > 0 ||
       sampleChange !== undefined;
     if (changed) {
       const itemWarnings = [
@@ -288,7 +288,7 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
       plan.updates.push({
         id: existing.id,
         content,
-        categoriesToAdd,
+        topicsToAdd,
         ...(sampleChange === undefined ? {} : { inSampleSet: sampleChange }),
         rows: rowNumbers,
         changed,
@@ -298,7 +298,7 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
       const status = group.find((r) => r.status !== undefined)?.status ?? 'published';
       plan.creates.push({
         content,
-        categories: [...categories],
+        topics: [...topics],
         status,
         inSampleSet: sample ?? false,
         rows: rowNumbers,
@@ -306,7 +306,7 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
     }
   }
 
-  plan.newCategories = [...newCategories];
-  plan.totals.newCategories = newCategories.size;
+  plan.newTopics = [...newTopics];
+  plan.totals.newTopics = newTopics.size;
   return plan;
 }

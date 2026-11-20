@@ -36,7 +36,7 @@ export function ItemsPage() {
   const q = useDebounced(search.trim(), 300);
   const [lang, setLang] = useState('');
   const [type, setType] = useState('');
-  const [categoryId, setCategoryId] = useState('');
+  const [topicId, setTopicId] = useState('');
   const [status, setStatus] = useState('');
   const [sample, setSample] = useState<'' | 'true' | 'false'>('');
   const [gap, setGap] = useState<Gap>('');
@@ -44,7 +44,7 @@ export function ItemsPage() {
   const [page, setPage] = useState(1);
 
   const languages = useQuery({ queryKey: ['admin', 'languages'], queryFn: adminApi.languages });
-  const categories = useQuery({ queryKey: ['admin', 'categories'], queryFn: adminApi.categories });
+  const topics = useQuery({ queryKey: ['admin', 'topics'], queryFn: adminApi.topics });
   // Every language, inactive ones too: "Missing Arabic meaning" helps prepare a new one (D-027).
   const allLangs = languages.data?.languages ?? [];
 
@@ -54,7 +54,7 @@ export function ItemsPage() {
     ...(q ? { q } : {}),
     ...(lang ? { lang } : {}),
     ...(type === 'word' || type === 'expr' ? { type } : {}),
-    ...(categoryId ? { categoryId: Number(categoryId) } : {}),
+    ...(topicId ? { topicId: Number(topicId) } : {}),
     ...(status === 'draft' || status === 'published' ? { status } : {}),
     ...(sample ? { inSampleSet: sample } : {}),
     ...(gap.startsWith('missing:') ? { missingTranslation: gap.slice(8) } : {}),
@@ -130,15 +130,15 @@ export function ItemsPage() {
             <option value="expr">{strings.types.expr}</option>
           </select>
         </Field>
-        <Field id={ids.cat} label={s.items.category}>
+        <Field id={ids.cat} label={s.items.topic}>
           <select
             id={ids.cat}
-            value={categoryId}
-            onChange={(e) => filter(setCategoryId)(e.target.value)}
+            value={topicId}
+            onChange={(e) => filter(setTopicId)(e.target.value)}
             className={inputClass}
           >
             <option value="">{s.common.all}</option>
-            {categories.data?.categories.map((c) => (
+            {topics.data?.topics.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
@@ -235,9 +235,9 @@ export function ItemsPage() {
                         {langName(item.lang)} · {strings.types[item.type]}
                       </span>
                     </p>
-                    {item.categories.length > 0 && (
+                    {item.topics.length > 0 && (
                       <p className="mt-1 text-xs text-muted">
-                        {item.categories.map((c) => c.name).join(' · ')}
+                        {item.topics.map((c) => c.name).join(' · ')}
                       </p>
                     )}
                   </div>

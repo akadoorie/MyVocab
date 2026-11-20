@@ -1,4 +1,4 @@
-import type { AdminCategory, AdminItem, AdminItemPatch, AdminLanguage } from '@myvocab/contracts';
+import type { AdminTopic, AdminItem, AdminItemPatch, AdminLanguage } from '@myvocab/contracts';
 import {
   isLiteralSameAsParallel,
   ITEM_LIMITS,
@@ -28,29 +28,29 @@ type Header = {
   multipleMeanings: boolean;
   status: 'draft' | 'published';
   inSampleSet: boolean;
-  categoryIds: number[];
+  topicIds: number[];
 };
 
 function useCatalog() {
   const languages = useQuery({ queryKey: ['admin', 'languages'], queryFn: adminApi.languages });
-  const categories = useQuery({ queryKey: ['admin', 'categories'], queryFn: adminApi.categories });
+  const topics = useQuery({ queryKey: ['admin', 'topics'], queryFn: adminApi.topics });
   return {
     languages: languages.data?.languages ?? [],
-    categories: categories.data?.categories ?? [],
-    ready: languages.isSuccess && categories.isSuccess,
+    topics: topics.data?.topics ?? [],
+    ready: languages.isSuccess && topics.isSuccess,
   };
 }
 
-/** Text, type, multiple meanings, status and categories (shared by "new" and "edit"). */
+/** Text, type, multiple meanings, status and topics (shared by "new" and "edit"). */
 function HeaderFields({
   value,
   onChange,
-  categories,
+  topics,
   errors,
 }: {
   value: Header;
   onChange: (next: Header) => void;
-  categories: AdminCategory[];
+  topics: AdminTopic[];
   errors: Record<string, string>;
 }) {
   const ids = { text: useId(), type: useId(), status: useId(), mm: useId(), sample: useId() };
@@ -127,10 +127,10 @@ function HeaderFields({
         </span>
       </label>
       <fieldset className="md:col-span-2">
-        <legend className="mb-2 text-sm text-muted">{s.editor.categories}</legend>
+        <legend className="mb-2 text-sm text-muted">{s.editor.topics}</legend>
         <div className="flex flex-wrap gap-2">
-          {categories.map((c) => {
-            const on = value.categoryIds.includes(c.id);
+          {topics.map((c) => {
+            const on = value.topicIds.includes(c.id);
             return (
               <button
                 key={c.id}
@@ -138,10 +138,10 @@ function HeaderFields({
                 aria-pressed={on}
                 onClick={() =>
                   set(
-                    'categoryIds',
+                    'topicIds',
                     on
-                      ? value.categoryIds.filter((id) => id !== c.id)
-                      : [...value.categoryIds, c.id].sort((a, b) => a - b),
+                      ? value.topicIds.filter((id) => id !== c.id)
+                      : [...value.topicIds, c.id].sort((a, b) => a - b),
                   )
                 }
                 className={`min-h-10 rounded-full border px-3 text-sm ${on ? 'border-accent bg-accent-strong text-[var(--on-color)]' : 'border-border text-muted hover:text-text'} ${c.isActive ? '' : 'opacity-60'}`}
@@ -161,7 +161,7 @@ export function NewItemPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const queryClient = useQueryClient();
-  const { languages, categories, ready } = useCatalog();
+  const { languages, topics, ready } = useCatalog();
   const active = languages.filter((l) => l.isActive);
   const langId = useId();
   const langNoteId = useId();
@@ -173,7 +173,7 @@ export function NewItemPage() {
     status: 'published',
     // New items start outside the sample set (D-038).
     inSampleSet: false,
-    categoryIds: [],
+    topicIds: [],
   });
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
@@ -237,7 +237,7 @@ export function NewItemPage() {
         <HeaderFields
           value={header}
           onChange={setHeader}
-          categories={categories}
+          topics={topics}
           errors={fieldErrors(error)}
         />
       </div>
@@ -288,7 +288,7 @@ export function ItemEditorPage() {
       key={itemQuery.data.itemId}
       item={itemQuery.data}
       languages={catalog.languages}
-      categories={catalog.categories}
+      topics={catalog.topics}
     />
   );
 }
@@ -300,18 +300,18 @@ function headerOf(item: AdminItem): Header {
     multipleMeanings: item.multipleMeanings,
     status: item.status,
     inSampleSet: item.inSampleSet,
-    categoryIds: item.categoryIds,
+    topicIds: item.topicIds,
   };
 }
 
 function Editor({
   item,
   languages,
-  categories,
+  topics,
 }: {
   item: AdminItem;
   languages: AdminLanguage[];
-  categories: AdminCategory[];
+  topics: AdminTopic[];
 }) {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -438,7 +438,7 @@ function Editor({
             <p className="mt-1 text-xs text-hint">{s.editor.inactiveLanguageNote(itemLang.name)}</p>
           )}
         </div>
-        <HeaderFields value={header} onChange={setHeader} categories={categories} errors={{}} />
+        <HeaderFields value={header} onChange={setHeader} topics={topics} errors={{}} />
         <div className="md:col-span-2">
           <Button3D disabled={!headerDirty || savingHeader} onClick={() => void saveHeader()}>
             {savingHeader ? s.common.saving : s.editor.saveHeader}

@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:test';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createContainer } from '../src/container';
-import { authed, categoryId, count, itemId, seedFixtures, setSetting, signIn } from './helpers';
+import { authed, topicId, count, itemId, seedFixtures, setSetting, signIn } from './helpers';
 
 let admin: { cookie: string; userId: string };
 
@@ -14,7 +14,7 @@ type Item = {
   itemId: number;
   version: number;
   text: string;
-  categoryIds: number[];
+  topicIds: number[];
   parallel: Record<string, string[]>;
   explanation: string[];
   hints: string[];
@@ -33,14 +33,14 @@ const auditActions = async () =>
   );
 
 describe('POST /api/admin/items', () => {
-  it('creates an item with categories, warnings and an audit entry', async () => {
-    const home = await categoryId('home');
+  it('creates an item with topics, warnings and an audit entry', async () => {
+    const home = await topicId('home');
     const res = await create({
       lang: 'en',
       text: '  new-sample  ',
       type: 'word',
       multipleMeanings: true,
-      categoryIds: [home],
+      topicIds: [home],
       meaning: { he: ['מילה-חדשה'] },
       hints: ['A synthetic hint.'],
     });
@@ -49,7 +49,7 @@ describe('POST /api/admin/items', () => {
     expect(item).toMatchObject({
       text: 'new-sample',
       version: 1,
-      categoryIds: [home],
+      topicIds: [home],
       playableTargets: ['he'],
     });
     expect(item.warnings.map((w) => w.code).sort()).toEqual([
@@ -61,10 +61,10 @@ describe('POST /api/admin/items', () => {
     expect(audit).toEqual({ entity_id: String(item.itemId), actor_user_id: admin.userId });
   });
 
-  it('rejects same-language translations, unknown categories and duplicates', async () => {
+  it('rejects same-language translations, unknown topics and duplicates', async () => {
     const base = { lang: 'en', text: 'another', type: 'word' };
     expect((await create({ ...base, parallel: { en: ['x'] } })).status).toBe(400);
-    expect((await create({ ...base, categoryIds: [9999] })).status).toBe(400);
+    expect((await create({ ...base, topicIds: [9999] })).status).toBe(400);
     expect((await create({ ...base, text: 'x'.repeat(201) })).status).toBe(400);
     const dup = await create({ ...base, text: 'FX-WORD-1' });
     expect(dup.status).toBe(409);
@@ -147,22 +147,22 @@ describe('PATCH /api/admin/items/:id (optimistic concurrency)', () => {
 
   it('a stale version gets 409 and writes nothing, even after another edit bumped the version', async () => {
     const id = await itemId('fx-word-1');
-    const nature = await categoryId('nature');
+    const nature = await topicId('nature');
     // Someone else's edit: version 1 → 2.
     expect((await patch(id, { version: 1, explanation: ['Changed elsewhere'] })).status).toBe(200);
     await env.DB.prepare('DELETE FROM audit_log').run();
-    const stale = await patch(id, { version: 1, categoryIds: [nature], hints: ['Mine'] });
+    const stale = await patch(id, { version: 1, topicIds: [nature], hints: ['Mine'] });
     expect(stale.status).toBe(409);
     expect(await stale.json()).toMatchObject({ error: { details: { reason: 'stale' } } });
     const item = await getItem(id);
     expect(item).toMatchObject({ version: 2, hints: ['Hint one.'] });
-    expect(item.categoryIds).toEqual([await categoryId('home')]);
+    expect(item.topicIds).toEqual([await topicId('home')]);
     expect(await count('audit_log')).toBe(0);
   });
 
   it('the repository refuses a stale version inside the batch (race after the read)', async () => {
     const id = await itemId('fx-word-1');
-    const nature = await categoryId('nature');
+    const nature = await topicId('nature');
     // Simulate a concurrent edit between the service's read and its write.
     await env.DB.prepare('UPDATE items SET version = 2 WHERE id = ?').bind(id).run();
     const { D1AdminItemRepository } = await import('../src/repositories/d1/admin-items');
@@ -179,10 +179,10 @@ describe('PATCH /api/admin/items/:id (optimistic concurrency)', () => {
     );
     expect(applied).toBe(false);
     expect(await count('audit_log')).toBe(0);
-    const links = await env.DB.prepare('SELECT category_id FROM item_categories WHERE item_id = ?')
+    const links = await env.DB.prepare('SELECT topic_id FROM item_topics WHERE item_id = ?')
       .bind(id)
       .all();
-    expect(links.results.map((r) => r.category_id)).toEqual([await categoryId('home')]);
+    expect(links.results.map((r) => r.topic_id)).toEqual([await topicId('home')]);
   });
 
   it('never accepts lang, validates the merged item and refuses duplicates', async () => {
@@ -202,11 +202,11 @@ describe('PATCH /api/admin/items/:id (optimistic concurrency)', () => {
     expect(await count('audit_log')).toBe(0);
   });
 
-  it('changes categories and status', async () => {
+  it('changes topics and status', async () => {
     const id = await itemId('fx-word-1');
-    const nature = await categoryId('nature');
-    const res = await patch(id, { version: 1, categoryIds: [nature], status: 'draft' });
-    expect(await res.json()).toMatchObject({ categoryIds: [nature], status: 'draft', version: 2 });
+    const nature = await topicId('nature');
+    const res = await patch(id, { version: 1, topicIds: [nature], status: 'draft' });
+    expect(await res.json()).toMatchObject({ topicIds: [nature], status: 'draft', version: 2 });
   });
 });
 
@@ -289,7 +289,7 @@ describe('Trash (FR-A20–24)', () => {
     expect(JSON.parse(snapshot!.details).snapshot).toMatchObject({
       itemId: id,
       text: 'fx-word-1',
-      categories: ['home'],
+      topics: ['home'],
       meaning: { he: ['מילה-1'] },
     });
   });
@@ -315,9 +315,7 @@ describe('Trash (FR-A20–24)', () => {
       (await req(`/admin/trash/${id}`, { method: 'DELETE', json: { confirm: 'PURGE' } })).status,
     ).toBe(200);
     expect(await count('user_known_items')).toBe(0);
-    const links = await env.DB.prepare(
-      'SELECT COUNT(*) AS n FROM item_categories WHERE item_id = ?',
-    )
+    const links = await env.DB.prepare('SELECT COUNT(*) AS n FROM item_topics WHERE item_id = ?')
       .bind(id)
       .first<{ n: number }>();
     expect(links?.n).toBe(0);

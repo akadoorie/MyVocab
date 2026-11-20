@@ -29,7 +29,7 @@ describe('DELETE /api/me (FR-L71)', () => {
     });
     await authed(cookie, '/loops', {
       method: 'POST',
-      json: { source: 'en', target: 'he', type: 'word', categoryId: null, size: 10 },
+      json: { source: 'en', target: 'he', type: 'word', topicId: null, size: 10 },
     });
     expect(await count('usage_counters')).toBe(1);
 
@@ -63,7 +63,7 @@ describe('DELETE /api/me (FR-L71)', () => {
 });
 
 describe('POST /api/loops (signed-in learner)', () => {
-  const body = { source: 'en', target: 'he', type: 'word', categoryId: null };
+  const body = { source: 'en', target: 'he', type: 'word', topicId: null };
 
   it('accepts the amounts from the settings without Turnstile and excludes known items', async () => {
     const fetchSpy = mockTurnstile(false);

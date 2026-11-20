@@ -9,7 +9,7 @@ import { CsvSyntaxError, parseCsv, serializeCsv } from './rfc4180';
 import { csvHeader, serializeItemsCsv, type ExportItem } from './serialize-items';
 
 const HEADER =
-  'lang,text,type,multiple_meanings,categories,translation_he,translation_en,explanation,synonyms,hints,status';
+  'lang,text,type,multiple_meanings,topics,translation_he,translation_en,explanation,synonyms,hints,status';
 const SWIFT =
   'en,Swift,word,true,,מהיר|סנונית,,"Moving or able to move very fast|A small bird that flies very fast",fast|quick|rapid,"He gave a swift reply.|A swift nested under the roof.",published';
 const MAHIR =
@@ -19,8 +19,8 @@ const opts = { languages: LANGS };
 const emptyCtx = (over: Partial<PlanContext> = {}): PlanContext => ({
   languages: LANGS,
   existing: new Map(),
-  knownCategories: new Set(['home', 'food']),
-  createMissingCategories: false,
+  knownTopics: new Set(['home', 'food']),
+  createMissingTopics: false,
   ...over,
 });
 
@@ -90,7 +90,7 @@ describe('parseImportCsv', () => {
     expect(r.rows[0]).toMatchObject({
       row: 2,
       status: 'published',
-      categories: [],
+      topics: [],
       content: {
         lang: 'en',
         text: 'Swift',
@@ -219,7 +219,7 @@ en,sample expression,expr,מקבילה-1,משמעות-1|משמעות-2,מילו�
     expect(r.errors.map((e) => `${e.row}:${e.column}`)).toEqual([
       '2:multiple_meanings',
       '2:status',
-      '2:categories',
+      '2:topics',
       '2:type',
       '3:lang',
       '4:lang',
@@ -231,6 +231,22 @@ en,sample expression,expr,מקבילה-1,משמעות-1|משמעות-2,מילו�
     const r = parseImportCsv(`${HEADER}\nen,Swift,word,,,מהיר|מהיר,,,,,`, opts);
     expect(r.errors).toEqual([
       { row: 2, column: 'translation_he', message: 'Duplicate entry "מהיר"' },
+    ]);
+  });
+
+  it('reads the old column name "categories" as "topics" (D-039)', () => {
+    const r = parseImportCsv(
+      'lang,text,type,categories,explanation\nen,a,word,home|nature,x',
+      opts,
+    );
+    expect(r.errors).toEqual([]);
+    expect(r.rows[0]?.topics).toEqual(['home', 'nature']);
+    const both = parseImportCsv(
+      'lang,text,type,categories,topics,explanation\nen,a,word,,,x',
+      opts,
+    );
+    expect(both.errors).toEqual([
+      { row: 1, column: 'topics', message: 'Duplicate column "topics"' },
     ]);
   });
 
@@ -246,7 +262,7 @@ en,sample expression,expr,מקבילה-1,משמעות-1|משמעות-2,מילו�
 function existingSwift(over: Partial<ItemContent> = {}, inSampleSet = false): ExistingItem {
   return {
     id: 7,
-    categories: ['home'],
+    topics: ['home'],
     inSampleSet,
     content: {
       lang: 'en',
@@ -272,7 +288,7 @@ describe('planImport', () => {
     expect(plan.creates).toEqual([
       {
         content: expect.objectContaining({ text: 'Cat', explanation: ['A small pet'] }),
-        categories: [],
+        topics: [],
         status: 'published',
         inSampleSet: false,
         rows: [2],
@@ -374,12 +390,12 @@ en,Swift,word,,זריז`;
   });
 
   it('merges rows of the same item within one file (first status wins)', () => {
-    const csv = `lang,text,type,categories,translation_he,status\nen,Swift,word,home,מהיר,\nen,swift!,word,food,סנונית,draft\nen,SWIFT,word,,מהיר,published`;
+    const csv = `lang,text,type,topics,translation_he,status\nen,Swift,word,home,מהיר,\nen,swift!,word,food,סנונית,draft\nen,SWIFT,word,,מהיר,published`;
     const plan = planImport(parseImportCsv(csv, opts).rows, emptyCtx());
     expect(plan.creates).toHaveLength(1);
     expect(plan.creates[0]).toMatchObject({
       content: { text: 'Swift', meaning: { he: ['מהיר', 'סנונית'] } },
-      categories: ['home', 'food'],
+      topics: ['home', 'food'],
       status: 'draft',
       rows: [2, 3, 4],
     });
@@ -404,32 +420,32 @@ en,Swift,word,,זריז`;
     expect(planImport(rows, emptyCtx({ existing })).errors).toEqual([]);
   });
 
-  it('reports unknown categories, or plans them when "create missing" is ticked', () => {
+  it('reports unknown topics, or plans them when "create missing" is ticked', () => {
     const rows = parseImportCsv(
-      'lang,text,type,categories,explanation\nen,Cat,word,pets|home,x',
+      'lang,text,type,topics,explanation\nen,Cat,word,pets|home,x',
       opts,
     ).rows;
     expect(planImport(rows, emptyCtx()).errors).toEqual([
       {
         row: 2,
-        column: 'categories',
-        message: 'Unknown category "pets" (tick "Create missing categories" to add it)',
+        column: 'topics',
+        message: 'Unknown topic "pets" (tick "Create missing topics" to add it)',
       },
     ]);
-    const plan = planImport(rows, emptyCtx({ createMissingCategories: true }));
+    const plan = planImport(rows, emptyCtx({ createMissingTopics: true }));
     expect(plan.errors).toEqual([]);
-    expect(plan.newCategories).toEqual(['pets']);
-    expect(plan.totals.newCategories).toBe(1);
-    expect(plan.creates[0]?.categories).toEqual(['pets', 'home']);
+    expect(plan.newTopics).toEqual(['pets']);
+    expect(plan.totals.newTopics).toBe(1);
+    expect(plan.creates[0]?.topics).toEqual(['pets', 'home']);
   });
 
-  it('adds new categories to existing items', () => {
+  it('adds new topics to existing items', () => {
     const rows = parseImportCsv(
-      'lang,text,type,categories,explanation\nen,Swift,word,food|home,x',
+      'lang,text,type,topics,explanation\nen,Swift,word,food|home,x',
       opts,
     ).rows;
     const existing = new Map([[itemIdentityKey('en', 'Swift', 'word'), existingSwift()]]);
-    expect(planImport(rows, emptyCtx({ existing })).updates[0]?.categoriesToAdd).toEqual(['food']);
+    expect(planImport(rows, emptyCtx({ existing })).updates[0]?.topicsToAdd).toEqual(['food']);
   });
 
   it('reports lists that become too long after merging', () => {
@@ -484,7 +500,7 @@ describe('serializeItemsCsv (round trip)', () => {
         synonyms: ['fast', 'quick'],
         hints: ['He gave a swift reply.'],
       },
-      categories: ['nature', 'home'],
+      topics: ['nature', 'home'],
       status: 'published',
       inSampleSet: true,
     },
@@ -501,7 +517,7 @@ describe('serializeItemsCsv (round trip)', () => {
         synonyms: [],
         hints: [],
       },
-      categories: [],
+      topics: [],
       status: 'draft',
       inSampleSet: false,
     },
@@ -513,7 +529,7 @@ describe('serializeItemsCsv (round trip)', () => {
       'text',
       'type',
       'multiple_meanings',
-      'categories',
+      'topics',
       'translation_meaning_en',
       'translation_meaning_he',
       'translation_parallel_en',
@@ -540,16 +556,16 @@ describe('serializeItemsCsv (round trip)', () => {
     expect(parsed.errors).toEqual([]);
     const plan = planImport(
       parsed.rows,
-      emptyCtx({ knownCategories: new Set(), createMissingCategories: true }),
+      emptyCtx({ knownTopics: new Set(), createMissingTopics: true }),
     );
     expect(plan.errors).toEqual([]);
     expect(
       plan.creates.map((c) => ({
         content: c.content,
-        categories: c.categories,
+        topics: c.topics,
         status: c.status,
         inSampleSet: c.inSampleSet,
       })),
-    ).toEqual(items.map((i) => ({ ...i, categories: [...i.categories] })));
+    ).toEqual(items.map((i) => ({ ...i, topics: [...i.topics] })));
   });
 });

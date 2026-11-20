@@ -37,11 +37,11 @@ function whereClause(s: LoopSelection): SQL {
     AND ${answer} ${known} ${sample}`;
 }
 
-/** With a category, start from its links so only that category's items are read. */
+/** With a topic, start from its links so only that topic's items are read. */
 function fromClause(s: LoopSelection): SQL {
-  return s.categoryId === null
+  return s.topicId === null
     ? sql`FROM items AS i`
-    : sql`FROM item_categories AS ic JOIN items AS i ON i.id = ic.item_id AND ic.category_id = ${s.categoryId}`;
+    : sql`FROM item_topics AS ic JOIN items AS i ON i.id = ic.item_id AND ic.topic_id = ${s.topicId}`;
 }
 
 export class D1LoopRepository implements LoopRepository {

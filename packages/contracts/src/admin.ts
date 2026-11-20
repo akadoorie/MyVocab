@@ -28,7 +28,7 @@ export const adminItemCreateSchema = z
     status: itemStatusSchema.optional(),
     /** In the sample set guests play (D-038); new items default to false. */
     inSampleSet: z.boolean().optional(),
-    categoryIds: z.array(itemIdSchema).max(100).optional(),
+    topicIds: z.array(itemIdSchema).max(100).optional(),
     parallel: rawTranslation.optional(),
     meaning: rawTranslation.optional(),
     literal: rawTranslation.optional(),
@@ -52,7 +52,7 @@ export const adminItemPatchSchema = z
     status: itemStatusSchema.optional(),
     /** In the sample set guests play (D-038); new items default to false. */
     inSampleSet: z.boolean().optional(),
-    categoryIds: z.array(itemIdSchema).max(100).optional(),
+    topicIds: z.array(itemIdSchema).max(100).optional(),
     parallel: rawTranslation.optional(),
     meaning: rawTranslation.optional(),
     literal: rawTranslation.optional(),
@@ -77,8 +77,8 @@ export const adminItemSchema = z.object({
   type: itemTypeSchema,
   lang: langCodeSchema,
   multipleMeanings: z.boolean(),
-  categoryIds: z.array(z.number().int()),
-  categories: z.array(z.string()),
+  topicIds: z.array(z.number().int()),
+  topics: z.array(z.string()),
   parallel: z.record(z.string(), z.array(z.string())),
   meaning: z.record(z.string(), z.array(z.string())),
   literal: z.record(z.string(), z.array(z.string())),
@@ -105,7 +105,7 @@ export const adminItemListQuerySchema = z
     q: z.string().trim().max(100).optional(),
     lang: langCodeSchema.optional(),
     type: itemTypeSchema.optional(),
-    categoryId: z.coerce.number().int().positive().optional(),
+    topicId: z.coerce.number().int().positive().optional(),
     status: itemStatusSchema.optional(),
     multipleMeanings: flag.optional(),
     inSampleSet: flag.optional(),
@@ -127,7 +127,7 @@ export const adminItemRowSchema = z.object({
   dir: dirSchema,
   type: itemTypeSchema,
   multipleMeanings: z.boolean(),
-  categories: z.array(z.object({ id: z.number().int(), name: z.string() })),
+  topics: z.array(z.object({ id: z.number().int(), name: z.string() })),
   translationCounts: z.record(z.string(), z.number().int()),
   explanationCount: z.number().int(),
   synonymCount: z.number().int(),
@@ -168,16 +168,16 @@ export const trashListResponseSchema = z.object({
 export const purgeRequestSchema = z.object({ confirm: z.literal('PURGE') }).strict();
 
 // ---------------------------------------------------------------------------------------------
-// Categories (FR-A30), languages (FR-A35)
+// Topics (FR-A30), languages (FR-A35)
 // ---------------------------------------------------------------------------------------------
 
-export const categorySlugSchema = z
+export const topicSlugSchema = z
   .string()
   .max(50)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use lowercase letters, digits and dashes');
-const categoryName = z.string().trim().min(1).max(60);
+const topicName = z.string().trim().min(1).max(60);
 
-export const adminCategorySchema = z.object({
+export const adminTopicSchema = z.object({
   id: z.number().int(),
   slug: z.string(),
   name: z.string(),
@@ -185,21 +185,19 @@ export const adminCategorySchema = z.object({
   sortOrder: z.number().int(),
   itemCount: z.number().int(),
 });
-export type AdminCategory = z.infer<typeof adminCategorySchema>;
-export const adminCategoryListSchema = z.object({ categories: z.array(adminCategorySchema) });
-export const categoryCreateSchema = z
-  .object({ slug: categorySlugSchema, name: categoryName, isActive: z.boolean().optional() })
+export type AdminTopic = z.infer<typeof adminTopicSchema>;
+export const adminTopicListSchema = z.object({ topics: z.array(adminTopicSchema) });
+export const topicCreateSchema = z
+  .object({ slug: topicSlugSchema, name: topicName, isActive: z.boolean().optional() })
   .strict();
-export const categoryPatchSchema = z
+export const topicPatchSchema = z
   .object({
-    slug: categorySlugSchema.optional(),
-    name: categoryName.optional(),
+    slug: topicSlugSchema.optional(),
+    name: topicName.optional(),
     isActive: z.boolean().optional(),
   })
   .strict();
-export const categoryOrderSchema = z
-  .object({ ids: z.array(itemIdSchema).min(1).max(500) })
-  .strict();
+export const topicOrderSchema = z.object({ ids: z.array(itemIdSchema).min(1).max(500) }).strict();
 
 export const adminLanguageSchema = z.object({
   code: langCodeSchema,
@@ -345,7 +343,7 @@ export const IMPORT_MAX_FILE_BYTES = 2 * 1024 * 1024;
 export const importQuerySchema = z
   .object({
     dryRun: flag.default(true),
-    createMissingCategories: flag.default(false),
+    createMissingTopics: flag.default(false),
   })
   .strict();
 
@@ -365,7 +363,7 @@ export const importReportSchema = z.object({
       newExplanationEntries: z.number().int(),
       newSynonyms: z.number().int(),
       newHints: z.number().int(),
-      newCategories: z.number().int(),
+      newTopics: z.number().int(),
       skippedDuplicates: z.number().int(),
       sampleSetChanges: z.number().int(),
     })

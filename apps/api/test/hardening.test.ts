@@ -72,7 +72,7 @@ describe('burst limits (PRD §14.3)', () => {
         source: 'en',
         target: 'he',
         type: 'word',
-        categoryId: null,
+        topicId: null,
         turnstileToken: 't',
       }),
     });
@@ -126,7 +126,7 @@ describe('write discipline (PRD §11.2)', () => {
         `/admin/items/${id}`,
         `/admin/items/${id}/preview`,
         '/admin/trash',
-        '/admin/categories',
+        '/admin/topics',
         '/admin/languages',
         '/admin/users',
         '/admin/settings',
@@ -152,7 +152,7 @@ describe('write discipline (PRD §11.2)', () => {
         source: 'en',
         target: 'he',
         type: 'word',
-        categoryId: null,
+        topicId: null,
         turnstileToken: 'x',
       }),
       await postJson('/me/known', { items: [{ itemId: 1, target: 'he', cycle: 1 }] }),
@@ -174,7 +174,7 @@ describe('write discipline (PRD §11.2)', () => {
     expect(await count()).toBe(0);
     const res = await authed(learner.cookie, '/loops', {
       method: 'POST',
-      json: { source: 'en', target: 'he', type: 'word', categoryId: null, size: 10 },
+      json: { source: 'en', target: 'he', type: 'word', topicId: null, size: 10 },
     });
     expect(res.status).toBe(200);
     expect(await count()).toBe(1);

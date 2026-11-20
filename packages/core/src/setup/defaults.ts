@@ -10,7 +10,7 @@ export type StartChoices = {
   sourceLang: LangCode;
   targetLang: LangCode;
   /** null = General (all items). */
-  categoryId: number | null;
+  topicId: number | null;
   type: ItemType;
   size: number;
   /** Admins only: play the sample set guests get (D-038). Guests always get it. */
@@ -21,7 +21,7 @@ export type StartSettings = {
   defaults: {
     sourceLang: LangCode;
     targetLang: LangCode;
-    categoryId: number | null;
+    topicId: number | null;
     type: ItemType;
   };
   sizeOptions: readonly number[];
@@ -33,20 +33,20 @@ export type StartContext = {
   settings: StartSettings;
   /** Active language codes, in display order. */
   activeLanguages: readonly LangCode[];
-  activeCategoryIds: readonly number[];
+  activeTopicIds: readonly number[];
   isGuest: boolean;
 };
 
 export function resolveStartDefaults(ctx: StartContext): StartChoices {
-  const { settings, activeLanguages, activeCategoryIds, isGuest } = ctx;
+  const { settings, activeLanguages, activeTopicIds, isGuest } = ctx;
   const first = activeLanguages[0];
   if (first === undefined) throw new Error('No active languages');
   const pick = (code: LangCode) => (activeLanguages.includes(code) ? code : first);
-  const { categoryId } = settings.defaults;
+  const { topicId } = settings.defaults;
   return {
     sourceLang: pick(settings.defaults.sourceLang),
     targetLang: pick(settings.defaults.targetLang),
-    categoryId: categoryId !== null && activeCategoryIds.includes(categoryId) ? categoryId : null,
+    topicId: topicId !== null && activeTopicIds.includes(topicId) ? topicId : null,
     type: settings.defaults.type,
     size: isGuest ? settings.guestLoopSize : resolveSize(settings),
   };

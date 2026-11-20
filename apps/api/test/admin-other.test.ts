@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:test';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { api, authed, categoryId, count, itemId, seedFixtures, signIn } from './helpers';
+import { api, authed, topicId, count, itemId, seedFixtures, signIn } from './helpers';
 
 let admin: { cookie: string; userId: string };
 
@@ -16,9 +16,9 @@ const actions = async () =>
     (r) => r.action,
   );
 
-describe('categories (FR-A30)', () => {
+describe('topics (FR-A30)', () => {
   it('creates, renames, deactivates and reorders, each audited', async () => {
-    const created = await req('/admin/categories', {
+    const created = await req('/admin/topics', {
       method: 'POST',
       json: { slug: 'food-drink', name: 'Food & drink' },
     });
@@ -26,44 +26,44 @@ describe('categories (FR-A30)', () => {
     const cat = await created.json<{ id: number; sortOrder: number; itemCount: number }>();
     expect(cat).toMatchObject({ itemCount: 0, isActive: true });
 
-    const renamed = await req(`/admin/categories/${cat.id}`, {
+    const renamed = await req(`/admin/topics/${cat.id}`, {
       method: 'PATCH',
       json: { name: 'Food', isActive: false },
     });
     expect(await renamed.json()).toMatchObject({ name: 'Food', isActive: false });
-    const meta = await (await api('/meta')).json<{ categories: { slug: string }[] }>();
-    expect(meta.categories.map((c) => c.slug)).not.toContain('food-drink');
+    const meta = await (await api('/meta')).json<{ topics: { slug: string }[] }>();
+    expect(meta.topics.map((c) => c.slug)).not.toContain('food-drink');
 
-    const home = await categoryId('home');
-    const order = await req('/admin/categories/order', {
+    const home = await topicId('home');
+    const order = await req('/admin/topics/order', {
       method: 'PUT',
       json: { ids: [cat.id, home] },
     });
-    const list = await order.json<{ categories: { id: number }[] }>();
-    expect(list.categories[0]?.id).toBe(cat.id);
-    expect(await actions()).toEqual(['category.create', 'category.update', 'category.reorder']);
+    const list = await order.json<{ topics: { id: number }[] }>();
+    expect(list.topics[0]?.id).toBe(cat.id);
+    expect(await actions()).toEqual(['topic.create', 'topic.update', 'topic.reorder']);
   });
 
-  it('validates slugs, refuses duplicates and blocks deleting a category in use', async () => {
-    const bad = await req('/admin/categories', {
+  it('validates slugs, refuses duplicates and blocks deleting a topic in use', async () => {
+    const bad = await req('/admin/topics', {
       method: 'POST',
       json: { slug: 'Bad Slug', name: 'x' },
     });
     expect(bad.status).toBe(400);
-    const dup = await req('/admin/categories', {
+    const dup = await req('/admin/topics', {
       method: 'POST',
       json: { slug: 'home', name: 'x' },
     });
     expect(dup.status).toBe(409);
-    const home = await categoryId('home');
-    const inUse = await req(`/admin/categories/${home}`, { method: 'DELETE' });
+    const home = await topicId('home');
+    const inUse = await req(`/admin/topics/${home}`, { method: 'DELETE' });
     expect(inUse.status).toBe(409);
     expect(await inUse.json()).toMatchObject({ error: { details: { reason: 'in_use' } } });
 
     const empty = await (
-      await req('/admin/categories', { method: 'POST', json: { slug: 'empty', name: 'Empty' } })
+      await req('/admin/topics', { method: 'POST', json: { slug: 'empty', name: 'Empty' } })
     ).json<{ id: number }>();
-    expect((await req(`/admin/categories/${empty.id}`, { method: 'DELETE' })).status).toBe(200);
+    expect((await req(`/admin/topics/${empty.id}`, { method: 'DELETE' })).status).toBe(200);
   });
 });
 
@@ -291,7 +291,7 @@ describe('settings (FR-A50)', () => {
       { 'loop.defaultSize': 15 },
       { 'defaults.sourceLang': 'fr' },
       { 'loop.sizeOptions': [10, 100] },
-      { 'defaults.categoryId': 9999 },
+      { 'defaults.topicId': 9999 },
       { 'undo.windowSeconds': 99 },
       { unknown: 1 },
     ];
@@ -326,18 +326,18 @@ describe('settings (FR-A50)', () => {
 describe('audit log (FR-A70–71) and dashboard (FR-A1)', () => {
   it('lists entries newest first with filters and a cursor; nothing can change them', async () => {
     for (let i = 0; i < 3; i++) {
-      await req('/admin/categories', { method: 'POST', json: { slug: `c-${i}`, name: `C ${i}` } });
+      await req('/admin/topics', { method: 'POST', json: { slug: `c-${i}`, name: `C ${i}` } });
     }
     await req('/admin/languages/he', { method: 'PATCH', json: { isActive: false } });
     type Page = { entries: { id: number; action: string }[]; nextCursor: number | null };
     const all = await (await req('/admin/audit')).json<Page>();
     expect(all.entries.map((e) => e.action)).toEqual([
       'language.update',
-      'category.create',
-      'category.create',
-      'category.create',
+      'topic.create',
+      'topic.create',
+      'topic.create',
     ]);
-    const cats = await (await req('/admin/audit?action=category.')).json<Page>();
+    const cats = await (await req('/admin/audit?action=topic.')).json<Page>();
     expect(cats.entries).toHaveLength(3);
     const byType = await (await req('/admin/audit?entityType=language')).json<Page>();
     expect(byType.entries).toHaveLength(1);

@@ -5,7 +5,7 @@ import { itemTypeSchema } from './common';
 export const settingsSchema = z.object({
   'defaults.sourceLang': z.string().default('en'),
   'defaults.targetLang': z.string().default('he'),
-  'defaults.categoryId': z.number().int().positive().nullable().default(null),
+  'defaults.topicId': z.number().int().positive().nullable().default(null),
   'defaults.type': itemTypeSchema.default('word'),
   'loop.sizeOptions': z
     .array(z.number().int().min(1).max(200))

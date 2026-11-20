@@ -1,6 +1,6 @@
 import {
-  adminCategoryListSchema,
-  adminCategorySchema,
+  adminTopicListSchema,
+  adminTopicSchema,
   adminItemListResponseSchema,
   adminItemSchema,
   adminLanguageListSchema,
@@ -93,14 +93,14 @@ export const adminApi = {
   restore: (id: number) => adminRequest(`/trash/${id}/restore`, ok, json('POST', {})),
   purge: (id: number) => adminRequest(`/trash/${id}`, ok, json('DELETE', { confirm: 'PURGE' })),
 
-  categories: () => adminRequest('/categories', adminCategoryListSchema),
-  createCategory: (body: { slug: string; name: string }) =>
-    adminRequest('/categories', adminCategorySchema, json('POST', body)),
-  patchCategory: (id: number, body: { slug?: string; name?: string; isActive?: boolean }) =>
-    adminRequest(`/categories/${id}`, adminCategorySchema, json('PATCH', body)),
-  deleteCategory: (id: number) => adminRequest(`/categories/${id}`, ok, { method: 'DELETE' }),
-  reorderCategories: (ids: number[]) =>
-    adminRequest('/categories/order', adminCategoryListSchema, json('PUT', { ids })),
+  topics: () => adminRequest('/topics', adminTopicListSchema),
+  createTopic: (body: { slug: string; name: string }) =>
+    adminRequest('/topics', adminTopicSchema, json('POST', body)),
+  patchTopic: (id: number, body: { slug?: string; name?: string; isActive?: boolean }) =>
+    adminRequest(`/topics/${id}`, adminTopicSchema, json('PATCH', body)),
+  deleteTopic: (id: number) => adminRequest(`/topics/${id}`, ok, { method: 'DELETE' }),
+  reorderTopics: (ids: number[]) =>
+    adminRequest('/topics/order', adminTopicListSchema, json('PUT', { ids })),
 
   languages: () => adminRequest('/languages', adminLanguageListSchema),
   setLanguageActive: (code: string, isActive: boolean) =>
@@ -122,7 +122,7 @@ export const adminApi = {
   audit: (q: AuditQuery) => adminRequest(`/audit${query(q)}`, auditListResponseSchema),
 
   /** Multipart upload (the browser sets the boundary). */
-  importCsv: (file: File, options: { dryRun: boolean; createMissingCategories: boolean }) => {
+  importCsv: (file: File, options: { dryRun: boolean; createMissingTopics: boolean }) => {
     const form = new FormData();
     form.append('file', file);
     return adminRequest(`/import${query(options)}`, importReportSchema, {

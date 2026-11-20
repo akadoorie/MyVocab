@@ -5,12 +5,12 @@ import { dirSchema as dir, itemTypeSchema, langCodeSchema as langCode } from './
 /** GET /api/meta (PRD §12.1). */
 export const metaResponseSchema = z.object({
   languages: z.array(z.object({ code: langCode, name: z.string(), nativeName: z.string(), dir })),
-  categories: z.array(z.object({ id: z.number().int(), slug: z.string(), name: z.string() })),
+  topics: z.array(z.object({ id: z.number().int(), slug: z.string(), name: z.string() })),
   types: z.array(z.object({ id: itemTypeSchema, label: z.string() })),
   defaults: z.object({
     sourceLang: langCode,
     targetLang: langCode,
-    categoryId: z.number().int().nullable(),
+    topicId: z.number().int().nullable(),
     type: itemTypeSchema,
     size: z.number().int(),
   }),
@@ -34,7 +34,7 @@ export const availableQuerySchema = z
     source: langCode,
     target: langCode,
     type: itemTypeSchema,
-    categoryId: z.coerce.number().int().positive().optional(),
+    topicId: z.coerce.number().int().positive().optional(),
     /** Only the sample set (D-038): forced for guests; admins may ask for it to check the set. */
     sample: z.enum(['true', 'false']).optional(),
   })
@@ -50,7 +50,7 @@ export const startLoopRequestSchema = z
     source: langCode,
     target: langCode,
     type: itemTypeSchema,
-    categoryId: z.number().int().positive().nullable(),
+    topicId: z.number().int().positive().nullable(),
     size: z.number().int().positive().max(1000).optional(),
     /** Only the sample set (D-038): forced for guests; admins may ask for it. */
     sample: z.boolean().optional(),

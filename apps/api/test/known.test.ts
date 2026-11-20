@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:test';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { api, authed, categoryId, count, itemId, postJson, seedFixtures, signIn } from './helpers';
+import { api, authed, topicId, count, itemId, postJson, seedFixtures, signIn } from './helpers';
 
 type ListBody = {
   items: {
@@ -10,7 +10,7 @@ type ListBody = {
     knownInCycle: number;
     knownAt: number;
     answer: { kind: string; lines: string[]; numbered: boolean; lang: string; dir: string };
-    categories: { id: number; name: string }[];
+    topics: { id: number; name: string }[];
   }[];
   nextCursor: string | null;
   total: number | null;
@@ -59,13 +59,12 @@ describe('POST /api/me/known', () => {
     expect(after.items).toHaveLength(1);
     expect(after.items[0]).toMatchObject({ knownTarget: 'he', knownInCycle: 1 });
     expect(after.items[0]?.knownAt).toBe(before.items[0]?.knownAt);
-    // The same item in another direction is a mark of its own: two rows, categories once each.
+    // The same item in another direction is a mark of its own: two rows, topics once each.
     const other = await mark(cookie, [{ itemId: id, target: 'en', cycle: 2 }]);
     expect(await other.json()).toEqual({ saved: 1 });
     const rows = (await list(cookie)).items;
     expect(rows.map((i) => i.knownTarget).sort()).toEqual(['en', 'he']);
-    for (const row of rows)
-      expect(row.categories).toEqual([{ id: expect.any(Number), name: 'Home' }]);
+    for (const row of rows) expect(row.topics).toEqual([{ id: expect.any(Number), name: 'Home' }]);
   });
 
   it('skips missing and trashed items and duplicates within a batch', async () => {
@@ -237,7 +236,7 @@ describe('DELETE /api/me/known/:itemId and restore', () => {
 });
 
 describe('GET /api/me/known (FR-L60–63)', () => {
-  it('shows the answer in the marked direction, categories and the cycle', async () => {
+  it('shows the answer in the marked direction, topics and the cycle', async () => {
     const { cookie } = await signIn();
     await mark(cookie, [
       { itemId: await itemId('fx-word-2'), target: 'he', cycle: 2 },
@@ -251,7 +250,7 @@ describe('GET /api/me/known (FR-L60–63)', () => {
       knownTarget: 'en',
       knownInCycle: 1,
       answer: { kind: 'explanation', lines: ['Explanation one'], numbered: false, dir: 'ltr' },
-      categories: [{ name: 'Home' }],
+      topics: [{ name: 'Home' }],
     });
     expect(items[1]).toMatchObject({
       knownInCycle: 2,
@@ -259,7 +258,7 @@ describe('GET /api/me/known (FR-L60–63)', () => {
     });
   });
 
-  it('searches text and translations, filters by language, type and category', async () => {
+  it('searches text and translations, filters by language, type and topic', async () => {
     const { cookie } = await signIn();
     const texts = ['fx-word-1', 'fx-word-3', 'fx-expr-1', 'מילה-א'];
     for (const t of texts) {
@@ -276,7 +275,7 @@ describe('GET /api/me/known (FR-L60–63)', () => {
     expect(await names('?lang=en&target=he')).toEqual(['fx-expr-1', 'fx-word-1', 'fx-word-3']);
     expect(await names('?target=en')).toEqual(['מילה-א']);
     expect(await names('?type=expr')).toEqual(['fx-expr-1']);
-    expect(await names(`?categoryId=${await categoryId('nature')}`)).toEqual(['fx-word-3']);
+    expect(await names(`?topicId=${await topicId('nature')}`)).toEqual(['fx-word-3']);
     expect((await authed(cookie, '/me/known?sort=random')).status).toBe(400);
   });
 

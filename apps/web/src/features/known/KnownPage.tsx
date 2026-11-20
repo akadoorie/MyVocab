@@ -50,7 +50,7 @@ function KnownList() {
     search: useId(),
     direction: useId(),
     type: useId(),
-    category: useId(),
+    topic: useId(),
     sort: useId(),
   };
 
@@ -58,7 +58,7 @@ function KnownList() {
   /** "from:to", e.g. "en:he" (D-028); empty = every direction. */
   const [direction, setDirection] = useState('');
   const [type, setType] = useState('');
-  const [categoryId, setCategoryId] = useState('');
+  const [topicId, setTopicId] = useState('');
   const [sort, setSort] = useState<KnownSort>('newest');
   const q = useDebounced(search.trim(), 300);
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
@@ -70,9 +70,9 @@ function KnownList() {
       ...(q ? { q } : {}),
       ...(lang && target ? { lang, target } : {}),
       ...(type === 'word' || type === 'expr' ? { type } : {}),
-      ...(categoryId ? { categoryId: Number(categoryId) } : {}),
+      ...(topicId ? { topicId: Number(topicId) } : {}),
     };
-  }, [q, direction, type, categoryId]);
+  }, [q, direction, type, topicId]);
   const hasFilters = Object.keys(filter).length > 0;
 
   // Marks still in the queue would be missing from the list: send them first.
@@ -170,13 +170,13 @@ function KnownList() {
           <option value="expr">{strings.types.expr}</option>
         </FilterSelect>
         <FilterSelect
-          id={ids.category}
-          label={strings.known.category}
-          value={categoryId}
-          onChange={setCategoryId}
+          id={ids.topic}
+          label={strings.known.topic}
+          value={topicId}
+          onChange={setTopicId}
         >
           <option value="">{strings.known.all}</option>
-          {meta.data?.categories.map((c) => (
+          {meta.data?.topics.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>
@@ -379,7 +379,7 @@ function KnownRow({
           </bdi>
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-          {item.categories.map((c) => (
+          {item.topics.map((c) => (
             <span key={c.id} className="rounded-full bg-surface-2 px-2 py-0.5 text-muted">
               {c.name}
             </span>

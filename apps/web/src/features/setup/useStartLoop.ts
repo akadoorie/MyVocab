@@ -58,7 +58,7 @@ export function useStartLoop({
         source: choices.sourceLang,
         target: choices.targetLang,
         type: choices.type,
-        categoryId: choices.categoryId,
+        topicId: choices.topicId,
         ...(isGuest ? {} : { size: choices.size }),
         ...(choices.sample && !isGuest ? { sample: true } : {}),
         ...(turnstileToken ? { turnstileToken } : {}),
@@ -77,10 +77,9 @@ export function useStartLoop({
       const topicName =
         isGuest || choices.sample
           ? strings.setup.sampleSet
-          : choices.categoryId === null
+          : choices.topicId === null
             ? strings.setup.general
-            : (meta.categories.find((c) => c.id === choices.categoryId)?.name ??
-              strings.setup.general);
+            : (meta.topics.find((c) => c.id === choices.topicId)?.name ?? strings.setup.general);
       const notice: LoopStartNotice =
         res.returned < res.requested
           ? { insufficient: strings.loop.insufficient(res.returned, topicName) }

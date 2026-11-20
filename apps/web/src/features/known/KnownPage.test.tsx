@@ -21,7 +21,7 @@ const ITEMS: KnownItem[] = [
       lang: 'he',
       dir: 'rtl',
     },
-    categories: [{ id: 1, name: 'Home' }],
+    topics: [{ id: 1, name: 'Home' }],
     knownAt: Date.UTC(2026, 10, 1),
     knownInCycle: 1,
   },
@@ -40,7 +40,7 @@ const ITEMS: KnownItem[] = [
       lang: 'en',
       dir: 'ltr',
     },
-    categories: [],
+    topics: [],
     knownAt: Date.UTC(2026, 10, 2),
     knownInCycle: 3,
   },
@@ -66,7 +66,7 @@ describe('KnownPage', () => {
     expect(await screen.findByRole('heading', { name: 'Sign-in to continue' })).toBeVisible();
   });
 
-  it('lists known items with direction, answer, categories and the cycle badge', async () => {
+  it('lists known items with direction, answer, topics and the cycle badge', async () => {
     setup({ 'GET /api/me/known': () => page() });
     const list = await screen.findByRole('list', { name: 'My known words' });
     const rows = within(list).getAllByRole('listitem');

@@ -14,7 +14,7 @@ import type {
   NewItem,
   TrashRow,
 } from '../interfaces';
-import { categoriesForItems, itemSearchCondition } from './shared';
+import { topicsForItems, itemSearchCondition } from './shared';
 
 type ItemRow = {
   id: number;
@@ -36,8 +36,8 @@ type ItemRow = {
   updated_at: number;
   deleted_at: number | null;
   deleted_by: string | null;
-  category_ids: string;
-  category_slugs: string;
+  topic_ids: string;
+  topic_slugs: string;
 };
 
 const ITEM_COLUMNS = sql`
@@ -45,10 +45,10 @@ const ITEM_COLUMNS = sql`
   i.translation_parallel AS parallel, i.translation_meaning AS meaning,
   i.translation_literal AS literal, i.explanation, i.synonyms, i.hints, i.status, i.in_sample_set, i.version, i.created_at, i.updated_at,
   i.deleted_at, i.deleted_by,
-  (SELECT json_group_array(ic.category_id) FROM item_categories ic WHERE ic.item_id = i.id)
-    AS category_ids,
-  (SELECT json_group_array(c.slug) FROM item_categories ic JOIN categories c ON c.id = ic.category_id
-    WHERE ic.item_id = i.id) AS category_slugs`;
+  (SELECT json_group_array(ic.topic_id) FROM item_topics ic WHERE ic.item_id = i.id)
+    AS topic_ids,
+  (SELECT json_group_array(c.slug) FROM item_topics ic JOIN topics c ON c.id = ic.topic_id
+    WHERE ic.item_id = i.id) AS topic_slugs`;
 
 function toRecord(r: ItemRow): ItemRecord {
   return {
@@ -71,17 +71,17 @@ function toRecord(r: ItemRow): ItemRecord {
     updatedAt: r.updated_at,
     deletedAt: r.deleted_at,
     deletedBy: r.deleted_by,
-    categoryIds: (JSON.parse(r.category_ids) as number[]).sort((a, b) => a - b),
-    categorySlugs: (JSON.parse(r.category_slugs) as string[]).sort(),
+    topicIds: (JSON.parse(r.topic_ids) as number[]).sort((a, b) => a - b),
+    topicSlugs: (JSON.parse(r.topic_slugs) as string[]).sort(),
   };
 }
 
-/** Links an item to the given (existing) categories; ids travel as one JSON parameter. */
-function linkCategories(itemId: SQL | number, categoryIds: readonly number[], when?: SQL): SQL {
+/** Links an item to the given (existing) topics; ids travel as one JSON parameter. */
+function linkTopics(itemId: SQL | number, topicIds: readonly number[], when?: SQL): SQL {
   return sql`
-    INSERT OR IGNORE INTO item_categories (item_id, category_id)
-    SELECT ${itemId}, c.id FROM categories AS c
-    WHERE c.id IN (SELECT value FROM json_each(${JSON.stringify(categoryIds)}))
+    INSERT OR IGNORE INTO item_topics (item_id, topic_id)
+    SELECT ${itemId}, c.id FROM topics AS c
+    WHERE c.id IN (SELECT value FROM json_each(${JSON.stringify(topicIds)}))
     ${when ? sql`AND ${when}` : sql``}`;
 }
 
@@ -100,9 +100,9 @@ function listConditions(f: AdminItemFilter, activeLangs: readonly string[]): SQL
   if (f.inSampleSet !== undefined) {
     conds.push(sql`i.in_sample_set = ${f.inSampleSet ? 1 : 0}`);
   }
-  if (f.categoryId !== undefined) {
+  if (f.topicId !== undefined) {
     conds.push(
-      sql`EXISTS (SELECT 1 FROM item_categories ic WHERE ic.item_id = i.id AND ic.category_id = ${f.categoryId})`,
+      sql`EXISTS (SELECT 1 FROM item_topics ic WHERE ic.item_id = i.id AND ic.topic_id = ${f.topicId})`,
     );
   }
   if (f.missingTranslation) {
@@ -208,8 +208,8 @@ export class D1AdminItemRepository implements AdminItemRepository {
     };
   }
 
-  categoriesFor(itemIds: readonly number[]) {
-    return categoriesForItems(this.db, itemIds);
+  topicsFor(itemIds: readonly number[]) {
+    return topicsForItems(this.db, itemIds);
   }
 
   async create(item: NewItem, actor: Actor, audit: AuditDetails, now: number): Promise<number> {
@@ -236,8 +236,8 @@ export class D1AdminItemRepository implements AdminItemRepository {
         updatedAt: now,
       }),
     ];
-    if (item.categoryIds.length > 0) {
-      statements.push(linkCategories(sql`(${newId})`, item.categoryIds));
+    if (item.topicIds.length > 0) {
+      statements.push(linkTopics(sql`(${newId})`, item.topicIds));
     }
     statements.push(
       auditInsert(
@@ -261,18 +261,18 @@ export class D1AdminItemRepository implements AdminItemRepository {
     id: number,
     version: number,
     changes: ItemChanges,
-    categoryIds: number[] | undefined,
+    topicIds: number[] | undefined,
     actor: Actor,
     audit: AuditDetails,
     now: number,
   ): Promise<boolean> {
     // Inside one transaction the item's version can't change between statements, so the
-    // category statements check the expected version before the UPDATE bumps it.
+    // topic statements check the expected version before the UPDATE bumps it.
     const current = sql`EXISTS (SELECT 1 FROM items WHERE id = ${id} AND version = ${version} AND deleted_at IS NULL)`;
     const statements: (SQL | { toSQL(): { sql: string; params: unknown[] } })[] = [];
-    if (categoryIds !== undefined) {
-      statements.push(sql`DELETE FROM item_categories WHERE item_id = ${id} AND ${current}`);
-      if (categoryIds.length > 0) statements.push(linkCategories(id, categoryIds, current));
+    if (topicIds !== undefined) {
+      statements.push(sql`DELETE FROM item_topics WHERE item_id = ${id} AND ${current}`);
+      if (topicIds.length > 0) statements.push(linkTopics(id, topicIds, current));
     }
     statements.push(
       this.db
@@ -357,7 +357,7 @@ export class D1AdminItemRepository implements AdminItemRepository {
   }
 
   purge(id: number, version: number, actor: Actor, audit: AuditDetails, now: number) {
-    // Cascades to category links and users' known marks (FR-A23).
+    // Cascades to topic links and users' known marks (FR-A23).
     return this.stateChange(
       this.db
         .delete(items)

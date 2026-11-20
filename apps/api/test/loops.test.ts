@@ -13,7 +13,7 @@ import { D1ItemRepository } from '../src/repositories/d1/items';
 import {
   api,
   authed,
-  categoryId,
+  topicId,
   count,
   mockTurnstile,
   postJson,
@@ -29,7 +29,7 @@ const guestBody = {
   source: 'en',
   target: 'he',
   type: 'word' as const,
-  categoryId: null,
+  topicId: null,
   turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
 };
 const errorCode = async (res: Response) => errorResponseSchema.parse(await res.json()).error.code;
@@ -42,7 +42,7 @@ describe('GET /api/meta', () => {
     expect(meta.defaults).toEqual({
       sourceLang: 'en',
       targetLang: 'he',
-      categoryId: null,
+      topicId: null,
       type: 'word',
       size: 10,
     });
@@ -53,7 +53,7 @@ describe('GET /api/meta', () => {
     expect(meta.sizeOptions).toEqual([10, 20, 30, 40, 50]);
     expect(meta.guest).toEqual({ enabled: true, loopSize: 5 });
     expect(meta.types.map((t) => t.label)).toEqual(['Words', 'Expressions']);
-    expect(meta.categories.map((c) => c.slug).sort()).toEqual(['home', 'nature']);
+    expect(meta.topics.map((c) => c.slug).sort()).toEqual(['home', 'nature']);
     expect(meta.turnstileSiteKey).toBeTruthy();
   });
 
@@ -70,16 +70,16 @@ describe('GET /api/loops/available', () => {
   const available = async (q: string) =>
     availableResponseSchema.parse(await (await api(`/loops/available?${q}`)).json()).available;
 
-  it('counts playable items for a direction, type and category', async () => {
+  it('counts playable items for a direction, type and topic', async () => {
     expect(await available('source=en&target=he&type=word')).toBe(6); // not the draft, not fx-word-4
     expect(await available('source=en&target=en&type=word')).toBe(6); // explanation: not fx-word-3
     expect(await available('source=en&target=he&type=expr')).toBe(1);
     expect(await available('source=he&target=en&type=word')).toBe(1);
-    // A category narrows the count for signed-in learners (guests always get the sample set).
+    // A topic narrows the count for signed-in learners (guests always get the sample set).
     const { cookie } = await signIn();
     const home = await authed(
       cookie,
-      `/loops/available?source=en&target=he&type=word&categoryId=${await categoryId('home')}`,
+      `/loops/available?source=en&target=he&type=word&topicId=${await topicId('home')}`,
     );
     expect(availableResponseSchema.parse(await home.json()).available).toBe(3);
   });
@@ -124,8 +124,7 @@ describe('GET /api/loops/available', () => {
     expect((await api('/loops/available?source=fr&target=he&type=word')).status).toBe(400);
     const { cookie } = await signIn();
     expect(
-      (await authed(cookie, '/loops/available?source=en&target=he&type=word&categoryId=999'))
-        .status,
+      (await authed(cookie, '/loops/available?source=en&target=he&type=word&topicId=999')).status,
     ).toBe(400);
     expect((await api('/loops/available?source=en&target=he&type=word&extra=1')).status).toBe(400);
   });
@@ -303,17 +302,11 @@ describe('LoopService (learner path)', () => {
        SELECT 'u1', id, 'he', 1, 0 FROM items WHERE text IN ('fx-word-1', 'fx-word-2')`,
     ).run();
     expect(
-      await loops.available(
-        { source: 'en', target: 'he', type: 'word', categoryId: null },
-        learner,
-      ),
+      await loops.available({ source: 'en', target: 'he', type: 'word', topicId: null }, learner),
     ).toBe(4);
     // Known into Hebrew only: the explanation direction still has all its words.
     expect(
-      await loops.available(
-        { source: 'en', target: 'en', type: 'word', categoryId: null },
-        learner,
-      ),
+      await loops.available({ source: 'en', target: 'en', type: 'word', topicId: null }, learner),
     ).toBe(6);
   });
 
@@ -337,12 +330,12 @@ describe('the sample set (D-038)', () => {
     await env.DB.prepare(`UPDATE items SET in_sample_set = 0 WHERE text = 'fx-word-1'`).run();
   });
 
-  it('guests count only the sample set, whatever category they send', async () => {
+  it('guests count only the sample set, whatever topic they send', async () => {
     expect(await count(await api(`/loops/available?${Q}`))).toBe(5);
-    expect(
-      await count(await api(`/loops/available?${Q}&categoryId=${await categoryId('home')}`)),
-    ).toBe(5);
-    expect(await count(await api(`/loops/available?${Q}&categoryId=999`))).toBe(5);
+    expect(await count(await api(`/loops/available?${Q}&topicId=${await topicId('home')}`))).toBe(
+      5,
+    );
+    expect(await count(await api(`/loops/available?${Q}&topicId=999`))).toBe(5);
   });
 
   it('learners see every item and cannot ask for the sample set; admins can', async () => {
@@ -357,7 +350,7 @@ describe('the sample set (D-038)', () => {
   it('a guest session only ever deals sample-set items', async () => {
     await env.DB.prepare(`UPDATE items SET in_sample_set = 0 WHERE text <> 'fx-word-2'`).run();
     mockTurnstile(true);
-    const res = await postJson('/loops', { ...guestBody, categoryId: await categoryId('nature') });
+    const res = await postJson('/loops', { ...guestBody, topicId: await topicId('nature') });
     const body = startLoopResponseSchema.parse(await res.json());
     expect(body.cards.map((c) => c.front.text)).toEqual(['fx-word-2']);
   });

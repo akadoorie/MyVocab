@@ -69,7 +69,7 @@ test('signed-in and admin pages: no accessibility violations', async ({
     ['/admin/items', 'Items'],
     ['/admin/items/1', 'Preview as learner'],
     ['/admin/trash', 'Trash'],
-    ['/admin/categories', 'Categories'],
+    ['/admin/topics', 'Topics'],
     ['/admin/users', 'Users'],
     ['/admin/settings', 'Settings'],
     ['/admin/import', 'CSV import'],

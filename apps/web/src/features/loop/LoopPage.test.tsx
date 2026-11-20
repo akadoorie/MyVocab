@@ -24,7 +24,7 @@ function setup(
     cards: CARDS,
     state: createLoop([1, 2, 3], 42),
     undoWindowSeconds: 4,
-    selection: { sourceLang: 'en', targetLang: 'he', categoryId: null, type: 'word', size: 5 },
+    selection: { sourceLang: 'en', targetLang: 'he', topicId: null, type: 'word', size: 5 },
     isGuest,
   });
   const router = createMemoryRouter(
@@ -373,12 +373,14 @@ describe('LoopPage', () => {
       fireEvent.click(newSession);
       await waitFor(() => expect(progress()).toBe('Cycle 1 · Card 1/2 · 0 known'));
       expect(posted).toEqual([
-        { source: 'en', target: 'he', type: 'word', categoryId: null, size: 5 },
+        { source: 'en', target: 'he', type: 'word', topicId: null, size: 5 },
       ]);
       expect(router.state.location.pathname).toBe('/loop');
       expect(loadLoop()?.cards.map((c) => c.itemId)).toEqual([7, 8]);
       expect(loadLoop()?.selection).toMatchObject({ sourceLang: 'en', targetLang: 'he' });
-      expect(await screen.findByText('Only 2 new cards in General, starting with 2')).toBeVisible();
+      expect(
+        await screen.findByText('Only 2 new cards in All topics, starting with 2'),
+      ).toBeVisible();
     });
 
     it('says so when no new cards are left, and Home still works', async () => {

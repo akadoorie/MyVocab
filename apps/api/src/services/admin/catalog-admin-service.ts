@@ -1,24 +1,19 @@
-import type {
-  AdminCategory,
-  AdminLanguage,
-  LanguageCreate,
-  LanguagePatch,
-} from '@myvocab/contracts';
+import type { AdminTopic, AdminLanguage, LanguageCreate, LanguagePatch } from '@myvocab/contracts';
 import { isSupportedScript } from '@myvocab/core';
 import { ConflictError, NotFoundError, ValidationError } from '../../middleware/errors';
 import type {
   Actor,
-  AdminCategoryRepository,
+  AdminTopicRepository,
   AdminLanguageRepository,
   LanguageChanges,
   LanguageRepository,
 } from '../../repositories/interfaces';
 
-/** Categories (FR-A30) and languages (FR-A35). Every change is audited in the same batch. */
+/** Topics (FR-A30) and languages (FR-A35). Every change is audited in the same batch. */
 export class CatalogAdminService {
   constructor(
     private readonly deps: {
-      categories: AdminCategoryRepository;
+      topics: AdminTopicRepository;
       languages: LanguageRepository;
       adminLanguages: AdminLanguageRepository;
       now?: () => number;
@@ -29,39 +24,39 @@ export class CatalogAdminService {
     return (this.deps.now ?? Date.now)();
   }
 
-  listCategories(): Promise<AdminCategory[]> {
-    return this.deps.categories.listWithCounts();
+  listTopics(): Promise<AdminTopic[]> {
+    return this.deps.topics.listWithCounts();
   }
 
   private async assertSlugFree(slug: string, exceptId?: number): Promise<void> {
-    const existing = await this.deps.categories.findBySlug(slug);
+    const existing = await this.deps.topics.findBySlug(slug);
     if (existing && existing.id !== exceptId) {
       throw new ConflictError(`The slug "${slug}" is already used`, { reason: 'duplicate' });
     }
   }
 
-  async createCategory(
+  async createTopic(
     input: { slug: string; name: string; isActive?: boolean | undefined },
     actor: Actor,
-  ): Promise<AdminCategory> {
+  ): Promise<AdminTopic> {
     await this.assertSlugFree(input.slug);
-    const id = await this.deps.categories.create(
+    const id = await this.deps.topics.create(
       { slug: input.slug, name: input.name, isActive: input.isActive ?? true },
       actor,
       this.now(),
     );
-    const created = await this.deps.categories.get(id);
-    if (!created) throw new NotFoundError('Category not found');
+    const created = await this.deps.topics.get(id);
+    if (!created) throw new NotFoundError('Topic not found');
     return created;
   }
 
-  async updateCategory(
+  async updateTopic(
     id: number,
     patch: { slug?: string | undefined; name?: string | undefined; isActive?: boolean | undefined },
     actor: Actor,
-  ): Promise<AdminCategory> {
-    const current = await this.deps.categories.get(id);
-    if (!current) throw new NotFoundError('Category not found');
+  ): Promise<AdminTopic> {
+    const current = await this.deps.topics.get(id);
+    if (!current) throw new NotFoundError('Topic not found');
     const changes: Partial<{ slug: string; name: string; isActive: boolean }> = {};
     const audit: Record<string, { before: unknown; after: unknown }> = {};
     for (const key of ['slug', 'name', 'isActive'] as const) {
@@ -73,44 +68,44 @@ export class CatalogAdminService {
     }
     if (Object.keys(changes).length === 0) return current;
     if (changes.slug) await this.assertSlugFree(changes.slug, id);
-    const ok = await this.deps.categories.update(
+    const ok = await this.deps.topics.update(
       id,
       changes,
       actor,
-      { action: 'category.update', details: { changes: audit } },
+      { action: 'topic.update', details: { changes: audit } },
       this.now(),
     );
-    if (!ok) throw new NotFoundError('Category not found');
-    return (await this.deps.categories.get(id)) ?? current;
+    if (!ok) throw new NotFoundError('Topic not found');
+    return (await this.deps.topics.get(id)) ?? current;
   }
 
-  /** Blocked while items still use the category (deactivate it instead). */
-  async deleteCategory(id: number, actor: Actor): Promise<void> {
-    const current = await this.deps.categories.get(id);
-    if (!current) throw new NotFoundError('Category not found');
+  /** Blocked while items still use the topic (deactivate it instead). */
+  async deleteTopic(id: number, actor: Actor): Promise<void> {
+    const current = await this.deps.topics.get(id);
+    if (!current) throw new NotFoundError('Topic not found');
     const blocked = () =>
       new ConflictError(
         `“${current.name}” is used by ${current.itemCount} ${current.itemCount === 1 ? 'item' : 'items'}. Deactivate it instead, or remove it from those items first.`,
         { reason: 'in_use', itemCount: current.itemCount },
       );
     if (current.itemCount > 0) throw blocked();
-    const ok = await this.deps.categories.delete(
+    const ok = await this.deps.topics.delete(
       id,
       actor,
-      { action: 'category.delete', details: { snapshot: current } },
+      { action: 'topic.delete', details: { snapshot: current } },
       this.now(),
     );
     if (!ok) throw blocked();
   }
 
-  /** The given categories come first, in that order; the others follow in their current order. */
-  async reorderCategories(ids: readonly number[], actor: Actor): Promise<AdminCategory[]> {
-    const current = (await this.deps.categories.listWithCounts()).map((c) => c.id);
+  /** The given topics come first, in that order; the others follow in their current order. */
+  async reorderTopics(ids: readonly number[], actor: Actor): Promise<AdminTopic[]> {
+    const current = (await this.deps.topics.listWithCounts()).map((c) => c.id);
     const known = new Set(current);
     const first = [...new Set(ids)].filter((id) => known.has(id));
     const rest = current.filter((id) => !first.includes(id));
-    await this.deps.categories.reorder([...first, ...rest], actor, this.now());
-    return this.deps.categories.listWithCounts();
+    await this.deps.topics.reorder([...first, ...rest], actor, this.now());
+    return this.deps.topics.listWithCounts();
   }
 
   async listLanguages(): Promise<AdminLanguage[]> {

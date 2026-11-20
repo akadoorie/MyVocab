@@ -17,9 +17,9 @@ export function ImportPage() {
   const toast = useToast();
   const fileId = useId();
   const [file, setFile] = useState<File | null>(null);
-  const [createCategories, setCreateCategories] = useState(false);
+  const [createTopics, setCreateTopics] = useState(false);
   const [report, setReport] = useState<ImportReportView | null>(null);
-  const [checked, setChecked] = useState<{ file: File; createCategories: boolean } | null>(null);
+  const [checked, setChecked] = useState<{ file: File; createTopics: boolean } | null>(null);
   const [busy, setBusy] = useState<'dry' | 'commit' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,7 +28,7 @@ export function ImportPage() {
     report.dryRun &&
     report.errors.length === 0 &&
     checked?.file === file &&
-    checked?.createCategories === createCategories;
+    checked?.createTopics === createTopics;
 
   async function run(dryRun: boolean) {
     if (!file) return;
@@ -37,10 +37,10 @@ export function ImportPage() {
     try {
       const result = await adminApi.importCsv(file, {
         dryRun,
-        createMissingCategories: createCategories,
+        createMissingTopics: createTopics,
       });
       setReport(result);
-      setChecked(dryRun ? { file, createCategories } : null);
+      setChecked(dryRun ? { file, createTopics } : null);
       if (result.committed) {
         toast.show({ message: s.import.committed });
         void queryClient.invalidateQueries({ queryKey: ['admin'] });
@@ -82,11 +82,11 @@ export function ImportPage() {
         <label className="flex min-h-11 items-center gap-3">
           <input
             type="checkbox"
-            checked={createCategories}
-            onChange={(e) => setCreateCategories(e.target.checked)}
+            checked={createTopics}
+            onChange={(e) => setCreateTopics(e.target.checked)}
             className="h-5 w-5 accent-[var(--accent)]"
           />
-          {s.import.createCategories}
+          {s.import.createTopics}
         </label>
         <div className="flex flex-wrap gap-3">
           <Button3D disabled={!file || busy !== null} onClick={() => void run(true)}>

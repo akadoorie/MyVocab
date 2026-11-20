@@ -14,7 +14,7 @@ const TOTALS = {
   newExplanationEntries: 0,
   newSynonyms: 0,
   newHints: 0,
-  newCategories: 0,
+  newTopics: 0,
   skippedDuplicates: 0,
   sampleSetChanges: 0,
 };
@@ -76,16 +76,16 @@ describe('ImportPage (FR-A60–61)', () => {
         : report({ warnings: [{ row: 2, column: 'text', message: 'Mixed scripts' }] }),
     );
     await chooseFile();
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Create missing categories' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Create missing topics' }));
     fireEvent.click(screen.getByRole('button', { name: 'Check the file (dry run)' }));
     expect(await screen.findByText('Mixed scripts')).toBeVisible();
     expect(screen.getByText('No errors. You can import this file.')).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Import' }));
     await waitFor(() => expect(calls).toHaveLength(2));
     expect(calls[0]).toContain('dryRun=true');
-    expect(calls[0]).toContain('createMissingCategories=true');
+    expect(calls[0]).toContain('createMissingTopics=true');
     expect(calls[1]).toContain('dryRun=false');
-    expect(calls[1]).toContain('createMissingCategories=true');
+    expect(calls[1]).toContain('createMissingTopics=true');
     expect((await screen.findAllByText('Import complete')).length).toBeGreaterThan(0);
   });
 
@@ -95,7 +95,7 @@ describe('ImportPage (FR-A60–61)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Check the file (dry run)' }));
     await screen.findByText('No errors. You can import this file.');
     expect(screen.getByRole('button', { name: 'Import' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Create missing categories' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Create missing topics' }));
     expect(screen.getByRole('button', { name: 'Import' })).toBeDisabled();
   });
 });

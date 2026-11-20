@@ -49,8 +49,9 @@ export const strings = {
     title: 'Configure your session',
     source: 'From',
     target: 'To',
-    category: 'Topic',
-    general: 'General',
+    topic: 'Topic',
+    /** No topic filter: every item (D-039; was "General"). */
+    general: 'All topics',
     /** The items guests play (D-038); admins can pick it too, to check it. */
     sampleSet: 'Sample set',
     guestTopicLocked: 'Sign-in to choose any topic.',
@@ -97,7 +98,7 @@ export const strings = {
     directionOption: (from: string, to: string) => `${from} → ${to}`,
     directionExplanation: (name: string) => `${name} → ${name} (explanation)`,
     type: 'Type',
-    category: 'Topic',
+    topic: 'Topic',
     sort: 'Sort',
     all: 'All',
     sortNewest: 'Newest first',

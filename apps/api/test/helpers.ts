@@ -8,7 +8,7 @@ export const ORIGIN = 'http://localhost:5173'; // APP_URL in wrangler.jsonc vars
 
 // Synthetic content only (PRD §14.2). Every fixture is in the sample set guests play (D-038).
 export const FIXTURE_CSV = [
-  'lang,text,type,sample,multiple_meanings,categories,translation_he,translation_en,explanation,synonyms,hints,status,literal_he',
+  'lang,text,type,sample,multiple_meanings,topics,translation_he,translation_en,explanation,synonyms,hints,status,literal_he',
   'en,fx-word-1,word,true,false,home,מילה-1,,Explanation one,,Hint one.,published',
   'en,fx-word-2,word,true,true,home,מילה-2א|מילה-2ב,,First meaning|Second meaning,syn-a,,published',
   'en,fx-word-3,word,true,false,nature,מילה-3,,,,,published',
@@ -26,7 +26,7 @@ export async function seedFixtures() {
     csvText: FIXTURE_CSV,
     fileName: 'fixtures.csv',
     dryRun: false,
-    createMissingCategories: true,
+    createMissingTopics: true,
     actor: null,
     limits: null,
   });
@@ -49,11 +49,11 @@ export async function count(table: string): Promise<number> {
   );
 }
 
-export async function categoryId(slug: string): Promise<number> {
-  const row = await env.DB.prepare('SELECT id FROM categories WHERE slug = ?')
+export async function topicId(slug: string): Promise<number> {
+  const row = await env.DB.prepare('SELECT id FROM topics WHERE slug = ?')
     .bind(slug)
     .first<{ id: number }>();
-  if (!row) throw new Error(`No category ${slug}`);
+  if (!row) throw new Error(`No topic ${slug}`);
   return row.id;
 }
 

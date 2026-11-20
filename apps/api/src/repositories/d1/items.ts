@@ -17,7 +17,7 @@ type IdentityRow = {
   hints: string;
   in_sample_set: number;
   version: number;
-  categories: string | null;
+  topics: string | null;
 };
 
 export class D1ItemRepository implements ItemRepository {
@@ -38,8 +38,8 @@ export class D1ItemRepository implements ItemRepository {
       i.translation_literal AS literal,
              i.explanation,
              i.synonyms, i.hints, i.in_sample_set, i.version,
-             (SELECT group_concat(c.slug, ' ') FROM item_categories ic
-                JOIN categories c ON c.id = ic.category_id WHERE ic.item_id = i.id) AS categories
+             (SELECT group_concat(c.slug, ' ') FROM item_topics ic
+                JOIN topics c ON c.id = ic.topic_id WHERE ic.item_id = i.id) AS topics
       FROM json_each(${json}) AS k
       JOIN items AS i
         ON i.lang = json_extract(k.value, '$[0]')
@@ -52,7 +52,7 @@ export class D1ItemRepository implements ItemRepository {
         id: r.id,
         version: r.version,
         inSampleSet: r.in_sample_set === 1,
-        categories: r.categories ? r.categories.split(' ') : [],
+        topics: r.topics ? r.topics.split(' ') : [],
         content: {
           lang: r.lang,
           text: r.text,

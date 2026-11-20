@@ -43,7 +43,7 @@ export const knownFilterSchema = z
     /** The direction's target language (D-028); with `lang`, one direction. */
     target: langCodeSchema.optional(),
     type: itemTypeSchema.optional(),
-    categoryId: itemIdSchema.optional(),
+    topicId: itemIdSchema.optional(),
   })
   .strict();
 export type KnownFilter = z.infer<typeof knownFilterSchema>;
@@ -74,7 +74,7 @@ export const knownListQuerySchema = z
     lang: langCodeSchema.optional(),
     target: langCodeSchema.optional(),
     type: itemTypeSchema.optional(),
-    categoryId: z.coerce.number().int().positive().optional(),
+    topicId: z.coerce.number().int().positive().optional(),
     sort: knownSortSchema.default('newest'),
     cursor: z.string().min(1).max(600).optional(),
   })
@@ -99,7 +99,7 @@ export const knownItemSchema = z.object({
     lang: langCodeSchema,
     dir: dirSchema,
   }),
-  categories: z.array(z.object({ id: z.number().int(), name: z.string() })),
+  topics: z.array(z.object({ id: z.number().int(), name: z.string() })),
   knownAt: z.number().int(),
   knownInCycle: z.number().int().min(1),
 });

@@ -9,13 +9,13 @@ import {
 
 const ctx: StartContext = {
   settings: {
-    defaults: { sourceLang: 'en', targetLang: 'he', categoryId: null, type: 'word' },
+    defaults: { sourceLang: 'en', targetLang: 'he', topicId: null, type: 'word' },
     sizeOptions: [10, 20, 30, 40, 50],
     defaultSize: 10,
     guestLoopSize: 5,
   },
   activeLanguages: ['en', 'he'],
-  activeCategoryIds: [1, 2],
+  activeTopicIds: [1, 2],
   isGuest: false,
 };
 
@@ -24,7 +24,7 @@ describe('resolveStartDefaults', () => {
     expect(resolveStartDefaults(ctx)).toEqual({
       sourceLang: 'en',
       targetLang: 'he',
-      categoryId: null,
+      topicId: null,
       type: 'word',
       size: 10,
     });
@@ -34,21 +34,21 @@ describe('resolveStartDefaults', () => {
     expect(resolveStartDefaults({ ...ctx, isGuest: true }).size).toBe(5);
   });
 
-  it('falls back when a default language or category is no longer active', () => {
+  it('falls back when a default language or topic is no longer active', () => {
     const r = resolveStartDefaults({
       ...ctx,
       settings: {
         ...ctx.settings,
-        defaults: { ...ctx.settings.defaults, targetLang: 'fr', categoryId: 9 },
+        defaults: { ...ctx.settings.defaults, targetLang: 'fr', topicId: 9 },
       },
     });
     expect(r.targetLang).toBe('en');
-    expect(r.categoryId).toBeNull();
-    const withCategory = resolveStartDefaults({
+    expect(r.topicId).toBeNull();
+    const withTopic = resolveStartDefaults({
       ...ctx,
-      settings: { ...ctx.settings, defaults: { ...ctx.settings.defaults, categoryId: 2 } },
+      settings: { ...ctx.settings, defaults: { ...ctx.settings.defaults, topicId: 2 } },
     });
-    expect(withCategory.categoryId).toBe(2);
+    expect(withTopic.topicId).toBe(2);
   });
 
   it('uses the first size option when the default size is not offered', () => {
@@ -77,7 +77,7 @@ describe('default vs selected styling', () => {
   });
 
   it('marks changed fields as selected and offers a reset', () => {
-    const choices = { ...defaults, size: 20, categoryId: 1 };
+    const choices = { ...defaults, size: 20, topicId: 1 };
     expect([...defaultFields(choices, defaults)].sort()).toEqual([
       'sourceLang',
       'targetLang',

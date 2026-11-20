@@ -32,8 +32,8 @@ export function itemSearchCondition(q: string): SQL | null {
   return either.length > 0 ? sql`(${sql.join(either, sql` OR `)})` : null;
 }
 
-/** Category chips for a page of items (one query, ids as a JSON parameter). */
-export async function categoriesForItems(
+/** Topic chips for a page of items (one query, ids as a JSON parameter). */
+export async function topicsForItems(
   db: Db,
   itemIds: readonly number[],
 ): Promise<Map<number, { id: number; name: string }[]>> {
@@ -42,8 +42,8 @@ export async function categoriesForItems(
   const rows = await db.all<{ item_id: number; id: number; name: string }>(sql`
     SELECT ic.item_id, c.id, c.name
     FROM json_each(${JSON.stringify(itemIds)}) AS j
-    JOIN item_categories AS ic ON ic.item_id = j.value
-    JOIN categories AS c ON c.id = ic.category_id
+    JOIN item_topics AS ic ON ic.item_id = j.value
+    JOIN topics AS c ON c.id = ic.topic_id
     ORDER BY c.sort_order, c.name
   `);
   for (const r of rows) {

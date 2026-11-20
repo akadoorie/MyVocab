@@ -3,7 +3,7 @@ import { NavLink, Route, Routes } from 'react-router';
 import { useSession } from '../../lib/session';
 import { adminStrings as s } from '../../strings-admin';
 import { AuditPage } from './AuditPage';
-import { CategoriesPage, LanguagesPage } from './CatalogPages';
+import { TopicsPage, LanguagesPage } from './CatalogPages';
 import { Dashboard } from './Dashboard';
 import { ItemEditorPage, NewItemPage } from './ItemEditor';
 import { ImportPage } from './ImportPage';
@@ -17,7 +17,7 @@ const NAV = [
   { to: '/admin', label: s.nav.dashboard, end: true },
   { to: '/admin/items', label: s.nav.items },
   { to: '/admin/trash', label: s.nav.trash },
-  { to: '/admin/categories', label: s.nav.categories },
+  { to: '/admin/topics', label: s.nav.topics },
   { to: '/admin/languages', label: s.nav.languages },
   { to: '/admin/import', label: s.nav.import },
   { to: '/admin/users', label: s.nav.users },
@@ -110,7 +110,7 @@ export function AdminApp() {
           <Route path="items/new" element={<NewItemPage />} />
           <Route path="items/:id" element={<ItemEditorPage />} />
           <Route path="trash" element={<TrashPage />} />
-          <Route path="categories" element={<CategoriesPage />} />
+          <Route path="topics" element={<TopicsPage />} />
           <Route path="languages" element={<LanguagesPage />} />
           <Route path="import" element={<ImportPage />} />
           <Route path="users" element={<UsersPage />} />
