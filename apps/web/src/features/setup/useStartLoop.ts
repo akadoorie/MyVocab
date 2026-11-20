@@ -60,6 +60,7 @@ export function useStartLoop({
         type: choices.type,
         categoryId: choices.categoryId,
         ...(isGuest ? {} : { size: choices.size }),
+        ...(choices.sample && !isGuest ? { sample: true } : {}),
         ...(turnstileToken ? { turnstileToken } : {}),
       });
       if (res.cards.length === 0) return 'empty';
@@ -74,10 +75,12 @@ export function useStartLoop({
         isGuest,
       });
       const topicName =
-        choices.categoryId === null
-          ? strings.setup.general
-          : (meta.categories.find((c) => c.id === choices.categoryId)?.name ??
-            strings.setup.general);
+        isGuest || choices.sample
+          ? strings.setup.sampleSet
+          : choices.categoryId === null
+            ? strings.setup.general
+            : (meta.categories.find((c) => c.id === choices.categoryId)?.name ??
+              strings.setup.general);
       const notice: LoopStartNotice =
         res.returned < res.requested
           ? { insufficient: strings.loop.insufficient(res.returned, topicName) }

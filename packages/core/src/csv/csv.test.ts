@@ -243,10 +243,11 @@ en,sample expression,expr,מקבילה-1,משמעות-1|משמעות-2,מילו�
   });
 });
 
-function existingSwift(over: Partial<ItemContent> = {}): ExistingItem {
+function existingSwift(over: Partial<ItemContent> = {}, inSampleSet = false): ExistingItem {
   return {
     id: 7,
     categories: ['home'],
+    inSampleSet,
     content: {
       lang: 'en',
       text: 'Swift',
@@ -273,10 +274,55 @@ describe('planImport', () => {
         content: expect.objectContaining({ text: 'Cat', explanation: ['A small pet'] }),
         categories: [],
         status: 'published',
+        inSampleSet: false,
         rows: [2],
       },
     ]);
     expect(plan.totals).toMatchObject({ newItems: 1, mergedItems: 0, newExplanationEntries: 1 });
+  });
+
+  describe('the sample column (D-038)', () => {
+    const SAMPLE_HEADER = 'lang,text,type,explanation,sample';
+    const plan = (rows: string, existing?: ExistingItem) =>
+      planImport(
+        parseImportCsv(`${SAMPLE_HEADER}\n${rows}`, opts).rows,
+        emptyCtx(
+          existing
+            ? { existing: new Map([[itemIdentityKey('en', 'Swift', 'word'), existing]]) }
+            : {},
+        ),
+      );
+    const SAME = 'en,Swift,word,Moving or able to move very fast';
+
+    it('puts a new item in the sample set only when the column says so', () => {
+      expect(plan(`en,Cat,word,A small pet,true`).creates[0]?.inSampleSet).toBe(true);
+      expect(plan(`en,Cat,word,A small pet,false`).creates[0]?.inSampleSet).toBe(false);
+      expect(plan(`en,Cat,word,A small pet,`).creates[0]?.inSampleSet).toBe(false);
+    });
+
+    it('turns an existing item on or off, and counts the change', () => {
+      const off = plan(`${SAME},false`, existingSwift({}, true));
+      expect(off.updates[0]).toMatchObject({ changed: true, inSampleSet: false });
+      expect(off.totals.sampleSetChanges).toBe(1);
+      const on = plan(`${SAME},yes`, existingSwift({}, false));
+      expect(on.updates[0]).toMatchObject({ changed: true, inSampleSet: true });
+    });
+
+    it('leaves an existing item alone when the cell is empty or already matches', () => {
+      for (const p of [
+        plan(`${SAME},`, existingSwift({}, true)),
+        plan(`${SAME},true`, existingSwift({}, true)),
+      ]) {
+        expect(p.updates[0]?.changed).toBe(false);
+        expect(p.updates[0]).not.toHaveProperty('inSampleSet');
+        expect(p.totals.sampleSetChanges).toBe(0);
+      }
+    });
+
+    it('rejects anything but true or false', () => {
+      const r = parseImportCsv(`${SAMPLE_HEADER}\nen,Cat,word,A small pet,maybe`, opts);
+      expect(r.errors).toEqual([{ row: 2, column: 'sample', message: 'Use true or false' }]);
+    });
   });
 
   it('appends only new entries to an existing item and never removes anything', () => {
@@ -440,6 +486,7 @@ describe('serializeItemsCsv (round trip)', () => {
       },
       categories: ['nature', 'home'],
       status: 'published',
+      inSampleSet: true,
     },
     {
       content: {
@@ -456,6 +503,7 @@ describe('serializeItemsCsv (round trip)', () => {
       },
       categories: [],
       status: 'draft',
+      inSampleSet: false,
     },
   ];
 
@@ -476,6 +524,7 @@ describe('serializeItemsCsv (round trip)', () => {
       'synonyms',
       'hints',
       'status',
+      'sample',
     ]);
   });
 
@@ -495,7 +544,12 @@ describe('serializeItemsCsv (round trip)', () => {
     );
     expect(plan.errors).toEqual([]);
     expect(
-      plan.creates.map((c) => ({ content: c.content, categories: c.categories, status: c.status })),
+      plan.creates.map((c) => ({
+        content: c.content,
+        categories: c.categories,
+        status: c.status,
+        inSampleSet: c.inSampleSet,
+      })),
     ).toEqual(items.map((i) => ({ ...i, categories: [...i.categories] })));
   });
 });

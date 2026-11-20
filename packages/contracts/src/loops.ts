@@ -35,6 +35,8 @@ export const availableQuerySchema = z
     target: langCode,
     type: itemTypeSchema,
     categoryId: z.coerce.number().int().positive().optional(),
+    /** Only the sample set (D-038): forced for guests; admins may ask for it to check the set. */
+    sample: z.enum(['true', 'false']).optional(),
   })
   .strict();
 export type AvailableQuery = z.infer<typeof availableQuerySchema>;
@@ -50,6 +52,8 @@ export const startLoopRequestSchema = z
     type: itemTypeSchema,
     categoryId: z.number().int().positive().nullable(),
     size: z.number().int().positive().max(1000).optional(),
+    /** Only the sample set (D-038): forced for guests; admins may ask for it. */
+    sample: z.boolean().optional(),
     turnstileToken: z.string().min(1).max(4096).optional(),
   })
   .strict();

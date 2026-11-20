@@ -30,6 +30,7 @@ type ItemRow = {
   synonyms: string;
   hints: string;
   status: 'draft' | 'published';
+  in_sample_set: number;
   version: number;
   created_at: number;
   updated_at: number;
@@ -42,7 +43,7 @@ type ItemRow = {
 const ITEM_COLUMNS = sql`
   i.id, i.lang, i.text, i.normalized_text, i.type, i.multiple_meanings,
   i.translation_parallel AS parallel, i.translation_meaning AS meaning,
-  i.translation_literal AS literal, i.explanation, i.synonyms, i.hints, i.status, i.version, i.created_at, i.updated_at,
+  i.translation_literal AS literal, i.explanation, i.synonyms, i.hints, i.status, i.in_sample_set, i.version, i.created_at, i.updated_at,
   i.deleted_at, i.deleted_by,
   (SELECT json_group_array(ic.category_id) FROM item_categories ic WHERE ic.item_id = i.id)
     AS category_ids,
@@ -64,6 +65,7 @@ function toRecord(r: ItemRow): ItemRecord {
     synonyms: JSON.parse(r.synonyms) as string[],
     hints: JSON.parse(r.hints) as string[],
     status: r.status,
+    inSampleSet: r.in_sample_set === 1,
     version: r.version,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
@@ -94,6 +96,9 @@ function listConditions(f: AdminItemFilter, activeLangs: readonly string[]): SQL
   if (f.status) conds.push(sql`i.status = ${f.status}`);
   if (f.multipleMeanings !== undefined) {
     conds.push(sql`i.multiple_meanings = ${f.multipleMeanings ? 1 : 0}`);
+  }
+  if (f.inSampleSet !== undefined) {
+    conds.push(sql`i.in_sample_set = ${f.inSampleSet ? 1 : 0}`);
   }
   if (f.categoryId !== undefined) {
     conds.push(
@@ -169,13 +174,14 @@ export class D1AdminItemRepository implements AdminItemRepository {
         synonym_count: number;
         hint_count: number;
         status: 'draft' | 'published';
+        in_sample_set: number;
         updated_at: number;
       }>(sql`
         SELECT i.id, i.text, i.lang, i.type, i.multiple_meanings,
                i.translation_parallel AS parallel, i.translation_meaning AS meaning,
                json_array_length(i.explanation) AS explanation_count,
                json_array_length(i.synonyms) AS synonym_count,
-               json_array_length(i.hints) AS hint_count, i.status, i.updated_at
+               json_array_length(i.hints) AS hint_count, i.status, i.in_sample_set, i.updated_at
         FROM items AS i WHERE ${where}
         ORDER BY ${LIST_ORDER[filter.sort]}
         LIMIT ${limit} OFFSET ${offset}
@@ -195,6 +201,7 @@ export class D1AdminItemRepository implements AdminItemRepository {
         synonymCount: r.synonym_count,
         hintCount: r.hint_count,
         status: r.status,
+        inSampleSet: r.in_sample_set === 1,
         updatedAt: r.updated_at,
       })),
       total: count?.n ?? 0,
@@ -223,6 +230,7 @@ export class D1AdminItemRepository implements AdminItemRepository {
         synonyms: item.synonyms,
         hints: item.hints,
         status: item.status,
+        inSampleSet: item.inSampleSet,
         createdBy: actor?.userId ?? null,
         createdAt: now,
         updatedAt: now,

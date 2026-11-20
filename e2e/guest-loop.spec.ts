@@ -9,10 +9,12 @@ const button = (page: Page, name: string) => page.getByRole('button', { name, ex
 test('a guest starts with the defaults and plays a loop to the summary', async ({ page }) => {
   await page.goto('/');
 
-  // Defaults: EN → HE, General, Words, amount locked at 5, all in the "default" style.
+  // Defaults: EN → HE, the Sample set (D-038), Words, amount locked at 5, all "default".
   const startCard = page.getByRole('region', { name: 'Configure your session' });
   await expect(startCard.getByLabel('From', { exact: true })).toHaveValue('en');
   await expect(startCard.getByLabel('To', { exact: true })).toHaveValue('he');
+  await expect(startCard.getByLabel('Topic', { exact: true })).toHaveValue('sample');
+  await expect(startCard.getByText('Sign-in to choose any topic.')).toBeVisible();
   await expect(startCard.getByText('Default')).toHaveCount(5);
   await expect(startCard.getByText(/new cards? available/)).toBeVisible();
 

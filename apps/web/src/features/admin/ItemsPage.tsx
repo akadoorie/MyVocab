@@ -28,6 +28,7 @@ export function ItemsPage() {
     type: useId(),
     cat: useId(),
     status: useId(),
+    sample: useId(),
     gap: useId(),
     sort: useId(),
   };
@@ -37,6 +38,7 @@ export function ItemsPage() {
   const [type, setType] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [status, setStatus] = useState('');
+  const [sample, setSample] = useState<'' | 'true' | 'false'>('');
   const [gap, setGap] = useState<Gap>('');
   const [sort, setSort] = useState<'updated' | 'text' | 'created'>('updated');
   const [page, setPage] = useState(1);
@@ -54,6 +56,7 @@ export function ItemsPage() {
     ...(type === 'word' || type === 'expr' ? { type } : {}),
     ...(categoryId ? { categoryId: Number(categoryId) } : {}),
     ...(status === 'draft' || status === 'published' ? { status } : {}),
+    ...(sample ? { inSampleSet: sample } : {}),
     ...(gap.startsWith('missing:') ? { missingTranslation: gap.slice(8) } : {}),
     ...(gap === 'missingExplanation' ? { missingExplanation: 'true' as const } : {}),
     ...(gap === 'noHints' ? { noHints: 'true' as const } : {}),
@@ -154,6 +157,18 @@ export function ItemsPage() {
             <option value="draft">{s.items.draft}</option>
           </select>
         </Field>
+        <Field id={ids.sample} label={s.items.sampleSet}>
+          <select
+            id={ids.sample}
+            value={sample}
+            onChange={(e) => filter(setSample)(e.target.value as typeof sample)}
+            className={inputClass}
+          >
+            <option value="">{s.common.all}</option>
+            <option value="true">{s.items.inSampleSet}</option>
+            <option value="false">{s.items.notInSampleSet}</option>
+          </select>
+        </Field>
         <Field id={ids.gap} label={s.items.gaps}>
           <select
             id={ids.gap}
@@ -215,6 +230,7 @@ export function ItemsPage() {
                           ◆
                         </span>
                       )}
+                      {item.inSampleSet && <Badge tone="hint">{s.items.sampleBadge}</Badge>}
                       <span className="text-xs text-muted">
                         {langName(item.lang)} · {strings.types[item.type]}
                       </span>

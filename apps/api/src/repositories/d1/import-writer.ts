@@ -66,6 +66,7 @@ export class D1ImportWriter implements ImportWriter {
             synonyms: c.synonyms,
             hints: c.hints,
             status: create.status,
+            inSampleSet: create.inSampleSet,
             createdBy: actor?.userId ?? null,
             createdAt: now,
             updatedAt: now,
@@ -107,6 +108,7 @@ export class D1ImportWriter implements ImportWriter {
             synonyms: c.synonyms,
             hints: c.hints,
             multipleMeanings: c.multipleMeanings,
+            ...(update.inSampleSet === undefined ? {} : { inSampleSet: update.inSampleSet }),
             version: version + 1,
             updatedAt: now,
           })

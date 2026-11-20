@@ -22,6 +22,7 @@ const ITEM: AdminItem = {
   synonyms: [],
   hints: ['First hint.'],
   status: 'published',
+  inSampleSet: true,
   version: 1,
   createdAt: 1,
   updatedAt: 1,

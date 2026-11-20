@@ -26,6 +26,8 @@ export type ParsedRow = {
   categories: string[];
   /** Only set when the cell had a value; applies to newly created items. */
   status?: ItemStatus;
+  /** Only set when the cell had a value: puts the item in or out of the sample set (D-038). */
+  sample?: boolean;
 };
 
 export type ParseRowsResult = {
@@ -164,6 +166,14 @@ export function parseImportCsv(text: string, opts: ParseRowsOptions): ParseRowsR
       else rowErrors.push({ row, column: CSV_COLUMNS.status, message: 'Use published or draft' });
     }
 
+    const sampleCell = cell(CSV_COLUMNS.sample).toLowerCase();
+    let sample: boolean | undefined;
+    if (sampleCell !== '') {
+      if (TRUE_VALUES.has(sampleCell)) sample = true;
+      else if (FALSE_VALUES.has(sampleCell)) sample = false;
+      else rowErrors.push({ row, column: CSV_COLUMNS.sample, message: 'Use true or false' });
+    }
+
     const categories = [
       ...new Set(splitList(cell(CSV_COLUMNS.categories)).map((c) => c.toLowerCase())),
     ];
@@ -218,7 +228,13 @@ export function parseImportCsv(text: string, opts: ParseRowsOptions): ParseRowsR
       result.errors.push(...rowErrors);
       continue;
     }
-    result.rows.push({ row, content: value, categories, ...(status ? { status } : {}) });
+    result.rows.push({
+      row,
+      content: value,
+      categories,
+      ...(status ? { status } : {}),
+      ...(sample === undefined ? {} : { sample }),
+    });
   }
   return result;
 }

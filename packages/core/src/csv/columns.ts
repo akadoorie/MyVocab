@@ -15,6 +15,8 @@ export const CSV_COLUMNS = {
   synonyms: 'synonyms',
   hints: 'hints',
   status: 'status',
+  /** true/false: in the sample set guests play (D-038). Empty = new items off, existing unchanged. */
+  sample: 'sample',
 } as const;
 
 export const REQUIRED_COLUMNS = [CSV_COLUMNS.lang, CSV_COLUMNS.text, CSV_COLUMNS.type] as const;

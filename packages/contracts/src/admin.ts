@@ -26,6 +26,8 @@ export const adminItemCreateSchema = z
     type: itemTypeSchema,
     multipleMeanings: z.boolean().optional(),
     status: itemStatusSchema.optional(),
+    /** In the sample set guests play (D-038); new items default to false. */
+    inSampleSet: z.boolean().optional(),
     categoryIds: z.array(itemIdSchema).max(100).optional(),
     parallel: rawTranslation.optional(),
     meaning: rawTranslation.optional(),
@@ -48,6 +50,8 @@ export const adminItemPatchSchema = z
     type: itemTypeSchema.optional(),
     multipleMeanings: z.boolean().optional(),
     status: itemStatusSchema.optional(),
+    /** In the sample set guests play (D-038); new items default to false. */
+    inSampleSet: z.boolean().optional(),
     categoryIds: z.array(itemIdSchema).max(100).optional(),
     parallel: rawTranslation.optional(),
     meaning: rawTranslation.optional(),
@@ -82,6 +86,7 @@ export const adminItemSchema = z.object({
   synonyms: z.array(z.string()),
   hints: z.array(z.string()),
   status: itemStatusSchema,
+  inSampleSet: z.boolean(),
   version: z.number().int(),
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
@@ -103,6 +108,7 @@ export const adminItemListQuerySchema = z
     categoryId: z.coerce.number().int().positive().optional(),
     status: itemStatusSchema.optional(),
     multipleMeanings: flag.optional(),
+    inSampleSet: flag.optional(),
     missingTranslation: langCodeSchema.optional(),
     missingExplanation: flag.optional(),
     noHints: flag.optional(),
@@ -127,6 +133,7 @@ export const adminItemRowSchema = z.object({
   synonymCount: z.number().int(),
   hintCount: z.number().int(),
   status: itemStatusSchema,
+  inSampleSet: z.boolean(),
   updatedAt: z.number().int(),
 });
 export type AdminItemRow = z.infer<typeof adminItemRowSchema>;
@@ -311,6 +318,17 @@ export const adminStatsSchema = z.object({
     noExplanation: z.number().int(),
     noHints: z.number().int(),
     multipleMeanings: z.number().int(),
+    /** Items in the sample set (D-038). */
+    sampleSet: z.number().int(),
+    /** Sample-set items guests can play, per direction and type (published, with an answer). */
+    sampleByDirection: z.array(
+      z.object({
+        source: z.string(),
+        target: z.string(),
+        type: itemTypeSchema,
+        count: z.number().int(),
+      }),
+    ),
   }),
   users: z.object({ total: z.number().int(), admins: z.number().int() }),
   trash: z.number().int(),
@@ -349,6 +367,7 @@ export const importReportSchema = z.object({
       newHints: z.number().int(),
       newCategories: z.number().int(),
       skippedDuplicates: z.number().int(),
+      sampleSetChanges: z.number().int(),
     })
     .nullable(),
   errors: z.array(csvIssueSchema),

@@ -25,6 +25,8 @@ export type LoopQuery = {
   target: string;
   type: ItemType;
   categoryId: number | null;
+  /** Ask for the sample set only (D-038). Honoured for admins; guests always get it. */
+  sample?: boolean | undefined;
 };
 
 export type StartLoopInput = LoopQuery & { size?: number; turnstileToken?: string };
@@ -44,22 +46,35 @@ export class LoopService {
     },
   ) {}
 
-  private async selection(q: LoopQuery, userId: string | null): Promise<LoopSelection> {
+  /**
+   * What a requester may play (D-038): guests always get the sample set across every topic,
+   * whatever they ask for; admins get it when they ask (to check what guests see); other
+   * learners never do.
+   */
+  private async selection(q: LoopQuery, requester: Requester): Promise<LoopSelection> {
     const languages = (await this.deps.languages.listAll()).filter((l) => l.isActive);
     const codes = new Set(languages.map((l) => l.code));
     if (!codes.has(q.source) || !codes.has(q.target)) {
       throw new ValidationError('Unknown or inactive language');
     }
-    if (q.categoryId !== null) {
-      const category = (await this.deps.categories.listAll()).find((c) => c.id === q.categoryId);
+    const sampleOnly = requester.kind === 'guest' || (requester.isAdmin && q.sample === true);
+    const categoryId = sampleOnly ? null : q.categoryId;
+    if (categoryId !== null) {
+      const category = (await this.deps.categories.listAll()).find((c) => c.id === categoryId);
       if (!category?.isActive) throw new ValidationError('Unknown or inactive category');
     }
-    return { ...q, userId };
+    return {
+      source: q.source,
+      target: q.target,
+      type: q.type,
+      categoryId,
+      sampleOnly,
+      userId: requester.kind === 'learner' ? requester.userId : null,
+    };
   }
 
   async available(q: LoopQuery, requester: Requester): Promise<number> {
-    const userId = requester.kind === 'learner' ? requester.userId : null;
-    return this.deps.loops.countPlayable(await this.selection(q, userId));
+    return this.deps.loops.countPlayable(await this.selection(q, requester));
   }
 
   async start(input: StartLoopInput, requester: Requester): Promise<StartLoopResult> {
@@ -93,10 +108,7 @@ export class LoopService {
       }
     }
 
-    const selection = await this.selection(
-      input,
-      requester.kind === 'learner' ? requester.userId : null,
-    );
+    const selection = await this.selection(input, requester);
     if (requester.kind === 'learner' && !isAdmin) {
       const decision = await this.deps.limits.checkLearnerCards(
         requester.userId,

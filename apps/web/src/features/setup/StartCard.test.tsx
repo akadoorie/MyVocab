@@ -20,6 +20,7 @@ const learner = {
   isGuest: false,
   loading: false,
 };
+const admin = { ...learner, user: { ...learner.user, role: 'admin' as 'user' } };
 
 function mockApi(cards = [makeCard(1), makeCard(2)]) {
   return vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
@@ -164,7 +165,7 @@ describe('StartCard', () => {
     });
     expect(loadLoop()?.cards).toHaveLength(2);
     expect(router.state.location.state).toEqual({
-      insufficient: 'Only 2 new cards in General, starting with 2',
+      insufficient: 'Only 2 new cards in Sample set, starting with 2',
     });
   });
 
@@ -180,5 +181,48 @@ describe('StartCard', () => {
     setup();
     fireEvent.click(screen.getByRole('button', { name: 'Start' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Too many sessions for now.');
+  });
+
+  describe('the sample set (D-038)', () => {
+    const topic = () => screen.getByLabelText('Topic', { exact: true }) as HTMLSelectElement;
+    const option = (name: string) =>
+      [...topic().options].find((o) => o.textContent === name) as HTMLOptionElement;
+
+    it('guests get the Sample set, with every other topic greyed out and locked', () => {
+      mockApi();
+      setup();
+      expect(topic().value).toBe('sample');
+      expect(option('Sample set').disabled).toBe(false);
+      expect(option('General').disabled).toBe(true);
+      expect(option('Home').disabled).toBe(true);
+      expect(topic()).toHaveAccessibleDescription('Sign-in to choose any topic.');
+    });
+
+    it('learners see no Sample set option', () => {
+      mockApi();
+      setup(learner);
+      expect(option('Sample set')).toBeUndefined();
+      expect(topic().value).toBe('');
+    });
+
+    it('admins can pick the Sample set, which the count and the session ask for', async () => {
+      const fetchSpy = mockApi();
+      const router = setup(admin);
+      fireEvent.change(topic(), { target: { value: 'sample' } });
+      expect(topic().value).toBe('sample');
+      await waitFor(() =>
+        expect(
+          fetchSpy.mock.calls.some(
+            ([u]) =>
+              String(u).includes('/api/loops/available?') && String(u).includes('sample=true'),
+          ),
+        ).toBe(true),
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+      await waitFor(() => expect(router.state.location.pathname).toBe('/loop'));
+      const post = fetchSpy.mock.calls.find(([u]) => u === '/api/loops');
+      expect(JSON.parse(String(post?.[1]?.body))).toMatchObject({ categoryId: null, sample: true });
+      expect(loadLoop()?.selection.sample).toBe(true);
+    });
   });
 });

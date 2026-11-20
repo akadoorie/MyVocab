@@ -48,11 +48,31 @@ export function Dashboard() {
         <Stat label={s.dashboard.noExplanation} value={d.items.noExplanation} />
         <Stat label={s.dashboard.noHints} value={d.items.noHints} />
         <Stat label={s.dashboard.multipleMeanings} value={d.items.multipleMeanings} />
+        <Stat label={s.dashboard.sampleSet} value={d.items.sampleSet} to="/admin/items" />
         <Stat label={s.dashboard.users} value={d.users.total} to="/admin/users" />
         <Stat label={s.dashboard.admins} value={d.users.admins} />
         <Stat label={s.dashboard.trash} value={d.trash} to="/admin/trash" />
         <Stat label={s.dashboard.limitEvents} value={d.limitEvents24h} to="/admin/audit" />
       </div>
+      <section className="rounded-[14px] border border-border bg-surface p-5">
+        <h2 className="text-lg font-semibold">{s.dashboard.sampleByDirection}</h2>
+        <p className="mt-1 mb-3 text-sm text-muted">{s.dashboard.sampleByDirectionHelp}</p>
+        <ul className="grid gap-2 sm:grid-cols-2">
+          {d.items.sampleByDirection.map((row) => (
+            <li
+              key={`${row.source}-${row.target}-${row.type}`}
+              className="flex justify-between gap-3 text-sm"
+            >
+              <span>
+                {name(row.source)} → {name(row.target)} · {strings.types[row.type]}
+              </span>
+              <span className={`font-semibold ${row.count < 5 ? 'text-dontknow' : ''}`}>
+                {row.count}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
       {d.items.byLangType.length > 0 && (
         <section className="rounded-[14px] border border-border bg-surface p-5">
           <h2 className="mb-3 text-lg font-semibold">{s.dashboard.byLanguage}</h2>

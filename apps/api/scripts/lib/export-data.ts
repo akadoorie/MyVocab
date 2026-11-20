@@ -102,7 +102,7 @@ export async function vocabularyCsv(d1: D1Database): Promise<{ csv: string; item
     d1
       .prepare(
         `SELECT i.lang, i.text, i.type, i.multiple_meanings, i.translation_parallel AS parallel,
-                i.translation_meaning AS meaning, i.translation_literal AS literal, i.explanation, i.synonyms, i.hints, i.status,
+                i.translation_meaning AS meaning, i.translation_literal AS literal, i.explanation, i.synonyms, i.hints, i.status, i.in_sample_set,
                 (SELECT json_group_array(slug) FROM (
                    SELECT c.slug FROM item_categories ic JOIN categories c ON c.id = ic.category_id
                    WHERE ic.item_id = i.id ORDER BY c.slug)) AS categories
@@ -120,6 +120,7 @@ export async function vocabularyCsv(d1: D1Database): Promise<{ csv: string; item
         synonyms: string;
         hints: string;
         status: ItemStatus;
+        in_sample_set: number;
         categories: string;
       }>(),
   ]);
@@ -138,6 +139,7 @@ export async function vocabularyCsv(d1: D1Database): Promise<{ csv: string; item
     },
     categories: JSON.parse(r.categories) as string[],
     status: r.status,
+    inSampleSet: r.in_sample_set === 1,
   }));
   return {
     csv: serializeItemsCsv(
@@ -221,7 +223,7 @@ export async function exportReadme(
     '  translation_parallel jsonb NOT NULL, translation_meaning jsonb NOT NULL,',
     '  translation_literal jsonb NOT NULL, explanation jsonb NOT NULL, synonyms jsonb NOT NULL,',
     '  hints jsonb NOT NULL,',
-    '  status text NOT NULL, version int NOT NULL, created_at bigint, updated_at bigint, deleted_at bigint);',
+    '  status text NOT NULL, in_sample_set boolean NOT NULL, version int NOT NULL, created_at bigint, updated_at bigint, deleted_at bigint);',
     'CREATE TABLE item_categories (item_id int REFERENCES items(id) ON DELETE CASCADE,',
     '  category_id int REFERENCES categories(id), PRIMARY KEY (item_id, category_id));',
     '```',
@@ -240,11 +242,11 @@ export async function exportReadme(
     "  await db.query('INSERT INTO categories VALUES ($1,$2,$3,$4,$5,$6,$7)',",
     '    [c.id, c.slug, c.name, c.is_active === 1, c.sort_order, c.created_at, c.updated_at]);',
     "for (const i of rows('items'))",
-    "  await db.query('INSERT INTO items VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)', [",
+    "  await db.query('INSERT INTO items VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)', [",
     '    i.id, i.lang, i.text, i.normalized_text, i.type, i.multiple_meanings === 1,',
     '    JSON.stringify(i.translation_parallel), JSON.stringify(i.translation_meaning),',
     '    JSON.stringify(i.translation_literal), JSON.stringify(i.explanation),',
-    '    JSON.stringify(i.synonyms), JSON.stringify(i.hints), i.status, i.version, i.created_at, i.updated_at, i.deleted_at]);',
+    '    JSON.stringify(i.synonyms), JSON.stringify(i.hints), i.status, i.in_sample_set === 1, i.version, i.created_at, i.updated_at, i.deleted_at]);',
     "for (const ic of rows('item_categories'))",
     "  await db.query('INSERT INTO item_categories VALUES ($1,$2)', [ic.item_id, ic.category_id]);",
     'await db.end();',

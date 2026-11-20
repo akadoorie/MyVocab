@@ -16,6 +16,7 @@ const TOTALS = {
   newHints: 0,
   newCategories: 0,
   skippedDuplicates: 0,
+  sampleSetChanges: 0,
 };
 const report = (over: Record<string, unknown>) =>
   Response.json({

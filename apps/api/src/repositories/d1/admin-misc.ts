@@ -445,19 +445,21 @@ export class D1StatsRepository implements StatsRepository {
 
   async stats(activeLangs: readonly string[], since: number) {
     const langs = JSON.stringify(activeLangs);
-    const [totals, byLangType, missing, users, other] = await Promise.all([
+    const [totals, byLangType, missing, users, other, sampleByDirection] = await Promise.all([
       this.db.get<{
         total: number;
         drafts: number;
         no_explanation: number;
         no_hints: number;
         multiple_meanings: number;
+        sample_set: number;
       }>(sql`
         SELECT COUNT(*) AS total,
                COALESCE(SUM(status = 'draft'), 0) AS drafts,
                COALESCE(SUM(json_array_length(explanation) = 0), 0) AS no_explanation,
                COALESCE(SUM(json_array_length(hints) = 0), 0) AS no_hints,
-               COALESCE(SUM(multiple_meanings), 0) AS multiple_meanings
+               COALESCE(SUM(multiple_meanings), 0) AS multiple_meanings,
+               COALESCE(SUM(in_sample_set), 0) AS sample_set
         FROM items WHERE deleted_at IS NULL`),
       this.db.all<{ lang: string; type: ItemType; count: number }>(sql`
         SELECT lang, type, COUNT(*) AS count FROM items WHERE deleted_at IS NULL
@@ -476,6 +478,18 @@ export class D1StatsRepository implements StatsRepository {
         SELECT (SELECT COUNT(*) FROM items WHERE deleted_at IS NOT NULL) AS trash,
                (SELECT COUNT(*) FROM audit_log WHERE created_at >= ${since}
                   AND action = 'limit.exceeded') AS limit_events`),
+      // What guests can play (D-038): the loop's playability rule, sample set only.
+      this.db.all<{ source: string; target: string; type: ItemType; count: number }>(sql`
+        SELECT s.value AS source, t.value AS target, i.type AS type, COUNT(*) AS count
+        FROM json_each(${langs}) AS s
+        JOIN json_each(${langs}) AS t
+        JOIN items AS i ON i.lang = s.value AND i.in_sample_set = 1
+          AND i.status = 'published' AND i.deleted_at IS NULL
+          AND CASE WHEN s.value = t.value THEN json_array_length(i.explanation) > 0
+            ELSE COALESCE(json_array_length(i.translation_meaning, '$."' || t.value || '"'), 0) > 0
+          END
+        GROUP BY s.value, t.value, i.type
+        ORDER BY s.value, t.value, i.type`),
     ]);
     return {
       total: totals?.total ?? 0,
@@ -483,6 +497,8 @@ export class D1StatsRepository implements StatsRepository {
       noExplanation: totals?.no_explanation ?? 0,
       noHints: totals?.no_hints ?? 0,
       multipleMeanings: totals?.multiple_meanings ?? 0,
+      sampleSet: totals?.sample_set ?? 0,
+      sampleByDirection,
       byLangType,
       missingTranslation: Object.fromEntries(missing.map((m) => [m.target, m.count])),
       users: users?.total ?? 0,

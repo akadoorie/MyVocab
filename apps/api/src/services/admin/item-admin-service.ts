@@ -72,6 +72,7 @@ export function itemSnapshot(rec: ItemRecord) {
     synonyms: rec.synonyms,
     hints: rec.hints,
     status: rec.status,
+    inSampleSet: rec.inSampleSet,
     version: rec.version,
     createdAt: rec.createdAt,
     updatedAt: rec.updatedAt,
@@ -173,6 +174,7 @@ export class ItemAdminService {
       synonyms: rec.synonyms,
       hints: rec.hints,
       status: rec.status,
+      inSampleSet: rec.inSampleSet,
       version: rec.version,
       createdAt: rec.createdAt,
       updatedAt: rec.updatedAt,
@@ -218,6 +220,7 @@ export class ItemAdminService {
         synonymCount: r.synonymCount,
         hintCount: r.hintCount,
         status: r.status,
+        inSampleSet: r.inSampleSet,
         updatedAt: r.updatedAt,
       })),
       total,
@@ -237,12 +240,17 @@ export class ItemAdminService {
     if (duplicate !== null) throw duplicateError(duplicate);
 
     const status = input.status ?? 'published';
+    // New items start outside the sample set unless the admin ticks it (D-038).
+    const inSampleSet = input.inSampleSet ?? false;
     let id: number;
     try {
       id = await this.deps.items.create(
-        { ...value, normalizedText, status, categoryIds },
+        { ...value, normalizedText, status, inSampleSet, categoryIds },
         actor,
-        { action: 'item.create', details: { after: { ...value, status, categoryIds } } },
+        {
+          action: 'item.create',
+          details: { after: { ...value, status, inSampleSet, categoryIds } },
+        },
         this.now(),
       );
     } catch (error) {
@@ -303,6 +311,10 @@ export class ItemAdminService {
     if (patch.status !== undefined && patch.status !== rec.status) {
       changes.status = patch.status;
       audit.status = { before: rec.status, after: patch.status };
+    }
+    if (patch.inSampleSet !== undefined && patch.inSampleSet !== rec.inSampleSet) {
+      changes.inSampleSet = patch.inSampleSet;
+      audit.inSampleSet = { before: rec.inSampleSet, after: patch.inSampleSet };
     }
     const categoriesChanged = categoryIds !== undefined && !same(categoryIds, rec.categoryIds);
     if (categoriesChanged) audit.categoryIds = { before: rec.categoryIds, after: categoryIds };

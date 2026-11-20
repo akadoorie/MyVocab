@@ -41,6 +41,7 @@ const storedLoopSchema = z.object({
     categoryId: z.number().int().nullable(),
     type: z.enum(['word', 'expr']),
     size: z.number().int(),
+    sample: z.boolean().optional(),
   }),
   isGuest: z.boolean(),
   /** The summary's celebration was shown (FR-L32a); after Back it isn't repeated. */

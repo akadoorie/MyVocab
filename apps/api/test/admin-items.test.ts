@@ -363,3 +363,72 @@ describe('Trash (FR-A20–24)', () => {
     expect(await count('usage_counters')).toBe(1);
   });
 });
+
+describe('the sample set on items (D-038)', () => {
+  const sampleOf = async (id: number) =>
+    (await req(`/admin/items/${id}`)).json<{ inSampleSet: boolean; version: number }>();
+
+  it('a new item starts outside the sample set unless ticked', async () => {
+    const off = await (
+      await create({ lang: 'en', text: 'fx-new-off', type: 'word', explanation: ['x'] })
+    ).json<{ inSampleSet: boolean }>();
+    expect(off.inSampleSet).toBe(false);
+    const on = await (
+      await create({
+        lang: 'en',
+        text: 'fx-new-on',
+        type: 'word',
+        explanation: ['x'],
+        inSampleSet: true,
+      })
+    ).json<{ inSampleSet: boolean }>();
+    expect(on.inSampleSet).toBe(true);
+  });
+
+  it('a patch switches it and audits the change', async () => {
+    const id = await itemId('fx-word-1');
+    const before = await sampleOf(id);
+    expect(before.inSampleSet).toBe(true);
+    const res = await patch(id, { version: before.version, inSampleSet: false });
+    expect(res.status).toBe(200);
+    expect((await sampleOf(id)).inSampleSet).toBe(false);
+    const details = await env.DB.prepare(
+      `SELECT details FROM audit_log WHERE action = 'item.update'`,
+    ).first<{ details: string }>();
+    expect(JSON.parse(details?.details ?? '{}')).toMatchObject({
+      changes: { inSampleSet: { before: true, after: false } },
+    });
+  });
+
+  it('the list filters by it and shows it on each row', async () => {
+    await env.DB.prepare(`UPDATE items SET in_sample_set = 0 WHERE text = 'fx-word-1'`).run();
+    const list = async (q: string) =>
+      (await req(`/admin/items?${q}`)).json<{
+        total: number;
+        items: { text: string; inSampleSet: boolean }[];
+      }>();
+    const out = await list('inSampleSet=false');
+    expect(out.items.map((i) => i.text)).toEqual(['fx-word-1']);
+    expect(out.items[0]?.inSampleSet).toBe(false);
+    expect((await list('inSampleSet=true')).total).toBe(9);
+  });
+
+  it('the dashboard counts it, and what guests can play per direction', async () => {
+    const stats = await (
+      await req('/admin/stats')
+    ).json<{
+      items: {
+        sampleSet: number;
+        sampleByDirection: { source: string; target: string; type: string; count: number }[];
+      };
+    }>();
+    expect(stats.items.sampleSet).toBe(10);
+    // Published with an answer in that direction: the draft and fx-word-4 (en → he) don't count.
+    expect(stats.items.sampleByDirection).toContainEqual({
+      source: 'en',
+      target: 'he',
+      type: 'word',
+      count: 6,
+    });
+  });
+});

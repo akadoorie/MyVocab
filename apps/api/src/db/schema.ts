@@ -160,6 +160,8 @@ export const items = sqliteTable(
       .notNull()
       .default(sql`'[]'`),
     status: text('status').$type<ItemStatus>().notNull().default('published'),
+    // Guests play only these items (D-038). New items start outside the set.
+    inSampleSet: integer('in_sample_set', { mode: 'boolean' }).notNull().default(false),
     version: integer('version').notNull().default(1),
     createdBy: text('created_by').references(() => user.id, { onDelete: 'set null' }),
     createdAt: integer('created_at').notNull(),

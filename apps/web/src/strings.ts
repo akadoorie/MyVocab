@@ -51,6 +51,9 @@ export const strings = {
     target: 'To',
     category: 'Topic',
     general: 'General',
+    /** The items guests play (D-038); admins can pick it too, to check it. */
+    sampleSet: 'Sample set',
+    guestTopicLocked: 'Sign-in to choose any topic.',
     type: 'Type',
     amount: 'Amount',
     defaultTag: 'Default',
@@ -67,7 +70,7 @@ export const strings = {
     emptyBody: 'Change the selection, or open My known words to bring some back.',
     emptyKnownLink: 'My known words',
     emptyGuestTitle: 'No cards for this selection yet',
-    emptyGuestBody: 'Try a different language, type or category.',
+    emptyGuestBody: 'Try a different language or type.',
     botCheck: 'Checking that you’re human…',
     botCheckFailed: 'The security check didn’t pass. Please try again.',
     genericError: 'Something went wrong. Please try again.',

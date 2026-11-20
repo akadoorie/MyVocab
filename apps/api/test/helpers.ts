@@ -6,19 +6,19 @@ import { createContainer } from '../src/container';
 export const BASE = 'https://myvocab.test';
 export const ORIGIN = 'http://localhost:5173'; // APP_URL in wrangler.jsonc vars
 
-// Synthetic content only (PRD §14.2).
+// Synthetic content only (PRD §14.2). Every fixture is in the sample set guests play (D-038).
 export const FIXTURE_CSV = [
-  'lang,text,type,multiple_meanings,categories,translation_he,translation_en,explanation,synonyms,hints,status,literal_he',
-  'en,fx-word-1,word,false,home,מילה-1,,Explanation one,,Hint one.,published',
-  'en,fx-word-2,word,true,home,מילה-2א|מילה-2ב,,First meaning|Second meaning,syn-a,,published',
-  'en,fx-word-3,word,false,nature,מילה-3,,,,,published',
-  'en,fx-word-4,word,false,,,,Explanation four only,,,published',
-  'en,fx-word-5,word,false,nature,מילה-5,,Explanation five,,,published',
-  'en,fx-word-6,word,false,home,מילה-6,,Explanation six,,,published',
-  'en,fx-word-7,word,false,,מילה-7,,Explanation seven,,,published',
-  'en,fx-draft,word,false,home,מילה-טיוטה,,Draft explanation,,,draft',
-  'en,fx-expr-1,expr,false,,ביטוי-1,,Expression explanation,,,published,מילולי-1',
-  'he,מילה-א,word,false,home,,fx-he-a,הסבר א,,,published',
+  'lang,text,type,sample,multiple_meanings,categories,translation_he,translation_en,explanation,synonyms,hints,status,literal_he',
+  'en,fx-word-1,word,true,false,home,מילה-1,,Explanation one,,Hint one.,published',
+  'en,fx-word-2,word,true,true,home,מילה-2א|מילה-2ב,,First meaning|Second meaning,syn-a,,published',
+  'en,fx-word-3,word,true,false,nature,מילה-3,,,,,published',
+  'en,fx-word-4,word,true,false,,,,Explanation four only,,,published',
+  'en,fx-word-5,word,true,false,nature,מילה-5,,Explanation five,,,published',
+  'en,fx-word-6,word,true,false,home,מילה-6,,Explanation six,,,published',
+  'en,fx-word-7,word,true,false,,מילה-7,,Explanation seven,,,published',
+  'en,fx-draft,word,true,false,home,מילה-טיוטה,,Draft explanation,,,draft',
+  'en,fx-expr-1,expr,true,false,,ביטוי-1,,Expression explanation,,,published,מילולי-1',
+  'he,מילה-א,word,true,false,home,,fx-he-a,הסבר א,,,published',
 ].join('\n');
 
 export async function seedFixtures() {

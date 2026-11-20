@@ -7,6 +7,7 @@ export type ExportItem = {
   content: ItemContent;
   categories: readonly string[];
   status: ItemStatus;
+  inSampleSet: boolean;
 };
 
 /**
@@ -37,6 +38,7 @@ export function csvHeader(translationLangs: readonly LangCode[]): string[] {
     CSV_COLUMNS.synonyms,
     CSV_COLUMNS.hints,
     CSV_COLUMNS.status,
+    CSV_COLUMNS.sample,
   ];
 }
 
@@ -49,7 +51,7 @@ export function serializeItemsCsv(
   languageOrder: readonly LangCode[],
 ): string {
   const langs = translationLanguages(items, languageOrder);
-  const rows = items.map(({ content, categories, status }) => [
+  const rows = items.map(({ content, categories, status, inSampleSet }) => [
     content.lang,
     content.text,
     content.type,
@@ -60,6 +62,7 @@ export function serializeItemsCsv(
     joinList(content.synonyms),
     joinList(content.hints),
     status,
+    inSampleSet ? 'true' : 'false',
   ]);
   return serializeCsv([csvHeader(langs), ...rows], { bom: true });
 }

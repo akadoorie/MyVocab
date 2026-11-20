@@ -110,6 +110,8 @@ export class OpsAdminService {
         noExplanation: s.noExplanation,
         noHints: s.noHints,
         multipleMeanings: s.multipleMeanings,
+        sampleSet: s.sampleSet,
+        sampleByDirection: s.sampleByDirection,
       },
       users: { total: s.users, admins: s.admins },
       trash: s.trash,

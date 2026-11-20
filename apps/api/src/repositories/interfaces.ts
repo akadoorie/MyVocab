@@ -105,6 +105,8 @@ export type LoopSelection = {
   target: string;
   type: ItemType;
   categoryId: number | null;
+  /** Only items in the sample set (guests; admins checking it, D-038). */
+  sampleOnly: boolean;
   /** Signed-in learner: their items known in this direction (`target`) are excluded (D-028). */
   userId: string | null;
 };
@@ -196,6 +198,7 @@ export type ItemRecord = ItemContent & {
   id: number;
   normalizedText: string;
   status: 'draft' | 'published';
+  inSampleSet: boolean;
   version: number;
   createdAt: number;
   updatedAt: number;
@@ -208,6 +211,7 @@ export type ItemRecord = ItemContent & {
 export type NewItem = ItemContent & {
   normalizedText: string;
   status: 'draft' | 'published';
+  inSampleSet: boolean;
   categoryIds: number[];
 };
 
@@ -224,7 +228,7 @@ export type ItemChanges = Partial<
     | 'explanation'
     | 'synonyms'
     | 'hints'
-  > & { normalizedText: string; status: 'draft' | 'published' }
+  > & { normalizedText: string; status: 'draft' | 'published'; inSampleSet: boolean }
 >;
 
 export type AdminItemFilter = {
@@ -234,6 +238,7 @@ export type AdminItemFilter = {
   categoryId?: number | undefined;
   status?: 'draft' | 'published' | undefined;
   multipleMeanings?: boolean | undefined;
+  inSampleSet?: boolean | undefined;
   missingTranslation?: string | undefined;
   missingExplanation?: boolean | undefined;
   noHints?: boolean | undefined;
@@ -253,6 +258,7 @@ export type AdminItemListRow = {
   synonymCount: number;
   hintCount: number;
   status: 'draft' | 'published';
+  inSampleSet: boolean;
   updatedAt: number;
 };
 
@@ -437,6 +443,8 @@ export interface StatsRepository {
     noExplanation: number;
     noHints: number;
     multipleMeanings: number;
+    sampleSet: number;
+    sampleByDirection: { source: string; target: string; type: ItemType; count: number }[];
     byLangType: { lang: string; type: ItemType; count: number }[];
     missingTranslation: Record<string, number>;
     users: number;

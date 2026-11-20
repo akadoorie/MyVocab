@@ -27,6 +27,7 @@ type Header = {
   type: 'word' | 'expr';
   multipleMeanings: boolean;
   status: 'draft' | 'published';
+  inSampleSet: boolean;
   categoryIds: number[];
 };
 
@@ -52,7 +53,7 @@ function HeaderFields({
   categories: AdminCategory[];
   errors: Record<string, string>;
 }) {
-  const ids = { text: useId(), type: useId(), status: useId(), mm: useId() };
+  const ids = { text: useId(), type: useId(), status: useId(), mm: useId(), sample: useId() };
   const set = <K extends keyof Header>(key: K, v: Header[K]) => onChange({ ...value, [key]: v });
   return (
     <>
@@ -109,6 +110,22 @@ function HeaderFields({
         />
         <span>◆ {s.editor.multipleMeanings}</span>
       </label>
+      <label htmlFor={ids.sample} className="flex min-h-11 items-center gap-3 md:col-span-2">
+        <input
+          id={ids.sample}
+          type="checkbox"
+          checked={value.inSampleSet}
+          onChange={(e) => set('inSampleSet', e.target.checked)}
+          className="h-5 w-5 accent-[var(--accent)]"
+          aria-describedby={`${ids.sample}-help`}
+        />
+        <span>
+          {s.editor.inSampleSet}
+          <span id={`${ids.sample}-help`} className="block text-xs text-muted">
+            {s.editor.inSampleSetHelp}
+          </span>
+        </span>
+      </label>
       <fieldset className="md:col-span-2">
         <legend className="mb-2 text-sm text-muted">{s.editor.categories}</legend>
         <div className="flex flex-wrap gap-2">
@@ -154,6 +171,8 @@ export function NewItemPage() {
     type: 'word',
     multipleMeanings: false,
     status: 'published',
+    // New items start outside the sample set (D-038).
+    inSampleSet: false,
     categoryIds: [],
   });
   const [error, setError] = useState<unknown>(null);
@@ -280,6 +299,7 @@ function headerOf(item: AdminItem): Header {
     type: item.type,
     multipleMeanings: item.multipleMeanings,
     status: item.status,
+    inSampleSet: item.inSampleSet,
     categoryIds: item.categoryIds,
   };
 }

@@ -196,6 +196,37 @@ en,marker-expression,expr,משמעות,מקבילה,=parallel`,
   });
 });
 
+describe('the sample column (D-038)', () => {
+  const sampleOf = async (text: string) =>
+    (
+      await env.DB.prepare('SELECT in_sample_set AS s FROM items WHERE text = ?')
+        .bind(text)
+        .first<{ s: number }>()
+    )?.s;
+  const importRows = (rows: string) =>
+    createContainer(env.DB).csvImport.run({
+      csvText: `lang,text,type,explanation,sample\n${rows}`,
+      fileName: 'sample.csv',
+      dryRun: false,
+      createMissingCategories: false,
+      actor: null,
+    });
+
+  it('creates items in or out of the set, then switches existing ones', async () => {
+    await importRows('en,fx-s-1,word,One,true\nen,fx-s-2,word,Two,\nen,fx-s-3,word,Three,true');
+    expect([await sampleOf('fx-s-1'), await sampleOf('fx-s-2'), await sampleOf('fx-s-3')]).toEqual([
+      1, 0, 1,
+    ]);
+    const report = await importRows(
+      'en,fx-s-1,word,One,false\nen,fx-s-2,word,Two,true\nen,fx-s-3,word,Three,',
+    );
+    expect(report.totals?.sampleSetChanges).toBe(2);
+    expect([await sampleOf('fx-s-1'), await sampleOf('fx-s-2'), await sampleOf('fx-s-3')]).toEqual([
+      0, 1, 1,
+    ]);
+  });
+});
+
 describe('slugToName', () => {
   it('turns a slug into Title Case words', () => {
     expect(slugToName('electronics-devices')).toBe('Electronics Devices');

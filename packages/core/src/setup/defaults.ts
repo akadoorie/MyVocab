@@ -13,6 +13,8 @@ export type StartChoices = {
   categoryId: number | null;
   type: ItemType;
   size: number;
+  /** Admins only: play the sample set guests get (D-038). Guests always get it. */
+  sample?: boolean;
 };
 
 export type StartSettings = {

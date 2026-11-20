@@ -65,12 +65,16 @@ export const publicRoutes = new Hono<AppEnv>()
   })
   .get('/loops/available', burstLimit('RL_AVAILABLE', ipKey), async (c) => {
     const q = parseOrThrow(availableQuerySchema, c.req.query());
-    const available = await c
-      .get('container')
-      .loops.available(
-        { source: q.source, target: q.target, type: q.type, categoryId: q.categoryId ?? null },
-        await c.get('requester')(),
-      );
+    const available = await c.get('container').loops.available(
+      {
+        source: q.source,
+        target: q.target,
+        type: q.type,
+        categoryId: q.categoryId ?? null,
+        sample: q.sample === 'true',
+      },
+      await c.get('requester')(),
+    );
     return c.json<AvailableResponse>({ available });
   })
   .post('/loops', burstLimit('RL_LOOPS', ipKey), async (c) => {

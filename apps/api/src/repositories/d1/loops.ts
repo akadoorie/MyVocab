@@ -31,9 +31,10 @@ function whereClause(s: LoopSelection): SQL {
       sql`AND NOT EXISTS (SELECT 1 FROM user_known_items k
           WHERE k.user_id = ${s.userId} AND k.item_id = i.id AND k.known_target = ${s.target})`
     : sql``;
+  const sample = s.sampleOnly ? sql`AND i.in_sample_set = 1` : sql``;
   return sql`i.lang = ${s.source} AND i.type = ${s.type}
     AND i.status = 'published' AND i.deleted_at IS NULL
-    AND ${answer} ${known}`;
+    AND ${answer} ${known} ${sample}`;
 }
 
 /** With a category, start from its links so only that category's items are read. */

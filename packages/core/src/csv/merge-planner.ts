@@ -21,7 +21,13 @@ import { toCsvIssue, type CsvIssue, type ParsedRow } from './parse-rows';
  * into existing items. Nothing is ever deleted or overwritten; only new entries are appended.
  */
 
-export type ExistingItem = { id: number; content: ItemContent; categories: readonly string[] };
+export type ExistingItem = {
+  id: number;
+  content: ItemContent;
+  categories: readonly string[];
+  /** In the sample set guests play (D-038). */
+  inSampleSet: boolean;
+};
 
 export type PlanContext = {
   languages: LanguageMap;
@@ -35,6 +41,8 @@ export type PlannedCreate = {
   content: ItemContent;
   categories: string[];
   status: ItemStatus;
+  /** From the `sample` column; off when the file doesn't say (D-038). */
+  inSampleSet: boolean;
   rows: number[];
 };
 
@@ -43,6 +51,11 @@ export type PlannedUpdate = {
   /** The full merged content (existing entries first, new ones appended). */
   content: ItemContent;
   categoriesToAdd: string[];
+  /**
+   * Set only when the `sample` column changes the item's sample-set membership (D-038). The one
+   * exception to append-only: the column is an explicit instruction, so it can also turn it off.
+   */
+  inSampleSet?: boolean;
   rows: number[];
   /** False when the file adds nothing new to this item. */
   changed: boolean;
@@ -59,6 +72,8 @@ export type ImportTotals = {
   newHints: number;
   newCategories: number;
   skippedDuplicates: number;
+  /** Existing items put in or taken out of the sample set (D-038). */
+  sampleSetChanges: number;
 };
 
 export type ImportPlan = {
@@ -130,6 +145,7 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
       newHints: 0,
       newCategories: 0,
       skippedDuplicates: 0,
+      sampleSetChanges: 0,
     },
     errors: [],
     warnings: [],
@@ -232,7 +248,16 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
       counts.explanation.added +
       counts.synonyms.added +
       counts.hints.added;
-    const changed = !existing || added > 0 || flagTurnedOn || categoriesToAdd.length > 0;
+    // The last row with a `sample` value decides (D-038).
+    const sample = group.findLast((r) => r.sample !== undefined)?.sample;
+    const sampleChange =
+      existing && sample !== undefined && sample !== existing.inSampleSet ? sample : undefined;
+    const changed =
+      !existing ||
+      added > 0 ||
+      flagTurnedOn ||
+      categoriesToAdd.length > 0 ||
+      sampleChange !== undefined;
     if (changed) {
       const itemWarnings = [
         ...multipleMeaningsWarnings(content),
@@ -259,11 +284,25 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
     const rowNumbers = group.map((r) => r.row);
     if (existing) {
       plan.totals.mergedItems++;
-      plan.updates.push({ id: existing.id, content, categoriesToAdd, rows: rowNumbers, changed });
+      if (sampleChange !== undefined) plan.totals.sampleSetChanges++;
+      plan.updates.push({
+        id: existing.id,
+        content,
+        categoriesToAdd,
+        ...(sampleChange === undefined ? {} : { inSampleSet: sampleChange }),
+        rows: rowNumbers,
+        changed,
+      });
     } else {
       plan.totals.newItems++;
       const status = group.find((r) => r.status !== undefined)?.status ?? 'published';
-      plan.creates.push({ content, categories: [...categories], status, rows: rowNumbers });
+      plan.creates.push({
+        content,
+        categories: [...categories],
+        status,
+        inSampleSet: sample ?? false,
+        rows: rowNumbers,
+      });
     }
   }
 

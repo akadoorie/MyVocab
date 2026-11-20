@@ -12,12 +12,14 @@ import { createContainer } from '../src/container';
 import { D1ItemRepository } from '../src/repositories/d1/items';
 import {
   api,
+  authed,
   categoryId,
   count,
   mockTurnstile,
   postJson,
   seedFixtures,
   setSetting,
+  signIn,
 } from './helpers';
 
 beforeEach(seedFixtures);
@@ -73,9 +75,13 @@ describe('GET /api/loops/available', () => {
     expect(await available('source=en&target=en&type=word')).toBe(6); // explanation: not fx-word-3
     expect(await available('source=en&target=he&type=expr')).toBe(1);
     expect(await available('source=he&target=en&type=word')).toBe(1);
-    expect(
-      await available(`source=en&target=he&type=word&categoryId=${await categoryId('home')}`),
-    ).toBe(3);
+    // A category narrows the count for signed-in learners (guests always get the sample set).
+    const { cookie } = await signIn();
+    const home = await authed(
+      cookie,
+      `/loops/available?source=en&target=he&type=word&categoryId=${await categoryId('home')}`,
+    );
+    expect(availableResponseSchema.parse(await home.json()).available).toBe(3);
   });
 
   it('excludes items in Trash', async () => {
@@ -116,8 +122,10 @@ describe('GET /api/loops/available', () => {
   it('rejects invalid queries', async () => {
     expect((await api('/loops/available?source=en&target=he&type=synonym')).status).toBe(400);
     expect((await api('/loops/available?source=fr&target=he&type=word')).status).toBe(400);
+    const { cookie } = await signIn();
     expect(
-      (await api('/loops/available?source=en&target=he&type=word&categoryId=999')).status,
+      (await authed(cookie, '/loops/available?source=en&target=he&type=word&categoryId=999'))
+        .status,
     ).toBe(400);
     expect((await api('/loops/available?source=en&target=he&type=word&extra=1')).status).toBe(400);
   });
@@ -155,9 +163,9 @@ describe('POST /api/loops (guest)', () => {
     const now = Date.now();
     await env.DB.prepare(
       `INSERT INTO items (lang, text, normalized_text, type, translation_meaning, translation_literal,
-         created_at, updated_at)
+         in_sample_set, created_at, updated_at)
        VALUES ('en', 'fx-expr-meaning', 'fx-expr-meaning', 'expr', '{"he":["משמעות-1"]}',
-         '{"he":["מילולי-2"]}', ?, ?)`,
+         '{"he":["מילולי-2"]}', 1, ?, ?)`,
     )
       .bind(now, now)
       .run();
@@ -175,8 +183,9 @@ describe('POST /api/loops (guest)', () => {
     });
     // A literal translation alone doesn't make an item playable.
     await env.DB.prepare(
-      `INSERT INTO items (lang, text, normalized_text, type, translation_literal, created_at, updated_at)
-       VALUES ('en', 'fx-expr-literal', 'fx-expr-literal', 'expr', '{"he":["מילולי-3"]}', ?, ?)`,
+      `INSERT INTO items (lang, text, normalized_text, type, translation_literal, in_sample_set,
+         created_at, updated_at)
+       VALUES ('en', 'fx-expr-literal', 'fx-expr-literal', 'expr', '{"he":["מילולי-3"]}', 1, ?, ?)`,
     )
       .bind(now, now)
       .run();
@@ -317,5 +326,50 @@ describe('LoopService (learner path)', () => {
     await expect(
       loops.start({ ...guestBody, size: 10 }, { ...learner, isAdmin: true }),
     ).resolves.toBeTruthy();
+  });
+});
+
+describe('the sample set (D-038)', () => {
+  const Q = 'source=en&target=he&type=word';
+  const count = async (res: Response) => availableResponseSchema.parse(await res.json()).available;
+  // fx-word-1 leaves the set: 5 of the 6 playable en → he words stay in it.
+  beforeEach(async () => {
+    await env.DB.prepare(`UPDATE items SET in_sample_set = 0 WHERE text = 'fx-word-1'`).run();
+  });
+
+  it('guests count only the sample set, whatever category they send', async () => {
+    expect(await count(await api(`/loops/available?${Q}`))).toBe(5);
+    expect(
+      await count(await api(`/loops/available?${Q}&categoryId=${await categoryId('home')}`)),
+    ).toBe(5);
+    expect(await count(await api(`/loops/available?${Q}&categoryId=999`))).toBe(5);
+  });
+
+  it('learners see every item and cannot ask for the sample set; admins can', async () => {
+    const learner = await signIn('user', 'learner@example.test');
+    expect(await count(await authed(learner.cookie, `/loops/available?${Q}`))).toBe(6);
+    expect(await count(await authed(learner.cookie, `/loops/available?${Q}&sample=true`))).toBe(6);
+    const admin = await signIn('admin', 'boss@example.test');
+    expect(await count(await authed(admin.cookie, `/loops/available?${Q}`))).toBe(6);
+    expect(await count(await authed(admin.cookie, `/loops/available?${Q}&sample=true`))).toBe(5);
+  });
+
+  it('a guest session only ever deals sample-set items', async () => {
+    await env.DB.prepare(`UPDATE items SET in_sample_set = 0 WHERE text <> 'fx-word-2'`).run();
+    mockTurnstile(true);
+    const res = await postJson('/loops', { ...guestBody, categoryId: await categoryId('nature') });
+    const body = startLoopResponseSchema.parse(await res.json());
+    expect(body.cards.map((c) => c.front.text)).toEqual(['fx-word-2']);
+  });
+
+  it('an admin session asked for the sample set deals only those items', async () => {
+    await env.DB.prepare(`UPDATE items SET in_sample_set = 0 WHERE text <> 'fx-word-2'`).run();
+    const admin = await signIn('admin', 'boss@example.test');
+    const res = await authed(admin.cookie, '/loops', {
+      method: 'POST',
+      json: { ...guestBody, size: 10, sample: true },
+    });
+    const body = startLoopResponseSchema.parse(await res.json());
+    expect(body.cards.map((c) => c.front.text)).toEqual(['fx-word-2']);
   });
 });

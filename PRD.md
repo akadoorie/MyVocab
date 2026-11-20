@@ -216,6 +216,12 @@ private content repository. It never appears in the public code repo or any publ
   - once automatically, the first time a guest sees the start card in a browser session, and
   - every time the guest taps/clicks the locked Amount field.
   The server **enforces** 5 for guests regardless of the request (§12.1).
+- **FR-L6a Guest topic: the Sample set** (D-038): guests play only items marked **"Include in Sample set"**, across
+  every topic. Their Topic dropdown shows **"Sample set"** selected, with "General" and every topic listed below it
+  **greyed out and unselectable**, a lock icon on the field, and the note "Sign-in to choose any topic." They still
+  choose the languages and the type, and the "N new cards available" count only counts the sample set. The server
+  **enforces** it for guests whatever the request says (both the count and starting a session). Signed-in learners
+  never see a "Sample set" option; **admins** do, so they can play exactly what guests get.
 - **FR-L7** The start card shows **"N new cards available"** for the current selection (debounced 300 ms; counts only
   playable items (FR-L40); excludes known items for signed-in users).
 - **FR-L8** If fewer cards are available than the amount, the loop starts with all available cards and shows a notice
@@ -431,16 +437,20 @@ so learners never download it. All admin pages work on mobile (tables collapse i
 
 ### 7.1 Dashboard (`/admin`)
 - **FR-A1** Counts: items (by language and type), items missing a translation (per language), items without an
-  explanation, items with no hints, items with multiple meanings, users, admins, items in Trash, rate-limit/scraping
-  events in the last 24 h. Quick links.
+  explanation, items with no hints, items with multiple meanings, items in the Sample set, users, admins, items in
+  Trash, rate-limit/scraping events in the last 24 h. Quick links. A **"What guests can play (Sample set)"** section
+  lists the published Sample-set items with an answer for each direction and type (fewer than 5 is shown in red,
+  D-038).
 
 ### 7.2 Items (`/admin/items`, `/admin/items/new`, `/admin/items/:id`)
-- **FR-A10** List: search (text and translations), filters (language, type, category, status, multiple meanings,
+- **FR-A10** List: search (text and translations), filters (language, type, category, status, Sample set (in / not
+  in), multiple meanings,
   "missing translation into X", "missing explanation", "no hints", "not playable"), sort, pagination (50 per page).
-  Columns: text, language, type, ◆, categories, translation badges per language, explanation ✓, hint count, status,
-  updated.
+  Columns: text, language, type, ◆, a "Sample" badge, categories, translation badges per language, explanation ✓, hint
+  count, status, updated.
 - **FR-A11** **Item editor**:
-  - **Header**: language, text, type (word/expr), **Multiple meanings** (toggle), status (draft/published),
+  - **Header**: language, text, type (word/expr), **Multiple meanings** (toggle), **Include in Sample set** (toggle,
+    off for new items, D-038), status (draft/published),
     categories (multi-select chips). The **language is chosen at creation and then fixed** (to change it, create a new
     item); this keeps an existing translation from becoming a same-language translation. Save validates uniqueness
     (same language + normalized text + type among non-deleted items).
@@ -589,6 +599,7 @@ This JSON shape is used by the API, the admin editor and the JSON export (illust
 | `synonyms` | Ordered list in `lang` (≤ 20 entries, each ≤ 100 chars) |
 | `hints` | Ordered list in `lang` (≤ 20 entries, each ≤ 500 chars) |
 | `status` | `published` (default) or `draft` (hidden from loops) |
+| `in_sample_set` | Guests play only these items (D-038). Off for new items; every item that existed when it was added was put in |
 
 - The meaning is required to play an item into a language; the parallel and the literal translation are optional
   (D-024, D-025). Example, the Hebrew idiom "יצא המרצע מן השק" in English: parallel "The cat is out of the bag",
@@ -635,6 +646,7 @@ The same normalization (case-insensitive, NFC) is used to de-duplicate entries w
 | `synonyms` | no | `|`-separated |
 | `hints` | no | `|`-separated |
 | `status` | no | `published` (default) or `draft` |
+| `sample` | no | `true` / `false`: in the Sample set guests play (D-038). Empty: off for a new item, unchanged for an existing one. The one column that can change an existing item both ways (the import is otherwise append-only) |
 
 Rules:
 - A row must have **at least one meaning or explanation** (otherwise it can't be played in any direction).
@@ -1264,8 +1276,8 @@ LIMIT :n;
 | GET | `/health` | `{ ok: true, version }` |
 | GET | `/meta` | `{ languages[], categories[], types: [{ id: 'word', label: 'Words' }, { id: 'expr', label: 'Expressions' }], defaults: { sourceLang, targetLang, categoryId, type, size }, sizeOptions, guest: { enabled, loopSize }, undoWindowSeconds, maintenance, turnstileSiteKey }` |
 | GET | `/stats/registered-users` | `{ registeredUsers: number }`: accounts that are not admins and not banned; kept 30 minutes per Worker instance (D-036) |
-| GET | `/loops/available?source&target&type&categoryId` | `{ available: number }` (excludes known items if signed in) |
-| POST | `/loops` | Body `{ source, target, type: 'word' \| 'expr', categoryId: number \| null, size?, turnstileToken? }` → `{ requested, returned, cards: CardView[] }` |
+| GET | `/loops/available?source&target&type&categoryId&sample` | `{ available: number }` (excludes known items if signed in; guests always count the Sample set, admins with `sample=true`, D-038) |
+| POST | `/loops` | Body `{ source, target, type: 'word' \| 'expr', categoryId: number \| null, size?, sample?, turnstileToken? }` (guests always get the Sample set; admins with `sample: true`, D-038) → `{ requested, returned, cards: CardView[] }` |
 
 ```ts
 type Dir = 'ltr' | 'rtl';

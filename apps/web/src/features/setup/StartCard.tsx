@@ -41,6 +41,7 @@ export function StartCard({
   quiet?: boolean;
 }) {
   const isGuest = session.isGuest;
+  const isAdmin = session.user?.role === 'admin';
   const isDesktop = useMediaQuery(DESKTOP_QUERY, true);
   const toast = useToast();
   const {
@@ -88,6 +89,7 @@ export function StartCard({
       target: choices.targetLang,
       type: choices.type,
       categoryId: choices.categoryId,
+      sample: choices.sample === true,
     },
     300,
   );
@@ -99,6 +101,7 @@ export function StartCard({
         target: query.target,
         type: query.type,
         ...(query.categoryId === null ? {} : { categoryId: query.categoryId }),
+        ...(query.sample ? { sample: 'true' as const } : {}),
       }),
   });
 
@@ -209,24 +212,72 @@ export function StartCard({
               {strings.setup.sameLanguageNote}
             </p>
           )}
-          <Field label={strings.setup.category} isDefault={defaultSet.has('categoryId')}>
-            {({ id, className }) => (
-              <select
-                id={id}
-                className={className}
-                value={choices.categoryId ?? ''}
-                onChange={(e) =>
-                  set('categoryId', e.target.value === '' ? null : Number(e.target.value))
-                }
-              >
-                <option value="">{strings.setup.general}</option>
-                {meta.categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            )}
+          <Field
+            label={strings.setup.category}
+            isDefault={isGuest || (defaultSet.has('categoryId') && !choices.sample)}
+          >
+            {({ id, className }) =>
+              isGuest ? (
+                // Guests play the sample set (D-038). The other topics are listed, greyed out
+                // and unselectable, to show what signing in unlocks.
+                <div className="flex flex-col gap-1.5">
+                  <div className="relative">
+                    <select
+                      id={id}
+                      className={`${className} pr-9`}
+                      value="sample"
+                      onChange={() => {}}
+                      aria-describedby={`${id}-locked`}
+                    >
+                      <option value="sample">{strings.setup.sampleSet}</option>
+                      <option value="" disabled>
+                        {strings.setup.general}
+                      </option>
+                      {meta.categories.map((c) => (
+                        <option key={c.id} value={c.id} disabled>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute top-1/2 right-8 -translate-y-1/2 text-sm"
+                    >
+                      🔒
+                    </span>
+                  </div>
+                  <p id={`${id}-locked`} className="text-xs text-muted">
+                    {strings.setup.guestTopicLocked}
+                  </p>
+                </div>
+              ) : (
+                <select
+                  id={id}
+                  className={className}
+                  value={choices.sample ? 'sample' : (choices.categoryId ?? '')}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setError(null);
+                    setChoices(({ sample: _sample, ...c }) =>
+                      v === 'sample'
+                        ? { ...c, categoryId: null, sample: true }
+                        : { ...c, categoryId: v === '' ? null : Number(v) },
+                    );
+                  }}
+                >
+                  {isAdmin && (
+                    // Admins can play exactly what guests get (D-038).
+                    <option value="sample">{strings.setup.sampleSet}</option>
+                  )}
+                  <option value="">{strings.setup.general}</option>
+                  {meta.categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              )
+            }
           </Field>
           <Field label={strings.setup.type} isDefault={defaultSet.has('type')}>
             {({ id }) => (
