@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node scripts/ensure-assets-dir.mjs && wrangler dev --port 8787",
+    "dev": "node scripts/ensure-assets-dir.mjs && pnpm db:migrate:local && wrangler dev --port 8787",
     "cf-typegen": "wrangler types",
     "typecheck": "tsc -p tsconfig.json",
     "test": "node scripts/ensure-assets-dir.mjs && vitest run",

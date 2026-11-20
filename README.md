@@ -80,17 +80,17 @@ pnpm dev                                          # http://localhost:5173
 
 ## Scripts
 
-| Command                     | What it does                                                   |
-| --------------------------- | -------------------------------------------------------------- |
-| `pnpm dev`                  | Vite dev server + `wrangler dev` (local Worker and local D1)   |
-| `pnpm build`                | Builds the SPA into `apps/web/dist`                            |
-| `pnpm lint` / `pnpm format` | ESLint / Prettier                                              |
-| `pnpm typecheck`            | TypeScript in every package                                    |
-| `pnpm test`                 | Unit, Worker integration, component and script tests           |
-| `pnpm e2e`                  | Playwright end-to-end tests (desktop + mobile, synthetic data) |
-| `pnpm check:no-vocabulary`  | Fails if vocabulary, DB dumps or exports would enter this repo |
-| `pnpm db:seed`              | Imports a CSV into the local database (see below)              |
-| `pnpm db:export`            | Exports the database on your computer (see below)              |
+| Command                     | What it does                                                                                   |
+| --------------------------- | ---------------------------------------------------------------------------------------------- |
+| `pnpm dev`                  | Applies local D1 migrations, then Vite dev server + `wrangler dev` (local Worker and local D1) |
+| `pnpm build`                | Builds the SPA into `apps/web/dist`                                                            |
+| `pnpm lint` / `pnpm format` | ESLint / Prettier                                                                              |
+| `pnpm typecheck`            | TypeScript in every package                                                                    |
+| `pnpm test`                 | Unit, Worker integration, component and script tests                                           |
+| `pnpm e2e`                  | Playwright end-to-end tests (desktop + mobile, synthetic data)                                 |
+| `pnpm check:no-vocabulary`  | Fails if vocabulary, DB dumps or exports would enter this repo                                 |
+| `pnpm db:seed`              | Imports a CSV into the local database (see below)                                              |
+| `pnpm db:export`            | Exports the database on your computer (see below)                                              |
 
 ## Testing
 
