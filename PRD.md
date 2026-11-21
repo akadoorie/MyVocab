@@ -212,7 +212,7 @@ private content repository. It never appears in the public code repo or any publ
   fields says "Same language: the back shows an explanation".
 - **FR-L6 Guest amount**: guests see the Amount field fixed at **5** with a lock icon. It cannot be changed. A
   **temporary toast** says: **"Sign-in to choose more cards per session."**, where **"Sign-in"** is a link that
-  starts sign-in (D-043), and auto-dismisses after ~5 s. On desktop it appears inside the Amount field, on its
+  starts sign-in (D-043), and auto-dismisses after 2 s on phones (D-045). On desktop it appears inside the Amount field, on its
   right side (the lock and the 5 stay visible), instead of the toast corner (D-044). It appears:
   - once automatically, the first time a guest sees the start card in a browser session, and
   - every time the guest taps/clicks the locked Amount field.
