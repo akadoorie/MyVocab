@@ -20,10 +20,9 @@ import { useDebounced } from './useDebounced';
 import { useStartLoop } from './useStartLoop';
 
 const GUEST_TOAST_FLAG = 'myvocab.guestAmountToast';
-/** How long the guest amount toast stays on phones (D-045). */
+/** How long the guest amount message stays: the toast on phones, inside the field on desktop (D-045). */
 const GUEST_TOAST_MS = 2000;
-/** How long the guest amount message covers the Amount field on desktop (D-044). */
-const AMOUNT_TIP_MS = 5000;
+const AMOUNT_TIP_MS = GUEST_TOAST_MS;
 /** Three non-breaking spaces: indents a topic under the guests' "Topics" heading (D-041). */
 const INDENT = String.fromCharCode(160).repeat(3);
 
