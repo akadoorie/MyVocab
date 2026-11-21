@@ -148,7 +148,7 @@ describe('FlipCard', () => {
     expect(screen.getByText(/Multiple meanings/)).toBeInTheDocument();
   });
 
-  it('has a Flip button on both faces (only the visible one is reachable); a card tap also flips', () => {
+  it('has a Flip button on both faces (only the visible one is reachable); a card tap does not flip (D-047)', () => {
     const onFlip = vi.fn();
     const { rerender } = render(
       <FlipCard card={makeCard(6)} side="front" hintsShown={false} onFlip={onFlip} />,
@@ -164,6 +164,6 @@ describe('FlipCard', () => {
     expect(face('back')).toContainElement(flipButtons()[0] as HTMLElement);
     fireEvent.click(flipButtons()[0] as HTMLElement);
     fireEvent.click(screen.getByTestId('flip-card'));
-    expect(onFlip).toHaveBeenCalledTimes(3);
+    expect(onFlip).toHaveBeenCalledTimes(2); // the tap on the card did nothing
   });
 });

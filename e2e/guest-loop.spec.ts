@@ -59,21 +59,27 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   await expect(page).toHaveURL(/\/loop$/);
   await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 0 known');
 
-  // Hints on the front, then Flip shows hints on the back; flip back and forth by button and tap.
-  await button(page, 'Hints').click();
-  await expect(page.getByTestId('front-hints')).toBeVisible();
-  await expect(button(page, 'Hints')).toHaveAttribute('aria-pressed', 'true');
-  // Hints is a toggle: a second press hides them, a third shows them again.
-  await button(page, 'Hints').click();
-  await expect(page.getByTestId('front-hints')).toHaveCount(0);
-  await button(page, 'Hints').click();
-  await expect(page.getByTestId('front-hints')).toBeVisible();
+  // Hints sit on the front under a live cover (D-047): a tap reveals, another covers. (A card
+  // without hints or synonyms has no cover; the admin preview test always has one.)
+  const cover = page.getByRole('button', { name: 'Tap to see hints', exact: true });
+  if (await cover.count()) {
+    await cover.click();
+    await expect(page.getByTestId('front-hints')).toBeVisible();
+    await expect(card(page)).toHaveAttribute('data-side', 'front'); // revealing doesn't flip
+    await button(page, 'Hide hints').click();
+    await expect(page.getByTestId('front-hints')).toHaveCount(0);
+    await button(page, 'Tap to see hints').click();
+    await expect(page.getByTestId('front-hints')).toBeVisible();
+  }
+  // Only the Flip button turns the card; a tap on the card does nothing (D-047).
+  await card(page).click({ position: { x: 20, y: 20 } });
+  await expect(card(page)).toHaveAttribute('data-side', 'front');
   await button(page, 'Flip').click();
   await expect(card(page)).toHaveAttribute('data-side', 'back');
   await expect(page.getByTestId('back-hints')).toBeVisible();
-  await card(page).click();
+  await button(page, 'Flip').click();
   await expect(card(page)).toHaveAttribute('data-side', 'front');
-  await card(page).click();
+  await button(page, 'Flip').click();
   await expect(card(page)).toHaveAttribute('data-side', 'back');
 
   // Know from the back side → next card, front side up. A guest's Know is the orange one; the

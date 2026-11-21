@@ -322,6 +322,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
             side={state.side}
             hintsShown={state.hintsShown}
             onFlip={() => act('FLIP')}
+            onToggleHints={() => act('TOGGLE_HINTS')}
             answer={shownAnswer}
           />
         </div>

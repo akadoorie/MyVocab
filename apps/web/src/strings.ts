@@ -233,6 +233,9 @@ export const strings = {
     showingAnswer: 'Showing answer',
     hintsShown: 'Hints shown',
     hintsHidden: 'Hints hidden',
+    /** The live cover over the hints on the card front (D-047). */
+    hideHints: 'Hide hints',
+    tapForHints: 'Tap to see hints',
     answeredKnow: 'Your answer: I know it',
     answeredKnowAgain: 'Your answer: I know it (show again in future)',
     answeredDontKnow: 'Your answer: I don’t know',

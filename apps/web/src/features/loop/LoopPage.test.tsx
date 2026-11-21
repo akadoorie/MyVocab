@@ -67,7 +67,7 @@ describe('LoopPage', () => {
     for (const name of [
       'I know it Show again in future',
       'I don’t know Show again soon',
-      'Hints',
+      'Tap to see hints', // the live cover over the hints on the card (D-047)
       'Flip',
     ])
       expect(btn(name)).toBeEnabled();
@@ -89,24 +89,29 @@ describe('LoopPage', () => {
     expect(btn('Next')).toHaveClass('is-urgent');
     expect(btn('Next')).toBeEnabled();
     expect(document.activeElement).toBe(btn('Next'));
-    expect(btn('Hints')).toBeDisabled(); // only while the front shows
+    // The hints cover is on the front only (the back shows the hints uncovered).
+    expect(screen.queryByRole('button', { name: 'Tap to see hints' })).toBeNull();
     fireEvent.click(btn('Flip'));
-    expect(btn('Hints')).toBeEnabled();
+    expect(btn('Tap to see hints')).toBeEnabled();
   });
 
-  it('Hints is a toggle: on (pressed, hints shown), then off (back to before)', () => {
+  it('the hints cover is a toggle: a tap reveals, another covers; H too; the card stays put (D-047)', () => {
     setup();
     const front = () => screen.queryByTestId('front-hints');
     expect(front()).toBeNull();
-    fireEvent.click(btn('Hints'));
-    expect(btn('Hints')).toHaveAttribute('aria-pressed', 'true');
-    expect(btn('Hints')).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Hints' })).toBeNull(); // no Hints button
+    fireEvent.click(btn('Tap to see hints'));
+    expect(btn('Hide hints')).toHaveAttribute('aria-expanded', 'true');
     expect(front()).not.toBeNull();
-    fireEvent.click(btn('Hints'));
-    expect(btn('Hints')).toHaveAttribute('aria-pressed', 'false');
+    expect(side()).toBe('front'); // revealing the hints doesn't flip the card
+    fireEvent.click(btn('Hide hints'));
+    expect(btn('Tap to see hints')).toHaveAttribute('aria-expanded', 'false');
     expect(front()).toBeNull();
     fireEvent.keyDown(window, { key: 'h' });
     expect(front()).not.toBeNull();
+    // A tap on the card itself does nothing; only the Flip button turns it.
+    fireEvent.click(screen.getByTestId('flip-card'));
+    expect(side()).toBe('front');
   });
 
   it('Back shows the previous card front side up with its answer; Next steps forward again', () => {

@@ -58,7 +58,8 @@ test('admin creates an item, previews both directions, moves it to Trash and res
   const card = page.getByTestId('flip-card');
   await expect(card).toHaveCount(1);
   await expect(page.getByRole('heading', { name: 'English → Hebrew · Translation' })).toBeVisible();
-  await page.getByRole('button', { name: 'Hints', exact: true }).click();
+  // The hints are under a live cover; a tap on it reveals them (D-047).
+  await page.getByRole('button', { name: 'Tap to see hints', exact: true }).click();
   await expect(page.getByTestId('front-hints')).toBeVisible();
   await page.getByRole('button', { name: 'Flip', exact: true }).click();
   await expect(card).toHaveAttribute('data-side', 'back');

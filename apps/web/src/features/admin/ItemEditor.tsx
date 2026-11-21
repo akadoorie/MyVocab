@@ -13,10 +13,7 @@ import { Button3D } from '../../components/Button3D';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { useToast } from '../../components/Toast';
 import { ApiError } from '../../lib/api';
-import { strings } from '../../strings';
 import { adminStrings as s } from '../../strings-admin';
-import { BulbIcon } from '../../components/Icons';
-import { LoopButton } from '../loop/ButtonBar';
 import { FlipCard } from '../loop/FlipCard';
 import { adminApi, errorMessage, fieldErrors } from './admin-api';
 import { ListEditor } from './ListEditor';
@@ -727,19 +724,10 @@ function PreviewCard({ card }: { card: CardView }) {
             side={side}
             hintsShown={hintsShown}
             onFlip={() => setSide((v) => (v === 'front' ? 'back' : 'front'))}
+            onToggleHints={() => setHintsShown((v) => !v)}
           />
         </div>
       </div>
-      {/* The session's Hints toggle (FR-L24); Know / Don't know have no meaning in a preview. */}
-      <LoopButton
-        kind="hint"
-        className="self-start"
-        icon={<BulbIcon />}
-        label={strings.loop.hints}
-        pressed={hintsShown && side === 'front'}
-        disabled={side !== 'front'}
-        onClick={() => setHintsShown((v) => !v)}
-      />
     </div>
   );
 }

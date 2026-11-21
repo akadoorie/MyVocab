@@ -1,7 +1,6 @@
 import { canDispatch, type LoopActionType, type LoopState } from '@myvocab/core';
 import type { MouseEvent, ReactNode, Ref } from 'react';
 import {
-  BulbIcon,
   CheckIcon,
   LockIcon,
   ChevronBackIcon,
@@ -79,8 +78,9 @@ export function LoopButton({
 }
 
 /**
- * Loop buttons (PRD FR-L24, §9.7). Desktop: one row `Stop · Hints · Back · three answers · Next`.
- * Phones: the three answer pills on top, `Stop · Hints · Back · Next` below. After "I don't know"
+ * Loop buttons (PRD FR-L24, §9.7). Desktop: one row `Stop · Back · three answers · Next`.
+ * Phones: the three answer pills on top, `Stop · Back · Next` below. Hints are on the card, under a
+ * live cover (D-047). After "I don't know"
  * the layout stays: the answers are off and Next pumps (D-031). Flip is on the card.
  * The answers (D-030): green "I know it · Don't show again", orange "I know it · Show again in
  * future" (FR-L27a) and red "I don't know · Show again soon". Guests (`signedIn` false) see the
@@ -117,21 +117,13 @@ export function ButtonBar({
   // Three pills on a phone carry their label only (base.css).
   const trio = 'lbtn--trio';
   return (
-    <div className="grid grid-cols-12 items-start gap-x-3 gap-y-5 pb-1 [grid-template-areas:'know_know_know_know_again_again_again_again_dk_dk_dk_dk'_'stop_stop_stop_hints_hints_hints_back_back_back_next_next_next'] md:grid-cols-[auto_auto_auto_1fr_1fr_1.1fr_auto] md:gap-x-6 md:[grid-template-areas:'stop_hints_back_know_again_dk_next']">
+    <div className="grid grid-cols-12 items-start gap-x-3 gap-y-5 pb-1 [grid-template-areas:'know_know_know_know_again_again_again_again_dk_dk_dk_dk'_'stop_stop_stop_stop_back_back_back_back_next_next_next_next'] md:grid-cols-[auto_auto_1fr_1fr_1.1fr_auto] md:gap-x-6 md:[grid-template-areas:'stop_back_know_again_dk_next']">
       <LoopButton
         kind="round"
         icon={<StopIcon />}
         label={strings.loop.stop}
         className="[grid-area:stop]"
         {...btn('STOP')}
-      />
-      <LoopButton
-        kind="hint"
-        className="[grid-area:hints]"
-        icon={<BulbIcon />}
-        label={strings.loop.hints}
-        pressed={state.hintsShown && state.side === 'front'}
-        {...btn('TOGGLE_HINTS')}
       />
       <LoopButton
         kind="round"

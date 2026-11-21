@@ -2,6 +2,7 @@ import type { CardAnswer, CardSide, CardView } from '@myvocab/core';
 import { FlipIcon } from '../../components/Icons';
 import { LoopButton } from './ButtonBar';
 import { strings } from '../../strings';
+import { HintsCover } from './HintsCover';
 
 /** The "Your answer" chip on a card reached with Back (FR-L29a, FR-L27a). */
 const CHIP: Record<CardAnswer, { color: string; text: string; mark: string }> = {
@@ -80,15 +81,17 @@ function Extras({ card }: { card: CardView }) {
 }
 
 /**
- * The flip card (PRD FR-L22, §9.3–9.4). Front: the item, the multiple-meanings badge and, after
- * Hints, the hints and synonyms. Back: the answer lines and, for a translation, the literal
- * meaning if any; then hints and synonyms (always).
+ * The flip card (PRD FR-L22, §9.3–9.4). Front: the item, the multiple-meanings badge, and the
+ * hints and synonyms under a live cover that a tap reveals (D-047). Back: the answer lines and,
+ * for a translation, the literal meaning if any; then hints and synonyms (always, uncovered).
+ * Only the round Flip button (or F / Space) turns the card: a tap elsewhere does nothing (D-047).
  */
 export function FlipCard({
   card,
   side,
   hintsShown,
   onFlip,
+  onToggleHints = () => undefined,
   decorative = false,
   answer = null,
 }: {
@@ -96,6 +99,8 @@ export function FlipCard({
   side: CardSide;
   hintsShown: boolean;
   onFlip: () => void;
+  /** Tapping the cover over the hints (D-047). */
+  onToggleHints?: () => void;
   /** A purely visual copy (the Know animation): no test ids. */
   decorative?: boolean;
   /** The answer already given, on a card reached with Back (FR-L29a): shown as a chip. */
@@ -115,7 +120,7 @@ export function FlipCard({
         {CHIP[answer].text} <span aria-hidden="true">{CHIP[answer].mark}</span>
       </p>
     );
-  // The Flip button is the keyboard control; a tap anywhere else on the card is a pointer shortcut.
+  // The only way to turn the card (with F / Space): a stray tap must not flip it (D-047).
   const flipButton = (
     <LoopButton
       kind="round"
@@ -134,14 +139,7 @@ export function FlipCard({
   // The hidden face is inert and aria-hidden, so only the visible face's Flip button is reachable.
   return (
     <div className={`flip-card ${front ? '' : 'is-flipped'}`}>
-      {/* A pointer shortcut: the Flip button and the F/Space keys are the keyboard controls. */}
-      {/* eslint-disable-next-line jsx-a11y-x/click-events-have-key-events, jsx-a11y-x/no-static-element-interactions */}
-      <div
-        className="flip-card__inner"
-        onClick={onFlip}
-        data-testid={tid('flip-card')}
-        data-side={side}
-      >
+      <div className="flip-card__inner" data-testid={tid('flip-card')} data-side={side}>
         <div className="flip-card__face flip-card__front" inert={!front} aria-hidden={!front}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="chip">{label}</p>
@@ -164,11 +162,19 @@ export function FlipCard({
               </span>
             )}
           </div>
-          {hintsShown && (
-            <div className="border-t border-border pt-4" data-testid={tid('front-hints')}>
+          {/* Hints and synonyms under a live cover; nothing to cover when there are none (D-047). */}
+          <div
+            className="border-t border-border pt-4"
+            data-testid={hintsShown ? tid('front-hints') : undefined}
+          >
+            {card.hints.length === 0 && card.synonyms.length === 0 ? (
               <Extras card={card} />
-            </div>
-          )}
+            ) : (
+              <HintsCover open={hintsShown} onToggle={onToggleHints} active={front && !decorative}>
+                <Extras card={card} />
+              </HintsCover>
+            )}
+          </div>
           {flipButton}
         </div>
 

@@ -164,7 +164,7 @@ private content repository. It never appears in the public code repo or any publ
 | Multiple meanings | Admin-set flag. Shown as a "◆ Multiple meanings" badge on the front |
 | Card UI | A glassy, violet-glowing **flip card** with a 3D flip animation and a round **Flip** button on both sides |
 | Hints | A **Hints** toggle button shows or hides hints + synonyms on the front. Flipping always shows them on the back |
-| Flip | The round **Flip** button on the card (front and back), a tap/click on the card, or Space/F. It toggles front ↔ back any number of times and never affects grading |
+| Flip | The round **Flip** button on the card (front and back), or Space/F; a tap elsewhere on the card does nothing (D-047). It toggles front ↔ back any number of times and never affects grading |
 | Known memory | **Any** green "I know it" (any cycle) is remembered per **item and direction** and hides the item in that direction (D-028). The orange "I know it · Show again in future" (signed-in learners) is not remembered: the word stays in the pool (FR-L27a) |
 | Known list | "My known words": search/filter/sort; return items to loops (single, selected, all filtered) |
 | Know tap | Advances immediately; Back (or swipe right) returns to the card, and its answer can be changed (FR-L29a) |
@@ -245,9 +245,10 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L22 The flip card.** Each card is shown on a raised card with a soft shadow (§9.3).
   - **Front**: a small label with the direction (e.g. "EN → HE"); the item **text**, large and
     centered, with `dir`/`lang` from its language (`rtl` for Hebrew); a **"◆ Multiple meanings"** badge under the text
-    when the item has multiple meanings. After **Hints** is pressed (FR-L25), a **Hints** section appears under the
-    text: the hints in order, then a **Synonyms:** line (if there are synonyms), in smaller muted text with the item
-    language's `dir`. If the item has no hints and no synonyms, the section shows "Hint is not available".
+    when the item has multiple meanings. Under the text, the **Hints** section (FR-L25): the hints in order, then a
+    **Synonyms:** line (if there are synonyms), in smaller muted text with the item language's `dir`, always there but
+    under a **live cover** until tapped (D-047). If the item has no hints and no synonyms, the section shows "Hint is
+    not available", with no cover.
   - **Back**: for a translation, labelled sections (D-024, D-025): the main answer in large text under a small
     headline ("Parallel" when the item has one, otherwise "Meaning"); under a parallel, a **"Meaning"** section in a
     medium size; then a **"Literally"** section, small and muted. When the literal is marked as the same as the
@@ -259,25 +260,27 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L23** Header progress: `Cycle 2 · Card 1/3 · 2 known` (known = total known in this loop).
 - **FR-L24** Buttons and phases:
 
-| Phase | Know | Hints | Flip | Don't know | Back | Next | Stop |
+| Phase | Know | Hints (cover) | Flip | Don't know | Back | Next | Stop |
 |---|---|---|---|---|---|---|---|
 | **Deciding**, card not answered yet | enabled | enabled\* | enabled | enabled | enabled\*\* | **disabled** | enabled |
 | **Deciding**, card answered earlier (reached with Back) | enabled | enabled\* | enabled | enabled | enabled\*\* | **enabled** | enabled |
 | **Revealed** (after Don't know) | disabled | enabled\* | enabled | disabled | enabled\*\* | **enabled + focused** | enabled |
 
-\* Hints is enabled whenever the **front** is showing (it is a toggle: on, then off again).
+\* Hints: the live cover on the card front (D-047), usable whenever the **front** is showing (a toggle).
 \*\* Back is disabled on the first card of a cycle (FR-L29a).
 **Know · ask again** (signed-in learners, FR-L27a) is enabled and disabled exactly like Know.
 
-- **FR-L25 Hints**: a **toggle** (the **Hints** button or the **H** key) that shows the hints and synonyms on the
-  **front** of the current card, and on a second press hides them again, so the card is exactly as before. While on,
-  the button looks pressed (`aria-pressed="true"`) and stays enabled (owner request, 2026-11-18; it used to be
-  one-way). The state survives flipping back and forth; the next card starts with hints hidden. If the learner never
-  presses Hints, the front shows no hints, even after the back has been seen. **Hints
-  has no effect on grading** and is not recorded.
+- **FR-L25 Hints** (D-047): on the **front**, the hints and synonyms sit under a **live cover**: a cloud of tiny
+  shimmering dots over the blurred text, with a small "Tap to see hints" label, so it is clear it can be tapped.
+  Tapping the cover (or pressing **H**) reveals them (the dots scatter and fade, the text sharpens); tapping again
+  covers them. The cover is a real button ("Tap to see hints" / "Hide hints", `aria-expanded`); the hidden text is not
+  read out until revealed; it is at least 4.5rem tall, so a one-line hint is still easy to tap; with reduced motion
+  the dots stand still. There is **no Hints button**. The state survives flipping back and forth; the next card
+  starts covered. The back shows the hints uncovered, always. **Hints have no effect on grading** and are not
+  recorded.
 - **FR-L26 Flip**: turns the card over (front ↔ back) with a 3D flip animation (§9.4). It can be triggered by the
-  round **Flip** button in the card's corner (shown on **both** faces), by **tapping/clicking the card**, or by the
-  **Space**/**F** keys. The learner can flip back and forth
+  round **Flip** button in the card's corner (shown on **both** faces, never covered) or by the **Space**/**F** keys.
+  A tap or click anywhere else on the card does nothing, so a near-miss on the hints cover never flips it (D-047). The learner can flip back and forth
   **any number of times**, in both phases. **Flipping has no effect on grading** and is not recorded.
 - **FR-L27 Know** (available on either side while Deciding): removes the card from the loop (it won't appear in the
   next cycle), records it as known in this cycle, and **immediately** shows the next card (front side up). A Know made
@@ -320,7 +323,7 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L29b Swipe** (phones, touch only; owner request, 2026-11-19): **swipe left = Next**, **swipe right = Back**,
   only when that action is allowed. The card follows the finger with a slight tilt; past about 70 px (or a quick flick)
   it slides out and the action runs, otherwise it springs back. When the action isn't allowed it moves only a little,
-  with resistance. A mostly vertical drag is ignored, a tap still flips, and with "reduce motion" there is no movement
+  with resistance. A mostly vertical drag is ignored, a tap does nothing, and with "reduce motion" there is no movement
   (the action just happens). There is no on-screen hint; the buttons stay.
 - **FR-L30 Stop**: the **Stop** button (or Esc) first asks **"Stop the session? This will stop the session. Are you
   sure?"** with **Yes** / **No**, the same question as Home (FR-L30a; owner request, 2026-11-18). **Yes** ends the
@@ -810,8 +813,8 @@ and a colored glow around. The loop uses two shapes:
   under it ("Don't show again", "Show again in future", "Show again soon"), which may wrap onto two lines on a
   phone. For guests the green pill is locked: a darker green (dimmed, not grey), disabled, with a small yellow padlock
   (no background) on its top-left edge, shown on phones too where the pills hide their icons (D-042).
-- **Round buttons** (Stop, Hints, Next; Flip on the card): an icon in a circle (56px mobile, 64px desktop) with an
-  italic muted caption underneath ("Stop", "Hints", "Next").
+- **Round buttons** (Stop, Back, Next; Flip on the card): an icon in a circle (56px mobile, 64px desktop) with an
+  italic muted caption underneath ("Stop", "Back", "Next"). (No Hints button since D-047: hints are on the card.)
 Disabled buttons lose glow and ledge and look muted. Base mechanics:
 ```css
 .btn3d {
@@ -878,13 +881,13 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   .flip-card__inner { transition: none; }      /* swap faces with a 150ms opacity crossfade instead */
 }
 ```
-- Triggers: the round **Flip** button on the card, a **tap/click on the card**, the **Space**/**F** keys. It toggles
+- Triggers: the round **Flip** button on the card and the **Space**/**F** keys (a tap on the card does nothing, D-047). It toggles
   both ways without limit.
 - Rapid repeated flips simply reverse the animation (no queued spins).
 - RTL: the rotation direction stays the same; only text direction changes per face.
-- **Hints** expands the front's hints section with a short height/opacity transition (none with reduced motion).
+- **Hints**: the live cover's dots scatter and fade while the text sharpens (none with reduced motion, D-047).
 - **Accessibility**: the round Flip button on the visible face is the keyboard control (a real `button` named
-  "Flip"); tapping the card is a pointer shortcut for the same action. The hidden face gets `inert` +
+  "Flip"); it is the only pointer control for flipping. The hidden face gets `inert` +
   `aria-hidden="true"`, so only the visible face's Flip button is focusable. An `aria-live="polite"` region announces
   "Showing answer" / "Showing front" / "Hints shown".
 - After **Don't know** on the front, the same flip animation plays automatically.
@@ -929,14 +932,14 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
 - **Loop header**: the MyVocab logo mark (two stacked cards) and the progress `Cycle 1 • Card 2/10 • 1 known` on the
   left; on the right, on desktop a "⌨ Keyboard shortcuts" link that opens a small popover listing the shortcuts, and
   "← Home" (asks before stopping the loop, FR-L30a).
-- **Loop buttons**: on desktop, one row under the card, in this order: `Stop · Hints · Back · I know it (green) ·
-  I know it (amber) · I don't know · Next` (round, round, round, pill, pill, pill, round; the green pill locked for
+- **Loop buttons**: on desktop, one row under the card, in this order: `Stop · Back · I know it (green) ·
+  I know it (amber) · I don't know · Next` (round, round, pill, pill, pill, round; the green pill locked for
   guests); after I don't know the row stays the same, the answers disabled and Next pumping (D-031). Flip is
   on the card itself.
 - **Loop (mobile, 360–767px)**: the flip card fills the space above; the buttons form a **sticky bottom bar** in the
   thumb zone, in two rows: the three answer pills on top (**I know it · I know it · I don't know**, three equal pills
   with their captions), and the round
-  `Stop · Hints · Back · Next` (with captions) below, so the two main actions stay big. After Don't know, the
+  `Stop · Back · Next` (with captions) below, so the two main actions stay big. After Don't know, the
   layout stays: the answer pills disable and the round Next pumps (FR-L28, FR-L29a, D-031).
 - **Loop (desktop ≥ 768px)**: a centered column of about 1100px; the card is wide (≈ 2.3 : 1) and the pills carry
   their labels.
@@ -1531,7 +1534,7 @@ Cloudflare Access: free for ≤ 50 users. Turnstile: free.
 | Integration | Vitest + `@cloudflare/vitest-pool-workers` (local D1, migrations applied) | Loop selection by topic/direction (translation vs explanation playability; the SQL rule agrees with `isPlayable` on fixtures); known items excluded **in every direction**; the DB CHECK rejects a same-language translation even through a direct repository write; item PATCH with a stale `version` → 409 and **no** audit row; **guest size forced to 5 even if a larger size is sent**; **guest without/with an invalid Turnstile token → 403 and zero D1 writes**; guest hourly cap → 429 with zero writes after the first `limit.exceeded` entry; learner daily cap → 429 with remaining allowance; admin exempt from caps; learner size must be in `sizeOptions`; admin endpoints → 401 guest / 403 user / 403 admin without an Access JWT in production mode / 403 on an email mismatch; item create/update + audit rows (before/after of changed lists); Trash: delete hides from loops and known lists, restore brings known marks back, restore blocked on a duplicate, purge cascades + snapshot; CSV dry run vs commit, merge rules, error and warning rows; idempotent `POST /me/known`; user A can't touch user B's known rows; `/api/*` responses carry `noindex` + `no-store` headers; settings validation (defaults must be active languages, etc.) |
 | Scripts | Vitest (Node) against a local D1 | `db:seed` falls back to `seed/sample.csv` when `CONTENT_DIR` is missing; **export round-trip**: seed → `db:export --local --content-only` → import into an empty D1 → identical content; full export produces `manifest.json` row counts that match the tables, valid JSON per table (item lists as real arrays/objects), and a `schema.sql` that recreates the schema in a fresh SQLite |
 | Guard | CI | `check:no-vocabulary` fails on a committed non-fixture `.csv`/`.sql`/export, or a `seed/sample.csv` over 20 rows |
-| Component | Vitest + Testing Library | Button states per phase (incl. Hints only while the front shows, and its pressed state); FlipCard (button/tap/keyboard toggling, hints section on the front after Hints and always on the back, multiple-meanings badge, numbered explanation lines, hidden face `inert`, live-region text, reduced-motion path); start card default vs selected styling + "Reset to defaults" + same-language note; guest locked amount + toast (auto once per session, on tap); Back, the "Your answer" chip, ← / →, and answer changes reaching the Know queue; ListEditor add/edit/delete/reorder + 409 handling; RTL rendering on both faces |
+| Component | Vitest + Testing Library | Button states per phase; FlipCard (button/keyboard flipping, a card tap does nothing, the hints cover on the front and the hints always on the back, multiple-meanings badge, numbered explanation lines, hidden face `inert`, live-region text, reduced-motion path); start card default vs selected styling + "Reset to defaults" + same-language note; guest locked amount + toast (auto once per session, on tap); Back, the "Your answer" chip, ← / →, and answer changes reaching the Know queue; ListEditor add/edit/delete/reorder + 409 handling; RTL rendering on both faces |
 | E2E | Playwright (mobile 390×844 + desktop 1280×800) | Guest: landing → press Start without changing anything (defaults EN→HE, All topics, Words) → 5-card loop to the summary (incl. Hints on the front, then Flip showing hints on the back, Flip back and forth by button and by tapping the card, Know from the back side, Don't know → auto-flip → Next, Know → Back → Don't know; touch swipes left = Next and right = Back); guest sees the sign-in toast and can't change the amount. Signed-in (test session): choose 20 → loop; Know → appears in My known words → no longer offered in the other direction → Return to loops → available again. Admin: create an item with translations, explanation, synonyms, hints and multiple meanings; preview both directions; delete to Trash; restore. CSV: dry run with errors and warnings, then commit |
 | Manual (post-deploy) | Phone + desktop | Play a loop (check the flip and hints feel on a real phone); guest Turnstile works invisibly; sign in; known list; `/admin` → Cloudflare Access asks for a one-time code; a non-admin email is refused by Access; a normal user calling `/api/admin/*` → 403; `pnpm db:export` and `--content-only` work from the owner's machine; the D1 dashboard shows rows read/written well within the free tier |
 
