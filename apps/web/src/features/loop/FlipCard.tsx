@@ -76,9 +76,10 @@ function Extras({ card }: { card: CardView }) {
         </p>
       )}
       {hints.length > 0 && (
-        // After synonyms, one empty line (pt-5 + the 0.5rem gap = one 1.75rem line of text-lg).
+        // After synonyms, a gap: one empty line on desktop (pt-5 + the 0.5rem gap = 1.75rem), a
+        // tighter 1rem on phones, where the hints area is short (D-051).
         <ul
-          className={`space-y-1 ${synonyms.length > 0 ? 'pt-5' : ''}`}
+          className={`space-y-1 ${synonyms.length > 0 ? 'pt-2 md:pt-5' : ''}`}
           aria-label={strings.card.hints}
         >
           {hints.map((h) => (

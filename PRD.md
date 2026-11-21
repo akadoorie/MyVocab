@@ -278,7 +278,7 @@ private content repository. It never appears in the public code repo or any publ
   area, the room left between the divider and the Flip button's row; when they don't fit, only that area scrolls,
   with a thin violet scrollbar and the last lines fading out while there is more below (the word and the Flip button
   never move). The cover fills exactly that area, so it ends above the Flip row, never at the card's edge. The back
-  works the same way under the answer. **Synonyms come first**, then one empty line, then the hint sentences. The cover is a real button ("Tap to see hints" / "Hide hints", `aria-expanded`); the hidden text is not
+  works the same way under the answer. **Synonyms come first**, then one empty line (a tighter 1rem gap on phones, D-051), then the hint sentences. On phones the Flip button is 48px (64px on desktop), leaving more room for the hints (D-051). The cover is a real button ("Tap to see hints" / "Hide hints", `aria-expanded`); the hidden text is not
   read out until revealed; it is at least 4.5rem tall, so a one-line hint is still easy to tap; with reduced motion
   the dots stand still. There is **no Hints button**. The state survives flipping back and forth and is remembered per card
   within the cycle: a new card starts covered, a card reached again with Back or Next shows it as it was left, and
