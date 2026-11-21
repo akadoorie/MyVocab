@@ -4,12 +4,10 @@ import { cleanText, normalize } from '../text/normalize';
 import { foreignLetters } from '../text/script';
 import { ITEM_LIMITS, type ListName } from './limits';
 import {
-  ITEM_TYPES,
   LITERAL_SAME_AS_PARALLEL,
   OWN_LANGUAGE_LISTS,
   TRANSLATION_KINDS,
   type ItemContent,
-  type ItemType,
   type Translations,
 } from './types';
 
@@ -24,7 +22,6 @@ export type ItemIssueCode =
   | 'TOO_MANY'
   | 'DUPLICATE'
   | 'INVALID_CHARACTER'
-  | 'INVALID_TYPE'
   | 'UNKNOWN_LANGUAGE'
   | 'SAME_LANGUAGE_TRANSLATION'
   | 'MULTIPLE_MEANINGS_SINGLE_ENTRY'
@@ -41,7 +38,6 @@ export type ItemIssue = { path: string; code: ItemIssueCode; message: string };
 export type ItemInput = {
   lang: string;
   text: string;
-  type: string;
   multipleMeanings?: boolean;
   parallel?: Record<string, readonly string[]>;
   meaning?: Record<string, readonly string[]>;
@@ -145,10 +141,6 @@ function cleanPerLanguage(
   return out;
 }
 
-function isItemType(value: string): value is ItemType {
-  return (ITEM_TYPES as readonly string[]).includes(value);
-}
-
 export function validateItem(input: ItemInput, ctx: ItemValidationContext): ItemValidationResult {
   const errors: ItemIssue[] = [];
   const warnings: ItemIssue[] = [];
@@ -169,11 +161,6 @@ export function validateItem(input: ItemInput, ctx: ItemValidationContext): Item
     });
   }
 
-  const type = input.type.trim().toLowerCase();
-  if (!isItemType(type)) {
-    errors.push({ path: 'type', code: 'INVALID_TYPE', message: 'Type must be "word" or "expr"' });
-  }
-
   const parallel = cleanPerLanguage(input.parallel, 'parallel', lang, ctx, errors);
   const meaning = cleanPerLanguage(input.meaning, 'meaning', lang, ctx, errors);
   const literal = cleanPerLanguage(input.literal, 'literal', lang, ctx, errors);
@@ -186,7 +173,6 @@ export function validateItem(input: ItemInput, ctx: ItemValidationContext): Item
   const value: ItemContent = {
     lang,
     text,
-    type: isItemType(type) ? type : 'word',
     multipleMeanings: input.multipleMeanings ?? false,
     parallel,
     meaning,
@@ -231,11 +217,11 @@ function literalMarkerErrors(parallel: Translations, literal: Translations): Ite
 }
 
 /**
- * An expression with a parallel but no literal translation for that language (D-026): either
- * the literal was forgotten, or it should be marked as the same as the parallel.
+ * A parallel but no literal translation for that language (D-026): either the literal was
+ * forgotten, or it should be marked as the same as the parallel. Any item with a parallel
+ * (D-046: there is no type any more; a parallel is what marks an idiom-like item).
  */
 export function missingLiteralWarnings(item: ItemContent): ItemIssue[] {
-  if (item.type !== 'expr') return [];
   return Object.entries(item.parallel)
     .filter(([code, entries]) => entries.length > 0 && !item.literal[code as LangCode]?.length)
     .map(([code]) => ({

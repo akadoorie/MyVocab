@@ -1,12 +1,10 @@
 import { z } from 'zod';
-import { itemTypeSchema } from './common';
 
 /** Admin-editable runtime settings with their defaults (PRD §7.7). */
 export const settingsSchema = z.object({
   'defaults.sourceLang': z.string().default('en'),
   'defaults.targetLang': z.string().default('he'),
   'defaults.topicId': z.number().int().positive().nullable().default(null),
-  'defaults.type': itemTypeSchema.default('word'),
   'loop.sizeOptions': z
     .array(z.number().int().min(1).max(200))
     .min(1)

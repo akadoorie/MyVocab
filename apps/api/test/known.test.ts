@@ -27,7 +27,7 @@ async function list(cookie: string, query = ''): Promise<ListBody> {
 }
 
 async function available(cookie: string, source: string, target: string) {
-  const res = await authed(cookie, `/loops/available?source=${source}&target=${target}&type=word`);
+  const res = await authed(cookie, `/loops/available?source=${source}&target=${target}`);
   return (await res.json<{ available: number }>()).available;
 }
 
@@ -110,7 +110,7 @@ describe('POST /api/me/known', () => {
     await mark(cookie, [{ itemId: id, target: 'en', cycle: 1 }]);
     expect(await available(cookie, 'en', 'en')).toBe(enEn - 1);
     // A guest's counts are not affected.
-    const guest = await api('/loops/available?source=en&target=he&type=word');
+    const guest = await api('/loops/available?source=en&target=he');
     expect((await guest.json<{ available: number }>()).available).toBe(enHe);
   });
 });
@@ -175,7 +175,7 @@ describe('DELETE /api/me/known/:itemId and restore', () => {
       .run();
     const byFilter = await authed(cookie, '/me/known/restore', {
       method: 'POST',
-      json: { filter: { type: 'word' } },
+      json: { filter: { q: 'fx-word-2' } },
     });
     expect(await byFilter.json()).toEqual({ restored: 1 }); // fx-word-2 only
     const left = await env.DB.prepare(
@@ -274,7 +274,7 @@ describe('GET /api/me/known (FR-L60–63)', () => {
     expect(await names('?lang=he')).toEqual(['מילה-א']);
     expect(await names('?lang=en&target=he')).toEqual(['fx-expr-1', 'fx-word-1', 'fx-word-3']);
     expect(await names('?target=en')).toEqual(['מילה-א']);
-    expect(await names('?type=expr')).toEqual(['fx-expr-1']);
+    expect(await names(`?topicId=${await topicId('expressions')}`)).toEqual(['fx-expr-1']);
     expect(await names(`?topicId=${await topicId('nature')}`)).toEqual(['fx-word-3']);
     expect((await authed(cookie, '/me/known?sort=random')).status).toBe(400);
   });
@@ -299,8 +299,8 @@ describe('GET /api/me/known (FR-L60–63)', () => {
       const text = `bulk-${String(i).padStart(3, '0')}`;
       stmts.push(
         env.DB.prepare(
-          `INSERT INTO items (lang, text, normalized_text, type, translation_parallel, created_at, updated_at)
-           VALUES ('en', ?, ?, 'word', '{"he":["x"]}', ?, ?)`,
+          `INSERT INTO items (lang, text, normalized_text, translation_parallel, created_at, updated_at)
+           VALUES ('en', ?, ?, '{"he":["x"]}', ?, ?)`,
         ).bind(text, text, now, now),
       );
     }

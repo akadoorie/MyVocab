@@ -10,7 +10,6 @@ const ADMIN: SessionUser = { ...TEST_USER, role: 'admin' };
 const ITEM: AdminItem = {
   itemId: 7,
   text: 'sample-item',
-  type: 'word',
   lang: 'en',
   multipleMeanings: false,
   topicIds: [],
@@ -126,7 +125,6 @@ describe('AdminApp', () => {
   it('literal: "Same as the parallel" saves the marker and replaces the list (D-026)', async () => {
     const IDIOM = {
       ...ITEM,
-      type: 'expr',
       meaning: { he: ['משמעות'] },
       parallel: { he: ['מקבילה'] },
       literal: {},

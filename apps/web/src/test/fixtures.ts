@@ -5,7 +5,6 @@ import type { CardView } from '@myvocab/core';
 export function makeCard(id: number, over: Partial<CardView> = {}): CardView {
   return {
     itemId: id,
-    type: 'word',
     direction: { source: 'en', target: 'he' },
     multipleMeanings: false,
     front: { text: `sample-${id}`, lang: 'en', dir: 'ltr' },
@@ -33,11 +32,7 @@ export const META: MetaResponse = {
     { code: 'he', name: 'Hebrew', nativeName: 'עברית', dir: 'rtl' },
   ],
   topics: [{ id: 1, slug: 'home', name: 'Home' }],
-  types: [
-    { id: 'word', label: 'Words' },
-    { id: 'expr', label: 'Expressions' },
-  ],
-  defaults: { sourceLang: 'en', targetLang: 'he', topicId: null, type: 'word', size: 10 },
+  defaults: { sourceLang: 'en', targetLang: 'he', topicId: null, size: 10 },
   sizeOptions: [10, 20, 30, 40, 50],
   guest: { enabled: true, loopSize: 5 },
   undoWindowSeconds: 4,

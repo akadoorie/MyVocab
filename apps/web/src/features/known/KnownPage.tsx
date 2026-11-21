@@ -49,7 +49,6 @@ function KnownList() {
   const ids = {
     search: useId(),
     direction: useId(),
-    type: useId(),
     topic: useId(),
     sort: useId(),
   };
@@ -57,7 +56,6 @@ function KnownList() {
   const [search, setSearch] = useState('');
   /** "from:to", e.g. "en:he" (D-028); empty = every direction. */
   const [direction, setDirection] = useState('');
-  const [type, setType] = useState('');
   const [topicId, setTopicId] = useState('');
   const [sort, setSort] = useState<KnownSort>('newest');
   const q = useDebounced(search.trim(), 300);
@@ -69,10 +67,9 @@ function KnownList() {
     return {
       ...(q ? { q } : {}),
       ...(lang && target ? { lang, target } : {}),
-      ...(type === 'word' || type === 'expr' ? { type } : {}),
       ...(topicId ? { topicId: Number(topicId) } : {}),
     };
-  }, [q, direction, type, topicId]);
+  }, [q, direction, topicId]);
   const hasFilters = Object.keys(filter).length > 0;
 
   // Marks still in the queue would be missing from the list: send them first.
@@ -163,11 +160,6 @@ function KnownList() {
               {d.label}
             </option>
           ))}
-        </FilterSelect>
-        <FilterSelect id={ids.type} label={strings.known.type} value={type} onChange={setType}>
-          <option value="">{strings.known.all}</option>
-          <option value="word">{strings.types.word}</option>
-          <option value="expr">{strings.types.expr}</option>
         </FilterSelect>
         <FilterSelect
           id={ids.topic}
@@ -366,9 +358,7 @@ function KnownRow({
               <span className="sr-only">{strings.known.multipleMeanings}</span>
             </span>
           )}
-          <span className="text-xs text-muted">
-            {languageName(item.lang)} · {strings.types[item.type]}
-          </span>
+          <span className="text-xs text-muted">{languageName(item.lang)}</span>
         </div>
         <p className="mt-1 text-sm">
           <span className="text-muted">

@@ -52,11 +52,19 @@ export class CatalogAdminService {
 
   async updateTopic(
     id: number,
-    patch: { slug?: string | undefined; name?: string | undefined; isActive?: boolean | undefined },
+    patch: {
+      slug?: string | undefined;
+      name?: string | undefined;
+      isActive?: boolean | undefined;
+      excludesTopicId?: number | null | undefined;
+    },
     actor: Actor,
   ): Promise<AdminTopic> {
     const current = await this.deps.topics.get(id);
     if (!current) throw new NotFoundError('Topic not found');
+    if (patch.excludesTopicId !== undefined && patch.excludesTopicId !== current.excludesTopicId) {
+      await this.setExclusion(current, patch.excludesTopicId, actor);
+    }
     const changes: Partial<{ slug: string; name: string; isActive: boolean }> = {};
     const audit: Record<string, { before: unknown; after: unknown }> = {};
     for (const key of ['slug', 'name', 'isActive'] as const) {
@@ -66,7 +74,7 @@ export class CatalogAdminService {
         audit[key] = { before: current[key], after: value };
       }
     }
-    if (Object.keys(changes).length === 0) return current;
+    if (Object.keys(changes).length === 0) return (await this.deps.topics.get(id)) ?? current;
     if (changes.slug) await this.assertSlugFree(changes.slug, id);
     const ok = await this.deps.topics.update(
       id,
@@ -77,6 +85,45 @@ export class CatalogAdminService {
     );
     if (!ok) throw new NotFoundError('Topic not found');
     return (await this.deps.topics.get(id)) ?? current;
+  }
+
+  /**
+   * "Can't be combined with" (D-046): pairs two topics, both ways. Refused while some items are
+   * in both (remove one of the two from them first).
+   */
+  private async setExclusion(
+    current: AdminTopic,
+    partnerId: number | null,
+    actor: Actor,
+  ): Promise<void> {
+    if (partnerId !== null) {
+      if (partnerId === current.id) {
+        throw new ValidationError("A topic can't exclude itself", [
+          { path: 'excludesTopicId', message: "A topic can't exclude itself" },
+        ]);
+      }
+      const partner = await this.deps.topics.get(partnerId);
+      if (!partner) throw new NotFoundError('Topic not found');
+      const inBoth = await this.deps.topics.countInBoth(current.id, partnerId);
+      if (inBoth > 0) {
+        throw new ConflictError(
+          `${inBoth} ${inBoth === 1 ? 'item is' : 'items are'} in both “${current.name}” and “${partner.name}”. Remove one of the two topics from ${inBoth === 1 ? 'it' : 'them'} first.`,
+          { reason: 'in_both', itemCount: inBoth },
+        );
+      }
+    }
+    await this.deps.topics.setExclusion(
+      current.id,
+      partnerId,
+      actor,
+      {
+        action: 'topic.update',
+        details: {
+          changes: { excludesTopicId: { before: current.excludesTopicId, after: partnerId } },
+        },
+      },
+      this.now(),
+    );
   }
 
   /** Blocked while items still use the topic (deactivate it instead). */

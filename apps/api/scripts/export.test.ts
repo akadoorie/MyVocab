@@ -49,13 +49,13 @@ async function withDb<T>(config: string, fn: (d1: D1Database) => Promise<T>): Pr
 function content(d1: D1Database) {
   return d1
     .prepare(
-      `SELECT i.lang, i.text, i.type, i.multiple_meanings, i.translation_parallel,
+      `SELECT i.lang, i.text, i.multiple_meanings, i.translation_parallel,
               i.translation_meaning, i.translation_literal, i.explanation,
               i.synonyms, i.hints, i.status,
               (SELECT group_concat(slug, '|') FROM (SELECT c.slug FROM item_topics ic
                  JOIN topics c ON c.id = ic.topic_id WHERE ic.item_id = i.id ORDER BY c.slug))
                 AS topics
-       FROM items i WHERE i.deleted_at IS NULL ORDER BY i.lang, i.normalized_text, i.type`,
+       FROM items i WHERE i.deleted_at IS NULL ORDER BY i.lang, i.normalized_text`,
     )
     .all()
     .then((r) => r.results);

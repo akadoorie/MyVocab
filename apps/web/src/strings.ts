@@ -61,7 +61,6 @@ export const strings = {
     /** The items guests play (D-038); admins can pick it too, to check it. */
     sampleSet: 'Sample set',
     guestTopicLocked: 'Sign-in to choose any topic.',
-    type: 'Type',
     amount: 'Amount',
     defaultTag: 'Default',
     reset: 'Reset to defaults',
@@ -104,7 +103,6 @@ export const strings = {
     direction: 'Direction',
     directionOption: (from: string, to: string) => `${from} → ${to}`,
     directionExplanation: (name: string) => `${name} → ${name} (explanation)`,
-    type: 'Type',
     topic: 'Topic',
     sort: 'Sort',
     all: 'All',
@@ -170,7 +168,6 @@ export const strings = {
     delete:
       'Open Account and choose “Delete my account”. Your account, sessions, known words and counters are deleted at once. Hashed guest counters expire after 48 hours.',
   },
-  types: { word: 'Words', expr: 'Expressions' } as Record<'word' | 'expr', string>,
   loop: {
     /** The three answer buttons and the captions under them (FR-L27a, D-030). */
     know: 'I know it',

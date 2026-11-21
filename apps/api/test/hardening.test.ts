@@ -71,7 +71,6 @@ describe('burst limits (PRD §14.3)', () => {
       body: JSON.stringify({
         source: 'en',
         target: 'he',
-        type: 'word',
         topicId: null,
         turnstileToken: 't',
       }),
@@ -81,7 +80,7 @@ describe('burst limits (PRD §14.3)', () => {
     fetchSpy.mockRestore();
     const available = await fetchWith(
       { RL_AVAILABLE: refuse },
-      '/loops/available?source=en&target=he&type=word',
+      '/loops/available?source=en&target=he',
       {},
     );
     expect(available.status).toBe(429);
@@ -115,10 +114,10 @@ describe('write discipline (PRD §11.2)', () => {
     const before = await snapshot();
     const reads = [
       api('/meta'),
-      api('/loops/available?source=en&target=he&type=word'),
+      api('/loops/available?source=en&target=he'),
       api('/me'),
       authed(learner.cookie, '/me'),
-      authed(learner.cookie, '/loops/available?source=en&target=en&type=word'),
+      authed(learner.cookie, '/loops/available?source=en&target=en'),
       authed(learner.cookie, '/me/known?sort=az'),
       ...[
         '/admin/stats',
@@ -151,14 +150,13 @@ describe('write discipline (PRD §11.2)', () => {
       await postJson('/loops', {
         source: 'en',
         target: 'he',
-        type: 'word',
         topicId: null,
         turnstileToken: 'x',
       }),
       await postJson('/me/known', { items: [{ itemId: 1, target: 'he', cycle: 1 }] }),
       await authed(learner.cookie, '/admin/items', {
         method: 'POST',
-        json: { lang: 'en', text: 'x', type: 'word' },
+        json: { lang: 'en', text: 'x' },
       }),
       await authed(learner.cookie, '/me/known', { method: 'POST', json: { items: [] } }),
     ];
@@ -174,7 +172,7 @@ describe('write discipline (PRD §11.2)', () => {
     expect(await count()).toBe(0);
     const res = await authed(learner.cookie, '/loops', {
       method: 'POST',
-      json: { source: 'en', target: 'he', type: 'word', topicId: null, size: 10 },
+      json: { source: 'en', target: 'he', topicId: null, size: 10 },
     });
     expect(res.status).toBe(200);
     expect(await count()).toBe(1);

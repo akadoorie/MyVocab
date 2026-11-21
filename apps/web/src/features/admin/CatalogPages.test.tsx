@@ -15,6 +15,7 @@ const EXISTING = {
   isActive: true,
   sortOrder: 0,
   itemCount: 0,
+  excludesTopicId: null,
 };
 
 function setup() {

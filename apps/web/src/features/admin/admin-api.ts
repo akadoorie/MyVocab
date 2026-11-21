@@ -96,8 +96,10 @@ export const adminApi = {
   topics: () => adminRequest('/topics', adminTopicListSchema),
   createTopic: (body: { slug: string; name: string }) =>
     adminRequest('/topics', adminTopicSchema, json('POST', body)),
-  patchTopic: (id: number, body: { slug?: string; name?: string; isActive?: boolean }) =>
-    adminRequest(`/topics/${id}`, adminTopicSchema, json('PATCH', body)),
+  patchTopic: (
+    id: number,
+    body: { slug?: string; name?: string; isActive?: boolean; excludesTopicId?: number | null },
+  ) => adminRequest(`/topics/${id}`, adminTopicSchema, json('PATCH', body)),
   deleteTopic: (id: number) => adminRequest(`/topics/${id}`, ok, { method: 'DELETE' }),
   reorderTopics: (ids: number[]) =>
     adminRequest('/topics/order', adminTopicListSchema, json('PUT', { ids })),

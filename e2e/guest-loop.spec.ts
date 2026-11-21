@@ -12,7 +12,7 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
 }) => {
   await page.goto('/');
 
-  // Defaults: EN → HE, the Sample set (D-038), Words, amount locked at 5, all "default".
+  // Defaults: EN → HE, the Sample set (D-038), amount locked at 5, all "default".
   const startCard = page.getByRole('region', { name: 'Configure your session' });
   await expect(startCard.getByLabel('From', { exact: true })).toHaveValue('en');
   await expect(startCard.getByLabel('To', { exact: true })).toHaveValue('he');
@@ -40,7 +40,7 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
     topicDisabled: true,
     enabled: 1,
   });
-  await expect(startCard.getByText('Default')).toHaveCount(5);
+  await expect(startCard.getByText('Default')).toHaveCount(4); // From, To, Topic, Amount
   await expect(startCard.getByText(/new cards? available/)).toBeVisible();
 
   // The sign-in message appears once automatically, and again when tapping the locked amount.

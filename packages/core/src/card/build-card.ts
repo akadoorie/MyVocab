@@ -30,7 +30,6 @@ export function buildCard(item: ItemData, target: LangCode, languages: LanguageM
   const marker = isLiteralSameAsParallel(literal);
   return {
     itemId: item.id,
-    type: item.type,
     direction: { source, target },
     multipleMeanings: item.multipleMeanings,
     front: { text: item.text, ...own },

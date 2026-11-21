@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { useToast } from '../../components/Toast';
-import { strings } from '../../strings';
 import { adminStrings as s } from '../../strings-admin';
 import { adminApi, errorMessage } from './admin-api';
 import { ErrorState, formatDateTime, ghostButton, Loading, PageTitle } from './ui';
@@ -70,9 +69,7 @@ export function TrashPage() {
                   <bdi lang={item.lang} dir={item.dir} className="font-semibold break-words">
                     {item.text}
                   </bdi>
-                  <span className="text-xs text-muted">
-                    {item.lang.toUpperCase()} · {strings.types[item.type]}
-                  </span>
+                  <span className="text-xs text-muted">{item.lang.toUpperCase()}</span>
                 </p>
                 <p className="mt-1 text-xs text-muted">
                   {s.trash.deletedAt(formatDateTime(item.deletedAt))}

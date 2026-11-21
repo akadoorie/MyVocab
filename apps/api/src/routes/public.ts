@@ -29,7 +29,6 @@ export const publicRoutes = new Hono<AppEnv>()
           sourceLang: s['defaults.sourceLang'],
           targetLang: s['defaults.targetLang'],
           topicId: s['defaults.topicId'],
-          type: s['defaults.type'],
         },
         sizeOptions: s['loop.sizeOptions'],
         defaultSize: s['loop.defaultSize'],
@@ -47,10 +46,6 @@ export const publicRoutes = new Hono<AppEnv>()
         dir,
       })),
       topics: activeCats.map(({ id, slug, name }) => ({ id, slug, name })),
-      types: [
-        { id: 'word', label: 'Words' },
-        { id: 'expr', label: 'Expressions' },
-      ],
       defaults,
       sizeOptions: s['loop.sizeOptions'],
       guest: { enabled: s['guests.enabled'], loopSize: s['guests.loopSize'] },
@@ -69,7 +64,6 @@ export const publicRoutes = new Hono<AppEnv>()
       {
         source: q.source,
         target: q.target,
-        type: q.type,
         topicId: q.topicId ?? null,
         sample: q.sample === 'true',
       },

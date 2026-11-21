@@ -9,7 +9,7 @@ import {
 
 const ctx: StartContext = {
   settings: {
-    defaults: { sourceLang: 'en', targetLang: 'he', topicId: null, type: 'word' },
+    defaults: { sourceLang: 'en', targetLang: 'he', topicId: null },
     sizeOptions: [10, 20, 30, 40, 50],
     defaultSize: 10,
     guestLoopSize: 5,
@@ -25,7 +25,6 @@ describe('resolveStartDefaults', () => {
       sourceLang: 'en',
       targetLang: 'he',
       topicId: null,
-      type: 'word',
       size: 10,
     });
   });
@@ -72,17 +71,13 @@ describe('default vs selected styling', () => {
   const defaults = resolveStartDefaults(ctx);
 
   it('marks every field as default on a fresh start', () => {
-    expect(defaultFields(defaults, defaults).size).toBe(5);
+    expect(defaultFields(defaults, defaults).size).toBe(4);
     expect(differsFromDefaults(defaults, defaults)).toBe(false);
   });
 
   it('marks changed fields as selected and offers a reset', () => {
     const choices = { ...defaults, size: 20, topicId: 1 };
-    expect([...defaultFields(choices, defaults)].sort()).toEqual([
-      'sourceLang',
-      'targetLang',
-      'type',
-    ]);
+    expect([...defaultFields(choices, defaults)].sort()).toEqual(['sourceLang', 'targetLang']);
     expect(differsFromDefaults(choices, defaults)).toBe(true);
   });
 

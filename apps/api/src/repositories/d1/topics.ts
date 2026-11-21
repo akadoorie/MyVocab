@@ -14,6 +14,7 @@ export class D1TopicRepository implements TopicRepository {
         name: topics.name,
         isActive: topics.isActive,
         sortOrder: topics.sortOrder,
+        excludesTopicId: topics.excludesTopicId,
       })
       .from(topics)
       .orderBy(asc(topics.sortOrder), asc(topics.name));

@@ -38,7 +38,6 @@ describe('POST /api/admin/items', () => {
     const res = await create({
       lang: 'en',
       text: '  new-sample  ',
-      type: 'word',
       multipleMeanings: true,
       topicIds: [home],
       meaning: { he: ['מילה-חדשה'] },
@@ -62,7 +61,7 @@ describe('POST /api/admin/items', () => {
   });
 
   it('rejects same-language translations, unknown topics and duplicates', async () => {
-    const base = { lang: 'en', text: 'another', type: 'word' };
+    const base = { lang: 'en', text: 'another' };
     expect((await create({ ...base, parallel: { en: ['x'] } })).status).toBe(400);
     expect((await create({ ...base, topicIds: [9999] })).status).toBe(400);
     expect((await create({ ...base, text: 'x'.repeat(201) })).status).toBe(400);
@@ -76,7 +75,6 @@ describe('POST /api/admin/items', () => {
     const res = await create({
       lang: 'en',
       text: 'mixed-מ-text',
-      type: 'word',
       explanation: ['x'],
     });
     const item = await res.json<Item>();
@@ -113,7 +111,6 @@ describe('PATCH /api/admin/items/:id (optimistic concurrency)', () => {
     const res = await create({
       lang: 'en',
       text: 'marker-sample',
-      type: 'expr',
       meaning: { he: ['משמעות'] },
       parallel: { he: ['מקבילה'] },
       literal: { he: ['=parallel'] },
@@ -222,14 +219,15 @@ describe('GET /api/admin/items and preview', () => {
     expect(await list('?missingTranslation=he&lang=en')).toEqual(['fx-word-4']);
     expect(await list('?missingExplanation=true')).toEqual(['fx-word-3']);
     expect(await list('?status=draft')).toEqual(['fx-draft']);
-    expect(await list('?type=expr')).toEqual(['fx-expr-1']);
+    // An old file's "expr" row joins "Expressions (except Idioms)" (D-046).
+    expect(await list(`?topicId=${await topicId('expressions')}`)).toEqual(['fx-expr-1']);
     expect(await list('?multipleMeanings=true')).toEqual(['fx-word-2']);
     expect(await list('?q=word-7')).toEqual(['fx-word-7']);
     expect((await req('/admin/items?page=0')).status).toBe(400);
   });
 
   it('lists items that are playable in no direction', async () => {
-    await create({ lang: 'en', text: 'orphan', type: 'word', hints: ['only a hint'] });
+    await create({ lang: 'en', text: 'orphan', hints: ['only a hint'] });
     const res = await req('/admin/items?notPlayable=true');
     const body = await res.json<{ items: { text: string }[] }>();
     expect(body.items.map((i) => i.text)).toEqual(['orphan']);
@@ -259,13 +257,13 @@ describe('Trash (FR-A20–24)', () => {
     const learner = await signIn('user');
     const id = await itemId('fx-word-1');
     await markKnown(learner.cookie, id);
-    const before = await (await req('/loops/available?source=en&target=he&type=word')).json();
+    const before = await (await req('/loops/available?source=en&target=he')).json();
 
     expect((await req(`/admin/items/${id}`, { method: 'DELETE' })).status).toBe(200);
     expect((await req(`/admin/items/${id}`)).status).toBe(404);
     const known = await (await authed(learner.cookie, '/me/known')).json<{ items: unknown[] }>();
     expect(known.items).toHaveLength(0);
-    const after = await (await req('/loops/available?source=en&target=he&type=word')).json();
+    const after = await (await req('/loops/available?source=en&target=he')).json();
     expect(after).toEqual({ available: (before as { available: number }).available - 1 });
 
     const trash = await (
@@ -297,9 +295,7 @@ describe('Trash (FR-A20–24)', () => {
   it('restore is blocked while a non-deleted duplicate exists', async () => {
     const id = await itemId('fx-word-1');
     await req(`/admin/items/${id}`, { method: 'DELETE' });
-    expect(
-      (await create({ lang: 'en', text: 'fx-word-1', type: 'word', explanation: ['x'] })).status,
-    ).toBe(201);
+    expect((await create({ lang: 'en', text: 'fx-word-1', explanation: ['x'] })).status).toBe(201);
     const res = await req(`/admin/trash/${id}/restore`, { method: 'POST', json: {} });
     expect(res.status).toBe(409);
     expect(await res.json()).toMatchObject({ error: { details: { reason: 'duplicate' } } });
@@ -368,14 +364,13 @@ describe('the sample set on items (D-038)', () => {
 
   it('a new item starts outside the sample set unless ticked', async () => {
     const off = await (
-      await create({ lang: 'en', text: 'fx-new-off', type: 'word', explanation: ['x'] })
+      await create({ lang: 'en', text: 'fx-new-off', explanation: ['x'] })
     ).json<{ inSampleSet: boolean }>();
     expect(off.inSampleSet).toBe(false);
     const on = await (
       await create({
         lang: 'en',
         text: 'fx-new-on',
-        type: 'word',
         explanation: ['x'],
         inSampleSet: true,
       })
@@ -425,8 +420,7 @@ describe('the sample set on items (D-038)', () => {
     expect(stats.items.sampleByDirection).toContainEqual({
       source: 'en',
       target: 'he',
-      type: 'word',
-      count: 6,
+      count: 7, // 6 words and the expression (D-046)
     });
   });
 });

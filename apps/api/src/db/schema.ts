@@ -18,7 +18,7 @@ import {
   text,
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core';
-import type { ItemStatus, ItemType, TextDir, Translations } from '@myvocab/core';
+import type { ItemStatus, TextDir, Translations } from '@myvocab/core';
 
 // ---------------------------------------------------------------------------------------------
 // Better Auth (core tables + admin plugin fields)
@@ -117,6 +117,12 @@ export const topics = sqliteTable('topics', {
   name: text('name').notNull(),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
   sortOrder: integer('sort_order').notNull().default(0),
+  /**
+   * An item can't be in this topic and that one together (D-046), e.g. "Expressions (except
+   * Idioms)" and "Idioms". Kept symmetric by the topic service; a plain id (no foreign key, so
+   * the column can be added without rebuilding the table).
+   */
+  excludesTopicId: integer('excludes_topic_id'),
   createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),
 });
@@ -131,7 +137,6 @@ export const items = sqliteTable(
       .references(() => languages.code),
     text: text('text').notNull(),
     normalizedText: text('normalized_text').notNull(),
-    type: text('type').$type<ItemType>().notNull(),
     multipleMeanings: integer('multiple_meanings', { mode: 'boolean' }).notNull().default(false),
     // The three kinds of translation per other language (PRD §8.1, D-024): the equivalent word or
     // expression, what it means, and the word-for-word translation.
@@ -170,7 +175,6 @@ export const items = sqliteTable(
     deletedBy: text('deleted_by').references(() => user.id, { onDelete: 'set null' }),
   },
   (t) => [
-    check('ck_items_type', sql`type IN ('word','expr')`),
     check('ck_items_status', sql`status IN ('draft','published')`),
     check('ck_items_multiple_meanings', sql`multiple_meanings IN (0,1)`),
     // The parallel and literal constraints keep their names from before the columns were renamed
@@ -207,10 +211,10 @@ export const items = sqliteTable(
     check('ck_items_synonyms_array', sql`json_valid(synonyms) AND json_type(synonyms) = 'array'`),
     check('ck_items_hints_array', sql`json_valid(hints) AND json_type(hints) = 'array'`),
     uniqueIndex('ux_items_identity')
-      .on(t.lang, t.normalizedText, t.type)
+      .on(t.lang, t.normalizedText)
       .where(sql`deleted_at IS NULL`),
     index('ix_items_playable')
-      .on(t.lang, t.type)
+      .on(t.lang)
       .where(sql`status = 'published' AND deleted_at IS NULL`),
     index('ix_items_trash')
       .on(t.deletedAt)

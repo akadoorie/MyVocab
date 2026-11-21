@@ -94,7 +94,6 @@ export class CsvImportService {
 
     const keys = parsed.rows.map((r) => ({
       lang: r.content.lang,
-      type: r.content.type,
       normalizedText: normalize(r.content.text),
     }));
     const [existing, topics] = await Promise.all([
@@ -106,6 +105,13 @@ export class CsvImportService {
       existing,
       knownTopics: new Set(topics.map((c) => c.slug)),
       createMissingTopics: input.createMissingTopics,
+      // Topics that can't be together on one item, by slug, both ways (D-046).
+      exclusions: new Map(
+        topics.flatMap((t) => {
+          const partner = topics.find((p) => p.id === t.excludesTopicId);
+          return partner ? [[t.slug, partner.slug] as [string, string]] : [];
+        }),
+      ),
     });
     report.errors.push(...plan.errors);
     report.errors.sort((a, b) => a.row - b.row);

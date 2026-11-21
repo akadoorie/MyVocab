@@ -39,7 +39,6 @@ const storedLoopSchema = z.object({
     sourceLang: z.string(),
     targetLang: z.string(),
     topicId: z.number().int().nullable(),
-    type: z.enum(['word', 'expr']),
     size: z.number().int(),
     sample: z.boolean().optional(),
   }),

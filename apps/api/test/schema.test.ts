@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest';
 const now = Date.now();
 const insertItem = (lang: string, text: string, translation: string, extra = '') =>
   env.DB.prepare(
-    `INSERT INTO items (lang, text, normalized_text, type, translation_parallel, created_at, updated_at${extra ? ', explanation' : ''})
-     VALUES (?, ?, ?, 'word', ?, ?, ?${extra ? ', ?' : ''})`,
+    `INSERT INTO items (lang, text, normalized_text, translation_parallel, created_at, updated_at${extra ? ', explanation' : ''})
+     VALUES (?, ?, ?, ?, ?, ?${extra ? ', ?' : ''})`,
   )
     .bind(lang, text, text.toLowerCase(), translation, now, now, ...(extra ? [extra] : []))
     .run();
@@ -71,8 +71,8 @@ describe('schema', () => {
   it('defaults meaning and literal to {} and rejects one in the item own language or a non-object (CHECK, D-024)', async () => {
     const withList = (column: string, text: string, value: string) =>
       env.DB.prepare(
-        `INSERT INTO items (lang, text, normalized_text, type, ${column}, created_at, updated_at)
-         VALUES ('en', ?, ?, 'expr', ?, ?, ?)`,
+        `INSERT INTO items (lang, text, normalized_text, ${column}, created_at, updated_at)
+         VALUES ('en', ?, ?, ?, ?, ?)`,
       )
         .bind(text, text.toLowerCase(), value, now, now)
         .run();
@@ -110,7 +110,7 @@ describe('schema', () => {
     await expect(insertItem('en', 'C', 'not json')).rejects.toThrow();
   });
 
-  it('enforces one non-deleted item per language + normalized text + type', async () => {
+  it('enforces one non-deleted item per language + normalized text (no type, D-046)', async () => {
     await insertItem('he', 'מהיר', '{"en":["fast"]}');
     await expect(insertItem('he', 'מהיר', '{"en":["quick"]}')).rejects.toThrow(/UNIQUE/);
     await env.DB.prepare(`UPDATE items SET deleted_at = ? WHERE lang = 'he'`).bind(now).run();

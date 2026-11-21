@@ -1,4 +1,4 @@
-import type { ItemType, TextDir } from '@myvocab/core';
+import type { TextDir } from '@myvocab/core';
 import { and, count, eq, sql, type SQL } from 'drizzle-orm';
 import { AFTER_ONE_CHANGE, auditInsert, runBatch } from '../../db/batch';
 import type { Db } from '../../db/client';
@@ -27,7 +27,7 @@ type Statement = SQL | { toSQL(): { sql: string; params: unknown[] } };
 // Topics (FR-A30)
 // ---------------------------------------------------------------------------------------------
 
-const TOPIC_COLUMNS = sql`c.id, c.slug, c.name, c.is_active, c.sort_order,
+const TOPIC_COLUMNS = sql`c.id, c.slug, c.name, c.is_active, c.sort_order, c.excludes_topic_id,
   (SELECT COUNT(*) FROM item_topics ic WHERE ic.topic_id = c.id) AS item_count`;
 
 type TopicDbRow = {
@@ -36,6 +36,7 @@ type TopicDbRow = {
   name: string;
   is_active: number;
   sort_order: number;
+  excludes_topic_id: number | null;
   item_count: number;
 };
 
@@ -45,6 +46,7 @@ const toTopic = (r: TopicDbRow): TopicWithCount => ({
   name: r.name,
   isActive: r.is_active === 1,
   sortOrder: r.sort_order,
+  excludesTopicId: r.excludes_topic_id,
   itemCount: r.item_count,
 });
 
@@ -77,6 +79,7 @@ export class D1AdminTopicRepository implements AdminTopicRepository {
           name: row.name,
           isActive: row.isActive,
           sortOrder: row.sortOrder,
+          excludesTopicId: row.excludesTopicId,
         }
       : null;
   }
@@ -137,6 +140,10 @@ export class D1AdminTopicRepository implements AdminTopicRepository {
     const [result] = await runBatch(this.d1, [
       sql`DELETE FROM topics WHERE id = ${id}
           AND NOT EXISTS (SELECT 1 FROM item_topics WHERE topic_id = ${id})`,
+      // Its partner, if any, is free again (runs after the delete; harmless if it was blocked,
+      // since then the topic still exists and keeps its pair).
+      sql`UPDATE topics SET excludes_topic_id = NULL
+          WHERE excludes_topic_id = ${id} AND NOT EXISTS (SELECT 1 FROM topics WHERE id = ${id})`,
       auditInsert(
         {
           actor,
@@ -150,6 +157,51 @@ export class D1AdminTopicRepository implements AdminTopicRepository {
       ),
     ]);
     return result?.meta.changes === 1;
+  }
+
+  async setExclusion(
+    id: number,
+    partnerId: number | null,
+    actor: Actor,
+    audit: AuditDetails,
+    now: number,
+  ): Promise<void> {
+    const ids = partnerId === null ? [id] : [id, partnerId];
+    const list = JSON.stringify(ids);
+    const statements: Statement[] = [
+      // Unpair both and whatever they were paired with.
+      sql`UPDATE topics SET excludes_topic_id = NULL, updated_at = ${now}
+          WHERE id IN (SELECT value FROM json_each(${list}))
+             OR excludes_topic_id IN (SELECT value FROM json_each(${list}))`,
+    ];
+    if (partnerId !== null) {
+      statements.push(
+        sql`UPDATE topics SET excludes_topic_id = ${partnerId} WHERE id = ${id}`,
+        sql`UPDATE topics SET excludes_topic_id = ${id} WHERE id = ${partnerId}`,
+      );
+    }
+    statements.push(
+      auditInsert(
+        {
+          actor,
+          action: audit.action,
+          entityType: 'topic',
+          entityId: String(id),
+          details: audit.details,
+        },
+        now,
+      ),
+    );
+    await runBatch(this.d1, statements);
+  }
+
+  async countInBoth(a: number, b: number): Promise<number> {
+    const row = await this.db.get<{ n: number }>(sql`
+      SELECT COUNT(*) AS n FROM item_topics x
+      JOIN item_topics y ON y.item_id = x.item_id AND y.topic_id = ${b}
+      JOIN items i ON i.id = x.item_id AND i.deleted_at IS NULL
+      WHERE x.topic_id = ${a}`);
+    return row?.n ?? 0;
   }
 
   async reorder(ids: readonly number[], actor: Actor, now: number): Promise<void> {
@@ -445,7 +497,7 @@ export class D1StatsRepository implements StatsRepository {
 
   async stats(activeLangs: readonly string[], since: number) {
     const langs = JSON.stringify(activeLangs);
-    const [totals, byLangType, missing, users, other, sampleByDirection] = await Promise.all([
+    const [totals, byLang, missing, users, other, sampleByDirection] = await Promise.all([
       this.db.get<{
         total: number;
         drafts: number;
@@ -461,9 +513,9 @@ export class D1StatsRepository implements StatsRepository {
                COALESCE(SUM(multiple_meanings), 0) AS multiple_meanings,
                COALESCE(SUM(in_sample_set), 0) AS sample_set
         FROM items WHERE deleted_at IS NULL`),
-      this.db.all<{ lang: string; type: ItemType; count: number }>(sql`
-        SELECT lang, type, COUNT(*) AS count FROM items WHERE deleted_at IS NULL
-        GROUP BY lang, type ORDER BY lang, type`),
+      this.db.all<{ lang: string; count: number }>(sql`
+        SELECT lang, COUNT(*) AS count FROM items WHERE deleted_at IS NULL
+        GROUP BY lang ORDER BY lang`),
       this.db.all<{ target: string; count: number }>(sql`
         SELECT l.value AS target, COUNT(i.id) AS count
         FROM json_each(${langs}) AS l
@@ -479,8 +531,8 @@ export class D1StatsRepository implements StatsRepository {
                (SELECT COUNT(*) FROM audit_log WHERE created_at >= ${since}
                   AND action = 'limit.exceeded') AS limit_events`),
       // What guests can play (D-038): the loop's playability rule, sample set only.
-      this.db.all<{ source: string; target: string; type: ItemType; count: number }>(sql`
-        SELECT s.value AS source, t.value AS target, i.type AS type, COUNT(*) AS count
+      this.db.all<{ source: string; target: string; count: number }>(sql`
+        SELECT s.value AS source, t.value AS target, COUNT(*) AS count
         FROM json_each(${langs}) AS s
         JOIN json_each(${langs}) AS t
         JOIN items AS i ON i.lang = s.value AND i.in_sample_set = 1
@@ -488,8 +540,8 @@ export class D1StatsRepository implements StatsRepository {
           AND CASE WHEN s.value = t.value THEN json_array_length(i.explanation) > 0
             ELSE COALESCE(json_array_length(i.translation_meaning, '$."' || t.value || '"'), 0) > 0
           END
-        GROUP BY s.value, t.value, i.type
-        ORDER BY s.value, t.value, i.type`),
+        GROUP BY s.value, t.value
+        ORDER BY s.value, t.value`),
     ]);
     return {
       total: totals?.total ?? 0,
@@ -499,7 +551,7 @@ export class D1StatsRepository implements StatsRepository {
       multipleMeanings: totals?.multiple_meanings ?? 0,
       sampleSet: totals?.sample_set ?? 0,
       sampleByDirection,
-      byLangType,
+      byLang,
       missingTranslation: Object.fromEntries(missing.map((m) => [m.target, m.count])),
       users: users?.total ?? 0,
       admins: users?.admins ?? 0,

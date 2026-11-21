@@ -40,7 +40,6 @@ describe('buildCard', () => {
     const card = buildCard(makeItem(), 'he', LANGS);
     expect(card).toEqual({
       itemId: 1,
-      type: 'word',
       direction: { source: 'en', target: 'he' },
       multipleMeanings: true,
       front: { text: 'Date', lang: 'en', dir: 'ltr' },
@@ -63,7 +62,6 @@ describe('buildCard', () => {
 
   it('shows the parallel as the main answer, with the meaning and literal under it (D-024)', () => {
     const item = makeItem({
-      type: 'expr',
       multipleMeanings: false,
       parallel: { he: ['מקבילה-1'] },
       meaning: { he: ['משמעות-1'] },
@@ -108,7 +106,6 @@ describe('buildCard', () => {
 
   it('resolves the "same as the parallel" marker into a flag, never into text (D-026)', () => {
     const item = makeItem({
-      type: 'expr',
       multipleMeanings: false,
       parallel: { he: ['מקבילה-1'] },
       meaning: { he: ['משמעות-1'] },
@@ -131,7 +128,6 @@ describe('buildCard', () => {
   it('adds the literal meaning to translation cards only', () => {
     const item = makeItem({
       text: 'sample expression',
-      type: 'expr',
       multipleMeanings: false,
       meaning: { he: ['משמעות-1'] },
       literal: { he: ['מילולי-1'] },

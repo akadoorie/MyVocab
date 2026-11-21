@@ -30,7 +30,6 @@ export function csvHeader(translationLangs: readonly LangCode[]): string[] {
   return [
     CSV_COLUMNS.lang,
     CSV_COLUMNS.text,
-    CSV_COLUMNS.type,
     CSV_COLUMNS.multipleMeanings,
     CSV_COLUMNS.topics,
     ...TRANSLATION_KINDS.flatMap((kind) => translationLangs.map((l) => translationColumn(kind, l))),
@@ -54,7 +53,6 @@ export function serializeItemsCsv(
   const rows = items.map(({ content, topics, status, inSampleSet }) => [
     content.lang,
     content.text,
-    content.type,
     content.multipleMeanings ? 'true' : 'false',
     joinList(topics),
     ...TRANSLATION_KINDS.flatMap((kind) => langs.map((l) => joinList(content[kind][l] ?? []))),

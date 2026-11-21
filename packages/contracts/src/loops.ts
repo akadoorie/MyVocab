@@ -1,17 +1,15 @@
 import { z } from 'zod';
 import type { CardView } from '@myvocab/core';
-import { dirSchema as dir, itemTypeSchema, langCodeSchema as langCode } from './common';
+import { dirSchema as dir, langCodeSchema as langCode } from './common';
 
 /** GET /api/meta (PRD §12.1). */
 export const metaResponseSchema = z.object({
   languages: z.array(z.object({ code: langCode, name: z.string(), nativeName: z.string(), dir })),
   topics: z.array(z.object({ id: z.number().int(), slug: z.string(), name: z.string() })),
-  types: z.array(z.object({ id: itemTypeSchema, label: z.string() })),
   defaults: z.object({
     sourceLang: langCode,
     targetLang: langCode,
     topicId: z.number().int().nullable(),
-    type: itemTypeSchema,
     size: z.number().int(),
   }),
   sizeOptions: z.array(z.number().int()),
@@ -33,7 +31,6 @@ export const availableQuerySchema = z
   .object({
     source: langCode,
     target: langCode,
-    type: itemTypeSchema,
     topicId: z.coerce.number().int().positive().optional(),
     /** Only the sample set (D-038): forced for guests; admins may ask for it to check the set. */
     sample: z.enum(['true', 'false']).optional(),
@@ -49,7 +46,6 @@ export const startLoopRequestSchema = z
   .object({
     source: langCode,
     target: langCode,
-    type: itemTypeSchema,
     topicId: z.number().int().positive().nullable(),
     size: z.number().int().positive().max(1000).optional(),
     /** Only the sample set (D-038): forced for guests; admins may ask for it. */
@@ -64,7 +60,6 @@ const langDir = { lang: langCode, dir };
 /** One card as rendered by the browser (mirrors `CardView` in @myvocab/core). */
 export const cardViewSchema = z.object({
   itemId: z.number().int(),
-  type: itemTypeSchema,
   direction: z.object({ source: langCode, target: langCode }),
   multipleMeanings: z.boolean(),
   front: z.object({ text: z.string(), ...langDir }),

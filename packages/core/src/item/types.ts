@@ -1,8 +1,5 @@
 import type { LangCode } from '../lang/languages';
 
-export const ITEM_TYPES = ['word', 'expr'] as const;
-export type ItemType = (typeof ITEM_TYPES)[number];
-
 export const ITEM_STATUSES = ['draft', 'published'] as const;
 export type ItemStatus = (typeof ITEM_STATUSES)[number];
 
@@ -12,8 +9,8 @@ export type Translations = Record<LangCode, string[]>;
 /** The learnable content of an item (PRD §8.1), without database bookkeeping. */
 export type ItemContent = {
   lang: LangCode;
+  /** A word, an expression or anything else: its topics classify it (D-046). */
   text: string;
-  type: ItemType;
   multipleMeanings: boolean;
   /**
    * The three kinds of translation into other languages (PRD §8.1, D-024), each optional per

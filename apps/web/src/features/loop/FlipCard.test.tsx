@@ -9,7 +9,7 @@ const face = (side: 'front' | 'back') =>
 describe('FlipCard', () => {
   it('shows the item on the front with its direction label, and hides hints until Hints', () => {
     render(<FlipCard card={makeCard(1)} side="front" hintsShown={false} onFlip={vi.fn()} />);
-    expect(screen.getByText('EN → HE · Words')).toBeInTheDocument();
+    expect(screen.getByText('EN → HE')).toBeInTheDocument(); // just the direction (D-046)
     expect(screen.queryByTestId('front-hints')).not.toBeInTheDocument();
     expect(face('front')).toHaveAttribute('aria-hidden', 'false');
     expect(face('back')).toHaveAttribute('aria-hidden', 'true');
@@ -66,7 +66,6 @@ describe('FlipCard', () => {
   it('with a parallel: Parallel (big), then Meaning, then Literally (muted) (D-024)', () => {
     const base = makeCard(8);
     const card = makeCard(8, {
-      type: 'expr',
       answer: { ...base.answer, main: 'parallel', meaning: ['משמעות-8'], literal: ['מילולי-8'] },
     });
     render(<FlipCard card={card} side="back" hintsShown={false} onFlip={vi.fn()} />);
@@ -83,7 +82,6 @@ describe('FlipCard', () => {
   it('when the literal is the parallel: "Parallel (also literally)" and no Literally section (D-026)', () => {
     const base = makeCard(11);
     const card = makeCard(11, {
-      type: 'expr',
       answer: {
         ...base.answer,
         main: 'parallel',

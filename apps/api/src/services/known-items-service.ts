@@ -125,7 +125,6 @@ export class KnownItemsService {
         text: r.text,
         lang: r.lang,
         dir: dir(r.lang),
-        type: r.type,
         multipleMeanings: r.multipleMeanings,
         knownTarget: r.knownTarget,
         answer: {

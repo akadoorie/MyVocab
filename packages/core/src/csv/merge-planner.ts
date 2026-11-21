@@ -13,7 +13,7 @@ import {
   multipleMeaningsWarnings,
 } from '../item/validate';
 import { normalize } from '../text/normalize';
-import { CSV_COLUMNS, translationColumn } from './columns';
+import { CSV_COLUMNS, EXPRESSIONS_TOPIC_SLUG, translationColumn } from './columns';
 import { toCsvIssue, type CsvIssue, type ParsedRow } from './parse-rows';
 
 /**
@@ -35,6 +35,11 @@ export type PlanContext = {
   existing: ReadonlyMap<string, ExistingItem>;
   knownTopics: ReadonlySet<string>;
   createMissingTopics: boolean;
+  /**
+   * Topics that can't be together on one item, by slug, both ways (D-046), e.g.
+   * "expressions" ↔ "idioms". An item that would end up with both is an error.
+   */
+  exclusions?: ReadonlyMap<string, string>;
 };
 
 export type PlannedCreate = {
@@ -153,7 +158,7 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
 
   const groups = new Map<string, ParsedRow[]>();
   for (const row of rows) {
-    const key = itemIdentityKey(row.content.lang, row.content.text, row.content.type);
+    const key = itemIdentityKey(row.content.lang, row.content.text);
     const group = groups.get(key);
     if (group) group.push(row);
     else groups.set(key, [row]);
@@ -207,6 +212,31 @@ export function planImport(rows: readonly ParsedRow[], ctx: PlanContext): Import
           topics.add(slug);
           topicsToAdd.push(slug);
         }
+      }
+    }
+
+    // An old file's `type = expr` (D-046): the item joins "Expressions (except Idioms)", unless
+    // it already has a topic that excludes it (an idiom stays an idiom only).
+    const expressions = EXPRESSIONS_TOPIC_SLUG;
+    const excludedBy = ctx.exclusions?.get(expressions);
+    if (
+      group.some((r) => r.legacyExpr) &&
+      ctx.knownTopics.has(expressions) &&
+      !topics.has(expressions) &&
+      !(excludedBy !== undefined && topics.has(excludedBy))
+    ) {
+      topics.add(expressions);
+      topicsToAdd.push(expressions);
+    }
+
+    // Topics that can't be together on one item (D-046).
+    for (const [a, b] of ctx.exclusions ?? []) {
+      if (a < b && topics.has(a) && topics.has(b)) {
+        plan.errors.push({
+          row: (group[group.length - 1] as ParsedRow).row,
+          column: CSV_COLUMNS.topics,
+          message: `An item can't be in both "${a}" and "${b}"`,
+        });
       }
     }
 

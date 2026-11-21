@@ -33,7 +33,7 @@ describe('loop storage', () => {
         ],
         state: createLoop([1, 2], 3),
         undoWindowSeconds: 4,
-        selection: { sourceLang: 'en', targetLang: 'he', topicId: null, type: 'word', size: 5 },
+        selection: { sourceLang: 'en', targetLang: 'he', topicId: null, size: 5 },
         isGuest: true,
       }),
     );
@@ -54,7 +54,7 @@ describe('loop storage', () => {
         cards: [{ ...card, answer: oldAnswer }],
         state: createLoop([1], 3),
         undoWindowSeconds: 4,
-        selection: { sourceLang: 'en', targetLang: 'he', topicId: null, type: 'word', size: 5 },
+        selection: { sourceLang: 'en', targetLang: 'he', topicId: null, size: 5 },
         isGuest: true,
       }),
     );
@@ -71,7 +71,7 @@ describe('loop storage', () => {
         cards: [makeCard(1)],
         state: createLoop([1], 3),
         undoWindowSeconds: 4,
-        selection: { sourceLang: 'en', targetLang: 'he', categoryId: 3, type: 'word', size: 5 },
+        selection: { sourceLang: 'en', targetLang: 'he', categoryId: 3, size: 5 },
         isGuest: false,
       }),
     );
@@ -79,7 +79,6 @@ describe('loop storage', () => {
       sourceLang: 'en',
       targetLang: 'he',
       topicId: 3,
-      type: 'word',
       size: 5,
     });
   });

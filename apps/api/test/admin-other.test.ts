@@ -1,5 +1,6 @@
 import { env } from 'cloudflare:test';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { createContainer } from '../src/container';
 import { api, authed, topicId, count, itemId, seedFixtures, signIn } from './helpers';
 
 let admin: { cookie: string; userId: string };
@@ -64,6 +65,72 @@ describe('topics (FR-A30)', () => {
       await req('/admin/topics', { method: 'POST', json: { slug: 'empty', name: 'Empty' } })
     ).json<{ id: number }>();
     expect((await req(`/admin/topics/${empty.id}`, { method: 'DELETE' })).status).toBe(200);
+  });
+});
+
+describe("topics that can't be combined (D-046)", () => {
+  type Topic = { id: number; slug: string; excludesTopicId: number | null };
+  const topics = async () =>
+    (await (await req('/admin/topics')).json<{ topics: Topic[] }>()).topics;
+  const pair = (id: number, excludesTopicId: number | null) =>
+    req(`/admin/topics/${id}`, { method: 'PATCH', json: { excludesTopicId } });
+
+  it('migration 0007 creates "Expressions (except Idioms)", unpaired when there is no Idioms topic', async () => {
+    const expressions = (await topics()).find((t) => t.slug === 'expressions');
+    expect(expressions).toMatchObject({ excludesTopicId: null });
+  });
+
+  it('pairs two topics both ways, and re-pairing frees the old partner', async () => {
+    const home = await topicId('home');
+    const nature = await topicId('nature');
+    const expressions = await topicId('expressions');
+    // fx-word-1 is in home: pairing home with expressions is fine (nothing is in both).
+    expect((await pair(home, expressions)).status).toBe(200);
+    let all = await topics();
+    expect(all.find((t) => t.id === home)?.excludesTopicId).toBe(expressions);
+    expect(all.find((t) => t.id === expressions)?.excludesTopicId).toBe(home);
+    expect((await pair(nature, home)).status).toBe(200);
+    all = await topics();
+    expect(all.find((t) => t.id === home)?.excludesTopicId).toBe(nature);
+    expect(all.find((t) => t.id === expressions)?.excludesTopicId).toBeNull();
+    expect((await pair(home, null)).status).toBe(200);
+    expect((await topics()).every((t) => t.excludesTopicId === null)).toBe(true);
+    expect((await pair(home, home)).status).toBe(400);
+    expect(await actions()).toContain('topic.update');
+  });
+
+  it('refuses to pair topics that some items are already in together', async () => {
+    const home = await topicId('home');
+    const nature = await topicId('nature');
+    const id = await itemId('fx-word-1');
+    await env.DB.prepare('INSERT INTO item_topics (item_id, topic_id) VALUES (?, ?)')
+      .bind(id, nature)
+      .run();
+    const res = await pair(home, nature);
+    expect(res.status).toBe(409);
+    expect(await res.text()).toMatch(/1 item is in both/);
+  });
+
+  it('blocks saving an item with both topics, in the editor and in a CSV import', async () => {
+    const home = await topicId('home');
+    const expressions = await topicId('expressions');
+    await pair(home, expressions);
+    const created = await req('/admin/items', {
+      method: 'POST',
+      json: { lang: 'en', text: 'fx-both', explanation: ['x'], topicIds: [home, expressions] },
+    });
+    expect(created.status).toBe(400);
+    expect(await created.text()).toMatch(/can.t be in both/);
+    const report = await createContainer(env.DB).csvImport.run({
+      csvText: 'lang,text,topics,explanation\nen,fx-both,home|expressions,x',
+      fileName: 'both.csv',
+      dryRun: true,
+      createMissingTopics: false,
+      actor: null,
+    });
+    expect(report.errors.map((e) => e.message)).toContain(
+      `An item can't be in both "expressions" and "home"`,
+    );
   });
 });
 
@@ -167,7 +234,7 @@ describe('languages (FR-A35)', () => {
     // A new item in the inactive language, and a CSV with its columns.
     const created = await req('/admin/items', {
       method: 'POST',
-      json: { lang: 'ar', text: 'كلمة-تجربة', type: 'word', meaning: { en: ['test-word'] } },
+      json: { lang: 'ar', text: 'كلمة-تجربة', meaning: { en: ['test-word'] } },
     });
     expect(created.status).toBe(201);
     const csv = [

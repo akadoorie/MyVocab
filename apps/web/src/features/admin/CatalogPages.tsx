@@ -61,8 +61,10 @@ export function TopicsPage() {
     onError: fail,
   });
   const update = useMutation({
-    mutationFn: (v: { id: number; body: { slug?: string; name?: string; isActive?: boolean } }) =>
-      adminApi.patchTopic(v.id, v.body),
+    mutationFn: (v: {
+      id: number;
+      body: { slug?: string; name?: string; isActive?: boolean; excludesTopicId?: number | null };
+    }) => adminApi.patchTopic(v.id, v.body),
     onSuccess: () => {
       setEditing(null);
       done(s.topics.updated);
@@ -215,6 +217,29 @@ export function TopicsPage() {
                   </p>
                 </div>
               )}
+              {/* "Can't be combined with" (D-046): set on either topic, applies both ways. */}
+              <select
+                aria-label={s.topics.excludesLabel(c.name)}
+                value={c.excludesTopicId ?? ''}
+                onChange={(e) =>
+                  update.mutate({
+                    id: c.id,
+                    body: {
+                      excludesTopicId: e.target.value === '' ? null : Number(e.target.value),
+                    },
+                  })
+                }
+                className={`${inputClass} md:w-64`}
+              >
+                <option value="">{s.topics.combinable}</option>
+                {topics
+                  .filter((other) => other.id !== c.id)
+                  .map((other) => (
+                    <option key={other.id} value={other.id}>
+                      {s.topics.notWith(other.name)}
+                    </option>
+                  ))}
+              </select>
               <label className="flex min-h-11 items-center gap-2 text-sm">
                 <input
                   type="checkbox"

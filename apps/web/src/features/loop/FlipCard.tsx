@@ -102,7 +102,7 @@ export function FlipCard({
   answer?: CardAnswer | null;
 }) {
   const tid = (id: string) => (decorative ? undefined : id);
-  const label = `${card.direction.source.toUpperCase()} → ${card.direction.target.toUpperCase()} · ${strings.types[card.type]}`;
+  const label = `${card.direction.source.toUpperCase()} → ${card.direction.target.toUpperCase()}`;
   const front = side === 'front';
   const Answer = card.answer.numbered ? 'ol' : 'ul';
   // On both faces; the test id goes on the front one only.

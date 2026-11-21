@@ -1,4 +1,4 @@
-import type { ItemType, Translations } from '@myvocab/core';
+import type { Translations } from '@myvocab/core';
 import { and, eq, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
 import { AFTER_ONE_CHANGE, auditInsert, runBatch } from '../../db/batch';
 import type { Db } from '../../db/client';
@@ -21,7 +21,6 @@ type ItemRow = {
   lang: string;
   text: string;
   normalized_text: string;
-  type: ItemType;
   multiple_meanings: number;
   parallel: string;
   meaning: string;
@@ -41,7 +40,7 @@ type ItemRow = {
 };
 
 const ITEM_COLUMNS = sql`
-  i.id, i.lang, i.text, i.normalized_text, i.type, i.multiple_meanings,
+  i.id, i.lang, i.text, i.normalized_text, i.multiple_meanings,
   i.translation_parallel AS parallel, i.translation_meaning AS meaning,
   i.translation_literal AS literal, i.explanation, i.synonyms, i.hints, i.status, i.in_sample_set, i.version, i.created_at, i.updated_at,
   i.deleted_at, i.deleted_by,
@@ -56,7 +55,6 @@ function toRecord(r: ItemRow): ItemRecord {
     lang: r.lang,
     text: r.text,
     normalizedText: r.normalized_text,
-    type: r.type,
     multipleMeanings: r.multiple_meanings === 1,
     parallel: JSON.parse(r.parallel) as Translations,
     meaning: JSON.parse(r.meaning) as Translations,
@@ -92,7 +90,6 @@ function listConditions(f: AdminItemFilter, activeLangs: readonly string[]): SQL
     if (search) conds.push(search);
   }
   if (f.lang) conds.push(sql`i.lang = ${f.lang}`);
-  if (f.type) conds.push(sql`i.type = ${f.type}`);
   if (f.status) conds.push(sql`i.status = ${f.status}`);
   if (f.multipleMeanings !== undefined) {
     conds.push(sql`i.multiple_meanings = ${f.multipleMeanings ? 1 : 0}`);
@@ -143,12 +140,11 @@ export class D1AdminItemRepository implements AdminItemRepository {
   async findDuplicate(
     lang: string,
     normalizedText: string,
-    type: ItemType,
     excludeId?: number,
   ): Promise<number | null> {
     const row = await this.db.get<{ id: number }>(sql`
       SELECT id FROM items
-      WHERE lang = ${lang} AND normalized_text = ${normalizedText} AND type = ${type}
+      WHERE lang = ${lang} AND normalized_text = ${normalizedText}
         AND deleted_at IS NULL ${excludeId === undefined ? sql`` : sql`AND id <> ${excludeId}`}
     `);
     return row?.id ?? null;
@@ -166,7 +162,6 @@ export class D1AdminItemRepository implements AdminItemRepository {
         id: number;
         text: string;
         lang: string;
-        type: ItemType;
         multiple_meanings: number;
         parallel: string;
         meaning: string;
@@ -177,7 +172,7 @@ export class D1AdminItemRepository implements AdminItemRepository {
         in_sample_set: number;
         updated_at: number;
       }>(sql`
-        SELECT i.id, i.text, i.lang, i.type, i.multiple_meanings,
+        SELECT i.id, i.text, i.lang, i.multiple_meanings,
                i.translation_parallel AS parallel, i.translation_meaning AS meaning,
                json_array_length(i.explanation) AS explanation_count,
                json_array_length(i.synonyms) AS synonym_count,
@@ -193,7 +188,6 @@ export class D1AdminItemRepository implements AdminItemRepository {
         id: r.id,
         text: r.text,
         lang: r.lang,
-        type: r.type,
         multipleMeanings: r.multiple_meanings === 1,
         parallel: JSON.parse(r.parallel) as Record<string, string[]>,
         meaning: JSON.parse(r.meaning) as Record<string, string[]>,
@@ -214,14 +208,13 @@ export class D1AdminItemRepository implements AdminItemRepository {
 
   async create(item: NewItem, actor: Actor, audit: AuditDetails, now: number): Promise<number> {
     // The new id is found by its identity (unique among non-deleted items) inside the batch.
-    const newId = sql`SELECT id FROM items WHERE lang = ${item.lang} AND type = ${item.type}
+    const newId = sql`SELECT id FROM items WHERE lang = ${item.lang}
       AND normalized_text = ${item.normalizedText} AND deleted_at IS NULL`;
     const statements: (SQL | { toSQL(): { sql: string; params: unknown[] } })[] = [
       this.db.insert(items).values({
         lang: item.lang,
         text: item.text,
         normalizedText: item.normalizedText,
-        type: item.type,
         multipleMeanings: item.multipleMeanings,
         parallel: item.parallel,
         meaning: item.meaning,
@@ -252,7 +245,7 @@ export class D1AdminItemRepository implements AdminItemRepository {
       ),
     );
     await runBatch(this.d1, statements);
-    const created = await this.findDuplicate(item.lang, item.normalizedText, item.type);
+    const created = await this.findDuplicate(item.lang, item.normalizedText);
     if (created === null) throw new Error('created item not found');
     return created;
   }
@@ -400,12 +393,11 @@ export class D1AdminItemRepository implements AdminItemRepository {
       id: number;
       text: string;
       lang: string;
-      type: ItemType;
       deleted_at: number;
       deleted_by: string | null;
       deleted_by_name: string | null;
     }>(sql`
-      SELECT i.id, i.text, i.lang, i.type, i.deleted_at, i.deleted_by, u.name AS deleted_by_name
+      SELECT i.id, i.text, i.lang, i.deleted_at, i.deleted_by, u.name AS deleted_by_name
       FROM items AS i LEFT JOIN "user" AS u ON u.id = i.deleted_by
       WHERE i.deleted_at IS NOT NULL
       ORDER BY i.deleted_at DESC
@@ -415,7 +407,6 @@ export class D1AdminItemRepository implements AdminItemRepository {
       id: r.id,
       text: r.text,
       lang: r.lang,
-      type: r.type,
       deletedAt: r.deleted_at,
       deletedBy: r.deleted_by ? { id: r.deleted_by, name: r.deleted_by_name ?? '' } : null,
     }));

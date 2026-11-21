@@ -94,7 +94,6 @@ describe('parseImportCsv', () => {
       content: {
         lang: 'en',
         text: 'Swift',
-        type: 'word',
         multipleMeanings: true,
         meaning: { he: ['מהיר', 'סנונית'] },
         synonyms: ['fast', 'quick', 'rapid'],
@@ -121,7 +120,6 @@ describe('parseImportCsv', () => {
       'Unknown column "colour"',
       'Unknown language "fr" in column "translation_fr"',
       'Duplicate column "text"',
-      'Missing required column "type"',
     ]);
   });
 
@@ -219,8 +217,8 @@ en,sample expression,expr,מקבילה-1,משמעות-1|משמעות-2,מילו�
     expect(r.errors.map((e) => `${e.row}:${e.column}`)).toEqual([
       '2:multiple_meanings',
       '2:status',
-      '2:topics',
       '2:type',
+      '2:topics',
       '3:lang',
       '4:lang',
       '4:text',
@@ -267,7 +265,6 @@ function existingSwift(over: Partial<ItemContent> = {}, inSampleSet = false): Ex
     content: {
       lang: 'en',
       text: 'Swift',
-      type: 'word',
       multipleMeanings: false,
       meaning: { he: ['מהיר'] },
       parallel: {},
@@ -297,15 +294,66 @@ describe('planImport', () => {
     expect(plan.totals).toMatchObject({ newItems: 1, mergedItems: 0, newExplanationEntries: 1 });
   });
 
+  describe('no item type; topics that exclude each other (D-046)', () => {
+    const ctx = (extra: Partial<PlanContext> = {}) =>
+      emptyCtx({
+        knownTopics: new Set(['home', 'idioms', 'expressions']),
+        exclusions: new Map([
+          ['idioms', 'expressions'],
+          ['expressions', 'idioms'],
+        ]),
+        ...extra,
+      });
+    const plan = (csv: string) => planImport(parseImportCsv(csv, opts).rows, ctx());
+
+    it('needs no type column; the same text is one item whatever an old file said', () => {
+      const p = plan('lang,text,type,explanation\nen,Cat,word,A pet\nen,cat,expr,A small animal');
+      expect(p.errors).toEqual([]);
+      expect(p.creates).toHaveLength(1);
+      expect(
+        planImport(parseImportCsv('lang,text,explanation\nen,Cat,A pet', opts).rows, ctx()).creates,
+      ).toHaveLength(1);
+    });
+
+    it('puts an old "expr" row in Expressions (except Idioms), unless it is an idiom', () => {
+      expect(
+        plan('lang,text,type,explanation\nen,Sample saying,expr,x').creates[0]?.topics,
+      ).toEqual(['expressions']);
+      expect(
+        plan('lang,text,type,topics,explanation\nen,Sample idiom,expr,idioms,x').creates[0]?.topics,
+      ).toEqual(['idioms']);
+      expect(plan('lang,text,type,explanation\nen,Cat,word,x').creates[0]?.topics).toEqual([]);
+    });
+
+    it('refuses an item that would be in two topics that exclude each other', () => {
+      const p = plan('lang,text,topics,explanation\nen,Sample saying,idioms|expressions,x');
+      expect(p.errors).toEqual([
+        {
+          row: 2,
+          column: 'topics',
+          message: `An item can't be in both "expressions" and "idioms"`,
+        },
+      ]);
+    });
+
+    it('rejects a type cell other than word or expr', () => {
+      expect(parseImportCsv('lang,text,type,explanation\nen,Cat,phrase,x', opts).errors).toEqual([
+        {
+          row: 2,
+          column: 'type',
+          message: 'Use word or expr, or leave the column out (items have no type any more)',
+        },
+      ]);
+    });
+  });
+
   describe('the sample column (D-038)', () => {
     const SAMPLE_HEADER = 'lang,text,type,explanation,sample';
     const plan = (rows: string, existing?: ExistingItem) =>
       planImport(
         parseImportCsv(`${SAMPLE_HEADER}\n${rows}`, opts).rows,
         emptyCtx(
-          existing
-            ? { existing: new Map([[itemIdentityKey('en', 'Swift', 'word'), existing]]) }
-            : {},
+          existing ? { existing: new Map([[itemIdentityKey('en', 'Swift'), existing]]) } : {},
         ),
       );
     const SAME = 'en,Swift,word,Moving or able to move very fast';
@@ -343,7 +391,7 @@ describe('planImport', () => {
 
   it('appends only new entries to an existing item and never removes anything', () => {
     const parsed = parseImportCsv(`${HEADER}\n${SWIFT}`, opts);
-    const existing = new Map([[itemIdentityKey('en', 'swift', 'word'), existingSwift()]]);
+    const existing = new Map([[itemIdentityKey('en', 'swift'), existingSwift()]]);
     const plan = planImport(parsed.rows, emptyCtx({ existing }));
     expect(plan.updates).toHaveLength(1);
     const update = plan.updates[0];
@@ -372,7 +420,7 @@ describe('planImport', () => {
       opts,
     );
     const existing = new Map([
-      [itemIdentityKey('en', 'Swift', 'word'), existingSwift({ multipleMeanings: true })],
+      [itemIdentityKey('en', 'Swift'), existingSwift({ multipleMeanings: true })],
     ]);
     const plan = planImport(parsed.rows, emptyCtx({ existing }));
     expect(plan.updates[0]).toMatchObject({ changed: false, content: { multipleMeanings: true } });
@@ -381,7 +429,7 @@ describe('planImport', () => {
   it('appends literal meanings to an existing item and counts them', () => {
     const csv = `lang,text,type,translation_he,literal_he
 en,Swift,word,,זריז`;
-    const existing = new Map([[itemIdentityKey('en', 'swift', 'word'), existingSwift()]]);
+    const existing = new Map([[itemIdentityKey('en', 'swift'), existingSwift()]]);
     const rows = parseImportCsv(csv, opts).rows;
     const plan = planImport(rows, emptyCtx({ existing }));
     expect(plan.updates[0]?.content.literal).toEqual({ he: ['זריז'] });
@@ -416,7 +464,7 @@ en,Swift,word,,זריז`;
       opts,
     );
     expect(planImport(merged.rows, emptyCtx()).errors).toEqual([]);
-    const existing = new Map([[itemIdentityKey('en', 'Swift', 'word'), existingSwift()]]);
+    const existing = new Map([[itemIdentityKey('en', 'Swift'), existingSwift()]]);
     expect(planImport(rows, emptyCtx({ existing })).errors).toEqual([]);
   });
 
@@ -444,7 +492,7 @@ en,Swift,word,,זריז`;
       'lang,text,type,topics,explanation\nen,Swift,word,food|home,x',
       opts,
     ).rows;
-    const existing = new Map([[itemIdentityKey('en', 'Swift', 'word'), existingSwift()]]);
+    const existing = new Map([[itemIdentityKey('en', 'Swift'), existingSwift()]]);
     expect(planImport(rows, emptyCtx({ existing })).updates[0]?.topicsToAdd).toEqual(['food']);
   });
 
@@ -491,7 +539,6 @@ describe('serializeItemsCsv (round trip)', () => {
       content: {
         lang: 'en',
         text: 'Swift',
-        type: 'word',
         multipleMeanings: true,
         meaning: { he: ['מהיר', 'סנונית'] },
         parallel: {},
@@ -508,7 +555,6 @@ describe('serializeItemsCsv (round trip)', () => {
       content: {
         lang: 'he',
         text: 'מהיר',
-        type: 'word',
         multipleMeanings: false,
         parallel: { en: ['fast'] },
         meaning: { en: ['speedy'] },
@@ -527,7 +573,6 @@ describe('serializeItemsCsv (round trip)', () => {
     expect(csvHeader(['en', 'he'])).toEqual([
       'lang',
       'text',
-      'type',
       'multiple_meanings',
       'topics',
       'translation_meaning_en',

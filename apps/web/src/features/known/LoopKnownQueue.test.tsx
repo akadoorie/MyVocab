@@ -15,7 +15,7 @@ function setup(isGuest: boolean) {
     cards: [makeCard(1), makeCard(2)],
     state: createLoop([1, 2], 7),
     undoWindowSeconds: 4,
-    selection: { sourceLang: 'en', targetLang: 'he', topicId: null, type: 'word', size: 10 },
+    selection: { sourceLang: 'en', targetLang: 'he', topicId: null, size: 10 },
     isGuest,
   });
   mockFetch({ 'POST /api/me/known': () => Response.json({ saved: 1 }) });

@@ -57,7 +57,6 @@ export function useStartLoop({
       const res = await api.startLoop({
         source: choices.sourceLang,
         target: choices.targetLang,
-        type: choices.type,
         topicId: choices.topicId,
         ...(isGuest ? {} : { size: choices.size }),
         ...(choices.sample && !isGuest ? { sample: true } : {}),

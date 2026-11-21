@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { dirSchema, itemIdSchema, itemTypeSchema, langCodeSchema } from './common';
+import { dirSchema, itemIdSchema, langCodeSchema } from './common';
 
 /**
  * Admin API contracts (PRD §12.4). Item content limits (lengths, list sizes, duplicates, own
@@ -23,7 +23,6 @@ export const adminItemCreateSchema = z
   .object({
     lang: langCodeSchema,
     text: z.string().max(2000),
-    type: itemTypeSchema,
     multipleMeanings: z.boolean().optional(),
     status: itemStatusSchema.optional(),
     /** In the sample set guests play (D-038); new items default to false. */
@@ -47,7 +46,6 @@ export const adminItemPatchSchema = z
   .object({
     version: z.number().int().positive(),
     text: z.string().max(2000).optional(),
-    type: itemTypeSchema.optional(),
     multipleMeanings: z.boolean().optional(),
     status: itemStatusSchema.optional(),
     /** In the sample set guests play (D-038); new items default to false. */
@@ -74,7 +72,6 @@ export type ItemIssueView = z.infer<typeof itemIssueSchema>;
 export const adminItemSchema = z.object({
   itemId: itemIdSchema,
   text: z.string(),
-  type: itemTypeSchema,
   lang: langCodeSchema,
   multipleMeanings: z.boolean(),
   topicIds: z.array(z.number().int()),
@@ -104,7 +101,6 @@ export const adminItemListQuerySchema = z
   .object({
     q: z.string().trim().max(100).optional(),
     lang: langCodeSchema.optional(),
-    type: itemTypeSchema.optional(),
     topicId: z.coerce.number().int().positive().optional(),
     status: itemStatusSchema.optional(),
     multipleMeanings: flag.optional(),
@@ -125,7 +121,6 @@ export const adminItemRowSchema = z.object({
   text: z.string(),
   lang: langCodeSchema,
   dir: dirSchema,
-  type: itemTypeSchema,
   multipleMeanings: z.boolean(),
   topics: z.array(z.object({ id: z.number().int(), name: z.string() })),
   translationCounts: z.record(z.string(), z.number().int()),
@@ -155,7 +150,6 @@ export const trashItemSchema = z.object({
   text: z.string(),
   lang: langCodeSchema,
   dir: dirSchema,
-  type: itemTypeSchema,
   deletedAt: z.number().int(),
   deletedBy: z.object({ id: z.string(), name: z.string() }).nullable(),
   purgeAt: z.number().int(),
@@ -184,6 +178,8 @@ export const adminTopicSchema = z.object({
   isActive: z.boolean(),
   sortOrder: z.number().int(),
   itemCount: z.number().int(),
+  /** An item can't be in this topic and that one together (D-046). */
+  excludesTopicId: z.number().int().nullable(),
 });
 export type AdminTopic = z.infer<typeof adminTopicSchema>;
 export const adminTopicListSchema = z.object({ topics: z.array(adminTopicSchema) });
@@ -195,6 +191,8 @@ export const topicPatchSchema = z
     slug: topicSlugSchema.optional(),
     name: topicName.optional(),
     isActive: z.boolean().optional(),
+    /** null: combinable with every topic (D-046). Kept both ways by the server. */
+    excludesTopicId: itemIdSchema.nullable().optional(),
   })
   .strict();
 export const topicOrderSchema = z.object({ ids: z.array(itemIdSchema).min(1).max(500) }).strict();
@@ -308,9 +306,7 @@ export const auditListResponseSchema = z.object({
 export const adminStatsSchema = z.object({
   items: z.object({
     total: z.number().int(),
-    byLangType: z.array(
-      z.object({ lang: z.string(), type: itemTypeSchema, count: z.number().int() }),
-    ),
+    byLang: z.array(z.object({ lang: z.string(), count: z.number().int() })),
     drafts: z.number().int(),
     missingTranslation: z.record(z.string(), z.number().int()),
     noExplanation: z.number().int(),
@@ -318,14 +314,9 @@ export const adminStatsSchema = z.object({
     multipleMeanings: z.number().int(),
     /** Items in the sample set (D-038). */
     sampleSet: z.number().int(),
-    /** Sample-set items guests can play, per direction and type (published, with an answer). */
+    /** Sample-set items guests can play, per direction (published, with an answer). */
     sampleByDirection: z.array(
-      z.object({
-        source: z.string(),
-        target: z.string(),
-        type: itemTypeSchema,
-        count: z.number().int(),
-      }),
+      z.object({ source: z.string(), target: z.string(), count: z.number().int() }),
     ),
   }),
   users: z.object({ total: z.number().int(), admins: z.number().int() }),

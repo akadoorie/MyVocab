@@ -40,8 +40,10 @@ describe('CsvImportService', () => {
     const report = await run({});
     expect(report).toMatchObject({ committed: true, errors: [], batches: 1, skippedConcurrent: 0 });
     expect(await count('items')).toBe(3);
-    expect(await count('topics')).toBe(2);
-    expect(await count('item_topics')).toBe(2);
+    // home and food, plus "Expressions (except Idioms)" from migration 0007; the old "expr" row
+    // joins it (D-046).
+    expect(await count('topics')).toBe(3);
+    expect(await count('item_topics')).toBe(3);
 
     const item = await env.DB.prepare(
       `SELECT text, multiple_meanings, translation_meaning AS translation, explanation, status, version FROM items WHERE text = 'sample-word-1'`,
@@ -150,9 +152,9 @@ en,marker-expression,expr,משמעות,מקבילה,=parallel`,
   });
 
   it('stops at file-level errors', async () => {
-    const report = await run({ csvText: 'lang,text\nen,x' });
+    const report = await run({ csvText: 'lang\nen' });
     expect(report.errors).toEqual([
-      expect.objectContaining({ message: 'Missing required column "type"' }),
+      expect.objectContaining({ message: 'Missing required column "text"' }),
     ]);
     expect(report.totals).toBeNull();
   });

@@ -7,7 +7,6 @@ type IdentityRow = {
   id: number;
   lang: string;
   text: string;
-  type: 'word' | 'expr';
   multiple_meanings: number;
   parallel: string;
   meaning: string;
@@ -32,9 +31,9 @@ export class D1ItemRepository implements ItemRepository {
   ): Promise<Map<string, ExistingItemWithVersion>> {
     const result = new Map<string, ExistingItemWithVersion>();
     if (keys.length === 0) return result;
-    const json = JSON.stringify(keys.map((k) => [k.lang, k.type, k.normalizedText]));
+    const json = JSON.stringify(keys.map((k) => [k.lang, k.normalizedText]));
     const rows = await this.db.all<IdentityRow>(sql`
-      SELECT i.id, i.lang, i.text, i.type, i.multiple_meanings, i.translation_parallel AS parallel, i.translation_meaning AS meaning,
+      SELECT i.id, i.lang, i.text, i.multiple_meanings, i.translation_parallel AS parallel, i.translation_meaning AS meaning,
       i.translation_literal AS literal,
              i.explanation,
              i.synonyms, i.hints, i.in_sample_set, i.version,
@@ -43,12 +42,11 @@ export class D1ItemRepository implements ItemRepository {
       FROM json_each(${json}) AS k
       JOIN items AS i
         ON i.lang = json_extract(k.value, '$[0]')
-       AND i.type = json_extract(k.value, '$[1]')
-       AND i.normalized_text = json_extract(k.value, '$[2]')
+       AND i.normalized_text = json_extract(k.value, '$[1]')
        AND i.deleted_at IS NULL
     `);
     for (const r of rows) {
-      result.set(itemIdentityKey(r.lang, r.text, r.type), {
+      result.set(itemIdentityKey(r.lang, r.text), {
         id: r.id,
         version: r.version,
         inSampleSet: r.in_sample_set === 1,
@@ -56,7 +54,6 @@ export class D1ItemRepository implements ItemRepository {
         content: {
           lang: r.lang,
           text: r.text,
-          type: r.type,
           multipleMeanings: r.multiple_meanings === 1,
           parallel: JSON.parse(r.parallel) as Translations,
           meaning: JSON.parse(r.meaning) as Translations,

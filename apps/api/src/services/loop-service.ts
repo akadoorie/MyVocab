@@ -1,4 +1,4 @@
-import { buildCard, toLanguageMap, type CardView, type ItemType } from '@myvocab/core';
+import { buildCard, toLanguageMap, type CardView } from '@myvocab/core';
 import type { BotCheck } from '../auth/turnstile';
 import {
   BotCheckFailedError,
@@ -23,7 +23,6 @@ export type Requester =
 export type LoopQuery = {
   source: string;
   target: string;
-  type: ItemType;
   topicId: number | null;
   /** Ask for the sample set only (D-038). Honoured for admins; guests always get it. */
   sample?: boolean | undefined;
@@ -66,7 +65,6 @@ export class LoopService {
     return {
       source: q.source,
       target: q.target,
-      type: q.type,
       topicId,
       sampleOnly,
       userId: requester.kind === 'learner' ? requester.userId : null,

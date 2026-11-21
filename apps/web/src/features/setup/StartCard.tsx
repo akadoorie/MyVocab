@@ -109,7 +109,6 @@ export function StartCard({
     {
       source: choices.sourceLang,
       target: choices.targetLang,
-      type: choices.type,
       topicId: choices.topicId,
       sample: choices.sample === true,
     },
@@ -121,7 +120,6 @@ export function StartCard({
       api.available({
         source: query.source,
         target: query.target,
-        type: query.type,
         ...(query.topicId === null ? {} : { topicId: query.topicId }),
         ...(query.sample ? { sample: 'true' as const } : {}),
       }),
@@ -312,19 +310,8 @@ export function StartCard({
               )
             }
           </Field>
-          <Field label={strings.setup.type} isDefault={defaultSet.has('type')}>
-            {({ id }) => (
-              <Segmented
-                id={id}
-                label={strings.setup.type}
-                isDefault={defaultSet.has('type')}
-                value={choices.type}
-                onChange={(v) => set('type', v)}
-                options={meta.types.map((t) => ({ value: t.id, label: t.label }))}
-              />
-            )}
-          </Field>
-          <div className="md:col-span-2">
+          {/* Amount sits next to Topic on desktop, where Type used to be (D-046). */}
+          <div>
             <Field label={strings.setup.amount} isDefault={defaultSet.has('size')}>
               {({ id }) =>
                 isGuest ? (

@@ -29,6 +29,8 @@ export type ParsedRow = {
   status?: ItemStatus;
   /** Only set when the cell had a value: puts the item in or out of the sample set (D-038). */
   sample?: boolean;
+  /** An old file's `type` cell said `expr` (D-046): the merge planner adds the topic. */
+  legacyExpr?: true;
 };
 
 export type ParseRowsResult = {
@@ -170,6 +172,16 @@ export function parseImportCsv(text: string, opts: ParseRowsOptions): ParseRowsR
       else rowErrors.push({ row, column: CSV_COLUMNS.status, message: 'Use published or draft' });
     }
 
+    // The old `type` column (D-046): only `word`, `expr` or empty are understood.
+    const typeCell = cell(CSV_COLUMNS.type).toLowerCase();
+    if (typeCell !== '' && typeCell !== 'word' && typeCell !== 'expr') {
+      rowErrors.push({
+        row,
+        column: CSV_COLUMNS.type,
+        message: 'Use word or expr, or leave the column out (items have no type any more)',
+      });
+    }
+
     const sampleCell = cell(CSV_COLUMNS.sample).toLowerCase();
     let sample: boolean | undefined;
     if (sampleCell !== '') {
@@ -203,7 +215,6 @@ export function parseImportCsv(text: string, opts: ParseRowsOptions): ParseRowsR
       {
         lang: cell(CSV_COLUMNS.lang),
         text: cell(CSV_COLUMNS.text),
-        type: cell(CSV_COLUMNS.type),
         multipleMeanings: TRUE_VALUES.has(mm),
         parallel: perLanguageCells('parallel'),
         meaning: perLanguageCells('meaning'),
@@ -236,6 +247,7 @@ export function parseImportCsv(text: string, opts: ParseRowsOptions): ParseRowsR
       topics,
       ...(status ? { status } : {}),
       ...(sample === undefined ? {} : { sample }),
+      ...(typeCell === 'expr' ? { legacyExpr: true as const } : {}),
     });
   }
   return result;

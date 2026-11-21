@@ -19,7 +19,7 @@ async function signIn(page: Page, baseURL: string, email: string) {
 }
 
 async function available(request: APIRequestContext, source: string, target: string) {
-  const res = await request.get(`/api/loops/available?source=${source}&target=${target}&type=word`);
+  const res = await request.get(`/api/loops/available?source=${source}&target=${target}`);
   expect(res.ok()).toBe(true);
   return ((await res.json()) as { available: number }).available;
 }

@@ -24,7 +24,7 @@ function setup(
     cards: CARDS,
     state: createLoop([1, 2, 3], 42),
     undoWindowSeconds: 4,
-    selection: { sourceLang: 'en', targetLang: 'he', topicId: null, type: 'word', size: 5 },
+    selection: { sourceLang: 'en', targetLang: 'he', topicId: null, size: 5 },
     isGuest,
   });
   const router = createMemoryRouter(
@@ -403,9 +403,7 @@ describe('LoopPage', () => {
       await waitFor(() => expect(newSession).toBeEnabled()); // once the settings have loaded
       fireEvent.click(newSession);
       await waitFor(() => expect(progress()).toBe('Cycle 1 · Card 1/2 · 0 known'));
-      expect(posted).toEqual([
-        { source: 'en', target: 'he', type: 'word', topicId: null, size: 5 },
-      ]);
+      expect(posted).toEqual([{ source: 'en', target: 'he', topicId: null, size: 5 }]);
       expect(router.state.location.pathname).toBe('/loop');
       expect(loadLoop()?.cards.map((c) => c.itemId)).toEqual([7, 8]);
       expect(loadLoop()?.selection).toMatchObject({ sourceLang: 'en', targetLang: 'he' });

@@ -11,7 +11,6 @@ const ITEMS: KnownItem[] = [
     text: 'sample-one',
     lang: 'en',
     dir: 'ltr',
-    type: 'word',
     multipleMeanings: true,
     knownTarget: 'he',
     answer: {
@@ -30,7 +29,6 @@ const ITEMS: KnownItem[] = [
     text: 'sample-two',
     lang: 'en',
     dir: 'ltr',
-    type: 'expr',
     multipleMeanings: false,
     knownTarget: 'en',
     answer: {
@@ -163,13 +161,13 @@ describe('KnownPage', () => {
   it('returns all filtered rows after a confirmation', async () => {
     const restore = vi.fn((_init: RequestInit | undefined) => Response.json({ restored: 1 }));
     const fetchSpy = setup({
-      'GET /api/me/known': (_init, url) => (url.includes('type=expr') ? page([ITEMS[1]!]) : page()),
+      'GET /api/me/known': (_init, url) => (url.includes('topicId=1') ? page([ITEMS[1]!]) : page()),
       'POST /api/me/known/restore': restore,
     });
     await screen.findAllByRole('listitem');
-    fireEvent.change(screen.getByLabelText('Type'), { target: { value: 'expr' } });
+    fireEvent.change(screen.getByLabelText('Topic'), { target: { value: '1' } });
     await waitFor(() => expect(screen.getAllByRole('listitem')).toHaveLength(1));
-    expect(fetchSpy.mock.calls.some(([u]) => String(u).includes('type=expr'))).toBe(true);
+    expect(fetchSpy.mock.calls.some(([u]) => String(u).includes('topicId=1'))).toBe(true);
 
     fireEvent.click(screen.getByRole('button', { name: 'Return all 1' }));
     const dialog = screen.getByRole('dialog', { name: 'Return 1 word to practice?' });
@@ -181,7 +179,7 @@ describe('KnownPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Return them' }));
     await waitFor(() => expect(restore).toHaveBeenCalled());
     expect(JSON.parse(String(restore.mock.calls[0]![0]!.body))).toEqual({
-      filter: { type: 'expr' },
+      filter: { topicId: 1 },
     });
   });
 

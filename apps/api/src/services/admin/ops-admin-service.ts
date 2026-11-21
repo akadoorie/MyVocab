@@ -104,7 +104,7 @@ export class OpsAdminService {
     return {
       items: {
         total: s.total,
-        byLangType: s.byLangType,
+        byLang: s.byLang,
         drafts: s.drafts,
         missingTranslation: s.missingTranslation,
         noExplanation: s.noExplanation,

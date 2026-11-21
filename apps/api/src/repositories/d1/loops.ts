@@ -1,4 +1,4 @@
-import type { ItemData, ItemType, Translations } from '@myvocab/core';
+import type { ItemData, Translations } from '@myvocab/core';
 import { sql, type SQL } from 'drizzle-orm';
 import type { Db } from '../../db/client';
 import type { LoopRepository, LoopSelection } from '../interfaces';
@@ -7,7 +7,6 @@ type Row = {
   id: number;
   lang: string;
   text: string;
-  type: ItemType;
   multiple_meanings: number;
   parallel: string;
   meaning: string;
@@ -32,7 +31,7 @@ function whereClause(s: LoopSelection): SQL {
           WHERE k.user_id = ${s.userId} AND k.item_id = i.id AND k.known_target = ${s.target})`
     : sql``;
   const sample = s.sampleOnly ? sql`AND i.in_sample_set = 1` : sql``;
-  return sql`i.lang = ${s.source} AND i.type = ${s.type}
+  return sql`i.lang = ${s.source}
     AND i.status = 'published' AND i.deleted_at IS NULL
     AND ${answer} ${known} ${sample}`;
 }
@@ -56,7 +55,7 @@ export class D1LoopRepository implements LoopRepository {
 
   async selectPlayable(s: LoopSelection, limit: number): Promise<ItemData[]> {
     const rows = await this.db.all<Row>(sql`
-      SELECT i.id, i.lang, i.text, i.type, i.multiple_meanings, i.translation_parallel AS parallel, i.translation_meaning AS meaning,
+      SELECT i.id, i.lang, i.text, i.multiple_meanings, i.translation_parallel AS parallel, i.translation_meaning AS meaning,
       i.translation_literal AS literal,
              i.explanation,
              i.synonyms, i.hints
@@ -69,7 +68,6 @@ export class D1LoopRepository implements LoopRepository {
       id: r.id,
       lang: r.lang,
       text: r.text,
-      type: r.type,
       multipleMeanings: r.multiple_meanings === 1,
       parallel: JSON.parse(r.parallel) as Translations,
       meaning: JSON.parse(r.meaning) as Translations,

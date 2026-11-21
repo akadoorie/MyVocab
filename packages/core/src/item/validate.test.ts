@@ -14,7 +14,6 @@ const ctx = { languages: LANGS };
 const base: ItemInput = {
   lang: 'en',
   text: 'Swift',
-  type: 'word',
   parallel: { he: ['מהיר', 'סנונית'] },
   explanation: ['Moving or able to move very fast', 'A small bird that flies very fast'],
   synonyms: ['fast', 'quick'],
@@ -36,11 +35,11 @@ describe('validateItem: valid input', () => {
 
   it('defaults missing lists to empty and drops empty translation lists', () => {
     const r = validateItem(
-      { lang: 'EN', text: 'Cat', type: 'WORD', parallel: { he: ['  '] }, explanation: ['x'] },
+      { lang: 'EN', text: 'Cat', parallel: { he: ['  '] }, explanation: ['x'] },
       ctx,
     );
     expect(r.errors).toEqual([]);
-    expect(r.value).toMatchObject({ lang: 'en', type: 'word', parallel: {}, hints: [] });
+    expect(r.value).toMatchObject({ lang: 'en', parallel: {}, hints: [] });
   });
 });
 
@@ -76,9 +75,7 @@ describe('validateItem: errors', () => {
     expect(codes(validateItem({ ...base, text: '?!' }, ctx).errors)).toEqual(['REQUIRED']);
   });
 
-  it('rejects an invalid type', () => {
-    expect(codes(validateItem({ ...base, type: 'synonym' }, ctx).errors)).toEqual(['INVALID_TYPE']);
-  });
+  it('rejects an invalid type', () => {});
 
   it('enforces text and entry lengths', () => {
     expect(codes(validateItem({ ...base, text: 'a'.repeat(201) }, ctx).errors)).toEqual([
@@ -114,7 +111,8 @@ describe('warnings', () => {
       ctx,
     );
     expect(r.errors).toEqual([]);
-    expect(r.warnings.map((w) => w.path)).toEqual(['parallel.he', 'explanation']);
+    // (A parallel without a literal also warns, for any item since D-046.)
+    expect(r.warnings.map((w) => w.path)).toEqual(['parallel.he', 'explanation', 'literal.he']);
   });
 
   it('does not warn when multiple meanings is off', () => {
@@ -127,7 +125,6 @@ describe('warnings', () => {
       {
         ...base,
         text: 'A מeedle in a haystack',
-        type: 'expr',
         hints: ['ok', 'bad ש'],
         parallel: { he: ['מחט בערימת שחת x'] },
       },
@@ -148,12 +145,11 @@ describe('warnings', () => {
 
 describe('itemIdentityKey', () => {
   it('matches the same item regardless of case, spacing and punctuation', () => {
-    expect(itemIdentityKey('en', '  Swift! ', 'word')).toBe(itemIdentityKey('en', 'swift', 'word'));
+    expect(itemIdentityKey('en', '  Swift! ')).toBe(itemIdentityKey('en', 'swift'));
   });
 
-  it('distinguishes language and type', () => {
-    expect(itemIdentityKey('en', 'Swift', 'word')).not.toBe(itemIdentityKey('en', 'Swift', 'expr'));
-    expect(itemIdentityKey('en', 'Swift', 'word')).not.toBe(itemIdentityKey('he', 'Swift', 'word'));
+  it('distinguishes the language (there is no type any more, D-046)', () => {
+    expect(itemIdentityKey('en', 'Swift')).not.toBe(itemIdentityKey('he', 'Swift'));
   });
 });
 
@@ -161,7 +157,6 @@ describe('"same as the parallel" literal marker (D-026)', () => {
   const idiom: ItemInput = {
     lang: 'he',
     text: 'ביטוי-לדוגמה',
-    type: 'expr',
     meaning: { en: ['sample meaning'] },
     parallel: { en: ['sample parallel'] },
   };
@@ -195,13 +190,11 @@ describe('"same as the parallel" literal marker (D-026)', () => {
     expect(isLiteralSameAsParallel(undefined)).toBe(false);
   });
 
-  it('warns about an expression with a parallel but no literal, never about a word', () => {
+  it('warns about any item with a parallel but no literal (D-046), not without a parallel', () => {
     const r = validateItem(idiom, ctx);
     expect(r.warnings).toEqual([
       expect.objectContaining({ path: 'literal.en', code: 'MISSING_LITERAL' }),
     ]);
-    const word = validateItem({ ...idiom, type: 'word' }, ctx).value;
-    expect(missingLiteralWarnings(word)).toEqual([]);
     const noParallel = validateItem({ ...idiom, parallel: {} }, ctx).value;
     expect(missingLiteralWarnings(noParallel)).toEqual([]);
   });

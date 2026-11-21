@@ -3,7 +3,6 @@ import type {
   ImportPlan,
   ItemContent,
   ItemData,
-  ItemType,
   LanguageInfo,
   TextDir,
 } from '@myvocab/core';
@@ -33,13 +32,15 @@ export type TopicRow = {
   name: string;
   isActive: boolean;
   sortOrder: number;
+  /** An item can't be in this topic and that one together (D-046); kept symmetric. */
+  excludesTopicId: number | null;
 };
 
 export interface TopicRepository {
   listAll(): Promise<TopicRow[]>;
 }
 
-export type IdentityKey = { lang: string; type: ItemType; normalizedText: string };
+export type IdentityKey = { lang: string; normalizedText: string };
 
 export type ExistingItemWithVersion = ExistingItem & { version: number };
 
@@ -103,7 +104,6 @@ export interface AuditRepository {
 export type LoopSelection = {
   source: string;
   target: string;
-  type: ItemType;
   topicId: number | null;
   /** Only items in the sample set (guests; admins checking it, D-038). */
   sampleOnly: boolean;
@@ -123,7 +123,6 @@ export type KnownFilterInput = {
   q?: string | undefined;
   lang?: string | undefined;
   target?: string | undefined;
-  type?: ItemType | undefined;
   topicId?: number | undefined;
 };
 
@@ -140,7 +139,6 @@ export type KnownListRow = {
   text: string;
   normalizedText: string;
   lang: string;
-  type: ItemType;
   multipleMeanings: boolean;
   parallel: Record<string, string[]>;
   meaning: Record<string, string[]>;
@@ -220,7 +218,6 @@ export type ItemChanges = Partial<
   Pick<
     ItemContent,
     | 'text'
-    | 'type'
     | 'multipleMeanings'
     | 'parallel'
     | 'meaning'
@@ -234,7 +231,6 @@ export type ItemChanges = Partial<
 export type AdminItemFilter = {
   q?: string | undefined;
   lang?: string | undefined;
-  type?: ItemType | undefined;
   topicId?: number | undefined;
   status?: 'draft' | 'published' | undefined;
   multipleMeanings?: boolean | undefined;
@@ -250,7 +246,6 @@ export type AdminItemListRow = {
   id: number;
   text: string;
   lang: string;
-  type: ItemType;
   multipleMeanings: boolean;
   parallel: Record<string, string[]>;
   meaning: Record<string, string[]>;
@@ -266,7 +261,6 @@ export type TrashRow = {
   id: number;
   text: string;
   lang: string;
-  type: ItemType;
   deletedAt: number;
   deletedBy: { id: string; name: string } | null;
 };
@@ -277,12 +271,7 @@ export interface AdminItemRepository {
   /** Any item, including one in Trash. */
   get(id: number): Promise<ItemRecord | null>;
   /** A non-deleted item with this identity (other than `excludeId`). */
-  findDuplicate(
-    lang: string,
-    normalizedText: string,
-    type: ItemType,
-    excludeId?: number,
-  ): Promise<number | null>;
+  findDuplicate(lang: string, normalizedText: string, excludeId?: number): Promise<number | null>;
   list(
     filter: AdminItemFilter,
     activeLangs: readonly string[],
@@ -352,8 +341,21 @@ export interface AdminTopicRepository {
     audit: AuditDetails,
     now: number,
   ): Promise<boolean>;
-  /** Deletes only when no item links to it; false otherwise. */
+  /** Deletes only when no item links to it; false otherwise. Clears exclusions that name it. */
   delete(id: number, actor: Actor, audit: AuditDetails, now: number): Promise<boolean>;
+  /**
+   * Pairs `id` with `partnerId` (or unpairs it with null), both ways, and unpairs the topics
+   * either was paired with before (D-046). Audited.
+   */
+  setExclusion(
+    id: number,
+    partnerId: number | null,
+    actor: Actor,
+    audit: AuditDetails,
+    now: number,
+  ): Promise<void>;
+  /** How many live items are in both topics. */
+  countInBoth(a: number, b: number): Promise<number>;
   reorder(ids: readonly number[], actor: Actor, now: number): Promise<void>;
 }
 
@@ -444,8 +446,8 @@ export interface StatsRepository {
     noHints: number;
     multipleMeanings: number;
     sampleSet: number;
-    sampleByDirection: { source: string; target: string; type: ItemType; count: number }[];
-    byLangType: { lang: string; type: ItemType; count: number }[];
+    sampleByDirection: { source: string; target: string; count: number }[];
+    byLang: { lang: string; count: number }[];
     missingTranslation: Record<string, number>;
     users: number;
     admins: number;

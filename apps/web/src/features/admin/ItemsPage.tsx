@@ -2,7 +2,6 @@ import type { AdminItemListQuery } from '@myvocab/contracts';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useId, useState } from 'react';
 import { Link } from 'react-router';
-import { strings } from '../../strings';
 import { adminStrings as s } from '../../strings-admin';
 import { useDebounced } from '../setup/useDebounced';
 import { adminApi } from './admin-api';
@@ -25,7 +24,6 @@ export function ItemsPage() {
   const ids = {
     q: useId(),
     lang: useId(),
-    type: useId(),
     cat: useId(),
     status: useId(),
     sample: useId(),
@@ -35,7 +33,6 @@ export function ItemsPage() {
   const [search, setSearch] = useState('');
   const q = useDebounced(search.trim(), 300);
   const [lang, setLang] = useState('');
-  const [type, setType] = useState('');
   const [topicId, setTopicId] = useState('');
   const [status, setStatus] = useState('');
   const [sample, setSample] = useState<'' | 'true' | 'false'>('');
@@ -53,7 +50,6 @@ export function ItemsPage() {
     page,
     ...(q ? { q } : {}),
     ...(lang ? { lang } : {}),
-    ...(type === 'word' || type === 'expr' ? { type } : {}),
     ...(topicId ? { topicId: Number(topicId) } : {}),
     ...(status === 'draft' || status === 'published' ? { status } : {}),
     ...(sample ? { inSampleSet: sample } : {}),
@@ -116,18 +112,6 @@ export function ItemsPage() {
                 {l.name}
               </option>
             ))}
-          </select>
-        </Field>
-        <Field id={ids.type} label={s.items.type}>
-          <select
-            id={ids.type}
-            value={type}
-            onChange={(e) => filter(setType)(e.target.value)}
-            className={inputClass}
-          >
-            <option value="">{s.common.all}</option>
-            <option value="word">{strings.types.word}</option>
-            <option value="expr">{strings.types.expr}</option>
           </select>
         </Field>
         <Field id={ids.cat} label={s.items.topic}>
@@ -231,9 +215,7 @@ export function ItemsPage() {
                         </span>
                       )}
                       {item.inSampleSet && <Badge tone="hint">{s.items.sampleBadge}</Badge>}
-                      <span className="text-xs text-muted">
-                        {langName(item.lang)} · {strings.types[item.type]}
-                      </span>
+                      <span className="text-xs text-muted">{langName(item.lang)}</span>
                     </p>
                     {item.topics.length > 0 && (
                       <p className="mt-1 text-xs text-muted">

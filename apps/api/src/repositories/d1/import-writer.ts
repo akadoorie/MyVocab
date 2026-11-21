@@ -57,7 +57,6 @@ export class D1ImportWriter implements ImportWriter {
             lang: c.lang,
             text: c.text,
             normalizedText: normalize(c.text),
-            type: c.type,
             multipleMeanings: c.multipleMeanings,
             parallel: c.parallel,
             meaning: c.meaning,
@@ -78,7 +77,7 @@ export class D1ImportWriter implements ImportWriter {
           query: raw(sql`
             INSERT OR IGNORE INTO item_topics (item_id, topic_id)
             SELECT i.id, c.id FROM items AS i, topics AS c
-            WHERE i.lang = ${c.lang} AND i.type = ${c.type}
+            WHERE i.lang = ${c.lang}
               AND i.normalized_text = ${normalize(c.text)} AND i.deleted_at IS NULL
               AND c.slug IN (SELECT value FROM json_each(${JSON.stringify(create.topics)}))
           `),

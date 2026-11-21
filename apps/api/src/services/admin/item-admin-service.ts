@@ -61,7 +61,6 @@ export function itemSnapshot(rec: ItemRecord) {
   return {
     itemId: rec.id,
     text: rec.text,
-    type: rec.type,
     lang: rec.lang,
     multipleMeanings: rec.multipleMeanings,
     topics: rec.topicSlugs,
@@ -86,7 +85,7 @@ function isUniqueViolation(error: unknown): boolean {
 }
 
 const duplicateError = (itemId?: number | null) =>
-  new ConflictError('An item with the same text and type already exists in this language', {
+  new ConflictError('An item with the same text already exists in this language', {
     reason: 'duplicate',
     ...(itemId ? { itemId } : {}),
   });
@@ -127,12 +126,22 @@ export class ItemAdminService {
   private async checkTopics(ids: readonly number[] | undefined): Promise<number[] | undefined> {
     if (ids === undefined) return undefined;
     const unique = [...new Set(ids)].sort((a, b) => a - b);
-    const known = new Set((await this.deps.topics.listAll()).map((c) => c.id));
-    const missing = unique.filter((id) => !known.has(id));
+    const all = await this.deps.topics.listAll();
+    const byId = new Map(all.map((t) => [t.id, t]));
+    const missing = unique.filter((id) => !byId.has(id));
     if (missing.length > 0) {
       throw new ValidationError('Unknown topic', [
         { path: 'topicIds', message: `Unknown topic: ${missing.join(', ')}` },
       ]);
+    }
+    // Topics that can't be together on one item (D-046).
+    for (const id of unique) {
+      const topic = byId.get(id);
+      const partner = topic?.excludesTopicId ? byId.get(topic.excludesTopicId) : undefined;
+      if (topic && partner && id < partner.id && unique.includes(partner.id)) {
+        const message = `An item can't be in both “${topic.name}” and “${partner.name}”`;
+        throw new ValidationError(message, [{ path: 'topicIds', message }]);
+      }
     }
     return unique;
   }
@@ -162,7 +171,6 @@ export class ItemAdminService {
     return {
       itemId: rec.id,
       text: rec.text,
-      type: rec.type,
       lang: rec.lang,
       multipleMeanings: rec.multipleMeanings,
       topicIds: rec.topicIds,
@@ -211,7 +219,6 @@ export class ItemAdminService {
         text: r.text,
         lang: r.lang,
         dir: ctx.allMap[r.lang]?.dir ?? 'ltr',
-        type: r.type,
         multipleMeanings: r.multipleMeanings,
         topics: topics.get(r.id) ?? [],
         // Per language: parallel + meaning entries (either one answers a card, FR-L40).
@@ -236,7 +243,7 @@ export class ItemAdminService {
     if (errors.length > 0) throw new ValidationError('Invalid item', errors);
     const topicIds = (await this.checkTopics(input.topicIds)) ?? [];
     const normalizedText = normalize(value.text);
-    const duplicate = await this.deps.items.findDuplicate(value.lang, normalizedText, value.type);
+    const duplicate = await this.deps.items.findDuplicate(value.lang, normalizedText);
     if (duplicate !== null) throw duplicateError(duplicate);
 
     const status = input.status ?? 'published';
@@ -274,7 +281,6 @@ export class ItemAdminService {
       {
         lang: rec.lang,
         text: patch.text ?? rec.text,
-        type: patch.type ?? rec.type,
         multipleMeanings: patch.multipleMeanings ?? rec.multipleMeanings,
         parallel: patch.parallel ?? rec.parallel,
         meaning: patch.meaning ?? rec.meaning,
@@ -292,7 +298,6 @@ export class ItemAdminService {
     const audit: Record<string, { before: unknown; after: unknown }> = {};
     const fields = [
       'text',
-      'type',
       'multipleMeanings',
       'parallel',
       'meaning',
@@ -320,14 +325,9 @@ export class ItemAdminService {
     if (topicsChanged) audit.topicIds = { before: rec.topicIds, after: topicIds };
     if (Object.keys(audit).length === 0) return this.view(rec, ctx);
 
-    if (changes.text !== undefined || changes.type !== undefined) {
+    if (changes.text !== undefined) {
       const normalizedText = changes.normalizedText ?? rec.normalizedText;
-      const duplicate = await this.deps.items.findDuplicate(
-        rec.lang,
-        normalizedText,
-        value.type,
-        id,
-      );
+      const duplicate = await this.deps.items.findDuplicate(rec.lang, normalizedText, id);
       if (duplicate !== null) throw duplicateError(duplicate);
     }
 
@@ -386,7 +386,6 @@ export class ItemAdminService {
         text: r.text,
         lang: r.lang,
         dir: ctx.allMap[r.lang]?.dir ?? 'ltr',
-        type: r.type,
         deletedAt: r.deletedAt,
         deletedBy: r.deletedBy,
         purgeAt: r.deletedAt + retentionHours * HOUR,
@@ -403,10 +402,10 @@ export class ItemAdminService {
   /** FR-A21: blocked if a non-deleted duplicate exists now; known marks come back with it. */
   async restore(id: number, actor: Actor): Promise<void> {
     const rec = await this.trashed(id);
-    const duplicate = await this.deps.items.findDuplicate(rec.lang, rec.normalizedText, rec.type);
+    const duplicate = await this.deps.items.findDuplicate(rec.lang, rec.normalizedText);
     if (duplicate !== null) {
       throw new ConflictError(
-        'Restore is blocked: another item with the same text and type now exists in this language. Delete or rename it first.',
+        'Restore is blocked: another item with the same text now exists in this language. Delete or rename it first.',
         { reason: 'duplicate', itemId: duplicate },
       );
     }

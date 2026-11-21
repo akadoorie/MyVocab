@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useId, useState, type ReactNode } from 'react';
 import { Button3D } from '../../components/Button3D';
 import { useToast } from '../../components/Toast';
-import { strings } from '../../strings';
 import { adminStrings as s } from '../../strings-admin';
 import { adminApi, errorMessage, fieldErrors } from './admin-api';
 import { ErrorState, inputClass, Loading, PageTitle } from './ui';
@@ -133,16 +132,6 @@ function SettingsForm({
             label: s.settings.topicsGroup,
             options: topics.map((c) => [String(c.id), c.name] as [string, string]),
           }}
-        />
-        <SelectField
-          id="defaults.type"
-          label={label('defaults.type')}
-          value={draft['defaults.type']}
-          onChange={(v) => set('defaults.type', v as Draft['defaults.type'])}
-          options={[
-            ['word', strings.types.word],
-            ['expr', strings.types.expr],
-          ]}
         />
       </Group>
       <Group title={s.settings.groups.loops}>

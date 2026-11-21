@@ -1,4 +1,4 @@
-import { serializeItemsCsv, type ExportItem, type ItemStatus, type ItemType } from '@myvocab/core';
+import { serializeItemsCsv, type ExportItem, type ItemStatus } from '@myvocab/core';
 
 /**
  * Builds the export files (PRD §8.6) from a D1 binding (local or remote, via getPlatformProxy).
@@ -101,7 +101,7 @@ export async function vocabularyCsv(d1: D1Database): Promise<{ csv: string; item
     d1.prepare('SELECT code FROM languages ORDER BY sort_order, code').all<{ code: string }>(),
     d1
       .prepare(
-        `SELECT i.lang, i.text, i.type, i.multiple_meanings, i.translation_parallel AS parallel,
+        `SELECT i.lang, i.text, i.multiple_meanings, i.translation_parallel AS parallel,
                 i.translation_meaning AS meaning, i.translation_literal AS literal, i.explanation, i.synonyms, i.hints, i.status, i.in_sample_set,
                 (SELECT json_group_array(slug) FROM (
                    SELECT c.slug FROM item_topics ic JOIN topics c ON c.id = ic.topic_id
@@ -111,7 +111,6 @@ export async function vocabularyCsv(d1: D1Database): Promise<{ csv: string; item
       .all<{
         lang: string;
         text: string;
-        type: ItemType;
         multiple_meanings: number;
         parallel: string;
         meaning: string;
@@ -128,7 +127,6 @@ export async function vocabularyCsv(d1: D1Database): Promise<{ csv: string; item
     content: {
       lang: r.lang,
       text: r.text,
-      type: r.type,
       multipleMeanings: r.multiple_meanings === 1,
       parallel: JSON.parse(r.parallel) as Record<string, string[]>,
       meaning: JSON.parse(r.meaning) as Record<string, string[]>,
@@ -217,9 +215,10 @@ export async function exportReadme(
     'CREATE TABLE languages (code text PRIMARY KEY, name text NOT NULL, native_name text NOT NULL,',
     '  dir text NOT NULL, script text NOT NULL, is_active boolean NOT NULL, sort_order int NOT NULL);',
     'CREATE TABLE topics (id int PRIMARY KEY, slug text UNIQUE NOT NULL, name text NOT NULL,',
-    '  is_active boolean NOT NULL, sort_order int NOT NULL, created_at bigint, updated_at bigint);',
+    '  is_active boolean NOT NULL, sort_order int NOT NULL, excludes_topic_id int,',
+    '  created_at bigint, updated_at bigint);',
     'CREATE TABLE items (id int PRIMARY KEY, lang text NOT NULL REFERENCES languages(code), text text NOT NULL,',
-    '  normalized_text text NOT NULL, type text NOT NULL, multiple_meanings boolean NOT NULL,',
+    '  normalized_text text NOT NULL, multiple_meanings boolean NOT NULL,',
     '  translation_parallel jsonb NOT NULL, translation_meaning jsonb NOT NULL,',
     '  translation_literal jsonb NOT NULL, explanation jsonb NOT NULL, synonyms jsonb NOT NULL,',
     '  hints jsonb NOT NULL,',
@@ -239,11 +238,11 @@ export async function exportReadme(
     "  await db.query('INSERT INTO languages VALUES ($1,$2,$3,$4,$5,$6,$7)',",
     '    [l.code, l.name, l.native_name, l.dir, l.script, l.is_active === 1, l.sort_order]);',
     "for (const c of rows('topics'))",
-    "  await db.query('INSERT INTO topics VALUES ($1,$2,$3,$4,$5,$6,$7)',",
-    '    [c.id, c.slug, c.name, c.is_active === 1, c.sort_order, c.created_at, c.updated_at]);',
+    "  await db.query('INSERT INTO topics VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',",
+    '    [c.id, c.slug, c.name, c.is_active === 1, c.sort_order, c.excludes_topic_id, c.created_at, c.updated_at]);',
     "for (const i of rows('items'))",
-    "  await db.query('INSERT INTO items VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)', [",
-    '    i.id, i.lang, i.text, i.normalized_text, i.type, i.multiple_meanings === 1,',
+    "  await db.query('INSERT INTO items VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)', [",
+    '    i.id, i.lang, i.text, i.normalized_text, i.multiple_meanings === 1,',
     '    JSON.stringify(i.translation_parallel), JSON.stringify(i.translation_meaning),',
     '    JSON.stringify(i.translation_literal), JSON.stringify(i.explanation),',
     '    JSON.stringify(i.synonyms), JSON.stringify(i.hints), i.status, i.in_sample_set === 1, i.version, i.created_at, i.updated_at, i.deleted_at]);',

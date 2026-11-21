@@ -1,4 +1,3 @@
-import type { ItemType } from '@myvocab/core';
 import { sql, type SQL } from 'drizzle-orm';
 import type { Db } from '../../db/client';
 import type {
@@ -16,7 +15,6 @@ type ListRow = {
   text: string;
   normalized_text: string;
   lang: string;
-  type: ItemType;
   multiple_meanings: number;
   parallel: string;
   meaning: string;
@@ -34,7 +32,6 @@ function filterConditions(userId: string, f: KnownFilterInput): SQL[] {
   const conds: SQL[] = [sql`k.user_id = ${userId}`, sql`i.deleted_at IS NULL`];
   if (f.lang) conds.push(sql`i.lang = ${f.lang}`);
   if (f.target) conds.push(sql`k.known_target = ${f.target}`);
-  if (f.type) conds.push(sql`i.type = ${f.type}`);
   if (f.topicId !== undefined) {
     conds.push(
       sql`EXISTS (SELECT 1 FROM item_topics ic WHERE ic.item_id = i.id AND ic.topic_id = ${f.topicId})`,
@@ -143,7 +140,7 @@ export class D1KnownRepository implements KnownRepository {
     if (cursor) conds.push(cursorCondition(sort, cursor));
     const rows = await this.db.all<ListRow>(sql`
       SELECT k.item_id, k.known_target, k.known_in_cycle, k.known_at,
-             i.text, i.normalized_text, i.lang, i.type, i.multiple_meanings,
+             i.text, i.normalized_text, i.lang, i.multiple_meanings,
              i.translation_parallel AS parallel, i.translation_meaning AS meaning, i.explanation
       FROM user_known_items AS k JOIN items AS i ON i.id = k.item_id
       WHERE ${sql.join(conds, sql` AND `)}
@@ -155,7 +152,6 @@ export class D1KnownRepository implements KnownRepository {
       text: r.text,
       normalizedText: r.normalized_text,
       lang: r.lang,
-      type: r.type,
       multipleMeanings: r.multiple_meanings === 1,
       parallel: JSON.parse(r.parallel) as Record<string, string[]>,
       meaning: JSON.parse(r.meaning) as Record<string, string[]>,

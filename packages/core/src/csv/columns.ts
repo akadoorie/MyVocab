@@ -8,6 +8,10 @@ import { TRANSLATION_KINDS, type TranslationKind } from '../item/types';
 export const CSV_COLUMNS = {
   lang: 'lang',
   text: 'text',
+  /**
+   * Old and optional (D-046): items have no type any more. `expr` puts the item in the
+   * "Expressions (except Idioms)" topic, unless it is in a topic that excludes it.
+   */
   type: 'type',
   multipleMeanings: 'multiple_meanings',
   topics: 'topics',
@@ -22,7 +26,10 @@ export const CSV_COLUMNS = {
 /** Older column names still read (D-039: `categories` became `topics`). */
 export const OLD_COLUMN_NAMES: Readonly<Record<string, string>> = { categories: 'topics' };
 
-export const REQUIRED_COLUMNS = [CSV_COLUMNS.lang, CSV_COLUMNS.text, CSV_COLUMNS.type] as const;
+export const REQUIRED_COLUMNS = [CSV_COLUMNS.lang, CSV_COLUMNS.text] as const;
+
+/** The topic an old `type = expr` row joins (D-046). */
+export const EXPRESSIONS_TOPIC_SLUG = 'expressions';
 
 export function translationColumn(kind: TranslationKind, lang: LangCode): string {
   return `translation_${kind}_${lang}`;

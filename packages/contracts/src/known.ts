@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { dirSchema, itemIdSchema, itemTypeSchema, langCodeSchema } from './common';
+import { dirSchema, itemIdSchema, langCodeSchema } from './common';
 
 /** Known items (PRD §6.4–6.5, §12.3). */
 export const KNOWN_BATCH_MAX = 100;
@@ -42,7 +42,6 @@ export const knownFilterSchema = z
     lang: langCodeSchema.optional(),
     /** The direction's target language (D-028); with `lang`, one direction. */
     target: langCodeSchema.optional(),
-    type: itemTypeSchema.optional(),
     topicId: itemIdSchema.optional(),
   })
   .strict();
@@ -73,7 +72,6 @@ export const knownListQuerySchema = z
     q: searchText.optional(),
     lang: langCodeSchema.optional(),
     target: langCodeSchema.optional(),
-    type: itemTypeSchema.optional(),
     topicId: z.coerce.number().int().positive().optional(),
     sort: knownSortSchema.default('newest'),
     cursor: z.string().min(1).max(600).optional(),
@@ -87,7 +85,6 @@ export const knownItemSchema = z.object({
   text: z.string(),
   lang: langCodeSchema,
   dir: dirSchema,
-  type: itemTypeSchema,
   multipleMeanings: z.boolean(),
   /** The direction's target language: the row is the item known in this direction (D-028). */
   knownTarget: langCodeSchema,

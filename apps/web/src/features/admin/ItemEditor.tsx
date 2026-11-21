@@ -24,7 +24,6 @@ import { ErrorState, inputClass, Loading, PageTitle } from './ui';
 
 type Header = {
   text: string;
-  type: 'word' | 'expr';
   multipleMeanings: boolean;
   status: 'draft' | 'published';
   inSampleSet: boolean;
@@ -41,7 +40,7 @@ function useCatalog() {
   };
 }
 
-/** Text, type, multiple meanings, status and topics (shared by "new" and "edit"). */
+/** Text, multiple meanings, status and topics (shared by "new" and "edit"). */
 function HeaderFields({
   value,
   onChange,
@@ -53,7 +52,7 @@ function HeaderFields({
   topics: AdminTopic[];
   errors: Record<string, string>;
 }) {
-  const ids = { text: useId(), type: useId(), status: useId(), mm: useId(), sample: useId() };
+  const ids = { text: useId(), status: useId(), mm: useId(), sample: useId() };
   const set = <K extends keyof Header>(key: K, v: Header[K]) => onChange({ ...value, [key]: v });
   return (
     <>
@@ -71,20 +70,6 @@ function HeaderFields({
           aria-invalid={errors.text ? true : undefined}
         />
         {errors.text && <p className="text-sm text-dontknow">{errors.text}</p>}
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor={ids.type} className="text-sm text-muted">
-          {s.editor.type}
-        </label>
-        <select
-          id={ids.type}
-          value={value.type}
-          onChange={(e) => set('type', e.target.value as Header['type'])}
-          className={inputClass}
-        >
-          <option value="word">{strings.types.word}</option>
-          <option value="expr">{strings.types.expr}</option>
-        </select>
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor={ids.status} className="text-sm text-muted">
@@ -168,7 +153,6 @@ export function NewItemPage() {
   const [lang, setLang] = useState('');
   const [header, setHeader] = useState<Header>({
     text: '',
-    type: 'word',
     multipleMeanings: false,
     status: 'published',
     // New items start outside the sample set (D-038).
@@ -296,7 +280,6 @@ export function ItemEditorPage() {
 function headerOf(item: AdminItem): Header {
   return {
     text: item.text,
-    type: item.type,
     multipleMeanings: item.multipleMeanings,
     status: item.status,
     inSampleSet: item.inSampleSet,

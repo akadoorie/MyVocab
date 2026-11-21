@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
-import { strings } from '../../strings';
 import { adminStrings as s } from '../../strings-admin';
 import { adminApi } from './admin-api';
 import { ErrorState, ghostButton, Loading, PageTitle } from './ui';
@@ -59,12 +58,9 @@ export function Dashboard() {
         <p className="mt-1 mb-3 text-sm text-muted">{s.dashboard.sampleByDirectionHelp}</p>
         <ul className="grid gap-2 sm:grid-cols-2">
           {d.items.sampleByDirection.map((row) => (
-            <li
-              key={`${row.source}-${row.target}-${row.type}`}
-              className="flex justify-between gap-3 text-sm"
-            >
+            <li key={`${row.source}-${row.target}`} className="flex justify-between gap-3 text-sm">
               <span>
-                {name(row.source)} → {name(row.target)} · {strings.types[row.type]}
+                {name(row.source)} → {name(row.target)}
               </span>
               <span className={`font-semibold ${row.count < 5 ? 'text-dontknow' : ''}`}>
                 {row.count}
@@ -73,15 +69,13 @@ export function Dashboard() {
           ))}
         </ul>
       </section>
-      {d.items.byLangType.length > 0 && (
+      {d.items.byLang.length > 0 && (
         <section className="rounded-[14px] border border-border bg-surface p-5">
           <h2 className="mb-3 text-lg font-semibold">{s.dashboard.byLanguage}</h2>
           <ul className="grid gap-2 sm:grid-cols-2">
-            {d.items.byLangType.map((row) => (
-              <li key={`${row.lang}-${row.type}`} className="flex justify-between gap-3 text-sm">
-                <span>
-                  {name(row.lang)} · {strings.types[row.type]}
-                </span>
+            {d.items.byLang.map((row) => (
+              <li key={row.lang} className="flex justify-between gap-3 text-sm">
+                <span>{name(row.lang)}</span>
                 <span className="font-semibold">{row.count}</span>
               </li>
             ))}

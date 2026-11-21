@@ -82,7 +82,7 @@ describe('StartCard', () => {
     setup();
     for (const label of ['From', 'To', 'Topic'])
       expect(field(label)).toHaveAttribute('data-default', 'true');
-    expect(screen.getAllByText('Default')).toHaveLength(5);
+    expect(screen.getAllByText('Default')).toHaveLength(4); // From, To, Topic, Amount (no Type, D-046)
     expect(await screen.findByText('6 new cards available')).toBeInTheDocument();
     expect(screen.queryByText('Reset to defaults')).not.toBeInTheDocument();
   });
@@ -182,7 +182,6 @@ describe('StartCard', () => {
     expect(JSON.parse(String(post?.[1]?.body))).toEqual({
       source: 'en',
       target: 'he',
-      type: 'word',
       topicId: null,
       turnstileToken: 'test-token',
     });

@@ -1,5 +1,4 @@
 import type { LangCode } from '../lang/languages';
-import type { ItemType } from '../item/types';
 
 /**
  * Start-card defaults (PRD FR-L2–FR-L4, §7.7): admin settings → the values a fresh visit starts
@@ -9,9 +8,8 @@ import type { ItemType } from '../item/types';
 export type StartChoices = {
   sourceLang: LangCode;
   targetLang: LangCode;
-  /** null = General (all items). */
+  /** null = All topics (every item). */
   topicId: number | null;
-  type: ItemType;
   size: number;
   /** Admins only: play the sample set guests get (D-038). Guests always get it. */
   sample?: boolean;
@@ -22,7 +20,6 @@ export type StartSettings = {
     sourceLang: LangCode;
     targetLang: LangCode;
     topicId: number | null;
-    type: ItemType;
   };
   sizeOptions: readonly number[];
   defaultSize: number;
@@ -47,7 +44,6 @@ export function resolveStartDefaults(ctx: StartContext): StartChoices {
     sourceLang: pick(settings.defaults.sourceLang),
     targetLang: pick(settings.defaults.targetLang),
     topicId: topicId !== null && activeTopicIds.includes(topicId) ? topicId : null,
-    type: settings.defaults.type,
     size: isGuest ? settings.guestLoopSize : resolveSize(settings),
   };
 }
