@@ -101,7 +101,7 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   await button(page, 'Back').click();
   await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 1 known');
   await expect(card(page)).toHaveAttribute('data-side', 'front');
-  await expect(page.getByTestId('answer-chip')).toHaveText(/Your answer: I know it/);
+  await expect(page.getByTestId('answer-chip')).toHaveText(/Clicked: I know it/);
   await button(page, 'I don’t know Show again soon').click();
   await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 0 known');
   await button(page, 'Next').click();

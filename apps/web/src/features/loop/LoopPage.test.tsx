@@ -137,17 +137,18 @@ describe('LoopPage', () => {
     expect(progress()).toBe('Cycle 1 · Card 1/3 · 1 known');
     expect(side()).toBe('front');
     // A guest's Know is the orange one (D-042).
+    // Short on screen; the orange one's caption is there for screen readers (D-049).
     expect(screen.getByTestId('answer-chip')).toHaveTextContent(
-      'Your answer: I know it (show again in future)',
+      'Clicked: I know it (show again in future)',
     );
-    expect(
-      screen.getByText('Card 1 of 3. Your answer: I know it (show again in future)'),
-    ).toHaveClass('sr-only');
+    expect(screen.getByText('Card 1 of 3. Clicked: I know it (show again in future)')).toHaveClass(
+      'sr-only',
+    );
     expect(btn('Next')).toBeEnabled(); // answered, so Next skips ahead without answering again
     fireEvent.click(btn('Next'));
     expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known');
     expect(side()).toBe('front'); // even though it was showing its back when we left it
-    expect(screen.getByTestId('answer-chip')).toHaveTextContent('Your answer: I don’t know');
+    expect(screen.getByTestId('answer-chip')).toHaveTextContent('Clicked: I don’t know');
     fireEvent.click(btn('Next'));
     expect(screen.queryByTestId('answer-chip')).not.toBeInTheDocument(); // not answered yet
     expect(btn('Next')).toBeDisabled();
@@ -237,12 +238,13 @@ describe('LoopPage', () => {
     expect(sink.onKnow).not.toHaveBeenCalled();
     expect(loadLoop()?.state.known[0]?.again).toBe(true); // a refresh keeps it
     fireEvent.click(btn('Back'));
+    // Short on screen; the orange one's caption is there for screen readers (D-049).
     expect(screen.getByTestId('answer-chip')).toHaveTextContent(
-      'Your answer: I know it (show again in future)',
+      'Clicked: I know it (show again in future)',
     );
-    expect(
-      screen.getByText('Card 1 of 3. Your answer: I know it (show again in future)'),
-    ).toHaveClass('sr-only');
+    expect(screen.getByText('Card 1 of 3. Clicked: I know it (show again in future)')).toHaveClass(
+      'sr-only',
+    );
 
     fireEvent.keyDown(window, { key: 'a' }); // the same answer: nothing changes
     expect(sink.onKnow).not.toHaveBeenCalled();

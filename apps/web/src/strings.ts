@@ -236,9 +236,14 @@ export const strings = {
     /** The live cover over the hints on the card front (D-047). */
     hideHints: 'Hide hints',
     tapForHints: 'Tap to see hints',
-    answeredKnow: 'Your answer: I know it',
-    answeredKnowAgain: 'Your answer: I know it (show again in future)',
-    answeredDontKnow: 'Your answer: I don’t know',
+    /** What was clicked, on a card reached with Back (D-049). The orange one adds its caption for
+        screen readers only: the two Knows look alike without their colour. */
+    answeredKnow: 'Clicked: I know it',
+    answeredKnowAgain: 'Clicked: I know it (show again in future)',
+    answeredDontKnow: 'Clicked: I don’t know',
+    /** The orange chip's visible text; the caption stays for screen readers. */
+    answeredKnowAgainShort: 'Clicked: I know it',
+    answeredKnowAgainExtra: ' (show again in future)',
     /** Announced when Back lands on a card (screen readers). */
     backTo: (card: number, size: number, answer: string | null) =>
       `Card ${card} of ${size}${answer ? `. ${answer}` : ''}`,

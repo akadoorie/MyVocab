@@ -4,10 +4,18 @@ import { LoopButton } from './ButtonBar';
 import { strings } from '../../strings';
 import { HintsCover } from './HintsCover';
 
-/** The "Your answer" chip on a card reached with Back (FR-L29a, FR-L27a). */
-const CHIP: Record<CardAnswer, { color: string; text: string; mark: string }> = {
+/**
+ * The "Clicked: …" chip on a card reached with Back (FR-L29a, D-049): short, its colour tells the
+ * two Knows apart; the orange one's caption is there for screen readers only.
+ */
+const CHIP: Record<CardAnswer, { color: string; text: string; extra?: string; mark: string }> = {
   know: { color: 'text-know', text: strings.card.answeredKnow, mark: '✓' },
-  knowAgain: { color: 'text-again', text: strings.card.answeredKnowAgain, mark: '✓' },
+  knowAgain: {
+    color: 'text-again',
+    text: strings.card.answeredKnowAgainShort,
+    extra: strings.card.answeredKnowAgainExtra,
+    mark: '✓',
+  },
   dontKnow: { color: 'text-dontknow', text: strings.card.answeredDontKnow, mark: '✗' },
 };
 
@@ -114,10 +122,12 @@ export function FlipCard({
   const answerChip = (face: 'front' | 'back') =>
     answer && (
       <p
-        className={`chip ${CHIP[answer].color}`}
+        className={`chip shrink-0 whitespace-nowrap ${CHIP[answer].color}`}
         data-testid={face === 'front' ? tid('answer-chip') : undefined}
       >
-        {CHIP[answer].text} <span aria-hidden="true">{CHIP[answer].mark}</span>
+        {CHIP[answer].text}
+        {CHIP[answer].extra && <span className="sr-only">{CHIP[answer].extra}</span>}{' '}
+        <span aria-hidden="true">{CHIP[answer].mark}</span>
       </p>
     );
   // The only way to turn the card (with F / Space): a stray tap must not flip it (D-047).
@@ -141,8 +151,9 @@ export function FlipCard({
     <div className={`flip-card ${front ? '' : 'is-flipped'}`}>
       <div className="flip-card__inner" data-testid={tid('flip-card')} data-side={side}>
         <div className="flip-card__face flip-card__front" inert={!front} aria-hidden={!front}>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="chip">{label}</p>
+          {/* One line with the direction, on phones too (D-049). */}
+          <div className="flex items-center justify-between gap-2">
+            <p className="chip shrink-0">{label}</p>
             {answerChip('front')}
           </div>
           {/* The item sits in the upper part of the card and never moves; hints and synonyms
