@@ -24,6 +24,7 @@ const loopStateSchema = z.object({
   index: z.number().int().min(0),
   side: z.enum(['front', 'back']),
   hintsShown: z.boolean(),
+  hintsOpen: z.array(z.number().int()).optional(),
   nextCycle: ids,
   known: z.array(mark),
   // `lastKnow` (the old Undo) is gone; Zod drops it from sessions saved before, so they resume.

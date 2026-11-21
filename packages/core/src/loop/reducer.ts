@@ -28,6 +28,11 @@ export type LoopState = {
   side: CardSide;
   /** Whether the current card's hints are shown on the front (FR-L25). */
   hintsShown: boolean;
+  /**
+   * Cards of this cycle whose hints cover was left open (D-048): Back or Next onto them shows
+   * it open again. Optional so a session saved before D-048 still loads.
+   */
+  hintsOpen?: number[];
   /** "Don't know" cards collected for the next cycle. */
   nextCycle: number[];
   /** Cards marked Know in this loop, with the cycle they were marked in. */
@@ -61,6 +66,7 @@ export function createLoop(cardIds: readonly number[], seed: RngState): LoopStat
     index: 0,
     side: 'front',
     hintsShown: false,
+    hintsOpen: [],
     nextCycle: [],
     known: [],
     totalCards: unique.length,
@@ -68,11 +74,23 @@ export function createLoop(cardIds: readonly number[], seed: RngState): LoopStat
   };
 }
 
+/** Whether the card at `index` was left with its hints cover open in this cycle (D-048). */
+function leftOpen(state: LoopState, index: number): boolean {
+  const id = state.order[index];
+  return id !== undefined && (state.hintsOpen ?? []).includes(id);
+}
+
 /** Moves past the current card: the next card, a cycle break, or the end of the loop. */
 function advance(state: LoopState): LoopState {
   const index = state.index + 1;
   if (index < state.order.length) {
-    return { ...state, index, phase: 'deciding', side: 'front', hintsShown: false };
+    return {
+      ...state,
+      index,
+      phase: 'deciding',
+      side: 'front',
+      hintsShown: leftOpen(state, index),
+    };
   }
   return {
     ...state,
@@ -159,21 +177,27 @@ export function loopReducer(state: LoopState, action: LoopAction): LoopState {
         side: 'back',
       };
     }
-    case 'TOGGLE_HINTS':
-      return { ...state, hintsShown: !state.hintsShown };
+    case 'TOGGLE_HINTS': {
+      // Remembered per card, so coming back to it keeps the cover as it was left (D-048).
+      const id = currentId(state);
+      const others = (state.hintsOpen ?? []).filter((n) => n !== id);
+      const hintsShown = !state.hintsShown;
+      return { ...state, hintsShown, hintsOpen: hintsShown ? [...others, id] : others };
+    }
     case 'FLIP':
       return { ...state, side: state.side === 'front' ? 'back' : 'front' };
     case 'NEXT':
       return advance(state);
     case 'BACK': {
-      // The card always arrives front side up, hints hidden (FR-L29a).
+      // The card arrives front side up, its hints cover as it was left (FR-L29a, D-048).
       const from = state.phase === 'cycleBreak' || state.phase === 'finished';
+      const index = (from ? state.order.length : state.index) - 1;
       return {
         ...state,
-        index: (from ? state.order.length : state.index) - 1,
+        index,
         phase: 'deciding',
         side: 'front',
-        hintsShown: false,
+        hintsShown: leftOpen(state, index),
       };
     }
     case 'CONTINUE': {
@@ -186,7 +210,9 @@ export function loopReducer(state: LoopState, action: LoopAction): LoopState {
         nextCycle: [],
         phase: 'deciding',
         side: 'front',
+        // A new cycle is a fresh try: every card starts covered again (D-048).
         hintsShown: false,
+        hintsOpen: [],
         rng,
       };
     }

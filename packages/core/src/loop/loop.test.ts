@@ -164,6 +164,26 @@ describe('Flip and Hints never affect grading', () => {
     expect(run(shown, 'KNOW').hintsShown).toBe(false);
   });
 
+  it("keeps each card's cover as it was left when coming back to it (D-048)", () => {
+    const s0 = createLoop([1, 2, 3], 7);
+    // Card 1: open the cover and answer; card 2 arrives covered.
+    const s1 = run(s0, 'TOGGLE_HINTS', 'DONT_KNOW', 'NEXT');
+    expect(s1).toMatchObject({ index: 1, hintsShown: false });
+    // Back to card 1: still open. Covering it again is remembered too.
+    const back = run(s1, 'BACK');
+    expect(back).toMatchObject({ index: 0, hintsShown: true });
+    expect(run(back, 'TOGGLE_HINTS', 'NEXT', 'BACK').hintsShown).toBe(false);
+    // Next onto a card already seen restores its state as well.
+    const s2 = run(s1, 'TOGGLE_HINTS', 'BACK', 'NEXT');
+    expect(s2).toMatchObject({ index: 1, hintsShown: true });
+    // From the cycle break, Back to the last card keeps its cover.
+    const end = run(s0, 'KNOW', 'KNOW', 'TOGGLE_HINTS', 'DONT_KNOW', 'NEXT');
+    expect(end.phase).toBe('cycleBreak');
+    expect(run(end, 'BACK')).toMatchObject({ index: 2, hintsShown: true });
+    // A new cycle is a fresh try: covered again.
+    expect(run(end, 'CONTINUE')).toMatchObject({ cycle: 2, hintsShown: false, hintsOpen: [] });
+  });
+
   it('Hints is still available on the front after Don’t know', () => {
     const s = run(createLoop([1, 2], 5), 'DONT_KNOW', 'FLIP');
     expect(canDispatch(s, 'TOGGLE_HINTS')).toBe(true);

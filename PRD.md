@@ -275,8 +275,9 @@ private content repository. It never appears in the public code repo or any publ
   Tapping the cover (or pressing **H**) reveals them (the dots scatter and fade, the text sharpens); tapping again
   covers them. The cover is a real button ("Tap to see hints" / "Hide hints", `aria-expanded`); the hidden text is not
   read out until revealed; it is at least 4.5rem tall, so a one-line hint is still easy to tap; with reduced motion
-  the dots stand still. There is **no Hints button**. The state survives flipping back and forth; the next card
-  starts covered. The back shows the hints uncovered, always. **Hints have no effect on grading** and are not
+  the dots stand still. There is **no Hints button**. The state survives flipping back and forth and is remembered per card
+  within the cycle: a new card starts covered, a card reached again with Back or Next shows it as it was left, and
+  a new cycle starts every card covered again (D-048). The back shows the hints uncovered, always. **Hints have no effect on grading** and are not
   recorded.
 - **FR-L26 Flip**: turns the card over (front ↔ back) with a 3D flip animation (§9.4). It can be triggered by the
   round **Flip** button in the card's corner (shown on **both** faces, never covered) or by the **Space**/**F** keys.
@@ -309,7 +310,8 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L29a Back and changing an answer** (owner request, 2026-11-19): the round **Back** button (or **←**) shows the
   previous card of the current cycle, card by card, down to the first card of the cycle (earlier cycles are out of
   reach). On the cycle break and the summary, **"← Back to the last card"** returns to the cycle's last card. A card
-  reached with Back (or Next) **always shows its front**, hints hidden, even if it was showing its back when left.
+  reached with Back (or Next) **always shows its front**, even if it was showing its back when left, with its hints
+  cover **as it was left**: open if the learner had revealed the hints and not covered them again (D-048).
   - A card that already has an answer shows a chip **"Your answer: Know ✓"** (green), **"Your answer: Know (ask
     again) ✓"** (amber) or **"Your answer: Don't know ✗"** (red), and **Next** steps forward without answering again,
     up to the first unanswered card.

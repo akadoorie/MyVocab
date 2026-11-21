@@ -114,6 +114,19 @@ describe('LoopPage', () => {
     expect(side()).toBe('front');
   });
 
+  it('Back brings a card back with its hints cover as it was left (D-048)', () => {
+    setup();
+    const front = () => screen.queryByTestId('front-hints');
+    fireEvent.click(btn('Tap to see hints'));
+    expect(front()).not.toBeNull();
+    fireEvent.click(btn('I know it Show again in future'));
+    expect(front()).toBeNull(); // the next card arrives covered
+    fireEvent.click(btn('Back'));
+    expect(progress()).toBe('Cycle 1 · Card 1/3 · 1 known');
+    expect(front()).not.toBeNull(); // still open, as it was left
+    expect(btn('Hide hints')).toHaveAttribute('aria-expanded', 'true');
+  });
+
   it('Back shows the previous card front side up with its answer; Next steps forward again', () => {
     setup();
     expect(btn('Back')).toBeDisabled(); // first card of the cycle
