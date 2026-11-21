@@ -68,8 +68,11 @@ function Extras({ card }: { card: CardView }) {
         </ul>
       )}
       {synonyms.length > 0 && (
-        <p>
-          <span className="font-medium">{strings.card.synonyms}</span> {synonyms.join(', ')}
+        // After hints, one empty line (pt-5 + the 0.5rem gap = one 1.75rem line of text-lg).
+        <p className={hints.length > 0 ? 'pt-5' : ''}>
+          {/* The label a little brighter than the muted text around it. */}
+          <span className="font-medium text-[#cdc6e6]">{strings.card.synonyms}</span>{' '}
+          {synonyms.join(', ')}
         </p>
       )}
     </div>
