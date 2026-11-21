@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mockFetch, renderRoutes } from '../test/render';
 import { Landing } from './Landing';
@@ -19,7 +19,7 @@ describe('Landing: back from a failed sign-in (FR-L56)', () => {
     expect(router.state.location.search).toBe('');
     // The automatic guest toast is held back so it doesn't contradict the notice.
     await new Promise((r) => setTimeout(r, 50)); // after the address was cleaned
-    expect(screen.queryByText(/Please register/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Sign-in to choose more cards/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
@@ -77,6 +77,8 @@ describe('Landing: the Buttons guide under How it works (D-030)', () => {
     expect(section.querySelector('.mini-btn--know.is-locked')).not.toBeNull();
     expect(section.querySelectorAll('.mini-btn__lock')).toHaveLength(1);
     expect(section.querySelector('.mini-btn--again.is-locked')).toBeNull();
+    // "Sign-in" in "(Sign-in to enable)" is a link that starts sign-in (D-043).
+    expect(within(section).getByRole('button', { name: 'Sign-in' })).toBeInTheDocument();
   });
 });
 

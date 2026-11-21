@@ -214,11 +214,11 @@ body {
       transform 80ms ease,
       box-shadow 80ms ease;
   }
-  .lbtn:active:not(:disabled) .lbtn__shape,
-  .lbtn:active:not(:disabled) .lbtn__icon {
+  .lbtn:active:not(:disabled, [aria-disabled='true']) .lbtn__shape,
+  .lbtn:active:not(:disabled, [aria-disabled='true']) .lbtn__icon {
     transform: translateY(6px);
   }
-  .lbtn:active:not(:disabled) .lbtn__shape {
+  .lbtn:active:not(:disabled, [aria-disabled='true']) .lbtn__shape {
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.2),
       0 0 0 var(--c-ledge),
@@ -231,19 +231,19 @@ body {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
   }
-  .lbtn:disabled {
+  .lbtn:is(:disabled, [aria-disabled='true']) {
     cursor: not-allowed;
   }
-  .lbtn:disabled .lbtn__shape,
-  .lbtn:disabled .lbtn__icon {
+  .lbtn:is(:disabled, [aria-disabled='true']) .lbtn__shape,
+  .lbtn:is(:disabled, [aria-disabled='true']) .lbtn__icon {
     opacity: 0.5;
     transform: translateY(6px);
   }
-  .lbtn:disabled .lbtn__shape {
+  .lbtn:is(:disabled, [aria-disabled='true']) .lbtn__shape {
     box-shadow: none;
   }
-  .lbtn:disabled .lbtn__label,
-  .lbtn:disabled .lbtn__caption {
+  .lbtn:is(:disabled, [aria-disabled='true']) .lbtn__label,
+  .lbtn:is(:disabled, [aria-disabled='true']) .lbtn__caption {
     opacity: 0.6;
   }
   /* Shown but not available (the orange Know for guests, D-030): grey instead of its colour. */
@@ -256,6 +256,46 @@ body {
   .lbtn.is-locked .lbtn__icon,
   .lbtn.is-locked .lbtn__label {
     filter: brightness(0.55) saturate(0.85);
+  }
+  /* The guest amount message inside the Amount field, on desktop (D-044): on its right side,
+     leaving the lock and the number visible. */
+  .amount-tip {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    max-width: calc(100% - 4rem);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    border-radius: 10px;
+    border: 1px solid rgba(139, 108, 255, 0.45);
+    background: var(--surface-2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    font-size: 0.95rem;
+  }
+
+  /* "Sign-in required" over the locked green pill (D-043): the pill's own size and shape. */
+  .locked-tip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* A flex row drops the plain space between the link and the word: use a gap instead. */
+    gap: 0.3em;
+    height: 60px;
+    border-radius: 999px;
+    border: 1px solid rgba(139, 108, 255, 0.45);
+    background: var(--surface-2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  @media (min-width: 768px) {
+    .locked-tip {
+      height: 72px;
+      font-size: 1.05rem;
+    }
   }
   /* A yellow padlock with no background; a soft dark shadow keeps its outline clear where it
      crosses the button's edge. */
@@ -306,11 +346,11 @@ body {
     color: #cdb98c;
   }
   /* Hints is a toggle: while on, it stays pressed down with a brighter glow and label. */
-  .lbtn.is-pressed:not(:disabled) .lbtn__shape,
-  .lbtn.is-pressed:not(:disabled) .lbtn__icon {
+  .lbtn.is-pressed:not(:disabled, [aria-disabled='true']) .lbtn__shape,
+  .lbtn.is-pressed:not(:disabled, [aria-disabled='true']) .lbtn__icon {
     transform: translateY(4px);
   }
-  .lbtn.is-pressed:not(:disabled) .lbtn__shape {
+  .lbtn.is-pressed:not(:disabled, [aria-disabled='true']) .lbtn__shape {
     box-shadow:
       inset 0 2px 6px rgba(0, 0, 0, 0.45),
       0 2px 0 var(--c-ledge),
@@ -400,8 +440,8 @@ body {
     pointer-events: none;
     transition: transform 80ms ease;
   }
-  .lbtn--pill:active:not(:disabled) .lbtn__label,
-  .lbtn--pill:disabled .lbtn__label {
+  .lbtn--pill:active:not(:disabled, [aria-disabled='true']) .lbtn__label,
+  .lbtn--pill:is(:disabled, [aria-disabled='true']) .lbtn__label {
     transform: translateY(6px);
   }
   /* The small caption under the two Knows ("forever" / "ask again", FR-L27a). */

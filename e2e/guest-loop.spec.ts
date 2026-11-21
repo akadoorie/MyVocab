@@ -6,7 +6,10 @@ const progress = (page: Page) => page.getByTestId('progress');
 const card = (page: Page) => page.getByTestId('flip-card');
 const button = (page: Page, name: string) => page.getByRole('button', { name, exact: true }).last();
 
-test('a guest starts with the defaults and plays a loop to the summary', async ({ page }) => {
+test('a guest starts with the defaults and plays a loop to the summary', async ({
+  page,
+  isMobile,
+}) => {
   await page.goto('/');
 
   // Defaults: EN → HE, the Sample set (D-038), Words, amount locked at 5, all "default".
@@ -40,11 +43,16 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   await expect(startCard.getByText('Default')).toHaveCount(5);
   await expect(startCard.getByText(/new cards? available/)).toBeVisible();
 
-  // The register toast appears once automatically, and again when tapping the locked amount.
-  const toastText = 'Please register in order to choose a larger amount of cards.';
-  await expect(page.getByText(toastText)).toBeVisible();
+  // The sign-in message appears once automatically, and again when tapping the locked amount.
+  // "Sign-in" is a link at the start of the sentence (D-043). On phones it is a toast; on desktop
+  // it covers the Amount field itself (D-044).
+  const toast = isMobile
+    ? page.getByRole('status').filter({ hasText: 'to choose more cards per session.' })
+    : startCard.locator('.amount-tip');
+  await expect(toast).toHaveText('Sign-in to choose more cards per session.');
+  await expect(toast.getByRole('button', { name: 'Sign-in' })).toBeVisible();
   await startCard.getByRole('button', { name: /Amount: 5/ }).click();
-  await expect(page.getByText(toastText)).toBeVisible();
+  await expect(toast).toBeVisible();
 
   // Start without changing anything (invisible Turnstile with Cloudflare's test keys).
   await startCard.getByRole('button', { name: 'Start' }).click();
@@ -70,7 +78,16 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
 
   // Know from the back side → next card, front side up. A guest's Know is the orange one; the
   // green "Don't show again" is locked (D-042).
-  await expect(button(page, 'I know it Don’t show again (sign-in to enable)')).toBeDisabled();
+  // The locked green button explains itself when tapped, and marks nothing (D-043).
+  const locked = button(page, 'I know it Don’t show again (sign-in to enable)');
+  await expect(locked).toHaveAttribute('aria-disabled', 'true');
+  // Playwright won't click an aria-disabled button (a person can), and on phones the earlier
+  // toast may still cover it: send the click to the button itself.
+  await locked.dispatchEvent('click');
+  // "Sign-in required" covers the locked button for a second, then goes (D-043).
+  await expect(page.locator('.locked-tip')).toHaveText('Sign-in required');
+  await expect(page.locator('.locked-tip')).toHaveCount(0, { timeout: 3000 });
+  await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 0 known');
   await button(page, 'I know it Show again in future').click();
   await expect(progress(page)).toHaveText('Cycle 1 · Card 2/5 · 1 known');
   await expect(card(page)).toHaveAttribute('data-side', 'front');

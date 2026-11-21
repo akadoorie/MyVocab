@@ -14,7 +14,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { useToast } from '../../components/Toast';
 import { api } from '../../lib/api';
-import { useSession } from '../../lib/session';
+import { startGoogleSignIn, useSession } from '../../lib/session';
 import { strings } from '../../strings';
 import { useKnownQueue } from '../known/KnownQueueProvider';
 import { useStartLoop, type LoopStartNotice } from '../setup/useStartLoop';
@@ -26,6 +26,9 @@ import { CycleBreak, ShortcutsMenu, Summary } from './LoopScreens';
 import { CrumpleGhost, type Crumple } from './CrumpleGhost';
 import { useLoopShortcuts } from './useLoopShortcuts';
 import { useSwipe } from './useSwipe';
+
+/** How long "Sign-in required" covers the locked green button (D-043). */
+const LOCKED_TIP_MS = 1500;
 
 export type KnownSink = {
   /** A Know was made (signed-in learners queue it, PRD §6.4). */
@@ -176,15 +179,27 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
     [state, cards, knownSink],
   );
 
+  // A guest tapped the locked green button, or pressed K: "Sign-in required" covers that button
+  // for 1.5 seconds (D-043), rather than a toast that would cover the orange one on phones.
+  const [lockedTip, setLockedTip] = useState(false);
+  const lockedTimer = useRef<number | undefined>(undefined);
+  const showLocked = useCallback(() => {
+    setLockedTip(true);
+    window.clearTimeout(lockedTimer.current);
+    lockedTimer.current = window.setTimeout(() => setLockedTip(false), LOCKED_TIP_MS);
+  }, []);
+  useEffect(() => () => window.clearTimeout(lockedTimer.current), []);
+
   const onShortcut = useCallback(
     (action: LoopActionType | 'ENTER') => {
       if (confirmLeave) return; // the "are you sure?" question is open
-      if (action === 'KNOW' && stored.isGuest) return; // "Don't show again" needs signing in (D-042)
+      // "Don't show again" needs signing in (D-042); K says so, like tapping the button (D-043).
+      if (action === 'KNOW' && stored.isGuest) return showLocked();
       if (action === 'ENTER') act(state.phase === 'cycleBreak' ? 'CONTINUE' : 'NEXT');
       else if (action === 'STOP') setConfirmLeave('stop');
       else act(action);
     },
-    [act, state.phase, confirmLeave, stored.isGuest],
+    [act, state.phase, confirmLeave, stored.isGuest, showLocked],
   );
   useLoopShortcuts(onShortcut);
 
@@ -322,6 +337,9 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           onAction={(type) => (type === 'STOP' ? setConfirmLeave('stop') : act(type))}
           nextRef={nextRef}
           signedIn={!stored.isGuest}
+          onLocked={showLocked}
+          lockedTip={lockedTip}
+          onSignIn={startGoogleSignIn}
         />
       </div>
       {ghost}

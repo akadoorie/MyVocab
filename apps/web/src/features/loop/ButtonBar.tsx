@@ -39,6 +39,8 @@ export function LoopButton({
   hideLabel?: boolean;
   ref?: Ref<HTMLButtonElement>;
   disabled?: boolean;
+  /** Off but still focusable and clickable (the locked button explains itself, D-043). */
+  'aria-disabled'?: boolean;
   /** A toggle button's state (Hints): announced and styled as pressed. */
   pressed?: boolean;
   /** Shown but not available (the green Know for guests, D-042): dimmed, with a lock. */
@@ -90,11 +92,19 @@ export function ButtonBar({
   onAction,
   nextRef,
   signedIn = false,
+  onLocked,
+  lockedTip = false,
+  onSignIn,
 }: {
   state: LoopState;
   onAction: (type: LoopActionType) => void;
   nextRef: Ref<HTMLButtonElement>;
   signedIn?: boolean;
+  /** A guest tapped the locked green button: say why (D-043). */
+  onLocked?: () => void;
+  /** Show "Sign-in required" over the locked green button (for 1.5 seconds, D-043). */
+  lockedTip?: boolean;
+  onSignIn?: () => void;
 }) {
   const btn = (type: LoopActionType) => ({
     disabled: !canDispatch(state, type),
@@ -151,9 +161,25 @@ export function ButtonBar({
           title={strings.loop.signInToEnable}
           className={`[grid-area:know] ${trio}`}
           locked
-          disabled
+          aria-disabled
+          onClick={onLocked}
         />
       )}
+      {/* Over the green pill, in the same grid cell; announced politely. */}
+      <div aria-live="polite" className="pointer-events-none z-10 self-start [grid-area:know]">
+        {!signedIn && lockedTip && (
+          <p className="locked-tip pointer-events-auto">
+            <button
+              type="button"
+              onClick={onSignIn}
+              className="font-semibold text-accent underline underline-offset-2 hover:text-text"
+            >
+              {strings.nav.signInLink}
+            </button>{' '}
+            {strings.loop.lockedTip}
+          </p>
+        )}
+      </div>
       <LoopButton
         kind="again"
         icon={<CheckIcon />}

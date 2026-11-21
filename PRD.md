@@ -155,7 +155,7 @@ private content repository. It never appears in the public code repo or any publ
 | Auth | Better Auth, **Google sign-in only**. `role` = `user` or `admin` |
 | Admin protection | Server-side role check **+ mandatory Cloudflare Access** (emailed one-time code) on `/admin*` and `/api/admin/*` |
 | Start defaults | Source **English**, Target **Hebrew**, Topic **All topics**, Type **Words**, Amount **10**, shown in a muted "default" style |
-| Amount | Learners: **10 / 20 / 30 / 40 / 50** (default 10). Guests: **always 5**, locked, with a "please register" toast |
+| Amount | Learners: **10 / 20 / 30 / 40 / 50** (default 10). Guests: **always 5**, locked, with a "sign-in" toast |
 | Guests | Can run 5-card loops after an invisible **Turnstile** bot check. Their Know marks are **not** remembered |
 | Anti-scraping | Turnstile for guests + strict limits (guests ~10 loops/hour per IP; learners ~500 cards/day) + `noindex` + no third-party content exposure |
 | Content model | One **item** per word/expression, in its own language. The three kinds of translation (parallel, meaning, literal; per other language), explanation, synonyms and hints are **ordered lists** stored inside the item row (§11) |
@@ -211,8 +211,9 @@ private content repository. It never appears in the public code repo or any publ
   **explanation** instead of a translation. While the two languages are the same, a short muted note under the
   fields says "Same language: the back shows an explanation".
 - **FR-L6 Guest amount**: guests see the Amount field fixed at **5** with a lock icon. It cannot be changed. A
-  **temporary toast** says: **"Please register in order to choose a larger amount of cards."**, with a **"Sign-in with
-  Google"** button, and auto-dismisses after ~5 s. It appears:
+  **temporary toast** says: **"Sign-in to choose more cards per session."**, where **"Sign-in"** is a link that
+  starts sign-in (D-043), and auto-dismisses after ~5 s. On desktop it appears inside the Amount field, on its
+  right side (the lock and the 5 stay visible), instead of the toast corner (D-044). It appears:
   - once automatically, the first time a guest sees the start card in a browser session, and
   - every time the guest taps/clicks the locked Amount field.
   The server **enforces** 5 for guests regardless of the request (§12.1).
@@ -292,7 +293,9 @@ private content repository. It never appears in the public code repo or any publ
   **"Show again in future"**; red **"I don't know"** with **"Show again soon"**. Guests see all three, with the same
   labels and captions (D-042): nothing is ever stored for them (FR-L55), so the amber one does for them exactly what
   it says and is their "I know it", while the green **"Don't show again"** is shown **locked**: a darker green, a
-  yellow padlock on its top-left edge, disabled, titled "Sign-in to enable"; its K shortcut does nothing.
+  yellow padlock on its top-left edge, off, titled "Sign-in to enable". Tapping it (or pressing K) marks nothing
+  and shows **"Sign-in required"** over that button for 1.5 seconds, "Sign-in" being a link that starts sign-in
+  (D-043); it is `aria-disabled` rather than `disabled`, so it can still be tapped and focused.
 - **FR-L28 Don't know** (available on either side while Deciding): adds the card to the next cycle. If the card is
   showing its front, it **flips automatically** to the back (answer + hints + synonyms). The phase becomes
   **Revealed**: the three answer pills stay in place but disable, **Next** enables and receives focus, and Flip
@@ -404,7 +407,7 @@ different**:
   **stays until dismissed** (✕), above the hero:
   - refused: "We couldn't sign you in with this Google account. You can keep learning as a guest.";
   - error: "Sign-in didn't complete. Please try again."
-  The automatic guest "please register" toast (FR-L6) is held back on that visit, so the two never contradict each
+  The automatic guest "sign-in" toast (FR-L6) is held back on that visit, so the two never contradict each
   other. The address is cleaned at once, so a refresh doesn't repeat the notice. A ban with an end date simply stops
   refusing once it ends.
 
@@ -906,7 +909,7 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
 - **Default style** (value unchanged): looks chosen (bright value text, filled selected option), subtle solid
   outline, a small violet "Default" tag on the right. **Selected style** (user changed it): the same, with a solid
   `--accent` outline and no tag.
-- **Guest amount**: a single "5" pill with a lock icon; tapping it shows the "please register" toast (FR-L6).
+- **Guest amount**: a single "5" pill with a lock icon; tapping it shows the "sign-in" toast (FR-L6).
 - The "Same language: the back shows an explanation" note (FR-L5) appears under the language fields when they match.
 - The card's heading is **"Configure your session"**.
 - The large **Start** button (accent color, pressable ledge): on desktop it sits under the fields, with the "N new
@@ -949,7 +952,7 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
 ### 9.8 Microcopy (centralized in `apps/web/src/strings.ts`)
 All UI strings live in one module, keyed (e.g. `loop.know = "Know"`, `loop.hints = "Hints"`, `loop.flip = "Flip"`,
 `card.multipleMeanings = "Multiple meanings"`, `setup.sameLanguageNote = "Same language: the back shows an
-explanation"`, `setup.guestAmountToast = "Please register in order to choose a larger amount of cards."`), so a
+explanation"`, `setup.guestAmountToast = "Sign-in to choose more cards per session."`), so a
 future i18n library can replace it without touching components.
 
 ---
@@ -1536,7 +1539,7 @@ Cloudflare Access: free for ≤ 50 users. Turnstile: free.
 | Scripts | Vitest (Node) against a local D1 | `db:seed` falls back to `seed/sample.csv` when `CONTENT_DIR` is missing; **export round-trip**: seed → `db:export --local --content-only` → import into an empty D1 → identical content; full export produces `manifest.json` row counts that match the tables, valid JSON per table (item lists as real arrays/objects), and a `schema.sql` that recreates the schema in a fresh SQLite |
 | Guard | CI | `check:no-vocabulary` fails on a committed non-fixture `.csv`/`.sql`/export, or a `seed/sample.csv` over 20 rows |
 | Component | Vitest + Testing Library | Button states per phase (incl. Hints only while the front shows, and its pressed state); FlipCard (button/tap/keyboard toggling, hints section on the front after Hints and always on the back, multiple-meanings badge, numbered explanation lines, hidden face `inert`, live-region text, reduced-motion path); start card default vs selected styling + "Reset to defaults" + same-language note; guest locked amount + toast (auto once per session, on tap); Back, the "Your answer" chip, ← / →, and answer changes reaching the Know queue; ListEditor add/edit/delete/reorder + 409 handling; RTL rendering on both faces |
-| E2E | Playwright (mobile 390×844 + desktop 1280×800) | Guest: landing → press Start without changing anything (defaults EN→HE, All topics, Words) → 5-card loop to the summary (incl. Hints on the front, then Flip showing hints on the back, Flip back and forth by button and by tapping the card, Know from the back side, Don't know → auto-flip → Next, Know → Back → Don't know; touch swipes left = Next and right = Back); guest sees the register toast and can't change the amount. Signed-in (test session): choose 20 → loop; Know → appears in My known words → no longer offered in the other direction → Return to loops → available again. Admin: create an item with translations, explanation, synonyms, hints and multiple meanings; preview both directions; delete to Trash; restore. CSV: dry run with errors and warnings, then commit |
+| E2E | Playwright (mobile 390×844 + desktop 1280×800) | Guest: landing → press Start without changing anything (defaults EN→HE, All topics, Words) → 5-card loop to the summary (incl. Hints on the front, then Flip showing hints on the back, Flip back and forth by button and by tapping the card, Know from the back side, Don't know → auto-flip → Next, Know → Back → Don't know; touch swipes left = Next and right = Back); guest sees the sign-in toast and can't change the amount. Signed-in (test session): choose 20 → loop; Know → appears in My known words → no longer offered in the other direction → Return to loops → available again. Admin: create an item with translations, explanation, synonyms, hints and multiple meanings; preview both directions; delete to Trash; restore. CSV: dry run with errors and warnings, then commit |
 | Manual (post-deploy) | Phone + desktop | Play a loop (check the flip and hints feel on a real phone); guest Turnstile works invisibly; sign in; known list; `/admin` → Cloudflare Access asks for a one-time code; a non-admin email is refused by Access; a normal user calling `/api/admin/*` → 403; `pnpm db:export` and `--content-only` work from the owner's machine; the D1 dashboard shows rows read/written well within the free tier |
 
 CI fails on lint, type or test errors, a guard failure, or if `packages/core` coverage < 90%.

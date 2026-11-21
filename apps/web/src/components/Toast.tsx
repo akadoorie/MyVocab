@@ -9,7 +9,13 @@ import {
 } from 'react';
 
 export type ToastAction = { label: string; onClick: () => void };
-export type ToastInput = { message: string; action?: ToastAction; durationMs?: number };
+export type ToastInput = {
+  message: string;
+  /** A link shown first, as the start of the sentence ("Sign-in" to …, D-043). */
+  lead?: ToastAction;
+  action?: ToastAction;
+  durationMs?: number;
+};
 type Toast = ToastInput & { id: number };
 
 type ToastApi = { show: (toast: ToastInput) => void; dismiss: (id: number) => void };
@@ -50,7 +56,23 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             role="status"
             className="pointer-events-auto flex max-w-md items-center gap-3 rounded-[14px] border border-[rgba(139,108,255,0.35)] bg-surface-2 px-4 py-3 text-sm shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
           >
-            <span>{t.message}</span>
+            <span>
+              {t.lead && (
+                <>
+                  <button
+                    type="button"
+                    className="font-semibold text-accent underline underline-offset-2 hover:text-text"
+                    onClick={() => {
+                      t.lead?.onClick();
+                      dismiss(t.id);
+                    }}
+                  >
+                    {t.lead.label}
+                  </button>{' '}
+                </>
+              )}
+              {t.message}
+            </span>
             {t.action && (
               <button
                 type="button"

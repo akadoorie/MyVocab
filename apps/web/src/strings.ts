@@ -11,6 +11,8 @@ export const strings = {
     version: 'Version',
     home: 'Home',
     signIn: 'Sign-in with Google',
+    /** The link that starts a sentence in a toast (D-043). */
+    signInLink: 'Sign-in',
     signOut: 'Sign out',
     accountMenu: 'Account menu',
     knownWords: 'My known words',
@@ -39,9 +41,10 @@ export const strings = {
     buttonsTitle: 'Buttons',
     buttonGuide: {
       know: 'Don’t show it again. You can bring it back from My known words.',
-      /** For guests the green button is locked (D-042). */
-      knowGuest:
-        'Don’t show it again. You can bring it back from My known words. (Sign-in to enable)',
+      /** For guests the green button is locked (D-042): the text, then "(Sign-in to enable)" with a
+          "Sign-in" link (D-043). */
+      knowGuest: 'Don’t show it again. You can bring it back from My known words.',
+      toEnable: 'to enable',
       again: 'Done for this session; it shows up again in future sessions.',
       dontKnow: 'It comes back later in this session, until you know it.',
     },
@@ -68,7 +71,8 @@ export const strings = {
     available: (n: number) => `${n} new ${n === 1 ? 'card' : 'cards'} available`,
     checking: 'Checking…',
     guestAmountLocked: 'Guests always get 5 cards',
-    guestAmountToast: 'Please register in order to choose a larger amount of cards.',
+    /** After the "Sign-in" link (D-043): "Sign-in to choose more cards per session." */
+    guestAmountToast: 'to choose more cards per session.',
     signInToStart: 'Sign-in to start',
     emptyTitle: 'You know every card in this selection 🎉',
     emptyBody: 'Change the selection, or open My known words to bring some back.',
@@ -181,6 +185,8 @@ export const strings = {
     /** The green button is shown to guests, but locked: only a signed-in Know is kept (D-042). */
     signInToEnable: 'Sign-in to enable',
     knowNameGuest: 'I know it Don’t show again (sign-in to enable)',
+    /** After the "Sign-in" link, over the locked green button for 1.5 seconds when tapped (D-043). */
+    lockedTip: 'required',
     hints: 'Hints',
     flip: 'Flip',
     flipTitle: 'Flip the card (F or Space)',

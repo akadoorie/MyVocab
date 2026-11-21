@@ -1,6 +1,6 @@
 import { createLoop } from '@myvocab/core';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '../../components/Toast';
@@ -78,12 +78,13 @@ describe('LoopPage', () => {
     fireEvent.click(btn('I don’t know Show again soon'));
     expect(side()).toBe('back');
     // The answers stay in place, disabled; Next is the way on.
-    for (const name of [
-      'I know it Don’t show again (sign-in to enable)',
-      'I know it Show again in future',
-      'I don’t know Show again soon',
-    ])
+    for (const name of ['I know it Show again in future', 'I don’t know Show again soon'])
       expect(btn(name)).toBeDisabled();
+    // The guest's green one stays locked: off, but it can still explain itself (D-043).
+    expect(btn('I know it Don’t show again (sign-in to enable)')).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
     expect(screen.getAllByRole('button', { name: 'Next' })).toHaveLength(1);
     expect(btn('Next')).toHaveClass('is-urgent');
     expect(btn('Next')).toBeEnabled();
@@ -159,7 +160,7 @@ describe('LoopPage', () => {
   it('guests see all three answers, the green one locked; K does nothing, A works (D-042)', () => {
     setup();
     const know = btn('I know it Don’t show again (sign-in to enable)');
-    expect(know).toBeDisabled();
+    expect(know).toHaveAttribute('aria-disabled', 'true');
     expect(know).toHaveClass('lbtn--know', 'is-locked');
     expect(know).toHaveAttribute('title', 'Sign-in to enable');
     expect(know.querySelector('.lbtn__lock')).not.toBeNull();
@@ -173,6 +174,26 @@ describe('LoopPage', () => {
     expect(progress()).toBe('Cycle 1 · Card 1/3 · 0 known');
     fireEvent.keyDown(window, { key: 'a' });
     expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known');
+  });
+
+  it('tapping the locked green button (or K) shows "Sign-in required" over it for 1.5 seconds (D-043)', () => {
+    vi.useFakeTimers();
+    setup();
+    const tip = () => document.querySelector('.locked-tip');
+    expect(tip()).toBeNull();
+    fireEvent.click(btn('I know it Don’t show again (sign-in to enable)'));
+    expect(tip()).toHaveTextContent('Sign-in required');
+    expect(
+      within(tip() as HTMLElement).getByRole('button', { name: 'Sign-in' }),
+    ).toBeInTheDocument();
+    expect(progress()).toBe('Cycle 1 · Card 1/3 · 0 known'); // nothing is marked
+    act(() => vi.advanceTimersByTime(1400));
+    expect(tip()).not.toBeNull();
+    act(() => vi.advanceTimersByTime(100));
+    expect(tip()).toBeNull();
+    fireEvent.keyDown(window, { key: 'k' });
+    expect(tip()).toHaveTextContent('Sign-in required');
+    expect(progress()).toBe('Cycle 1 · Card 1/3 · 0 known');
   });
 
   it('signed-in: Know (forever), Know (ask again), Don’t know; ask again is never recorded', () => {

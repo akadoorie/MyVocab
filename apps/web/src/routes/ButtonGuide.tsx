@@ -1,4 +1,5 @@
 import { CheckIcon, CrossIcon, LockIcon } from '../components/Icons';
+import { startGoogleSignIn } from '../lib/session';
 import { strings } from '../strings';
 
 /**
@@ -54,6 +55,19 @@ export function ButtonGuide({ isGuest, headingId }: { isGuest: boolean; headingI
               {/* The button's name for screen readers, since the icon is decorative. */}
               <span className="sr-only">{row.label}: </span>
               {row.text}
+              {row.locked && (
+                <>
+                  {' ('}
+                  <button
+                    type="button"
+                    onClick={startGoogleSignIn}
+                    className="font-semibold text-accent underline underline-offset-2 hover:text-text"
+                  >
+                    {strings.nav.signInLink}
+                  </button>{' '}
+                  {g.toEnable})
+                </>
+              )}
             </span>
           </li>
         ))}

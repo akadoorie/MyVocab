@@ -6,7 +6,7 @@ import {
   type StartChoices,
 } from '@myvocab/core';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { Button3D } from '../../components/Button3D';
 import { Field, Segmented } from '../../components/Field';
@@ -20,6 +20,8 @@ import { useDebounced } from './useDebounced';
 import { useStartLoop } from './useStartLoop';
 
 const GUEST_TOAST_FLAG = 'myvocab.guestAmountToast';
+/** How long the guest amount message covers the Amount field on desktop (D-044). */
+const AMOUNT_TIP_MS = 5000;
 /** Three non-breaking spaces: indents a topic under the guests' "Topics" heading (D-041). */
 const INDENT = String.fromCharCode(160).repeat(3);
 
@@ -70,20 +72,35 @@ export function StartCard({
 
   const guestToast = useMemo(
     () => ({
+      lead: { label: strings.nav.signInLink, onClick: startGoogleSignIn },
       message: strings.setup.guestAmountToast,
-      action: { label: strings.nav.signIn, onClick: startGoogleSignIn },
     }),
     [],
   );
 
-  // FR-L6: the guest toast appears once per browser session automatically.
+  // The guest amount message (FR-L6). On desktop it covers the Amount field itself for a few
+  // seconds (D-044); on phones it is a toast.
+  const [amountTip, setAmountTip] = useState(false);
+  const amountTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(amountTimer.current), []);
+  const showGuestMessage = useCallback(() => {
+    if (!isDesktop) {
+      toast.show(guestToast);
+      return;
+    }
+    setAmountTip(true);
+    window.clearTimeout(amountTimer.current);
+    amountTimer.current = window.setTimeout(() => setAmountTip(false), AMOUNT_TIP_MS);
+  }, [isDesktop, toast, guestToast]);
+
+  // FR-L6: the guest message appears once per browser session automatically.
   const shownRef = useRef(false);
   useEffect(() => {
     if (quiet || !isGuest || shownRef.current || readFlag('session', GUEST_TOAST_FLAG)) return;
     shownRef.current = true;
     writeFlag('session', GUEST_TOAST_FLAG);
-    toast.show(guestToast);
-  }, [quiet, isGuest, toast, guestToast]);
+    showGuestMessage();
+  }, [quiet, isGuest, showGuestMessage]);
 
   const query = useDebounced(
     {
@@ -308,16 +325,36 @@ export function StartCard({
             <Field label={strings.setup.amount} isDefault={defaultSet.has('size')}>
               {({ id }) =>
                 isGuest ? (
-                  <button
-                    id={id}
-                    type="button"
-                    aria-label={`${strings.setup.amount}: ${meta.guest.loopSize}. ${strings.setup.guestAmountLocked}`}
-                    onClick={() => toast.show(guestToast)}
-                    className="flex min-h-12 w-full items-center gap-2 rounded-[10px] border border-border bg-surface-2 px-3 text-text"
-                  >
-                    <span aria-hidden="true">🔒</span>
-                    <span className="font-semibold">{meta.guest.loopSize}</span>
-                  </button>
+                  <div className="relative">
+                    <button
+                      id={id}
+                      type="button"
+                      aria-label={`${strings.setup.amount}: ${meta.guest.loopSize}. ${strings.setup.guestAmountLocked}`}
+                      onClick={showGuestMessage}
+                      className="flex min-h-12 w-full items-center gap-2 rounded-[10px] border border-border bg-surface-2 px-3 text-text"
+                    >
+                      <span aria-hidden="true">🔒</span>
+                      <span className="font-semibold">{meta.guest.loopSize}</span>
+                    </button>
+                    {/* Desktop: the message covers the field itself (D-044). */}
+                    <div aria-live="polite">
+                      {amountTip && (
+                        <p className="amount-tip">
+                          {/* One inline run, so the space after the link is kept. */}
+                          <span>
+                            <button
+                              type="button"
+                              onClick={startGoogleSignIn}
+                              className="font-semibold text-accent underline underline-offset-2 hover:text-text"
+                            >
+                              {strings.nav.signInLink}
+                            </button>{' '}
+                            {strings.setup.guestAmountToast}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 ) : (
                   <Segmented
                     id={id}

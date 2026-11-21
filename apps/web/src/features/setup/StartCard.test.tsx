@@ -55,7 +55,12 @@ function setup(session: typeof guest | typeof learner = guest) {
 
 const field = (label: string) =>
   screen.getByLabelText(label, { exact: true }).closest('[data-default]');
-const TOAST = 'Please register in order to choose a larger amount of cards.';
+const TOAST = 'Sign-in to choose more cards per session.';
+/** The toast's text is split: a "Sign-in" link, then the rest of the sentence (D-043). */
+const toastShown = () => screen.queryAllByRole('status').some((s) => s.textContent === TOAST);
+/** On desktop the message covers the Amount field instead of a toast (D-044). */
+const fieldTipShown = () => document.querySelector('.amount-tip')?.textContent === TOAST;
+const shown = () => toastShown() || fieldTipShown();
 
 beforeEach(() => {
   window.sessionStorage.clear();
@@ -126,28 +131,46 @@ describe('StartCard', () => {
     );
   });
 
-  it('locks the guest amount at 5 and shows the register toast once per session and on tap', async () => {
+  it('locks the guest amount at 5 and shows the sign-in message once per session and on tap', async () => {
     mockApi();
-    setup();
-    expect(await screen.findByText(TOAST)).toBeInTheDocument();
+    setup(); // no matchMedia in jsdom: desktop, so the message covers the Amount field (D-044)
+    await waitFor(() => expect(fieldTipShown()).toBe(true));
+    expect(toastShown()).toBe(false);
+    // "Sign-in" is a link that starts sign-in; there is no separate button.
+    expect(screen.getByRole('button', { name: 'Sign-in' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sign-in with Google' })).not.toBeInTheDocument();
     expect(screen.queryByRole('radiogroup', { name: 'Amount' })).not.toBeInTheDocument();
     expect(window.sessionStorage.getItem('myvocab.guestAmountToast')).toBe('1');
     fireEvent.click(screen.getByRole('button', { name: /Amount: 5/ }));
-    expect(screen.getByText(TOAST)).toBeInTheDocument();
+    expect(fieldTipShown()).toBe(true);
+  });
+
+  it('on phones the guest message is a toast, not over the field', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    mockApi();
+    setup();
+    await waitFor(() => expect(toastShown()).toBe(true));
+    expect(fieldTipShown()).toBe(false);
+    vi.unstubAllGlobals();
   });
 
   it('does not show the guest toast automatically twice in a session', () => {
     window.sessionStorage.setItem('myvocab.guestAmountToast', '1');
     mockApi();
     setup();
-    expect(screen.queryByText(TOAST)).not.toBeInTheDocument();
+    expect(shown()).toBe(false);
   });
 
   it('learners choose the amount and see no guest toast', () => {
     mockApi();
     setup(learner);
     expect(screen.getByRole('radiogroup', { name: 'Amount' })).toBeInTheDocument();
-    expect(screen.queryByText(TOAST)).not.toBeInTheDocument();
+    expect(shown()).toBe(false);
   });
 
   it('Start runs the bot check for guests, saves the loop and opens it', async () => {
