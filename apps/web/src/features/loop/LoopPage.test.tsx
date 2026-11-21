@@ -95,15 +95,19 @@ describe('LoopPage', () => {
     expect(btn('Tap to see hints')).toBeEnabled();
   });
 
-  it('the hints cover is a toggle: a tap reveals, another covers; H too; the card stays put (D-047)', () => {
+  it('a tap on the cover reveals the hints, "Hide hints" covers them; H too; the card stays put (D-047, D-050)', () => {
     setup();
     const front = () => screen.queryByTestId('front-hints');
     expect(front()).toBeNull();
     expect(screen.queryByRole('button', { name: 'Hints' })).toBeNull(); // no Hints button
     fireEvent.click(btn('Tap to see hints'));
-    expect(btn('Hide hints')).toHaveAttribute('aria-expanded', 'true');
     expect(front()).not.toBeNull();
     expect(side()).toBe('front'); // revealing the hints doesn't flip the card
+    // Open, the cover is out of the way: a tap on the hints keeps them open (D-050)…
+    expect(screen.queryByRole('button', { name: 'Tap to see hints' })).toBeNull();
+    fireEvent.click(screen.getByTestId('front-hints'));
+    expect(front()).not.toBeNull();
+    // …and the "Hide hints" link covers them again.
     fireEvent.click(btn('Hide hints'));
     expect(btn('Tap to see hints')).toHaveAttribute('aria-expanded', 'false');
     expect(front()).toBeNull();
@@ -124,7 +128,7 @@ describe('LoopPage', () => {
     fireEvent.click(btn('Back'));
     expect(progress()).toBe('Cycle 1 · Card 1/3 · 1 known');
     expect(front()).not.toBeNull(); // still open, as it was left
-    expect(btn('Hide hints')).toHaveAttribute('aria-expanded', 'true');
+    expect(btn('Hide hints')).toBeInTheDocument();
   });
 
   it('Back shows the previous card front side up with its answer; Next steps forward again', () => {

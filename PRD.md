@@ -272,8 +272,13 @@ private content repository. It never appears in the public code repo or any publ
 
 - **FR-L25 Hints** (D-047): on the **front**, the hints and synonyms sit under a **live cover**: a cloud of tiny
   shimmering dots over the blurred text, with a small "Tap to see hints" label, so it is clear it can be tapped.
-  Tapping the cover (or pressing **H**) reveals them (the dots scatter and fade, the text sharpens); tapping again
-  covers them. The cover is a real button ("Tap to see hints" / "Hide hints", `aria-expanded`); the hidden text is not
+  Tapping the cover (or pressing **H**) reveals them (the dots scatter and fade, the text sharpens); the small
+  **"Hide hints"** link next to the Flip button (or **H**) covers them again, while a tap on the revealed hints keeps
+  them open, so scrolling never hides them (D-050). **Long hints** (D-050): the hints and synonyms sit in their own
+  area, the room left between the divider and the Flip button's row; when they don't fit, only that area scrolls,
+  with a thin violet scrollbar and the last lines fading out while there is more below (the word and the Flip button
+  never move). The cover fills exactly that area, so it ends above the Flip row, never at the card's edge. The back
+  works the same way under the answer. **Synonyms come first**, then one empty line, then the hint sentences. The cover is a real button ("Tap to see hints" / "Hide hints", `aria-expanded`); the hidden text is not
   read out until revealed; it is at least 4.5rem tall, so a one-line hint is still easy to tap; with reduced motion
   the dots stand still. There is **no Hints button**. The state survives flipping back and forth and is remembered per card
   within the cycle: a new card starts covered, a card reached again with Back or Next shows it as it was left, and

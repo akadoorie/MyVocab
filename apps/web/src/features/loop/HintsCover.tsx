@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { strings } from '../../strings';
+import { HintsArea } from './HintsArea';
 
 /** Dots per square pixel of cover (about one dot per 38 px²). */
 const DENSITY = 1 / 38;
@@ -21,8 +22,9 @@ type Dot = {
 
 /**
  * The hints on the card front, under a "live" cover (D-047): a cloud of tiny shimmering dots
- * over the blurred hints invites a tap. Tapping reveals them (the dots scatter and fade); tapping
- * again covers them. The cover is a real button; the hidden text isn't read out until shown.
+ * over the blurred hints invites a tap. Tapping reveals them (the dots scatter and fade); the
+ * "Hide hints" link on the card (or H) covers them again, so a tap while scrolling long hints
+ * never hides them (D-050). The cover fills the hints area, ending above the Flip row. The cover is a real button; the hidden text isn't read out until shown.
  * With reduced motion the dots stand still. The animation runs only while covered and visible.
  */
 export function HintsCover({
@@ -122,19 +124,24 @@ export function HintsCover({
 
   return (
     <div className={`hints-cover ${open ? 'is-open' : ''}`}>
-      <div className="hints-cover__text" aria-hidden={!open}>
+      {/* The hints scroll on their own when long; covered, they don't (D-050). */}
+      <HintsArea locked={!open} hidden={!open}>
         {children}
-      </div>
+      </HintsArea>
+      {/* Covered: the button over the area, named by its visible label (axe
+          label-content-name-mismatch). Open: it stays only for the dots to scatter, out of the
+          way of taps and scrolling; "Hide hints" on the card covers them again (D-050). */}
       <button
         ref={buttonRef}
         type="button"
         className="hints-cover__button"
         aria-expanded={open}
-        // Named by its visible label (axe label-content-name-mismatch); open, the label goes.
-        aria-label={open ? strings.card.hideHints : strings.card.tapForHints}
+        aria-label={strings.card.tapForHints}
+        aria-hidden={open || undefined}
+        tabIndex={open ? -1 : undefined}
         onClick={(e) => {
           e.stopPropagation();
-          onToggle();
+          if (!open) onToggle();
         }}
       >
         <canvas ref={canvasRef} aria-hidden="true" />

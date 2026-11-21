@@ -2,6 +2,7 @@ import type { CardAnswer, CardSide, CardView } from '@myvocab/core';
 import { FlipIcon } from '../../components/Icons';
 import { LoopButton } from './ButtonBar';
 import { strings } from '../../strings';
+import { HintsArea } from './HintsArea';
 import { HintsCover } from './HintsCover';
 
 /**
@@ -66,8 +67,20 @@ function Extras({ card }: { card: CardView }) {
   }
   return (
     <div lang={extrasLang.lang} dir={extrasLang.dir} className="space-y-2 text-lg text-muted">
+      {/* Synonyms first, then the hint sentences after one empty line (D-050). */}
+      {synonyms.length > 0 && (
+        <p>
+          {/* The label a little brighter than the muted text around it. */}
+          <span className="font-medium text-[#cdc6e6]">{strings.card.synonyms}</span>{' '}
+          {synonyms.join(', ')}
+        </p>
+      )}
       {hints.length > 0 && (
-        <ul className="space-y-1" aria-label={strings.card.hints}>
+        // After synonyms, one empty line (pt-5 + the 0.5rem gap = one 1.75rem line of text-lg).
+        <ul
+          className={`space-y-1 ${synonyms.length > 0 ? 'pt-5' : ''}`}
+          aria-label={strings.card.hints}
+        >
           {hints.map((h) => (
             <li key={h} className="flex gap-2">
               <span aria-hidden="true">•</span>
@@ -75,14 +88,6 @@ function Extras({ card }: { card: CardView }) {
             </li>
           ))}
         </ul>
-      )}
-      {synonyms.length > 0 && (
-        // After hints, one empty line (pt-5 + the 0.5rem gap = one 1.75rem line of text-lg).
-        <p className={hints.length > 0 ? 'pt-5' : ''}>
-          {/* The label a little brighter than the muted text around it. */}
-          <span className="font-medium text-[#cdc6e6]">{strings.card.synonyms}</span>{' '}
-          {synonyms.join(', ')}
-        </p>
       )}
     </div>
   );
@@ -175,7 +180,7 @@ export function FlipCard({
           </div>
           {/* Hints and synonyms under a live cover; nothing to cover when there are none (D-047). */}
           <div
-            className="border-t border-border pt-4"
+            className="flex min-h-0 flex-1 flex-col border-t border-border pt-4"
             data-testid={hintsShown ? tid('front-hints') : undefined}
           >
             {card.hints.length === 0 && card.synonyms.length === 0 ? (
@@ -186,6 +191,19 @@ export function FlipCard({
               </HintsCover>
             )}
           </div>
+          {hintsShown && (card.hints.length > 0 || card.synonyms.length > 0) && (
+            // Covers the hints again; a tap on the hints keeps them open while scrolling (D-050).
+            <button
+              type="button"
+              className="hints-hide"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleHints();
+              }}
+            >
+              {strings.card.hideHints}
+            </button>
+          )}
           {flipButton}
         </div>
 
@@ -243,8 +261,14 @@ export function FlipCard({
               />
             )}
           </div>
-          <div className="border-t border-border pt-4" data-testid={tid('back-hints')}>
-            <Extras card={card} />
+          <div
+            className="flex min-h-0 flex-1 flex-col border-t border-border pt-4"
+            data-testid={tid('back-hints')}
+          >
+            {/* Long hints scroll on their own under the answer (D-050). */}
+            <HintsArea>
+              <Extras card={card} />
+            </HintsArea>
           </div>
           {flipButton}
         </div>
