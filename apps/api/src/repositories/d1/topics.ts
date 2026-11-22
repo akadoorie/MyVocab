@@ -12,6 +12,7 @@ export class D1TopicRepository implements TopicRepository {
         id: topics.id,
         slug: topics.slug,
         name: topics.name,
+        nameHe: topics.nameHe,
         isActive: topics.isActive,
         sortOrder: topics.sortOrder,
         excludesTopicId: topics.excludesTopicId,

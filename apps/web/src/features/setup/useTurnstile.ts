@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { strings } from '../../strings';
 
 /**
  * Invisible Cloudflare Turnstile for guests (PRD FR-L10, §14.3). The script is loaded only when a
@@ -13,6 +14,8 @@ type TurnstileApi = {
       sitekey: string;
       execution: 'execute';
       appearance: 'interaction-only';
+      /** The challenge's language: the UI's (D-080). */
+      language: string;
       callback: (token: string) => void;
       'error-callback': () => void;
       'expired-callback': () => void;
@@ -82,6 +85,7 @@ export function useTurnstile(siteKey: string | undefined, enabled: boolean) {
         sitekey: siteKey,
         execution: 'execute',
         appearance: 'interaction-only',
+        language: strings.locale.lang,
         callback: (t) => pending.current?.resolve(t),
         'error-callback': () => pending.current?.reject(new Error('Turnstile error')),
         'expired-callback': () => pending.current?.reject(new Error('Turnstile expired')),

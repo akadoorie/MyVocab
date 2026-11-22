@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { api, ApiError } from '../../lib/api';
 import { ME_QUERY_KEY } from '../../lib/session';
-import { strings } from '../../strings';
+import { strings, topicName } from '../../strings';
 import { saveLoop } from '../loop/loop-storage';
 import { useTurnstile } from './useTurnstile';
 
@@ -75,15 +75,18 @@ export function useStartLoop({
         selection: choices,
         isGuest,
       });
-      const topicName =
+      const topicLabel =
         isGuest || choices.sample
           ? strings.setup.sampleSet
           : choices.topicId === null
             ? strings.setup.general
-            : (meta.topics.find((c) => c.id === choices.topicId)?.name ?? strings.setup.general);
+            : (() => {
+                const topic = meta.topics.find((c) => c.id === choices.topicId);
+                return topic ? topicName(topic) : strings.setup.general;
+              })();
       const notice: LoopStartNotice =
         res.returned < res.requested
-          ? { insufficient: strings.loop.insufficient(res.returned, topicName) }
+          ? { insufficient: strings.loop.insufficient(res.returned, topicLabel) }
           : {};
       navigate('/loop', { state: notice, replace: options.replace ?? false });
       return 'started';
@@ -95,7 +98,14 @@ export function useStartLoop({
       else if (e instanceof ApiError && e.code === 'UNAUTHORIZED' && !isGuest) {
         setError(strings.setup.sessionExpired);
         void queryClient.invalidateQueries({ queryKey: ME_QUERY_KEY });
-      } else if (e instanceof ApiError) setError(e.message);
+      } else if (e instanceof ApiError && e.code === 'RATE_LIMITED')
+        setError(strings.setup.guestRateLimited);
+      else if (e instanceof ApiError && e.code === 'UNAUTHORIZED')
+        setError(strings.setup.guestsDisabled);
+      // Maintenance: the admin's own message (written in any language), or ours.
+      else if (e instanceof ApiError && e.code === 'FORBIDDEN')
+        setError(meta.maintenance.message || strings.nav.maintenance);
+      else if (e instanceof ApiError) setError(strings.setup.genericError);
       else if (e instanceof Error && e.message.startsWith('Turnstile'))
         setError(strings.setup.botCheckFailed);
       else setError(strings.setup.genericError);

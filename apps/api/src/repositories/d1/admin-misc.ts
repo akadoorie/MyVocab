@@ -27,13 +27,14 @@ type Statement = SQL | { toSQL(): { sql: string; params: unknown[] } };
 // Topics (FR-A30)
 // ---------------------------------------------------------------------------------------------
 
-const TOPIC_COLUMNS = sql`c.id, c.slug, c.name, c.is_active, c.sort_order, c.excludes_topic_id,
+const TOPIC_COLUMNS = sql`c.id, c.slug, c.name, c.name_he, c.is_active, c.sort_order, c.excludes_topic_id,
   (SELECT COUNT(*) FROM item_topics ic WHERE ic.topic_id = c.id) AS item_count`;
 
 type TopicDbRow = {
   id: number;
   slug: string;
   name: string;
+  name_he: string | null;
   is_active: number;
   sort_order: number;
   excludes_topic_id: number | null;
@@ -44,6 +45,7 @@ const toTopic = (r: TopicDbRow): TopicWithCount => ({
   id: r.id,
   slug: r.slug,
   name: r.name,
+  nameHe: r.name_he,
   isActive: r.is_active === 1,
   sortOrder: r.sort_order,
   excludesTopicId: r.excludes_topic_id,
@@ -77,6 +79,7 @@ export class D1AdminTopicRepository implements AdminTopicRepository {
           id: row.id,
           slug: row.slug,
           name: row.name,
+          nameHe: row.nameHe,
           isActive: row.isActive,
           sortOrder: row.sortOrder,
           excludesTopicId: row.excludesTopicId,
@@ -85,13 +88,13 @@ export class D1AdminTopicRepository implements AdminTopicRepository {
   }
 
   async create(
-    input: { slug: string; name: string; isActive: boolean },
+    input: { slug: string; name: string; nameHe: string | null; isActive: boolean },
     actor: Actor,
     now: number,
   ): Promise<number> {
     await runBatch(this.d1, [
-      sql`INSERT INTO topics (slug, name, is_active, sort_order, created_at, updated_at)
-          SELECT ${input.slug}, ${input.name}, ${input.isActive ? 1 : 0},
+      sql`INSERT INTO topics (slug, name, name_he, is_active, sort_order, created_at, updated_at)
+          SELECT ${input.slug}, ${input.name}, ${input.nameHe}, ${input.isActive ? 1 : 0},
                  COALESCE((SELECT MAX(sort_order) FROM topics), 0) + 1, ${now}, ${now}`,
       auditInsert(
         {
@@ -111,7 +114,7 @@ export class D1AdminTopicRepository implements AdminTopicRepository {
 
   async update(
     id: number,
-    changes: Partial<{ slug: string; name: string; isActive: boolean }>,
+    changes: Partial<{ slug: string; name: string; nameHe: string | null; isActive: boolean }>,
     actor: Actor,
     audit: AuditDetails,
     now: number,

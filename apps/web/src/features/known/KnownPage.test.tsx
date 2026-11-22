@@ -20,7 +20,7 @@ const ITEMS: KnownItem[] = [
       lang: 'he',
       dir: 'rtl',
     },
-    topics: [{ id: 1, name: 'Home' }],
+    topics: [{ id: 1, name: 'Home', nameHe: 'בית' }],
     knownAt: Date.UTC(2026, 10, 1),
     knownInCycle: 1,
   },

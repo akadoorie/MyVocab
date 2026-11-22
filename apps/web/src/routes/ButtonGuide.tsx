@@ -8,6 +8,8 @@ import { strings } from '../strings';
  */
 export function ButtonGuide({ isGuest, headingId }: { isGuest: boolean; headingId: string }) {
   const g = strings.landing.buttonGuide;
+  /** U+200F RIGHT-TO-LEFT MARK on right-to-left pages; nothing otherwise. */
+  const mark = strings.locale.dir === 'rtl' ? '‏' : '';
   const rows = [
     {
       kind: 'know',
@@ -60,7 +62,9 @@ export function ButtonGuide({ isGuest, headingId }: { isGuest: boolean; headingI
               {row.text}
               {row.locked && (
                 <>
-                  {' ('}
+                  {/* A button counts as neutral for the text direction, so in Hebrew the
+                      brackets get a right-to-left mark inside them to mirror properly (D-080). */}
+                  {` (${mark}`}
                   {/* The whole "Sign-in to enable" is the link (D-071). */}
                   <button
                     type="button"
@@ -69,7 +73,7 @@ export function ButtonGuide({ isGuest, headingId }: { isGuest: boolean; headingI
                   >
                     {strings.nav.signInLink} {g.toEnable}
                   </button>
-                  )
+                  {`${mark})`}
                 </>
               )}
             </span>

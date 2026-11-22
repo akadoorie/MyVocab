@@ -164,14 +164,17 @@ export function ButtonBar({
       <div aria-live="polite" className="pointer-events-none z-10 self-start [grid-area:know]">
         {!signedIn && lockedTip && (
           <p className="locked-tip pointer-events-auto">
+            {/* Text around the link, in either order: "Sign-in required" / "נדרשת התחברות". */}
+            {/* The spaces are for screen readers; the flex gap spaces the words on screen. */}
+            {strings.loop.lockedTipBefore && <span>{strings.loop.lockedTipBefore} </span>}
             <button
               type="button"
               onClick={onSignIn}
               className="font-semibold text-accent underline underline-offset-2 hover:text-text"
             >
-              {strings.nav.signInLink}
-            </button>{' '}
-            {strings.loop.lockedTip}
+              {strings.loop.lockedTipLink}
+            </button>
+            {strings.loop.lockedTip && <span> {strings.loop.lockedTip}</span>}
           </p>
         )}
       </div>

@@ -60,7 +60,7 @@ export function UserMenu({ user }: { user: SessionUser }) {
 
   const close = () => setOpen(false);
   const itemClass =
-    'flex min-h-11 w-full items-center rounded-[10px] px-3 text-left hover:bg-surface-2 focus-visible:bg-surface-2';
+    'flex min-h-11 w-full items-center rounded-[10px] px-3 text-start hover:bg-surface-2 focus-visible:bg-surface-2';
 
   return (
     <div ref={rootRef} className="relative">
@@ -78,7 +78,7 @@ export function UserMenu({ user }: { user: SessionUser }) {
       {open && (
         <div
           id={menuId}
-          className="absolute right-0 z-40 mt-2 w-64 rounded-[14px] border border-border bg-surface p-2 shadow-[var(--card-shadow)]"
+          className="absolute end-0 z-40 mt-2 w-64 rounded-[14px] border border-border bg-surface p-2 shadow-[var(--card-shadow)]"
         >
           <div className="border-b border-border px-3 pt-1 pb-3">
             <p className="truncate font-medium">{user.name}</p>

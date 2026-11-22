@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { dirSchema, itemIdSchema, langCodeSchema } from './common';
+import { dirSchema, itemIdSchema, langCodeSchema, topicRefSchema } from './common';
 
 /**
  * Admin API contracts (PRD §12.4). Item content limits (lengths, list sizes, duplicates, own
@@ -122,7 +122,7 @@ export const adminItemRowSchema = z.object({
   lang: langCodeSchema,
   dir: dirSchema,
   multipleMeanings: z.boolean(),
-  topics: z.array(z.object({ id: z.number().int(), name: z.string() })),
+  topics: z.array(topicRefSchema),
   translationCounts: z.record(z.string(), z.number().int()),
   explanationCount: z.number().int(),
   synonymCount: z.number().int(),
@@ -170,11 +170,14 @@ export const topicSlugSchema = z
   .max(50)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use lowercase letters, digits and dashes');
 const topicName = z.string().trim().min(1).max(60);
+/** The name in the Hebrew UI (D-080); empty = the Hebrew UI shows `name`. */
+const topicNameHe = z.string().trim().max(60);
 
 export const adminTopicSchema = z.object({
   id: z.number().int(),
   slug: z.string(),
   name: z.string(),
+  nameHe: z.string().nullable(),
   isActive: z.boolean(),
   sortOrder: z.number().int(),
   itemCount: z.number().int(),
@@ -184,12 +187,18 @@ export const adminTopicSchema = z.object({
 export type AdminTopic = z.infer<typeof adminTopicSchema>;
 export const adminTopicListSchema = z.object({ topics: z.array(adminTopicSchema) });
 export const topicCreateSchema = z
-  .object({ slug: topicSlugSchema, name: topicName, isActive: z.boolean().optional() })
+  .object({
+    slug: topicSlugSchema,
+    name: topicName,
+    nameHe: topicNameHe.optional(),
+    isActive: z.boolean().optional(),
+  })
   .strict();
 export const topicPatchSchema = z
   .object({
     slug: topicSlugSchema.optional(),
     name: topicName.optional(),
+    nameHe: topicNameHe.optional(),
     isActive: z.boolean().optional(),
     /** null: combinable with every topic (D-046). Kept both ways by the server. */
     excludesTopicId: itemIdSchema.nullable().optional(),

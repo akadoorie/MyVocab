@@ -269,7 +269,9 @@ body {
     inset: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 2px 10px 2px 4px;
+    /* The scrollbar side (the end) gets the wider gap. */
+    padding-block: 2px;
+    padding-inline: 4px 10px;
     scrollbar-width: thin;
     scrollbar-color: rgba(155, 130, 255, 0.7) transparent;
   }
@@ -375,6 +377,25 @@ body {
       0 100%
     );
   }
+  /* Right-to-left pages (D-080): Flip sits in the bottom-left corner, so the notch and the fade
+     around it move there too. */
+  :root[dir='rtl'] .flip-card__front .hints-cover.is-open .hints-area__scroll {
+    --flip-fade: radial-gradient(
+      circle at var(--flip-cx) calc(100% - var(--flip-cy)),
+      transparent var(--flip-r0),
+      #000 var(--flip-r1)
+    );
+  }
+  :root[dir='rtl'] .flip-card__front .hints-cover__button {
+    clip-path: polygon(
+      0 0,
+      100% 0,
+      100% 100%,
+      var(--flip-notch) 100%,
+      var(--flip-notch) calc(100% - var(--flip-notch)),
+      0 calc(100% - var(--flip-notch))
+    );
+  }
   @media (min-width: 768px) {
     .flip-card__front {
       --flip-row: 64px;
@@ -389,7 +410,7 @@ body {
   .hints-hide {
     position: absolute;
     bottom: 24px;
-    left: 22px;
+    inset-inline-start: 22px;
     padding: 6px 2px;
     border: 0;
     background: none;
@@ -410,7 +431,7 @@ body {
   @media (min-width: 768px) {
     .hints-hide {
       bottom: 42px;
-      left: 42px;
+      inset-inline-start: 42px;
     }
   }
   .hints-cover__tap {
@@ -434,7 +455,7 @@ body {
   .amount-tip {
     position: absolute;
     top: 0;
-    right: 0;
+    inset-inline-end: 0;
     bottom: 0;
     max-width: calc(100% - 3.5rem);
     /* Next to Topic the field is half as wide: the message may take two short lines. */
@@ -451,7 +472,7 @@ body {
   /* Phones: the field is narrow, so the message covers all of it, on one line (D-070). */
   @media (max-width: 767px) {
     .amount-tip {
-      left: 0;
+      inset-inline-start: 0;
       max-width: none;
       justify-content: center;
       white-space: nowrap;
@@ -495,7 +516,7 @@ body {
   /* On the pill's top-left edge (a disabled pill sits 6px lower, pressed down). */
   .lbtn__lock {
     top: -2px;
-    left: 10px;
+    inset-inline-start: 10px;
     width: 18px;
     height: 18px;
   }
@@ -897,7 +918,7 @@ body {
   }
   .mini-btn__lock {
     top: -6px;
-    left: 6px;
+    inset-inline-start: 6px;
     width: 13px;
     height: 13px;
   }
@@ -1021,6 +1042,68 @@ body {
     to {
       opacity: 1;
       background-position: -30% 0;
+    }
+  }
+  /* Right-to-left pages (D-080): the word tilts the other way and the shine sweeps from the
+     right, the way the text reads. */
+  :root[dir='rtl'] .slogan-stick {
+    animation-name: slogan-tries-rtl;
+  }
+  @keyframes slogan-tries-rtl {
+    0% {
+      opacity: 0;
+      transform: translateY(-1.6em);
+      animation-timing-function: cubic-bezier(0.5, 0, 1, 0.6);
+    }
+    8% {
+      opacity: 1;
+    }
+    24% {
+      transform: translateY(0) scale(1.12, 0.84);
+      animation-timing-function: cubic-bezier(0, 0.4, 0.5, 1);
+    }
+    40% {
+      transform: translateY(-0.7em) rotate(4deg);
+      animation-timing-function: cubic-bezier(0.5, 0, 1, 0.6);
+    }
+    55% {
+      transform: translateY(0) scale(1.1, 0.87);
+      animation-timing-function: cubic-bezier(0, 0.4, 0.5, 1);
+    }
+    66% {
+      transform: translateY(-0.28em) rotate(-2deg);
+      animation-timing-function: cubic-bezier(0.5, 0, 1, 0.6);
+    }
+    76% {
+      transform: translateY(0) scale(1.16, 0.8);
+      animation-timing-function: ease-out;
+    }
+    88% {
+      transform: scale(0.97, 1.04);
+    }
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  :root[dir='rtl'] .slogan-shine {
+    background-image: linear-gradient(
+      -100deg,
+      transparent 35%,
+      rgba(255, 255, 255, 0.95) 50%,
+      transparent 65%
+    );
+    background-position: -30% 0;
+    animation-name: slogan-shine-rtl;
+  }
+  @keyframes slogan-shine-rtl {
+    from {
+      opacity: 1;
+      background-position: -30% 0;
+    }
+    to {
+      opacity: 1;
+      background-position: 120% 0;
     }
   }
   /* Reduced motion: the slogan only fades in. */
@@ -1178,7 +1261,7 @@ body {
   /* A little smaller on phones, leaving more room for the hints (D-051). */
   --size: 48px;
   position: absolute;
-  right: 14px;
+  inset-inline-end: 14px;
   bottom: 14px;
   grid-template-rows: var(--size);
 }
@@ -1196,7 +1279,7 @@ body {
   }
   .flip-card__flip {
     --size: 64px;
-    right: 24px;
+    inset-inline-end: 24px;
     bottom: 24px;
   }
   .flip-card__flip .lbtn__icon svg {
@@ -1394,6 +1477,19 @@ body {
     left: -10px;
     width: 58px;
     height: 48px;
+  }
+}
+/* Right-to-left pages (D-080): the mirror image, on the upper-right corner. The flight offsets
+   are measured in the mirrored box (Crown in Celebration.tsx). */
+:root[dir='rtl'] .crown {
+  left: auto;
+  right: -26px;
+  transform: scaleX(-1);
+}
+@media (max-width: 639px) {
+  :root[dir='rtl'] .crown {
+    left: auto;
+    right: -10px;
   }
 }
 @keyframes crown-x {

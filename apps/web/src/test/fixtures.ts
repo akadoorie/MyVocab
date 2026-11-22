@@ -31,7 +31,7 @@ export const META: MetaResponse = {
     { code: 'en', name: 'English', nativeName: 'English', dir: 'ltr' },
     { code: 'he', name: 'Hebrew', nativeName: 'עברית', dir: 'rtl' },
   ],
-  topics: [{ id: 1, slug: 'home', name: 'Home' }],
+  topics: [{ id: 1, slug: 'home', name: 'Home', nameHe: 'בית' }],
   defaults: { sourceLang: 'en', targetLang: 'he', topicId: null, size: 10 },
   sizeOptions: [10, 20, 30, 40, 50],
   guest: { enabled: true, loopSize: 5 },

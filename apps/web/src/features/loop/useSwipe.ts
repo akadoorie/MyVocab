@@ -9,9 +9,9 @@ const SLOP = 10;
 const SLIDE_MS = 180;
 
 export type SwipeOptions = {
-  /** Swipe left (Next) is allowed right now. */
+  /** Swipe left (Next; Back on right-to-left pages) is allowed right now. */
   canLeft: boolean;
-  /** Swipe right (Back) is allowed right now. */
+  /** Swipe right (Back; Next on right-to-left pages) is allowed right now. */
   canRight: boolean;
   onLeft: () => void;
   onRight: () => void;
@@ -22,7 +22,8 @@ export type SwipeOptions = {
 };
 
 /**
- * Touch swipes on the session card (PRD FR-L29b): left = Next, right = Back. The card follows the
+ * Touch swipes on the session card (PRD FR-L29b): left = Next, right = Back (the caller mirrors
+ * them on right-to-left pages, D-080). The card follows the
  * finger (only a little, with resistance, when that way isn't allowed), then slides out or springs
  * back. Mouse and pen are ignored; a mostly vertical drag is left to the page; the click that ends
  * a swipe is swallowed so it doesn't also flip the card. Returns a ref for the element that moves.

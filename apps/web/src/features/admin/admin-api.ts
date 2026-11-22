@@ -94,11 +94,17 @@ export const adminApi = {
   purge: (id: number) => adminRequest(`/trash/${id}`, ok, json('DELETE', { confirm: 'PURGE' })),
 
   topics: () => adminRequest('/topics', adminTopicListSchema),
-  createTopic: (body: { slug: string; name: string }) =>
+  createTopic: (body: { slug: string; name: string; nameHe?: string }) =>
     adminRequest('/topics', adminTopicSchema, json('POST', body)),
   patchTopic: (
     id: number,
-    body: { slug?: string; name?: string; isActive?: boolean; excludesTopicId?: number | null },
+    body: {
+      slug?: string;
+      name?: string;
+      nameHe?: string;
+      isActive?: boolean;
+      excludesTopicId?: number | null;
+    },
   ) => adminRequest(`/topics/${id}`, adminTopicSchema, json('PATCH', body)),
   deleteTopic: (id: number) => adminRequest(`/topics/${id}`, ok, { method: 'DELETE' }),
   reorderTopics: (ids: number[]) =>

@@ -70,9 +70,12 @@ function Extras({ card }: { card: CardView }) {
       {/* Synonyms first, then the hint sentences after one empty line (D-050). */}
       {synonyms.length > 0 && (
         <p>
-          {/* The label a little brighter than the muted text around it. */}
-          <span className="font-medium text-[#cdc6e6]">{strings.card.synonyms}</span>{' '}
-          {synonyms.join(', ')}
+          {/* The label a little brighter than the muted text around it. It is UI text inside a
+              line in the content's direction: isolated, with the colon outside it (D-080). */}
+          <bdi lang={strings.locale.lang} className="font-medium text-[#cdc6e6]">
+            {strings.card.synonyms}
+          </bdi>
+          : {synonyms.join(', ')}
         </p>
       )}
       {hints.length > 0 && (

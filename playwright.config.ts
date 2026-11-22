@@ -14,6 +14,17 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: 'retain-on-failure',
+    // The UI is Hebrew by default (D-080); these journeys are written in English, so they start
+    // with English chosen. e2e/hebrew.spec.ts clears this to test the default.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: `http://localhost:${PORT}`,
+          localStorage: [{ name: 'myvocab.locale', value: 'en' }],
+        },
+      ],
+    },
   },
   projects: [
     {

@@ -47,7 +47,7 @@ export const publicRoutes = new Hono<AppEnv>()
         nativeName,
         dir,
       })),
-      topics: activeCats.map(({ id, slug, name }) => ({ id, slug, name })),
+      topics: activeCats.map(({ id, slug, name, nameHe }) => ({ id, slug, name, nameHe })),
       defaults,
       sizeOptions: s['loop.sizeOptions'],
       guest: { enabled: s['guests.enabled'], loopSize: s['guests.loopSize'] },

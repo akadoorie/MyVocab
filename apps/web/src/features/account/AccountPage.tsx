@@ -53,7 +53,7 @@ function Account({ user }: { user: SessionUser }) {
   });
   const error =
     remove.error instanceof ApiError && remove.error.code === 'CONFLICT'
-      ? remove.error.message
+      ? strings.account.lastAdmin
       : remove.error
         ? strings.account.deleteFailed
         : null;

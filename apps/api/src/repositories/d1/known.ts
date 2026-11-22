@@ -1,6 +1,7 @@
 import { sql, type SQL } from 'drizzle-orm';
 import type { Db } from '../../db/client';
 import type {
+  TopicRef,
   KnownCursor,
   KnownFilterInput,
   KnownListRow,
@@ -170,7 +171,7 @@ export class D1KnownRepository implements KnownRepository {
     return row?.n ?? 0;
   }
 
-  topicsFor(itemIds: readonly number[]): Promise<Map<number, { id: number; name: string }[]>> {
+  topicsFor(itemIds: readonly number[]): Promise<Map<number, TopicRef[]>> {
     return topicsForItems(this.db, itemIds);
   }
 }

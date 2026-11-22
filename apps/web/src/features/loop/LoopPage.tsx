@@ -18,7 +18,7 @@ import { startGoogleSignIn, useSession } from '../../lib/session';
 import { strings } from '../../strings';
 import { useKnownQueue } from '../known/KnownQueueProvider';
 import { useStartLoop, type LoopStartNotice } from '../setup/useStartLoop';
-import { LogoMark } from '../../components/Icons';
+import { BackArrow, LogoMark } from '../../components/Icons';
 import { ButtonBar } from './ButtonBar';
 import { FlipCard } from './FlipCard';
 import { clearLoop, loadLoop, saveLoop, type StoredLoop } from './loop-storage';
@@ -272,11 +272,14 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   const card = id === null ? undefined : cards.get(id);
   // The chip shows on a card that already had an answer when it came up (reached with Back).
   const shownAnswer = id !== null && state.phase === 'deciding' ? answerOf(state, id) : null;
+  // Right-to-left, Next sits on the left, so the swipes are mirrored too (D-080).
+  const [swipeLeft, swipeRight] =
+    strings.locale.dir === 'rtl' ? (['BACK', 'NEXT'] as const) : (['NEXT', 'BACK'] as const);
   const swipeRef = useSwipe({
-    canLeft: canDispatch(state, 'NEXT'),
-    canRight: canDispatch(state, 'BACK'),
-    onLeft: () => act('NEXT'),
-    onRight: () => act('BACK'),
+    canLeft: canDispatch(state, swipeLeft),
+    canRight: canDispatch(state, swipeRight),
+    onLeft: () => act(swipeLeft),
+    onRight: () => act(swipeRight),
     enabled: !confirmLeave,
     animate: motionAllowed(),
   });
@@ -373,7 +376,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
             // The only way out of a session now (D-072): a clear bordered button, not a faint link.
             className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-[10px] border border-border px-3 text-sm font-medium text-text transition-colors hover:border-accent hover:text-accent md:text-base"
           >
-            <span aria-hidden="true">←</span> {strings.nav.home}
+            <BackArrow /> {strings.nav.home}
           </button>
         </div>
         {leaveDialog}

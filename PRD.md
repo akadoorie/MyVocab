@@ -88,7 +88,7 @@ private content repository. It never appears in the public code repo or any publ
 - Payments or subscriptions (seam only).
 - AI-generated content (seam only).
 - Languages beyond English and Hebrew (supported by the data model, but not shipped).
-- A localized UI (the UI is English only; Hebrew *content* is fully supported, including RTL).
+- UI languages beyond Hebrew and English (the UI is Hebrew by default with an English option, D-080).
 - Session history, per-word statistics, spaced repetition.
 - Offline/PWA mode, native mobile apps, light theme.
 
@@ -170,7 +170,7 @@ private content repository. It never appears in the public code repo or any publ
 | Know tap | Advances immediately; Back (or swipe right) returns to the card, and its answer can be changed (FR-L29a) |
 | Topics | Many-to-many. "All topics" = all items |
 | Content sources | Agent-written starter set (in the private content repo) → then admins add manually or by CSV bulk upload |
-| UI language | English only (strings centralized for future i18n). Hebrew content renders RTL |
+| UI language | **Hebrew by default**, English on request: a switch in the footer, remembered in the browser (D-080). Hebrew pages are right-to-left. The admin area stays English. Content renders in its own direction |
 | Look | Dark only. Near-black + violet palette. "Pressable ledge" 3D buttons |
 | DB tuning | Built for the D1 free tier: one row per item, only the indexes queries need, no writes from blocked requests, no per-request writes (§11.2) |
 
@@ -382,7 +382,7 @@ private content repository. It never appears in the public code repo or any publ
   amount), without the start card (D-029): the button reads "Starting…" (guests: the security check) meanwhile, and a
   problem (no new cards left, the daily limit, a failed check) is shown under the buttons, where Home stays available.
   It waits while the start settings load, and if they can't load it falls back to the start card, pre-filled.
-  **Home** goes to the start card with the defaults. Guests also see "Sign-in to remember these words".
+  **Home** goes to the start card with the defaults. Guests also see "Sign-in to skip words that no longer need to repeat".
 - **FR-L32a Celebration** (owner request, 2026-11-19): when the summary appears, a burst of **confetti** in the app's
   colours shoots up from the bottom corners and flutters down for about 3 seconds (a canvas drawn by the app, no
   library; none with "reduce motion"), and a short **applause** plays (`/sounds/applause.wav`, 2.3 s, mono, about
@@ -550,7 +550,7 @@ so learners never download it. All admin pages work on mobile (tables collapse i
   (all fields and lists + topic slugs) that is **kept permanently**.
 
 ### 7.4 Topics (`/admin/topics`)
-- **FR-A30** CRUD: slug (lowercase, `a-z0-9-`), name, active, sort order (reorder), and **"Can't be combined with"** (one other topic, kept both ways; refused while items are in both; D-046). The list reads as a table on desktop, under the headings "Topic | Can't be combined with | Active | Order": the pairing dropdown lists the other topics' names, with "— (none)" first for no pairing; the Active checkbox has no word beside it; an inactive topic's row is dimmed. On phones each topic is a card whose fields carry those labels (D-061). The ↑ / ↓ arrows move a topic at once (rolled back if the server refuses), with the rows sliding to their new places and the moved one glowing briefly (D-076; none with reduced motion). An item with two such topics can't be saved in the editor, and is an error in a CSV import. The add form fills the slug from
+- **FR-A30** CRUD: slug (lowercase, `a-z0-9-`), name, an optional **Hebrew name** for the Hebrew UI (empty = learners see the name; D-080), active, sort order (reorder), and **"Can't be combined with"** (one other topic, kept both ways; refused while items are in both; D-046). The list reads as a table on desktop, under the headings "Topic | Can't be combined with | Active | Order": the pairing dropdown lists the other topics' names, with "— (none)" first for no pairing; the Active checkbox has no word beside it; an inactive topic's row is dimmed. On phones each topic is a card whose fields carry those labels (D-061). The ↑ / ↓ arrows move a topic at once (rolled back if the server refuses), with the rows sliding to their new places and the moved one glowing briefly (D-076; none with reduced motion). An item with two such topics can't be saved in the editor, and is an error in a CSV import. The add form fills the slug from
   the name as it is typed ("Home & Garden" → `home-garden`) until the admin edits the slug; a hint under the field says
   what it is for, and an invalid or already-used slug is reported under the field while typing (Add stays disabled). Deleting a topic that still has
   items is blocked: deactivate it instead, or remove it from those items first.
@@ -971,7 +971,8 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   subsets a page shows (D-027).
 - Item text (front): `clamp(2rem, 6vw, 3.5rem)`, weight 600. Answer lines (back): `clamp(1.5rem, 4.5vw, 2.25rem)`;
   long explanation lines step down to `1.125rem–1.25rem`. Hints, synonyms and the literal translation: 1.125rem on every screen (raised from 1rem on phones at the owner's request), `--text-muted`.
-- Every piece of content text gets `dir` and `lang` from its language (`he` → `rtl`). The UI chrome stays LTR English.
+- Every piece of content text gets `dir` and `lang` from its language (`he` → `rtl`). The UI chrome follows the UI
+  language (D-080): Hebrew pages are RTL, English pages LTR; the admin area is always LTR English.
 
 ### 9.7 Layouts
 - **Landing**: header (logo "MyVocab", sign-in / avatar, an "Admin" link for admins as a full-page navigation); hero
@@ -1002,11 +1003,32 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   and an outlined **"← Home"** button top right, as in a session (D-077); on phones a "Menu" button (named "Admin
   menu") opens the menu. There is no "Back to MyVocab" link at the bottom of the menu any more.
 
-### 9.8 Microcopy (centralized in `apps/web/src/strings.ts`)
-All UI strings live in one module, keyed (e.g. `loop.know = "Know"`, `loop.hints = "Hints"`, `loop.flip = "Flip"`,
-`card.multipleMeanings = "Multiple meanings"`, `setup.sameLanguageNote = "Same language: the back shows an
-explanation"`, `setup.guestAmountToast = "Sign-in to change"`), so a
-future i18n library can replace it without touching components.
+### 9.8 Microcopy (`apps/web/src/strings.en.ts` and `strings.he.ts`)
+All learner-facing UI strings live in two modules with the same keys, English and Hebrew (e.g. `loop.know` =
+"I know it" / "ידעתי", `loop.hints` = "Hints" / "רמזים", `loop.flip` = "Flip" / "היפוך"); a missing Hebrew key fails
+the typecheck. Components read the active language's strings through `strings.ts`. Admin strings
+(`strings-admin.ts`) are English only.
+
+**UI language (D-080).**
+- **Default and switch:** a first visit is in Hebrew. The footer has a switch naming the other language in that
+  language ("English" / "עברית"); the choice is remembered in the browser (`localStorage`). Switching re-renders
+  the page in place. The admin area is always English and LTR, whatever the choice.
+- **Hebrew copy:** the learner is addressed in the plural ("בחרו", "לחצו"); first-person labels use the past tense,
+  which is the same for everyone ("ידעתי" / "לא ידעתי"). Counts spell out one ("כרטיס אחד"). The Hebrew slogan is "ללמוד מילים וביטויים לפסיכומטרי ביעילות"; the locked green button's tip reads
+  "נדרשת התחברות" (the link last). The slogan's last word, "ביעילות", gets the same drop-and-stick animation as "stick"
+  (D-037), mirrored: it tilts the other way and the shine sweeps from the right.
+- **Mirroring (RTL):** the layout follows the page direction (logical CSS properties): Back is on the right and
+  Next on the left, their chevrons and the "←" of Home point the other way, Flip sits in the card's bottom-left
+  corner (with the hints' notch and fade there), the padlocks sit on the buttons' top-right edge, and the summary
+  crown sits on the card's upper-right corner and flies in from the top right. Swipes and arrow keys are mirrored
+  like the buttons: swipe right or ← for Next, swipe left or → for Back.
+- **Names:** language names come from the UI strings ("אנגלית", "עברית"); topics have an optional Hebrew name
+  (`name_he`, FR-A30), shown in the Hebrew UI when set, otherwise the English name.
+- **Server messages:** errors that reach learners (the daily card limit, guest session limits, sign-in needed,
+  maintenance, deleting the last admin) are shown from the UI strings by error code. A maintenance message the
+  admin wrote is shown as written.
+- **Other:** dates in "My known words" use Hebrew formatting in the Hebrew UI; the Turnstile challenge uses the UI
+  language; keyboard shortcuts also work on a Hebrew keyboard layout (the physical key decides).
 
 ---
 
@@ -1162,6 +1184,7 @@ CREATE TABLE topics (
   id          INTEGER PRIMARY KEY,
   slug        TEXT NOT NULL UNIQUE,
   name        TEXT NOT NULL,
+  name_he     TEXT,              -- the name in the Hebrew UI; NULL = use name (D-080)
   is_active   INTEGER NOT NULL DEFAULT 1,
   sort_order  INTEGER NOT NULL DEFAULT 0,
   created_at  INTEGER NOT NULL,
@@ -1639,7 +1662,7 @@ Detailed acceptance criteria are in `AGENT_PROMPT.md` (local only, git-ignored).
   topics). Provider candidates: Paddle or Lemon Squeezy (merchant of record, which handles VAT) or Stripe.
 - **AI content**: `ContentGenerator` using the Claude API to suggest items, translations, explanations, hints and
   synonyms as `draft`s for admin review (an explicit owner decision about sending content to an AI provider).
-- **More languages**: insert into `languages` + content; UI localization via an i18n library replacing `strings.ts`.
+- **More languages**: insert into `languages` + content. Another UI language: a `strings.<lang>.ts` with the same keys, plus its direction (D-080).
 - **Learning science**: session history, per-word statistics, spaced repetition, "review known words" loops.
 - **Content ops**: bulk edit, duplicate finder, "replace" import mode (overwrite instead of append).
 - **Platform**: PWA/offline mode, custom domain, light theme.

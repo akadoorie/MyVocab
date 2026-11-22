@@ -12,15 +12,19 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router/dom';
 import { ToastProvider } from './components/Toast';
 import { KnownQueueProvider } from './features/known/KnownQueueProvider';
+import { initLocale, LocaleProvider } from './lib/locale';
 import { installStaleBuildReload } from './lib/stale-build';
 import { createRouter } from './router';
 
 // After a deploy, an old tab reloads itself once instead of showing a load error.
 installStaleBuildReload();
+// The UI language and direction before the first render (D-080).
+initLocale(window.location.pathname);
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Missing #root element');
 
+const router = createRouter();
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
 });
@@ -30,7 +34,9 @@ createRoot(root).render(
     <QueryClientProvider client={queryClient}>
       <KnownQueueProvider>
         <ToastProvider>
-          <RouterProvider router={createRouter()} />
+          <LocaleProvider router={router}>
+            <RouterProvider router={router} />
+          </LocaleProvider>
         </ToastProvider>
       </KnownQueueProvider>
     </QueryClientProvider>

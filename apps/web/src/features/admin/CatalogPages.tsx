@@ -37,13 +37,19 @@ const TOPIC_COLUMNS = 'md:grid-cols-[minmax(0,1fr)_14rem_4rem_7rem_9.5rem] md:ga
 export function TopicsPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
-  const ids = { slug: useId(), name: useId(), slugNote: useId() };
+  const ids = { slug: useId(), name: useId(), nameHe: useId(), slugNote: useId() };
   const list = useQuery({ queryKey: ['admin', 'topics'], queryFn: adminApi.topics });
   const [slug, setSlug] = useState('');
   const [name, setName] = useState('');
+  const [nameHe, setNameHe] = useState('');
   /** True while the slug follows the name; the admin typing in the slug field takes it over. */
   const [slugAuto, setSlugAuto] = useState(true);
-  const [editing, setEditing] = useState<{ id: number; name: string; slug: string } | null>(null);
+  const [editing, setEditing] = useState<{
+    id: number;
+    name: string;
+    nameHe: string;
+    slug: string;
+  } | null>(null);
   const [deleting, setDeleting] = useState<AdminTopic | null>(null);
 
   const done = (message: string) => {
@@ -55,10 +61,12 @@ export function TopicsPage() {
     toast.show({ message: errorMessage(e, s.common.genericError), durationMs: 8000 });
 
   const create = useMutation({
-    mutationFn: () => adminApi.createTopic({ slug: slug.trim(), name: name.trim() }),
+    mutationFn: () =>
+      adminApi.createTopic({ slug: slug.trim(), name: name.trim(), nameHe: nameHe.trim() }),
     onSuccess: () => {
       setSlug('');
       setName('');
+      setNameHe('');
       setSlugAuto(true);
       done(s.topics.created);
     },
@@ -67,7 +75,13 @@ export function TopicsPage() {
   const update = useMutation({
     mutationFn: (v: {
       id: number;
-      body: { slug?: string; name?: string; isActive?: boolean; excludesTopicId?: number | null };
+      body: {
+        slug?: string;
+        name?: string;
+        nameHe?: string;
+        isActive?: boolean;
+        excludesTopicId?: number | null;
+      };
     }) => adminApi.patchTopic(v.id, v.body),
     onSuccess: () => {
       setEditing(null);
@@ -135,7 +149,7 @@ export function TopicsPage() {
     <div className="flex flex-col gap-4">
       <PageTitle>{s.topics.title}</PageTitle>
       <form
-        className="grid gap-3 rounded-[14px] border border-border bg-surface p-4 md:grid-cols-[1fr_1fr_auto] md:items-start"
+        className="grid gap-3 rounded-[14px] border border-border bg-surface p-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-start"
         onSubmit={(e) => {
           e.preventDefault();
           if (canAdd) create.mutate();
@@ -151,6 +165,19 @@ export function TopicsPage() {
               setName(e.target.value);
               if (slugAuto) setSlug(slugify(e.target.value));
             }}
+            className={inputClass}
+          />
+        </Field>
+        {/* The name learners see in the Hebrew UI (D-080); empty = they see the Name. */}
+        <Field id={ids.nameHe} label={s.topics.nameHe}>
+          <input
+            autoComplete="off"
+            id={ids.nameHe}
+            value={nameHe}
+            maxLength={60}
+            dir="rtl"
+            lang="he"
+            onChange={(e) => setNameHe(e.target.value)}
             className={inputClass}
           />
         </Field>
@@ -220,7 +247,11 @@ export function TopicsPage() {
                       e.preventDefault();
                       update.mutate({
                         id: c.id,
-                        body: { name: editing.name.trim(), slug: editing.slug.trim() },
+                        body: {
+                          name: editing.name.trim(),
+                          nameHe: editing.nameHe.trim(),
+                          slug: editing.slug.trim(),
+                        },
                       });
                     }}
                   >
@@ -230,6 +261,17 @@ export function TopicsPage() {
                       value={editing.name}
                       maxLength={60}
                       onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                      className={inputClass}
+                    />
+                    <input
+                      autoComplete="off"
+                      aria-label={s.topics.nameHe}
+                      placeholder={s.topics.nameHe}
+                      value={editing.nameHe}
+                      maxLength={60}
+                      dir="rtl"
+                      lang="he"
+                      onChange={(e) => setEditing({ ...editing, nameHe: e.target.value })}
                       className={inputClass}
                     />
                     <input
@@ -257,7 +299,14 @@ export function TopicsPage() {
                   </form>
                 ) : (
                   <div className="w-full min-w-0">
-                    <p className="font-medium">{c.name}</p>
+                    <p className="font-medium">
+                      {c.name}
+                      {c.nameHe && (
+                        <span dir="rtl" lang="he" className="ms-2 font-normal text-muted">
+                          {c.nameHe}
+                        </span>
+                      )}
+                    </p>
                     <p className="text-xs text-muted">
                       {c.slug} · {s.topics.items(c.itemCount)}
                     </p>
@@ -331,7 +380,9 @@ export function TopicsPage() {
                   <button
                     type="button"
                     className={ghostButton}
-                    onClick={() => setEditing({ id: c.id, name: c.name, slug: c.slug })}
+                    onClick={() =>
+                      setEditing({ id: c.id, name: c.name, nameHe: c.nameHe ?? '', slug: c.slug })
+                    }
                   >
                     {s.common.edit}
                   </button>

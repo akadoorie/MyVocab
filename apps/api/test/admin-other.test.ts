@@ -66,6 +66,30 @@ describe('topics (FR-A30)', () => {
     ).json<{ id: number }>();
     expect((await req(`/admin/topics/${empty.id}`, { method: 'DELETE' })).status).toBe(200);
   });
+
+  it('keeps a Hebrew name for the Hebrew UI; empty clears it (D-080)', async () => {
+    const created = await req('/admin/topics', {
+      method: 'POST',
+      json: { slug: 'food', name: 'Food', nameHe: ' אוכל ' },
+    });
+    const cat = await created.json<{ id: number }>();
+    expect(cat).toMatchObject({ name: 'Food', nameHe: 'אוכל' });
+    type Meta = { topics: { slug: string; name: string; nameHe: string | null }[] };
+    const metaTopic = async () =>
+      (await (await api('/meta')).json<Meta>()).topics.find((t) => t.slug === 'food');
+    expect(await metaTopic()).toMatchObject({ name: 'Food', nameHe: 'אוכל' });
+
+    const cleared = await req(`/admin/topics/${cat.id}`, { method: 'PATCH', json: { nameHe: '' } });
+    expect(await cleared.json()).toMatchObject({ nameHe: null });
+    expect(await metaTopic()).toMatchObject({ nameHe: null });
+    expect(await actions()).toEqual(['topic.create', 'topic.update']);
+
+    const tooLong = await req(`/admin/topics/${cat.id}`, {
+      method: 'PATCH',
+      json: { nameHe: 'א'.repeat(61) },
+    });
+    expect(tooLong.status).toBe(400);
+  });
 });
 
 describe("topics that can't be combined (D-046)", () => {

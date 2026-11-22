@@ -115,6 +115,8 @@ export const topics = sqliteTable('topics', {
   id: integer('id').primaryKey(),
   slug: text('slug').notNull().unique(),
   name: text('name').notNull(),
+  /** The name in the Hebrew UI (D-080); null = the UI shows `name`. */
+  nameHe: text('name_he'),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
   sortOrder: integer('sort_order').notNull().default(0),
   /**

@@ -13,7 +13,7 @@ import { SignInPrompt } from '../../components/SignInPrompt';
 import { useToast } from '../../components/Toast';
 import { api } from '../../lib/api';
 import { useSession } from '../../lib/session';
-import { strings } from '../../strings';
+import { dateLocale, languageName, strings, topicName } from '../../strings';
 import { useDebounced } from '../setup/useDebounced';
 import { useKnownQueue } from './KnownQueueProvider';
 
@@ -109,16 +109,18 @@ function KnownList() {
     });
 
   const languages = meta.data?.languages ?? [];
-  const languageName = (code: string) =>
-    languages.find((l) => l.code === code)?.name ?? code.toUpperCase();
+  const nameOfLanguage = (code: string) => {
+    const lang = languages.find((l) => l.code === code);
+    return lang ? languageName(lang) : code.toUpperCase();
+  };
   // Every direction between the active languages; "English → English" is the explanation one.
   const directions = languages.flatMap((from) =>
     languages.map((to) => ({
       value: `${from.code}:${to.code}`,
       label:
         from.code === to.code
-          ? strings.known.directionExplanation(from.name)
-          : strings.known.directionOption(from.name, to.name),
+          ? strings.known.directionExplanation(languageName(from))
+          : strings.known.directionOption(languageName(from), languageName(to)),
     })),
   );
 
@@ -170,7 +172,7 @@ function KnownList() {
           <option value="">{strings.known.all}</option>
           {meta.data?.topics.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.name}
+              {topicName(c)}
             </option>
           ))}
         </FilterSelect>
@@ -243,7 +245,7 @@ function KnownList() {
             <KnownRow
               key={rowKey(item)}
               item={item}
-              languageName={languageName}
+              languageName={nameOfLanguage}
               selected={selected.has(rowKey(item))}
               onToggle={() => toggle(rowKey(item))}
               onReturn={() => restore.mutate({ marks: [keyOf(item)] })}
@@ -333,7 +335,7 @@ function KnownRow({
   busy: boolean;
 }) {
   const checkboxId = useId();
-  const date = new Date(item.knownAt).toLocaleDateString(undefined, { dateStyle: 'medium' });
+  const date = new Date(item.knownAt).toLocaleDateString(dateLocale(), { dateStyle: 'medium' });
   return (
     <li className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-3 rounded-[14px] border border-border bg-surface p-4 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
       <input
@@ -371,7 +373,7 @@ function KnownRow({
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
           {item.topics.map((c) => (
             <span key={c.id} className="rounded-full bg-surface-2 px-2 py-0.5 text-muted">
-              {c.name}
+              {topicName(c)}
             </span>
           ))}
           <span className="text-muted">{strings.known.knownOn(date)}</span>

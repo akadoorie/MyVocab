@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import type { CardView } from '@myvocab/core';
-import { dirSchema as dir, langCodeSchema as langCode } from './common';
+import { dirSchema as dir, langCodeSchema as langCode, topicRefSchema } from './common';
 
 /** GET /api/meta (PRD §12.1). */
 export const metaResponseSchema = z.object({
   languages: z.array(z.object({ code: langCode, name: z.string(), nativeName: z.string(), dir })),
-  topics: z.array(z.object({ id: z.number().int(), slug: z.string(), name: z.string() })),
+  topics: z.array(topicRefSchema.extend({ slug: z.string() })),
   defaults: z.object({
     sourceLang: langCode,
     targetLang: langCode,

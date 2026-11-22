@@ -64,7 +64,8 @@ describe('POST /api/me/known', () => {
     expect(await other.json()).toEqual({ saved: 1 });
     const rows = (await list(cookie)).items;
     expect(rows.map((i) => i.knownTarget).sort()).toEqual(['en', 'he']);
-    for (const row of rows) expect(row.topics).toEqual([{ id: expect.any(Number), name: 'Home' }]);
+    for (const row of rows)
+      expect(row.topics).toEqual([{ id: expect.any(Number), name: 'Home', nameHe: null }]);
   });
 
   it('skips missing and trashed items and duplicates within a batch', async () => {

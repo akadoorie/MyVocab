@@ -36,12 +36,22 @@ export class CatalogAdminService {
   }
 
   async createTopic(
-    input: { slug: string; name: string; isActive?: boolean | undefined },
+    input: {
+      slug: string;
+      name: string;
+      nameHe?: string | null | undefined;
+      isActive?: boolean | undefined;
+    },
     actor: Actor,
   ): Promise<AdminTopic> {
     await this.assertSlugFree(input.slug);
     const id = await this.deps.topics.create(
-      { slug: input.slug, name: input.name, isActive: input.isActive ?? true },
+      {
+        slug: input.slug,
+        name: input.name,
+        nameHe: input.nameHe || null,
+        isActive: input.isActive ?? true,
+      },
       actor,
       this.now(),
     );
@@ -55,6 +65,8 @@ export class CatalogAdminService {
     patch: {
       slug?: string | undefined;
       name?: string | undefined;
+      /** '' or null clears it (the Hebrew UI then shows `name`). */
+      nameHe?: string | null | undefined;
       isActive?: boolean | undefined;
       excludesTopicId?: number | null | undefined;
     },
@@ -65,10 +77,16 @@ export class CatalogAdminService {
     if (patch.excludesTopicId !== undefined && patch.excludesTopicId !== current.excludesTopicId) {
       await this.setExclusion(current, patch.excludesTopicId, actor);
     }
-    const changes: Partial<{ slug: string; name: string; isActive: boolean }> = {};
+    const changes: Partial<{
+      slug: string;
+      name: string;
+      nameHe: string | null;
+      isActive: boolean;
+    }> = {};
     const audit: Record<string, { before: unknown; after: unknown }> = {};
-    for (const key of ['slug', 'name', 'isActive'] as const) {
-      const value = patch[key];
+    for (const key of ['slug', 'name', 'nameHe', 'isActive'] as const) {
+      const value =
+        key === 'nameHe' && patch.nameHe !== undefined ? patch.nameHe || null : patch[key];
       if (value !== undefined && value !== current[key]) {
         Object.assign(changes, { [key]: value });
         audit[key] = { before: current[key], after: value };

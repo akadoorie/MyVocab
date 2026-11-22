@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { dirSchema, itemIdSchema, langCodeSchema } from './common';
+import { dirSchema, itemIdSchema, langCodeSchema, topicRefSchema } from './common';
 
 /** Known items (PRD §6.4–6.5, §12.3). */
 export const KNOWN_BATCH_MAX = 100;
@@ -96,7 +96,7 @@ export const knownItemSchema = z.object({
     lang: langCodeSchema,
     dir: dirSchema,
   }),
-  topics: z.array(z.object({ id: z.number().int(), name: z.string() })),
+  topics: z.array(topicRefSchema),
   knownAt: z.number().int(),
   knownInCycle: z.number().int().min(1),
 });

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { swipe } from './touch';
 
 // Guest journey (PRD §17 E2E). Runs against synthetic seed/sample.csv data only.
 
@@ -125,32 +126,13 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
     else await button(page, 'I know it Show again in future').click();
   }
   await expect(page.getByRole('heading', { name: 'Session completed' })).toBeVisible();
-  await expect(page.getByText('Sign-in to remember these words')).toBeVisible();
+  await expect(page.getByText('Sign-in to skip words that no longer need to repeat')).toBeVisible();
 
   // New session starts the next loop right away, with the same choices (FR-L32).
   await page.getByRole('button', { name: 'New session' }).click();
   await expect(progress(page)).toHaveText(/^Round 1 · Card 1\/\d+ · 0 known$/);
   await expect(page).toHaveURL(/\/loop$/);
 });
-
-/** A touch swipe across the card, as pointer events (PRD FR-L29b). */
-async function swipe(page: Page, dx: number) {
-  const box = (await card(page).boundingBox())!;
-  const x = box.x + box.width / 2;
-  const y = box.y + box.height / 2;
-  const target = page.getByTestId('flip-card');
-  const ev = (clientX: number) => ({
-    pointerType: 'touch',
-    pointerId: 7,
-    isPrimary: true,
-    clientX,
-    clientY: y,
-    bubbles: true,
-  });
-  await target.dispatchEvent('pointerdown', ev(x));
-  for (let i = 1; i <= 5; i++) await target.dispatchEvent('pointermove', ev(x + (dx * i) / 5));
-  await target.dispatchEvent('pointerup', ev(x + dx));
-}
 
 test('on touch, swipe left is Next and swipe right is Back', async ({ page }) => {
   await page.goto('/');

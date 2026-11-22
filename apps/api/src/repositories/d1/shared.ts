@@ -1,6 +1,7 @@
 import { cleanText, normalize } from '@myvocab/core';
 import { sql, type SQL } from 'drizzle-orm';
 import type { Db } from '../../db/client';
+import type { TopicRef } from '../interfaces';
 
 /** Escapes LIKE wildcards; used with `ESCAPE '\'`. */
 export function likePattern(text: string): string {
@@ -36,11 +37,16 @@ export function itemSearchCondition(q: string): SQL | null {
 export async function topicsForItems(
   db: Db,
   itemIds: readonly number[],
-): Promise<Map<number, { id: number; name: string }[]>> {
-  const result = new Map<number, { id: number; name: string }[]>();
+): Promise<Map<number, TopicRef[]>> {
+  const result = new Map<number, TopicRef[]>();
   if (itemIds.length === 0) return result;
-  const rows = await db.all<{ item_id: number; id: number; name: string }>(sql`
-    SELECT ic.item_id, c.id, c.name
+  const rows = await db.all<{
+    item_id: number;
+    id: number;
+    name: string;
+    name_he: string | null;
+  }>(sql`
+    SELECT ic.item_id, c.id, c.name, c.name_he
     FROM json_each(${JSON.stringify(itemIds)}) AS j
     JOIN item_topics AS ic ON ic.item_id = j.value
     JOIN topics AS c ON c.id = ic.topic_id
@@ -48,7 +54,7 @@ export async function topicsForItems(
   `);
   for (const r of rows) {
     const list = result.get(r.item_id) ?? [];
-    list.push({ id: r.id, name: r.name });
+    list.push({ id: r.id, name: r.name, nameHe: r.name_he });
     result.set(r.item_id, list);
   }
   return result;

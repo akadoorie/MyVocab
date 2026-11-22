@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
-import { LogoMark } from '../components/Icons';
+import { BackArrow, LogoMark } from '../components/Icons';
 import { UserMenu } from '../components/UserMenu';
 import { api } from '../lib/api';
+import { useLocale } from '../lib/locale';
 import { startGoogleSignIn, useSession } from '../lib/session';
-import { strings } from '../strings';
+import { strings, type Locale } from '../strings';
 
 const version = import.meta.env.VITE_APP_VERSION;
 
@@ -25,7 +26,7 @@ export function Layout() {
       </a>
       {maintenance?.enabled && (
         <div role="status" className="bg-hint px-4 py-2 text-center text-sm text-[#1c1407]">
-          {maintenance.message || 'MyVocab is under maintenance.'}
+          {maintenance.message || strings.nav.maintenance}
         </div>
       )}
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
@@ -55,7 +56,7 @@ export function Layout() {
               to="/"
               className="flex min-h-11 items-center gap-1.5 rounded-[10px] px-3 text-muted hover:text-text"
             >
-              <span aria-hidden="true">←</span> {strings.nav.home}
+              <BackArrow /> {strings.nav.home}
             </Link>
           )}
           {session.user ? (
@@ -97,7 +98,28 @@ export function Layout() {
         <Link to="/privacy" className="hover:text-text">
           {strings.nav.privacy}
         </Link>
+        <LanguageSwitch />
       </footer>
     </div>
+  );
+}
+
+/**
+ * Switches the UI between Hebrew and English (D-080). It names the other language in that
+ * language ("English" / "עברית"), so it can be read by those who need it.
+ */
+function LanguageSwitch() {
+  const { setLocale } = useLocale();
+  const next = strings.locale.switchLang as Locale;
+  return (
+    <button
+      type="button"
+      lang={next}
+      onClick={() => setLocale(next)}
+      className="ms-auto hover:text-text"
+      data-testid="language-switch"
+    >
+      {strings.locale.switchLabel}
+    </button>
   );
 }

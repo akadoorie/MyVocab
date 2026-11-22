@@ -211,6 +211,8 @@ export const adminStrings = {
     slugInvalid: 'Use lowercase English letters, digits and single dashes, e.g. home-garden.',
     slugTaken: (name: string) => `Already used by “${name}”.`,
     name: 'Name',
+    /** Shown to learners in the Hebrew UI (D-080); empty = they see the Name. */
+    nameHe: 'Hebrew name',
     items: (n: number) => `${n} ${n === 1 ? 'item' : 'items'}`,
     add: 'Add topic',
     /** "Can't be combined with" (D-046). */

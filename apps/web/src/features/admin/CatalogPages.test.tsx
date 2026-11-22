@@ -12,6 +12,7 @@ const EXISTING = {
   id: 1,
   slug: 'sample-one',
   name: 'Sample One',
+  nameHe: null,
   isActive: true,
   sortOrder: 0,
   itemCount: 0,
@@ -55,7 +56,9 @@ describe('TopicsPage add form (FR-A30)', () => {
     ).toBeVisible();
 
     fireEvent.click(screen.getByRole('button', { name: '+ Add topic' }));
-    await waitFor(() => expect(posts).toEqual([{ slug: 'home-garden', name: 'Home & Garden' }]));
+    await waitFor(() =>
+      expect(posts).toEqual([{ slug: 'home-garden', name: 'Home & Garden', nameHe: '' }]),
+    );
   });
 
   it('stops following the name once the slug is edited', async () => {

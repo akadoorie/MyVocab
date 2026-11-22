@@ -1,7 +1,7 @@
 import type { loopSummary } from '@myvocab/core';
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type Ref } from 'react';
 import { Button3D } from '../../components/Button3D';
-import { KeyboardIcon } from '../../components/Icons';
+import { BackArrow, KeyboardIcon } from '../../components/Icons';
 import { startGoogleSignIn } from '../../lib/session';
 import { strings } from '../../strings';
 import {
@@ -212,7 +212,7 @@ function BackToLastCard({ onBack }: { onBack: () => void }) {
       onClick={onBack}
       className="flex min-h-11 items-center gap-1.5 rounded-[10px] px-3 text-muted hover:text-text"
     >
-      <span aria-hidden="true">←</span> {strings.loop.backToCard}
+      <BackArrow /> {strings.loop.backToCard}
     </button>
   );
 }
@@ -248,7 +248,7 @@ export function ShortcutsMenu({ signedIn = false }: { signedIn?: boolean }) {
         {strings.loop.shortcutsTitle}
       </button>
       {open && (
-        <div id={panelId} className="glass absolute right-0 z-30 mt-2 w-64 p-4">
+        <div id={panelId} className="glass absolute end-0 z-30 mt-2 w-64 p-4">
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
             {strings.loop.shortcuts
               .filter(([key]) => signedIn || key !== 'K')

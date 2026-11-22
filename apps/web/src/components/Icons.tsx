@@ -46,14 +46,21 @@ export const CrossIcon = () => (
 );
 
 export const ChevronIcon = () => (
-  <Svg strokeWidth={2.8}>
+  <Svg strokeWidth={2.8} className="rtl:-scale-x-100">
     <path d="m9 5 7 7-7 7" />
   </Svg>
 );
 
-/** The left-pointing chevron of Back (PRD FR-L29a). */
+/** "←" pointing the way back: mirrored on right-to-left pages (D-080). */
+export const BackArrow = () => (
+  <span aria-hidden="true" className="inline-block rtl:-scale-x-100">
+    ←
+  </span>
+);
+
+/** The left-pointing chevron of Back (PRD FR-L29a); mirrored on right-to-left pages. */
 export const ChevronBackIcon = () => (
-  <Svg strokeWidth={2.8}>
+  <Svg strokeWidth={2.8} className="rtl:-scale-x-100">
     <path d="m15 5-7 7 7 7" />
   </Svg>
 );

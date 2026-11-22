@@ -30,11 +30,16 @@ export type TopicRow = {
   id: number;
   slug: string;
   name: string;
+  /** The name in the Hebrew UI (D-080); null = use `name`. */
+  nameHe: string | null;
   isActive: boolean;
   sortOrder: number;
   /** An item can't be in this topic and that one together (D-046); kept symmetric. */
   excludesTopicId: number | null;
 };
+
+/** A topic as shown next to an item (known words, admin item list). */
+export type TopicRef = { id: number; name: string; nameHe: string | null };
 
 export interface TopicRepository {
   listAll(): Promise<TopicRow[]>;
@@ -177,7 +182,7 @@ export interface KnownRepository {
     limit: number,
   ): Promise<KnownListRow[]>;
   count(userId: string, filter: KnownFilterInput): Promise<number>;
-  topicsFor(itemIds: readonly number[]): Promise<Map<number, { id: number; name: string }[]>>;
+  topicsFor(itemIds: readonly number[]): Promise<Map<number, TopicRef[]>>;
 }
 
 export type AccountRow = { id: string; role: string };
@@ -285,7 +290,7 @@ export interface AdminItemRepository {
     limit: number,
     offset: number,
   ): Promise<{ rows: AdminItemListRow[]; total: number }>;
-  topicsFor(itemIds: readonly number[]): Promise<Map<number, { id: number; name: string }[]>>;
+  topicsFor(itemIds: readonly number[]): Promise<Map<number, TopicRef[]>>;
   /** Inserts the item, its topic links and the audit entry; returns the new id. */
   create(item: NewItem, actor: Actor, audit: AuditDetails, now: number): Promise<number>;
   /** Optimistic update: false if `version` is stale (nothing written, no audit). */
@@ -337,13 +342,13 @@ export interface AdminTopicRepository {
   get(id: number): Promise<TopicWithCount | null>;
   findBySlug(slug: string): Promise<TopicRow | null>;
   create(
-    input: { slug: string; name: string; isActive: boolean },
+    input: { slug: string; name: string; nameHe: string | null; isActive: boolean },
     actor: Actor,
     now: number,
   ): Promise<number>;
   update(
     id: number,
-    changes: Partial<{ slug: string; name: string; isActive: boolean }>,
+    changes: Partial<{ slug: string; name: string; nameHe: string | null; isActive: boolean }>,
     actor: Actor,
     audit: AuditDetails,
     now: number,

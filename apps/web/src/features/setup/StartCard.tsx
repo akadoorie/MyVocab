@@ -17,7 +17,7 @@ import { api } from '../../lib/api';
 import { startGoogleSignIn, type SessionState } from '../../lib/session';
 import { readFlag, writeFlag } from '../../lib/storage';
 import { DESKTOP_QUERY, useMediaQuery } from '../../lib/useMediaQuery';
-import { strings } from '../../strings';
+import { languageName, strings, topicName } from '../../strings';
 import { useDebounced } from './useDebounced';
 import { useStartLoop } from './useStartLoop';
 
@@ -144,7 +144,7 @@ export function StartCard({
   const nothingLeft = count === 0;
   const blockedByMaintenance = meta.maintenance.enabled && session.user?.role !== 'admin';
   const guestsDisabled = isGuest && !meta.guest.enabled;
-  const languageOptions = meta.languages.map((l) => ({ value: l.code, label: l.name }));
+  const languageOptions = meta.languages.map((l) => ({ value: l.code, label: languageName(l) }));
 
   const startButton = guestsDisabled ? (
     <Button3D size="lg" className="w-full" onClick={startGoogleSignIn}>
@@ -302,7 +302,7 @@ export function StartCard({
                 <div className="relative">
                   <select
                     id={id}
-                    className={`${className} topic-select pl-9 max-md:pr-1 max-md:pl-8`}
+                    className={`${className} topic-select ps-9 max-md:pe-1 max-md:ps-8`}
                     value="sample"
                     onChange={() => {}}
                   >
@@ -321,14 +321,14 @@ export function StartCard({
                     {meta.topics.map((c) => (
                       <option key={c.id} value={c.id} disabled>
                         {/* The full count: what signing in unlocks (D-064). */}
-                        {withCount(c.name, topicCount(c.id))}
+                        {withCount(topicName(c), topicCount(c.id))}
                       </option>
                     ))}
                   </select>
                   <span
                     aria-hidden="true"
-                    // On the left, the same lock and size as the Amount field's (D-052).
-                    className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-base leading-none max-md:left-2.5"
+                    // At the start (left; right in Hebrew), the same lock and size as the Amount field's (D-052).
+                    className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-base leading-none max-md:start-2.5"
                   >
                     🔒
                   </span>
@@ -363,7 +363,7 @@ export function StartCard({
                   {meta.topics.map((c) => (
                     // A topic with nothing left to play is greyed out (D-064).
                     <option key={c.id} value={c.id} disabled={topicCount(c.id) === 0}>
-                      {withCount(c.name, topicCount(c.id))}
+                      {withCount(topicName(c), topicCount(c.id))}
                     </option>
                   ))}
                 </select>
