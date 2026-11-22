@@ -244,7 +244,7 @@ export function StartCard({
                   <div className="relative">
                     <select
                       id={id}
-                      className={`${className} topic-locked pr-9`}
+                      className={`${className} topic-locked pl-9`}
                       value="sample"
                       onChange={() => {}}
                       aria-describedby={`${id}-locked`}
@@ -267,7 +267,8 @@ export function StartCard({
                     </select>
                     <span
                       aria-hidden="true"
-                      className="pointer-events-none absolute top-1/2 right-8 -translate-y-1/2 text-sm"
+                      // On the left, the same lock and size as the Amount field's (D-052).
+                      className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-base leading-none"
                     >
                       🔒
                     </span>
