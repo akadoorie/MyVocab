@@ -167,7 +167,7 @@ export const en = {
   },
   privacy: {
     title: 'Privacy',
-    intro: 'MyVocab stores as little as it can. There are no ads and no tracking cookies.',
+    intro: 'MyVocab stores as little as it can. There are no tracking cookies.',
     storedTitle: 'What we store',
     stored: [
       'Your Google account id, email address, name and profile picture link, when you sign-in with Google.',
