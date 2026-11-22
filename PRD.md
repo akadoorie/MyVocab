@@ -329,7 +329,8 @@ private content repository. It never appears in the public code repo or any publ
   plays 0.3 s after every change of the screen (a new card, a flip, hints, Don't know); after that, only when the
   user waits 4 s without acting; while the user still waits, a soft shine alone (no pump) repeats every 10 s
   (D-074). Flip pulses gently until it is first used in the session (remembered across a refresh); after that it
-  joins the nudge and the shine only while the current card shows its front and wasn't flipped yet (D-074). Disabled or locked buttons, Back, Home and Next (which has its own pump) don't take part; nothing
+  joins the nudge and the shine only while the current card shows its front and wasn't flipped yet; while it still
+  pulses, it shines too, without the pump (D-074). Disabled or locked buttons, Back, Home and Next (which has its own pump) don't take part; nothing
   moves with reduced motion.
 - **FR-L29 Next**: moves to the next card (enabled in the Revealed phase, and on a card answered earlier that was
   reached with Back). The next card enters front side up with a short rise-in (no reverse-flip animation).

@@ -313,6 +313,15 @@ describe('LoopPage', () => {
       expect(btn('Flip')).toHaveClass('is-nudging');
     });
 
+    it('while Flip still pulses (never used), it shines with the others too (D-074)', () => {
+      motion();
+      vi.useFakeTimers();
+      setup();
+      act(() => vi.advanceTimersByTime(300));
+      expect(btn('Flip')).toHaveClass('is-breathing', 'is-shining');
+      expect(btn('Flip')).not.toHaveClass('is-nudging'); // no pump on top of the pulse
+    });
+
     it('Flip pulses until it is first used, and stays still after a refresh', () => {
       motion();
       setup();

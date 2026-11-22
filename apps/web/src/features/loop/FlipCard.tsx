@@ -123,7 +123,7 @@ export function FlipCard({
   answer?: CardAnswer | null;
   /** Flip pulses gently until it's first used in the session (D-066). */
   pulse?: boolean;
-  /** Pump and shine, or shine alone, with the answer buttons (D-066, D-074); not while it pulses. */
+  /** Pump and shine, or shine alone, with the answer buttons (D-066, D-074); only the shine while it pulses. */
   nudging?: 'full' | 'shine' | null;
 }) {
   const tid = (id: string) => (decorative ? undefined : id);
@@ -148,7 +148,15 @@ export function FlipCard({
       kind="round"
       icon={<FlipIcon />}
       label={strings.loop.flip}
-      className={`flip-card__flip ${pulse ? 'is-breathing' : nudging ? `${nudging === 'full' ? 'is-nudging' : 'is-shining'} nudge-4` : ''}`}
+      // While it pulses (not used yet this session) it still shines with the others, without the
+      // pump, which would fight the pulse (D-074).
+      className={`flip-card__flip ${
+        pulse
+          ? `is-breathing ${nudging ? 'is-shining nudge-4' : ''}`
+          : nudging
+            ? `${nudging === 'full' ? 'is-nudging' : 'is-shining'} nudge-4`
+            : ''
+      }`}
       hideLabel
       title={strings.loop.flipTitle}
       onClick={(e) => {
