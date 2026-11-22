@@ -280,6 +280,8 @@ export const adminStrings = {
     saved: 'Settings saved',
     /** Short explanations under some fields. */
     hints: {
+      'loop.continueSeconds':
+        'On the break between rounds, Continue counts down and moves on by itself. 0 turns it off.',
       'loop.maxSize':
         'The largest number allowed in the choices above. Settings won’t save if a choice is bigger.',
     },
@@ -303,6 +305,7 @@ export const adminStrings = {
       'guests.loopsPerHour': 'Guest sessions per hour (per network)',
       'users.cardsPerDay': 'Cards per learner per day',
       'undo.windowSeconds': 'Seconds before a Know is saved',
+      'loop.continueSeconds': 'Seconds before the next round starts',
       'maintenance.enabled': 'Maintenance mode',
       'maintenance.message': 'Maintenance message',
       'trash.retentionHours': 'Hours before Trash is purged',

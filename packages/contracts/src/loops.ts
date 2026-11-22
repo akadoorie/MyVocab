@@ -15,6 +15,8 @@ export const metaResponseSchema = z.object({
   sizeOptions: z.array(z.number().int()),
   guest: z.object({ enabled: z.boolean(), loopSize: z.number().int() }),
   undoWindowSeconds: z.number().int(),
+  /** Seconds before the break between rounds continues by itself; 0 = never (D-068). */
+  continueSeconds: z.number().int(),
   maintenance: z.object({ enabled: z.boolean(), message: z.string() }),
   turnstileSiteKey: z.string(),
 });

@@ -52,6 +52,7 @@ export const publicRoutes = new Hono<AppEnv>()
       sizeOptions: s['loop.sizeOptions'],
       guest: { enabled: s['guests.enabled'], loopSize: s['guests.loopSize'] },
       undoWindowSeconds: s['undo.windowSeconds'],
+      continueSeconds: s['loop.continueSeconds'],
       maintenance: { enabled: s['maintenance.enabled'], message: s['maintenance.message'] },
       turnstileSiteKey: c.get('config').TURNSTILE_SITE_KEY,
     });

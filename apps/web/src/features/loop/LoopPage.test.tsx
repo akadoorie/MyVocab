@@ -17,7 +17,13 @@ function setup(
     isGuest = true,
     routes = {},
     count = CARDS.length,
-  }: { isGuest?: boolean; routes?: Parameters<typeof mockFetch>[0]; count?: number } = {},
+    continueSeconds,
+  }: {
+    isGuest?: boolean;
+    routes?: Parameters<typeof mockFetch>[0];
+    count?: number;
+    continueSeconds?: number;
+  } = {},
 ) {
   // /api/me answers with a signed-in learner, /api/meta with the test settings.
   const fetchSpy = mockFetch(routes);
@@ -28,6 +34,7 @@ function setup(
     undoWindowSeconds: 4,
     selection: { sourceLang: 'en', targetLang: 'he', topicId: null, size: 5 },
     isGuest,
+    ...(continueSeconds === undefined ? {} : { continueSeconds }),
   });
   const router = createMemoryRouter(
     [
@@ -436,8 +443,8 @@ describe('LoopPage', () => {
   });
 
   describe('the break between rounds (D-067)', () => {
-    const toBreak = () => {
-      const router = setup();
+    const toBreak = (continueSeconds?: number) => {
+      const router = setup(undefined, continueSeconds === undefined ? {} : { continueSeconds });
       fireEvent.click(btn('I know it Show again in future'));
       fireEvent.click(btn('I know it Show again in future'));
       fireEvent.click(btn('I don’t know Show again soon'));
@@ -450,17 +457,25 @@ describe('LoopPage', () => {
       for (let i = 0; i < seconds; i++) act(() => vi.advanceTimersByTime(1000));
     };
 
-    it('shows what was known, "to next round", and moves on by itself after 7 seconds', () => {
+    it('shows what was known, "to next round", and moves on by itself after 10 seconds', () => {
       vi.useFakeTimers();
       toBreak();
       expect(screen.getByText('You knew 2 of 3 — 1 to go.')).toBeInTheDocument();
       expect(screen.getByText('to next round')).toBeInTheDocument();
-      expect(continueButton()).toHaveTextContent('Continue · 7');
+      expect(continueButton()).toHaveTextContent('Continue · 10');
       expect(continueButton()).toHaveAccessibleName('Continue'); // the digits aren't read out
       tick(3);
-      expect(continueButton()).toHaveTextContent('Continue · 4');
-      tick(4);
+      expect(continueButton()).toHaveTextContent('Continue · 7');
+      tick(7);
       expect(progress()).toBe('Round 2 · Card 1/1 · 2 known');
+    });
+
+    it('uses the length from the settings; 0 means no countdown (D-068)', () => {
+      vi.useFakeTimers();
+      toBreak(0);
+      expect(continueButton()).toHaveTextContent(/^Continue$/);
+      tick(15);
+      expect(screen.getByRole('heading', { name: 'Round 2 · 1 card left' })).toBeInTheDocument();
     });
 
     it('any key or tap stops the countdown for good', () => {

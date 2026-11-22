@@ -144,6 +144,7 @@ function SettingsForm({
         />
         {num('loop.defaultSize')}
         {num('loop.maxSize')}
+        {num('loop.continueSeconds')}
         {num('undo.windowSeconds')}
       </Group>
       <Group title={s.settings.groups.guests}>

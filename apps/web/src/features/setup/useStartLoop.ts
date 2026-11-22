@@ -70,6 +70,7 @@ export function useStartLoop({
           randomSeed(),
         ),
         undoWindowSeconds: meta.undoWindowSeconds,
+        continueSeconds: meta.continueSeconds,
         selection: choices,
         isGuest,
       });

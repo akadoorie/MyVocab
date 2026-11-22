@@ -36,6 +36,8 @@ const storedLoopSchema = z.object({
   cards: z.array(cardViewSchema).min(1),
   state: loopStateSchema,
   undoWindowSeconds: z.number().int().min(1).max(15),
+  /** Countdown on the break between rounds, from the settings at start (D-068). */
+  continueSeconds: z.number().int().min(0).max(30).optional(),
   selection: z.object({
     sourceLang: z.string(),
     targetLang: z.string(),
@@ -54,6 +56,7 @@ export type StoredLoop = {
   cards: CardView[];
   state: LoopState;
   undoWindowSeconds: number;
+  continueSeconds?: number;
   selection: StartChoices;
   isGuest: boolean;
   celebrated?: boolean;

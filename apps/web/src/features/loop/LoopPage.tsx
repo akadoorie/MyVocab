@@ -22,7 +22,7 @@ import { LogoMark } from '../../components/Icons';
 import { ButtonBar } from './ButtonBar';
 import { FlipCard } from './FlipCard';
 import { clearLoop, loadLoop, saveLoop, type StoredLoop } from './loop-storage';
-import { CycleBreak, ShortcutsMenu, Summary } from './LoopScreens';
+import { CycleBreak, DEFAULT_CONTINUE_SECONDS, ShortcutsMenu, Summary } from './LoopScreens';
 import { CrumpleGhost, type Crumple } from './CrumpleGhost';
 import { useLoopShortcuts } from './useLoopShortcuts';
 import { useSwipe } from './useSwipe';
@@ -295,6 +295,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           onBack={() => act('BACK')}
           onHome={() => setConfirmLeave('home')}
           paused={confirmLeave !== null}
+          seconds={stored.continueSeconds ?? DEFAULT_CONTINUE_SECONDS}
         />
         {leaveDialog}
         {ghost}

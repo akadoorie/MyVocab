@@ -360,6 +360,8 @@ describe('settings (FR-A50)', () => {
       { 'loop.sizeOptions': [10, 100] },
       { 'defaults.topicId': 9999 },
       { 'undo.windowSeconds': 99 },
+      { 'loop.continueSeconds': 31 },
+      { 'loop.continueSeconds': -1 },
       { unknown: 1 },
     ];
     for (const json of bad) {
@@ -387,6 +389,18 @@ describe('settings (FR-A50)', () => {
       'loop.sizeOptions',
       'undo.windowSeconds',
     ]);
+  });
+
+  it('the break countdown: 10 seconds by default, 0 turns it off (D-068)', async () => {
+    const meta = async () =>
+      (await (await api('/meta')).json<{ continueSeconds: number }>()).continueSeconds;
+    expect(await meta()).toBe(10);
+    const res = await req('/admin/settings', {
+      method: 'PUT',
+      json: { 'loop.continueSeconds': 0 },
+    });
+    expect(res.status).toBe(200);
+    expect(await meta()).toBe(0);
   });
 });
 

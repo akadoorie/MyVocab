@@ -36,6 +36,7 @@ export const META: MetaResponse = {
   sizeOptions: [10, 20, 30, 40, 50],
   guest: { enabled: true, loopSize: 5 },
   undoWindowSeconds: 4,
+  continueSeconds: 10,
   maintenance: { enabled: false, message: '' },
   turnstileSiteKey: 'test-site-key',
 };

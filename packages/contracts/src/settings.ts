@@ -12,6 +12,8 @@ export const settingsSchema = z.object({
     .default([10, 20, 30, 40, 50]),
   'loop.defaultSize': z.number().int().min(1).default(10),
   'loop.maxSize': z.number().int().min(1).max(200).default(50),
+  /** The break between rounds moves on by itself after this many seconds; 0 = never (D-068). */
+  'loop.continueSeconds': z.number().int().min(0).max(30).default(10),
   'guests.enabled': z.boolean().default(true),
   'guests.loopSize': z.number().int().min(1).max(50).default(5),
   'guests.loopsPerHour': z.number().int().min(1).max(1000).default(10),

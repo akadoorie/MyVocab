@@ -358,9 +358,9 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L31 Cycle break**: when a cycle ends and "Don't know" cards remain, an interstitial shows
   "Round 3 · 2 cards left", a recap ("You knew 5 of 8 — 3 to go."), then **Home** and **Continue** side by side as on
   the summary, with "to next round" under Continue (D-067). **Continue** (or Enter) starts the next round; it counts
-  down from 7 ("Continue · 7, 6…", with a light band draining across it) and starts the next round by itself at 0.
+  down from the admin setting `loop.continueSeconds` (default 10; "Continue · 10, 9…", with a light band draining across it) and starts the next round by itself at 0; 0 seconds means no countdown (D-068).
   Any tap, click or key stops the countdown for good; it pauses while the page is hidden; screen readers hear
-  "Continuing in 7 seconds" once; with reduced motion only the numbers count. **Home** (or Esc) asks "Back to
+  "Continuing in N seconds" once; with reduced motion only the numbers count. **Home** (or Esc) asks "Back to
   Home? This will stop the session. Are you sure?" first, as during a card (FR-L30a). "← Back to the last card"
   stays.
 - **FR-L32 End of loop**: when a cycle ends with no "Don't know" cards, a summary shows the total cards, the number of
@@ -573,6 +573,7 @@ so learners never download it. All admin pages work on mobile (tables collapse i
 | `loop.sizeOptions` | int[] | `[10,20,30,40,50]` | Cards-per-session choices for signed-in learners (admin label "Cards per session: choices", D-059) |
 | `loop.defaultSize` | int | `10` | Default cards per session (must be in `sizeOptions`; admin label "Cards per session: default") |
 | `loop.maxSize` | int | `50` | Server-side cap for `POST /loops`; no choice may exceed it. Admin label "Cards per session: maximum", with a hint under the field explaining this |
+| `loop.continueSeconds` | int | `10` | Countdown on the break between rounds before it continues by itself (0–30; 0 = no countdown; FR-L31, D-068). Admin label "Seconds before the next round starts", with a hint |
 | `guests.enabled` | bool | `true` | Allow guests to run loops |
 | `guests.loopSize` | int | `5` | Fixed cards per guest session (server-enforced; admin label "Cards per guest session") |
 | `guests.loopsPerHour` | int | `10` | Guest loops per hour per IP |

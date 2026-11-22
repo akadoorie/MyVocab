@@ -25,8 +25,8 @@ function useFocusOnMount<T extends HTMLElement>() {
   return ref;
 }
 
-/** Seconds before the break moves on to the next round by itself (D-067). */
-export const CONTINUE_SECONDS = 7;
+/** Seconds before the break moves on by itself, when the session doesn't say (D-067, D-068). */
+export const DEFAULT_CONTINUE_SECONDS = 10;
 
 /**
  * Counts down from `seconds` and calls `onDone` at 0 (D-067). Any tap, click or key cancels it
@@ -54,7 +54,9 @@ function useCountdown(seconds: number, onDone: () => void, paused: boolean) {
   useEffect(() => {
     done.current = onDone;
   });
-  const running = !cancelled && !paused && !hidden;
+  // 0 seconds: no countdown at all, Continue waits (D-068).
+  const counting = !cancelled && seconds > 0;
+  const running = counting && !paused && !hidden;
   useEffect(() => {
     if (!running) return;
     if (left === 0) {
@@ -64,7 +66,7 @@ function useCountdown(seconds: number, onDone: () => void, paused: boolean) {
     const t = window.setTimeout(() => setLeft((n) => n - 1), 1000);
     return () => window.clearTimeout(t);
   }, [running, left]);
-  return { left, counting: !cancelled, running };
+  return { left, counting, running };
 }
 
 /**
@@ -80,6 +82,7 @@ export function CycleBreak({
   onBack,
   onHome,
   paused = false,
+  seconds = DEFAULT_CONTINUE_SECONDS,
 }: {
   cycle: number;
   remaining: number;
@@ -92,9 +95,11 @@ export function CycleBreak({
   onHome: () => void;
   /** The "Are you sure?" question is open: the countdown waits. */
   paused?: boolean;
+  /** Countdown length, an admin setting (D-068); 0 = none. */
+  seconds?: number;
 }) {
   const focusRef = useFocusOnMount<HTMLButtonElement>();
-  const { left, counting, running } = useCountdown(CONTINUE_SECONDS, onContinue, paused);
+  const { left, counting, running } = useCountdown(seconds, onContinue, paused);
   return (
     <section className="glass m-auto flex w-full max-w-lg flex-col items-center gap-8 px-6 py-12 text-center">
       <div className="flex flex-col gap-3">
@@ -122,7 +127,7 @@ export function CycleBreak({
                 aria-hidden="true"
                 className="countdown-fill"
                 style={{
-                  animationDuration: `${CONTINUE_SECONDS}s`,
+                  animationDuration: `${seconds}s`,
                   animationPlayState: running ? 'running' : 'paused',
                 }}
               />
@@ -132,7 +137,7 @@ export function CycleBreak({
         </div>
       </div>
       <p className="sr-only" aria-live="polite">
-        {counting ? strings.loop.continuingIn(CONTINUE_SECONDS) : ''}
+        {counting ? strings.loop.continuingIn(seconds) : ''}
       </p>
       <BackToLastCard onBack={onBack} />
     </section>
