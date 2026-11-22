@@ -686,14 +686,15 @@ body {
     box-shadow: var(--card-shadow);
   }
 
-  /* The guests' Topic dropdown (D-038, D-041): desktop browsers draw the open list with the
-     page's colours, where a disabled option is barely dimmer; make the locked entries clearly
-     grey and keep "Sample set" bright. Phones draw their own picker and ignore this. */
-  .topic-locked option {
+  /* The Topic dropdowns (D-038, D-041, D-064): desktop browsers draw the open list with the
+     page's colours, where a disabled option is barely dimmer; make the locked or empty entries
+     clearly grey. Phones draw their own picker and ignore this. */
+  .topic-select option {
     color: var(--text);
     background-color: var(--surface-2);
   }
-  .topic-locked option:disabled {
+  /* Locked for guests, or a topic with nothing left to play (D-064). */
+  .topic-select option:disabled {
     color: #6a6290;
   }
   /* The special choices above the line ("Sample set", "All topics", D-063): their own lighter

@@ -22,10 +22,21 @@ const learner = {
 };
 const admin = { ...learner, user: { ...learner.user, role: 'admin' as 'user' } };
 
-function mockApi(cards = [makeCard(1), makeCard(2)], available = 6) {
+type Counts = { all: number; sample: number; topics: Record<string, number> };
+/** One count for everything unless `counts` says otherwise (D-064). */
+const countsOf = (n: number, counts: Partial<Counts> = {}): Counts => ({
+  all: n,
+  sample: n,
+  topics: { '1': n },
+  ...counts,
+});
+
+function mockApi(cards = [makeCard(1), makeCard(2)], available = 6, counts?: Partial<Counts>) {
   return vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
     const url = String(input);
-    if (url.startsWith('/api/loops/available')) return Response.json({ available });
+    if (url.startsWith('/api/loops/available-by-topic')) {
+      return Response.json(countsOf(available, counts));
+    }
     if (url === '/api/loops' && init?.method === 'POST') {
       return Response.json({ requested: 5, returned: cards.length, cards });
     }
@@ -56,6 +67,11 @@ function setup(session: typeof guest | typeof learner = guest) {
 const field = (label: string) =>
   screen.getByLabelText(label, { exact: true }).closest('[data-default]');
 const TOAST = 'Sign-in to choose more cards per session.';
+/** The "N cards available" line's text. */
+const availableLine = () =>
+  screen.queryAllByText(
+    (_, el) => el?.tagName === 'P' && /cards? available$/.test(el.textContent ?? ''),
+  )[0]?.textContent;
 /** The toast's text is split: a "Sign-in" link, then the rest of the sentence (D-043). */
 const toastShown = () => screen.queryAllByRole('status').some((s) => s.textContent === TOAST);
 /** On desktop the message covers the Amount field instead of a toast (D-044). */
@@ -231,8 +247,8 @@ describe('StartCard', () => {
 
   it('shows server errors such as the hourly cap', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) =>
-      String(input).startsWith('/api/loops/available')
-        ? Response.json({ available: 6 })
+      String(input).startsWith('/api/loops/available-by-topic')
+        ? Response.json(countsOf(6))
         : Response.json(
             { error: { code: 'RATE_LIMITED', message: 'Too many sessions for now.' } },
             { status: 429 },
@@ -264,25 +280,58 @@ describe('StartCard', () => {
       expect(topic().value).toBe('');
     });
 
-    it('admins can pick the Sample set, which the count and the session ask for', async () => {
-      const fetchSpy = mockApi();
+    it('admins can pick the Sample set, which the count and the session use', async () => {
+      const fetchSpy = mockApi(undefined, 9, { sample: 4 });
       const router = setup(admin);
       fireEvent.change(topic(), { target: { value: 'sample' } });
       expect(topic().value).toBe('sample');
-      await waitFor(() =>
-        expect(
-          fetchSpy.mock.calls.some(
-            ([u]) =>
-              String(u).includes('/api/loops/available?') && String(u).includes('sample=true'),
-          ),
-        ).toBe(true),
-      );
+      await waitFor(() => expect(availableLine()).toBe('4 cards available'));
       fireEvent.click(screen.getByRole('button', { name: 'Start' }));
       await waitFor(() => expect(router.state.location.pathname).toBe('/loop'));
       const post = fetchSpy.mock.calls.find(([u]) => u === '/api/loops');
       expect(JSON.parse(String(post?.[1]?.body))).toMatchObject({ topicId: null, sample: true });
       expect(loadLoop()?.selection.sample).toBe(true);
     });
+  });
+
+  it('shows each option’s count and greys out a topic with none left (D-064)', async () => {
+    mockApi(undefined, 9, { sample: 4, topics: {} });
+    setup(admin);
+    const topic = screen.getByLabelText('Topic', { exact: true }) as HTMLSelectElement;
+    await waitFor(() =>
+      expect([...topic.options].map((o) => o.textContent)).toEqual([
+        'Sample set [4]',
+        'All topics [9]',
+        'Home [0]',
+      ]),
+    );
+    expect([...topic.options].map((o) => o.disabled)).toEqual([false, false, true]);
+  });
+
+  it('asks once per direction; changing the topic reads the same counts (D-064)', async () => {
+    const fetchSpy = mockApi(undefined, 9, { topics: { '1': 3 } });
+    setup(learner);
+    const calls = () =>
+      fetchSpy.mock.calls.filter(([u]) => String(u).startsWith('/api/loops/available-by-topic'));
+    await waitFor(() => expect(availableLine()).toBe('9 cards available'));
+    fireEvent.change(screen.getByLabelText('Topic', { exact: true }), { target: { value: '1' } });
+    expect(availableLine()).toBe('3 cards available');
+    expect(calls()).toHaveLength(1);
+    expect(String(calls()[0]![0])).toBe('/api/loops/available-by-topic?source=en&target=he');
+  });
+
+  it('guests see the full counts on their locked topics, none on "Sample set" (D-064, D-065)', async () => {
+    mockApi(undefined, 9, { sample: 5, topics: { '1': 4 } });
+    setup();
+    const topic = screen.getByLabelText('Topic', { exact: true }) as HTMLSelectElement;
+    await waitFor(() =>
+      expect([...topic.options].map((o) => o.textContent)).toEqual([
+        'Sample set',
+        'All topics [9]',
+        'Home [4]',
+      ]),
+    );
+    expect(availableLine()).toBe('5 cards available');
   });
 
   it('lists the topics under a line, apart from "All topics", all at the top level (D-062)', () => {

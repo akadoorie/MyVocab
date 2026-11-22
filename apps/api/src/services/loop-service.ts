@@ -12,6 +12,7 @@ import type {
   LanguageRepository,
   LoopRepository,
   LoopSelection,
+  PlayableCounts,
 } from '../repositories/interfaces';
 import type { SettingsService } from './settings-service';
 import type { UsageLimitService } from './usage-limit-service';
@@ -51,11 +52,7 @@ export class LoopService {
    * learners never do.
    */
   private async selection(q: LoopQuery, requester: Requester): Promise<LoopSelection> {
-    const languages = (await this.deps.languages.listAll()).filter((l) => l.isActive);
-    const codes = new Set(languages.map((l) => l.code));
-    if (!codes.has(q.source) || !codes.has(q.target)) {
-      throw new ValidationError('Unknown or inactive language');
-    }
+    await this.checkLanguages(q.source, q.target);
     const sampleOnly = requester.kind === 'guest' || (requester.isAdmin && q.sample === true);
     const topicId = sampleOnly ? null : q.topicId;
     if (topicId !== null) {
@@ -71,8 +68,33 @@ export class LoopService {
     };
   }
 
+  private async checkLanguages(source: string, target: string): Promise<void> {
+    const languages = (await this.deps.languages.listAll()).filter((l) => l.isActive);
+    const codes = new Set(languages.map((l) => l.code));
+    if (!codes.has(source) || !codes.has(target)) {
+      throw new ValidationError('Unknown or inactive language');
+    }
+  }
+
   async available(q: LoopQuery, requester: Requester): Promise<number> {
     return this.deps.loops.countPlayable(await this.selection(q, requester));
+  }
+
+  /**
+   * Every count for one direction, for the Topic list (D-064). A learner's own known words are
+   * left out. Guests get the full counts, a preview of what signing in unlocks; what they can
+   * play is the `sample` count (D-038).
+   */
+  async availableByTopic(
+    q: { source: string; target: string },
+    requester: Requester,
+  ): Promise<PlayableCounts> {
+    await this.checkLanguages(q.source, q.target);
+    return this.deps.loops.countPlayableByTopic({
+      source: q.source,
+      target: q.target,
+      userId: requester.kind === 'learner' ? requester.userId : null,
+    });
   }
 
   async start(input: StartLoopInput, requester: Requester): Promise<StartLoopResult> {

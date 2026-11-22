@@ -41,6 +41,24 @@ export type AvailableQuery = z.infer<typeof availableQuerySchema>;
 export const availableResponseSchema = z.object({ available: z.number().int().nonnegative() });
 export type AvailableResponse = z.infer<typeof availableResponseSchema>;
 
+/** Query of GET /api/loops/available-by-topic (D-064): one direction, every count at once. */
+export const availableByTopicQuerySchema = z
+  .object({ source: langCode, target: langCode })
+  .strict();
+export type AvailableByTopicQuery = z.infer<typeof availableByTopicQuerySchema>;
+
+const cardCount = z.number().int().nonnegative();
+/**
+ * Playable cards for one direction (D-064): all topics, the sample set, and each topic by id.
+ * A signed-in learner's own known words are left out; guests get the full counts.
+ */
+export const availableByTopicResponseSchema = z.object({
+  all: cardCount,
+  sample: cardCount,
+  topics: z.record(z.string(), cardCount),
+});
+export type AvailableByTopicResponse = z.infer<typeof availableByTopicResponseSchema>;
+
 /** Body of POST /api/loops. */
 export const startLoopRequestSchema = z
   .object({

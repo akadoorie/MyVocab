@@ -222,8 +222,11 @@ private content repository. It never appears in the public code repo or any publ
   choose the languages, and the "N cards available" count only counts the sample set. The server
   **enforces** it for guests whatever the request says (both the count and starting a session). Signed-in learners
   never see a "Sample set" option; **admins** do, so they can play exactly what guests get.
-- **FR-L7** The start card shows **"N cards available"** for the current selection, with N in yellow (debounced
-  300 ms; counts only playable items (FR-L40); excludes known items for signed-in users). It sits right under the card's
+- **FR-L7** The start card shows **"N cards available"** for the current selection, with N in yellow (counts only
+  playable items (FR-L40); excludes known items for signed-in users). The counts come from one request per language
+  direction (debounced 300 ms, kept 5 minutes per direction, fetched again whenever the start card opens), which also
+  labels every Topic option with its count, e.g. "Home [15]"; changing the topic asks nothing (D-064). A topic with
+  0 cards is greyed out; guests see the full counts on their locked topics, but their "Sample set" has none (it is the "N cards available" line, and the narrow phone field with its lock has no room, D-065). It sits right under the card's
   heading, before the fields, with "Reset to defaults" beside it (D-060). The Amount field is labeled **"Cards per
   session"** (D-054).
 - **FR-L7a Amounts above the count** (D-057): all five amounts stay visible, but those above the "N cards
@@ -1276,7 +1279,7 @@ LIMIT :n;
 --   FROM item_topics ic JOIN items i ON i.id = ic.item_id
 --   WHERE ic.topic_id = :topicId AND <the same conditions>
 ```
-- `GET /loops/available` uses the same conditions with `COUNT(*)`.
+- `GET /loops/available` uses the same conditions with `COUNT(*)`; `GET /loops/available-by-topic` adds a `GROUP BY ic.topic_id` count over `item_topics` and a total with the sample-set sum (D-064).
 - `ORDER BY RANDOM()` is fine at the expected scale (thousands of items per language). **Scaling path** (documented,
   not built): an indexed `rand_key REAL` column, selecting `WHERE rand_key >= random()` with wrap-around.
 - **Known list and Trash**: known-list queries join `items` and filter `deleted_at IS NULL`, so trashed items are
@@ -1299,6 +1302,7 @@ LIMIT :n;
 | GET | `/meta` | `{ languages[], topics[], defaults: { sourceLang, targetLang, topicId, size }, sizeOptions, guest: { enabled, loopSize }, undoWindowSeconds, maintenance, turnstileSiteKey }` |
 | GET | `/stats/registered-users` | `{ registeredUsers: number }`: accounts that are not admins and not banned; kept 30 minutes per Worker instance (D-036) |
 | GET | `/loops/available?source&target&topicId&sample` | `{ available: number }` (excludes known items if signed in; guests always count the Sample set, admins with `sample=true`, D-038) |
+| GET | `/loops/available-by-topic?source&target` | `{ all, sample, topics: { [topicId]: number } }`: every count for one direction, for the start card (excludes known items if signed in; guests get the full counts, D-064) |
 | POST | `/loops` | Body `{ source, target, topicId: number \| null, size?, sample?, turnstileToken? }` (guests always get the Sample set; admins with `sample: true`, D-038) → `{ requested, returned, cards: CardView[] }` |
 
 ```ts
@@ -1472,8 +1476,8 @@ The app must show cards to its users, so scraping can be made **slow, costly and
 - **Guest limits**: 5 cards per loop (fixed) and `guests.loopsPerHour` (default 10) loops per hour per **hashed** IP
   → at most ~50 cards per hour per IP.
 - **Learner limits**: `users.cardsPerDay` (default 500) cards served per UTC day per user; admins exempt.
-- **Burst limits** (Workers Rate Limiting binding, per minute): `POST /loops` 10/min per IP, `GET /loops/available`
-  60/min per IP, `/auth/*` 20/min per IP, `/admin/import` 10/min per admin, other `/api/admin/*` 120/min per admin.
+- **Burst limits** (Workers Rate Limiting binding, per minute): `POST /loops` 10/min per IP, `GET /loops/available` and
+  `/loops/available-by-topic` 60/min per IP (shared), `/auth/*` 20/min per IP, `/admin/import` 10/min per admin, other `/api/admin/*` 120/min per admin.
 - **The daily write allowance can't be burned by bots**: blocked or unverified requests write nothing to D1 (§11.2
   rule 5).
 - **Visibility**: the first over-limit request per subject and period writes a `limit.exceeded` audit entry. The admin

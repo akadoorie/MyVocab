@@ -1,4 +1,5 @@
 import {
+  availableByTopicResponseSchema,
   availableResponseSchema,
   deleteKnownResponseSchema,
   errorResponseSchema,
@@ -74,6 +75,12 @@ export const api = {
     if (q.sample !== undefined) params.set('sample', q.sample);
     return request(`/loops/available?${params}`, availableResponseSchema);
   },
+  /** Every count for one direction, for the Topic list (D-064). */
+  availableByTopic: (source: string, target: string) =>
+    request(
+      `/loops/available-by-topic?${new URLSearchParams({ source, target })}`,
+      availableByTopicResponseSchema,
+    ),
   startLoop: (body: StartLoopRequest) =>
     request('/loops', startLoopResponseSchema, json('POST', body)),
 

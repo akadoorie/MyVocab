@@ -111,8 +111,15 @@ export type LoopSelection = {
   userId: string | null;
 };
 
+/** Playable counts for one direction (D-064): all topics, the sample set, each topic by id. */
+export type PlayableCounts = { all: number; sample: number; topics: Record<number, number> };
+
 export interface LoopRepository {
   countPlayable(selection: LoopSelection): Promise<number>;
+  /** Every count for a direction in two queries (D-064). */
+  countPlayableByTopic(
+    selection: Pick<LoopSelection, 'source' | 'target' | 'userId'>,
+  ): Promise<PlayableCounts>;
   /** Random playable items (PRD §11.3), at most `limit`. */
   selectPlayable(selection: LoopSelection, limit: number): Promise<ItemData[]>;
 }

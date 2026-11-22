@@ -1,6 +1,8 @@
 import {
+  availableByTopicQuerySchema,
   availableQuerySchema,
   startLoopRequestSchema,
+  type AvailableByTopicResponse,
   type AvailableResponse,
   type MetaResponse,
   type RegisteredUsersResponse,
@@ -70,6 +72,11 @@ export const publicRoutes = new Hono<AppEnv>()
       await c.get('requester')(),
     );
     return c.json<AvailableResponse>({ available });
+  })
+  .get('/loops/available-by-topic', burstLimit('RL_AVAILABLE', ipKey), async (c) => {
+    const q = parseOrThrow(availableByTopicQuerySchema, c.req.query());
+    const counts = await c.get('container').loops.availableByTopic(q, await c.get('requester')());
+    return c.json<AvailableByTopicResponse>(counts);
   })
   .post('/loops', burstLimit('RL_LOOPS', ipKey), async (c) => {
     const body = parseOrThrow(startLoopRequestSchema, await readJson(c.req));

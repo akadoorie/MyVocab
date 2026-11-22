@@ -1,5 +1,6 @@
 import { env } from 'cloudflare:test';
 import {
+  availableByTopicResponseSchema,
   availableResponseSchema,
   errorResponseSchema,
   metaResponseSchema,
@@ -122,6 +123,68 @@ describe('GET /api/loops/available', () => {
       400,
     );
     expect((await api('/loops/available?source=en&target=he&extra=1')).status).toBe(400);
+  });
+});
+
+describe('GET /api/loops/available-by-topic (D-064)', () => {
+  const byTopic = async (q: string, cookie?: string) => {
+    const path = `/loops/available-by-topic?${q}`;
+    const res = cookie ? await authed(cookie, path) : await api(path);
+    expect(res.status).toBe(200);
+    return availableByTopicResponseSchema.parse(await res.json());
+  };
+  const single = async (cookie: string, q: string) =>
+    availableResponseSchema.parse(await (await authed(cookie, `/loops/available?${q}`)).json())
+      .available;
+
+  it('returns every count for a direction, matching the single counts', async () => {
+    const { cookie } = await signIn();
+    const counts = await byTopic('source=en&target=he', cookie);
+    expect(counts.all).toBe(await single(cookie, 'source=en&target=he'));
+    for (const slug of ['home', 'nature', 'expressions']) {
+      const id = await topicId(slug);
+      expect(counts.topics[String(id)] ?? 0, slug).toBe(
+        await single(cookie, `source=en&target=he&topicId=${id}`),
+      );
+    }
+    expect(counts.topics[String(await topicId('home'))]).toBe(3);
+    // The sample count is what guests can play.
+    expect(counts.sample).toBe(
+      availableResponseSchema.parse(
+        await (await api('/loops/available?source=en&target=he')).json(),
+      ).available,
+    );
+  });
+
+  it('gives guests the full counts, and leaves out a learner’s known words', async () => {
+    const guest = await byTopic('source=en&target=he');
+    const { cookie } = await signIn();
+    const home = String(await topicId('home'));
+    expect(await byTopic('source=en&target=he', cookie)).toEqual(guest);
+    // Know one Home word EN → HE: it leaves that direction's counts only.
+    const [id] = (
+      await env.DB.prepare(
+        `SELECT ic.item_id AS id FROM item_topics ic JOIN items i ON i.id = ic.item_id
+         WHERE ic.topic_id = ? AND i.lang = 'en' AND i.status = 'published' LIMIT 1`,
+      )
+        .bind(Number(home))
+        .all<{ id: number }>()
+    ).results.map((r) => r.id);
+    await authed(cookie, '/me/known', {
+      method: 'POST',
+      json: { items: [{ itemId: id!, target: 'he', cycle: 1 }] },
+    });
+    const after = await byTopic('source=en&target=he', cookie);
+    expect(after.all).toBe(guest.all - 1);
+    expect(after.topics[home]).toBe(guest.topics[home]! - 1);
+    expect(await byTopic('source=en&target=en', cookie)).toEqual(
+      await byTopic('source=en&target=en'),
+    );
+  });
+
+  it('rejects invalid queries', async () => {
+    expect((await api('/loops/available-by-topic?source=fr&target=he')).status).toBe(400);
+    expect((await api('/loops/available-by-topic?source=en&target=he&topicId=1')).status).toBe(400);
   });
 });
 

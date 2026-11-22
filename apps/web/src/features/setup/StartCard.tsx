@@ -26,6 +26,8 @@ const GUEST_TOAST_FLAG = 'myvocab.guestAmountToast';
 /** How long the guest amount message stays: the toast on phones, inside the field on desktop (D-045). */
 const GUEST_TOAST_MS = 2000;
 const AMOUNT_TIP_MS = GUEST_TOAST_MS;
+/** How long the Topic counts are kept for a direction before asking again (D-064). */
+const COUNTS_STALE_MS = 5 * 60_000;
 
 export type { LoopStartNotice } from './useStartLoop';
 
@@ -105,32 +107,40 @@ export function StartCard({
     showGuestMessage();
   }, [quiet, isGuest, showGuestMessage]);
 
-  const query = useDebounced(
-    {
-      source: choices.sourceLang,
-      target: choices.targetLang,
-      topicId: choices.topicId,
-      sample: choices.sample === true,
-    },
-    300,
-  );
+  // Every count for the chosen direction in one request (D-064): the count line and each Topic
+  // option read from it, so changing the topic asks nothing. Kept for 5 minutes per direction,
+  // and fetched again each time the start card opens (after a session, words may be known).
+  const direction = useDebounced({ source: choices.sourceLang, target: choices.targetLang }, 300);
   const available = useQuery({
-    queryKey: ['available', query],
-    queryFn: () =>
-      api.available({
-        source: query.source,
-        target: query.target,
-        ...(query.topicId === null ? {} : { topicId: query.topicId }),
-        ...(query.sample ? { sample: 'true' as const } : {}),
-      }),
+    queryKey: ['availableByTopic', direction.source, direction.target, session.user?.id ?? null],
+    queryFn: () => api.availableByTopic(direction.source, direction.target),
+    staleTime: COUNTS_STALE_MS,
+    refetchOnMount: 'always',
   });
+  // Counts for another direction (the debounce hasn't caught up yet) aren't shown.
+  const counts =
+    direction.source === choices.sourceLang && direction.target === choices.targetLang
+      ? available.data
+      : undefined;
+  const checking = counts === undefined && !available.isError;
+  /** "Home [15]" once the counts are in (D-064). */
+  const withCount = (name: string, n: number | undefined) =>
+    n === undefined ? name : `${name} [${n}]`;
+  const topicCount = (id: number) => (counts ? (counts.topics[String(id)] ?? 0) : undefined);
 
   const set = <K extends keyof StartChoices>(key: K, value: StartChoices[K]) => {
     setError(null);
     setChoices((c) => ({ ...c, [key]: value }));
   };
 
-  const count = available.data?.available;
+  // Guests play the sample set (D-038); admins may pick it too.
+  const count = !counts
+    ? undefined
+    : isGuest || choices.sample
+      ? counts.sample
+      : choices.topicId === null
+        ? counts.all
+        : topicCount(choices.topicId);
   // Amounts above the available count are greyed out (D-057). While a new count loads, the
   // last one is kept, so the buttons don't flash enabled.
   const [lastCount, setLastCount] = useState<number | undefined>(undefined);
@@ -196,7 +206,7 @@ export function StartCard({
   // The count stands out in yellow, like the version and the registered users (D-054).
   const availableLine = (
     <p className="text-sm text-muted" aria-live="polite">
-      {available.isPending ? (
+      {checking ? (
         strings.setup.checking
       ) : count !== undefined ? (
         <>
@@ -308,15 +318,17 @@ export function StartCard({
                 <div className="relative">
                   <select
                     id={id}
-                    className={`${className} topic-locked pl-9 max-md:pr-1 max-md:pl-8`}
+                    className={`${className} topic-select pl-9 max-md:pr-1 max-md:pl-8`}
                     value="sample"
                     onChange={() => {}}
                   >
                     <option value="sample" className="topic-special">
+                      {/* No count here: it's the "N cards available" line above, and the
+                          narrow phone field (with its lock) has no room for both (D-065). */}
                       {strings.setup.sampleSet}
                     </option>
                     <option value="" disabled className="topic-special">
-                      {strings.setup.general}
+                      {withCount(strings.setup.general, counts?.all)}
                     </option>
                     {/* A line between the special choices and the topics, all left-aligned (D-062).
                         No optgroup: desktop Chrome draws disabled options inside a group in its
@@ -324,7 +336,8 @@ export function StartCard({
                     {meta.topics.length > 0 && <hr />}
                     {meta.topics.map((c) => (
                       <option key={c.id} value={c.id} disabled>
-                        {c.name}
+                        {/* The full count: what signing in unlocks (D-064). */}
+                        {withCount(c.name, topicCount(c.id))}
                       </option>
                     ))}
                   </select>
@@ -339,7 +352,7 @@ export function StartCard({
               ) : (
                 <select
                   id={id}
-                  className={className}
+                  className={`${className} topic-select`}
                   value={choices.sample ? 'sample' : (choices.topicId ?? '')}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -354,18 +367,19 @@ export function StartCard({
                   {isAdmin && (
                     // Admins can play exactly what guests get (D-038).
                     <option value="sample" className="topic-special">
-                      {strings.setup.sampleSet}
+                      {withCount(strings.setup.sampleSet, counts?.sample)}
                     </option>
                   )}
                   <option value="" className="topic-special">
-                    {strings.setup.general}
+                    {withCount(strings.setup.general, counts?.all)}
                   </option>
                   {/* A line between the special choices and the real topics, all left-aligned
                       (D-062; replaces the "Topics" heading of D-040). */}
                   {meta.topics.length > 0 && <hr />}
                   {meta.topics.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
+                    // A topic with nothing left to play is greyed out (D-064).
+                    <option key={c.id} value={c.id} disabled={topicCount(c.id) === 0}>
+                      {withCount(c.name, topicCount(c.id))}
                     </option>
                   ))}
                 </select>

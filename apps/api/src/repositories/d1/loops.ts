@@ -1,7 +1,7 @@
 import type { ItemData, Translations } from '@myvocab/core';
 import { sql, type SQL } from 'drizzle-orm';
 import type { Db } from '../../db/client';
-import type { LoopRepository, LoopSelection } from '../interfaces';
+import type { LoopRepository, LoopSelection, PlayableCounts } from '../interfaces';
 
 type Row = {
   id: number;
@@ -51,6 +51,26 @@ export class D1LoopRepository implements LoopRepository {
       sql`SELECT COUNT(*) AS n ${fromClause(s)} WHERE ${whereClause(s)}`,
     );
     return row?.n ?? 0;
+  }
+
+  async countPlayableByTopic(
+    selection: Pick<LoopSelection, 'source' | 'target' | 'userId'>,
+  ): Promise<PlayableCounts> {
+    const s: LoopSelection = { ...selection, topicId: null, sampleOnly: false };
+    const total = await this.db.get<{ n: number; sample: number | null }>(
+      sql`SELECT COUNT(*) AS n, SUM(i.in_sample_set) AS sample FROM items AS i WHERE ${whereClause(s)}`,
+    );
+    const rows = await this.db.all<{ id: number; n: number }>(sql`
+      SELECT ic.topic_id AS id, COUNT(*) AS n
+      FROM item_topics AS ic JOIN items AS i ON i.id = ic.item_id
+      WHERE ${whereClause(s)}
+      GROUP BY ic.topic_id
+    `);
+    return {
+      all: total?.n ?? 0,
+      sample: total?.sample ?? 0,
+      topics: Object.fromEntries(rows.map((r) => [r.id, r.n])),
+    };
   }
 
   async selectPlayable(s: LoopSelection, limit: number): Promise<ItemData[]> {

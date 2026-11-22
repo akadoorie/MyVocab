@@ -23,7 +23,7 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   const colors = await startCard.getByLabel('Topic', { exact: true }).evaluate((el) => {
     const opts = [...(el as HTMLSelectElement).options];
     const color = (o: HTMLOptionElement | undefined) => (o ? getComputedStyle(o).color : '');
-    const inGroup = opts.find((o) => o.textContent?.trim() === 'Home');
+    const inGroup = opts.find((o) => o.textContent?.startsWith('Home')); // "Home [n]" (D-064)
     return {
       sample: color(opts.find((o) => !o.disabled)),
       allTopics: color(opts.find((o) => o.disabled && o.parentElement === el)),
