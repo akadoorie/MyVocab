@@ -1,5 +1,5 @@
 import { canDispatch, type LoopActionType, type LoopState } from '@myvocab/core';
-import type { MouseEvent, ReactNode, Ref } from 'react';
+import type { CSSProperties, MouseEvent, ReactNode, Ref } from 'react';
 import { LockIcon, ChevronBackIcon, ChevronIcon, StopIcon } from '../../components/Icons';
 import { strings } from '../../strings';
 
@@ -16,6 +16,7 @@ export function LoopButton({
   hideLabel = false,
   pressed,
   locked = false,
+  labelExtra,
   ref,
   ...rest
 }: {
@@ -39,6 +40,9 @@ export function LoopButton({
   locked?: boolean;
   onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   title?: string;
+  style?: CSSProperties;
+  /** Shown after the label but not read out, e.g. Next's countdown " · 7" (D-069). */
+  labelExtra?: string;
 }) {
   const shape = kind === 'round' || kind === 'hint' ? 'lbtn--round' : 'lbtn--pill';
   return (
@@ -52,7 +56,10 @@ export function LoopButton({
     >
       <span className="lbtn__shape" aria-hidden="true" />
       <span className="lbtn__icon">{icon}</span>
-      <span className={hideLabel ? 'sr-only' : 'lbtn__label'}>{label}</span>
+      <span className={hideLabel ? 'sr-only' : 'lbtn__label'}>
+        {label}
+        {labelExtra && <span aria-hidden="true">{labelExtra}</span>}
+      </span>
       {locked && (
         // A yellow lock on the top-left edge (the answer pills have no icons, D-058).
         <span className="lock-badge lbtn__lock" aria-hidden="true">
@@ -89,6 +96,7 @@ export function ButtonBar({
   lockedTip = false,
   onSignIn,
   nudging = false,
+  nextCountdown = null,
 }: {
   state: LoopState;
   onAction: (type: LoopActionType) => void;
@@ -101,6 +109,8 @@ export function ButtonBar({
   onSignIn?: () => void;
   /** Pump once and shine, to show what to press (D-066); disabled buttons stay still. */
   nudging?: boolean;
+  /** After "I don't know", Next counts down and then moves on by itself (D-069). */
+  nextCountdown?: { left: number; running: boolean; seconds: number } | null;
 }) {
   const btn = (type: LoopActionType) => ({
     disabled: !canDispatch(state, type),
@@ -191,7 +201,13 @@ export function ButtonBar({
       <LoopButton
         ref={nextRef}
         kind="round"
-        className={`[grid-area:next] ${revealed ? 'is-urgent' : ''}`}
+        className={`[grid-area:next] ${revealed ? 'is-urgent' : ''} ${nextCountdown ? `has-countdown ${nextCountdown.running ? '' : 'is-countdown-paused'}` : ''}`}
+        {...(nextCountdown
+          ? {
+              labelExtra: ` · ${nextCountdown.left}`,
+              style: { '--countdown-s': `${nextCountdown.seconds}s` } as CSSProperties,
+            }
+          : {})}
         icon={<ChevronIcon />}
         label={strings.loop.next}
         {...btn('NEXT')}

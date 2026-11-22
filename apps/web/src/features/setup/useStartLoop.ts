@@ -71,6 +71,7 @@ export function useStartLoop({
         ),
         undoWindowSeconds: meta.undoWindowSeconds,
         continueSeconds: meta.continueSeconds,
+        nextSeconds: meta.nextSeconds,
         selection: choices,
         isGuest,
       });

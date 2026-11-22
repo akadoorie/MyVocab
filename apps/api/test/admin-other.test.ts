@@ -402,6 +402,17 @@ describe('settings (FR-A50)', () => {
     expect(res.status).toBe(200);
     expect(await meta()).toBe(0);
   });
+
+  it('Next’s countdown after I don’t know: 10 seconds by default, its own setting (D-069)', async () => {
+    const meta = async () =>
+      (await (await api('/meta')).json<{ nextSeconds: number }>()).nextSeconds;
+    expect(await meta()).toBe(10);
+    expect(
+      (await req('/admin/settings', { method: 'PUT', json: { 'loop.nextSeconds': 31 } })).status,
+    ).toBe(400);
+    await req('/admin/settings', { method: 'PUT', json: { 'loop.nextSeconds': 5 } });
+    expect(await meta()).toBe(5);
+  });
 });
 
 describe('audit log (FR-A70–71) and dashboard (FR-A1)', () => {

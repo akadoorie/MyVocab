@@ -144,6 +144,7 @@ function SettingsForm({
         />
         {num('loop.defaultSize')}
         {num('loop.maxSize')}
+        {num('loop.nextSeconds')}
         {num('loop.continueSeconds')}
         {num('undo.windowSeconds')}
       </Group>

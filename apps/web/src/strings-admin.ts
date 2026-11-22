@@ -282,6 +282,8 @@ export const adminStrings = {
     hints: {
       'loop.continueSeconds':
         'On the break between rounds, Continue counts down and moves on by itself. 0 turns it off.',
+      'loop.nextSeconds':
+        'After “I don’t know”, Next counts down and moves to the next card by itself. 0 turns it off.',
       'loop.maxSize':
         'The largest number allowed in the choices above. Settings won’t save if a choice is bigger.',
     },
@@ -306,6 +308,7 @@ export const adminStrings = {
       'users.cardsPerDay': 'Cards per learner per day',
       'undo.windowSeconds': 'Seconds before a Know is saved',
       'loop.continueSeconds': 'Seconds before the next round starts',
+      'loop.nextSeconds': 'Seconds before the next card (after “I don’t know”)',
       'maintenance.enabled': 'Maintenance mode',
       'maintenance.message': 'Maintenance message',
       'trash.retentionHours': 'Hours before Trash is purged',

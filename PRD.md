@@ -318,7 +318,11 @@ private content repository. It never appears in the public code repo or any publ
   **Revealed**: the three answer pills stay in place but disable, **Next** enables and receives focus, and Flip
   stays available (Hints works only while the front shows). The layout does not change: the round **Next turns
   violet and pumps** (a gentle grow-and-shrink with a soft ring) until it is pressed, so the way on is clear; with
-  reduced motion it shows a steady ring instead (D-031).
+  reduced motion it shows a steady ring instead (D-031). It also counts down from the admin setting `loop.nextSeconds`
+  (default 10; "Next · 10, 9…" under the button, with a light pie draining inside it) and moves to the next card by
+  itself at 0, like Continue on the break (D-069). Any tap, click, key or mouse-wheel scroll stops the countdown for
+  good (the learner may still be reading); it pauses while the page is hidden or "Are you sure?" is open; screen
+  readers hear "Next card in 10 seconds" once; 0 seconds means no countdown; not on a card reached with Back.
 - **FR-L28a The nudge** (D-066): to show what to press, the enabled answer pills and Flip pump once and a soft
   shine sweeps across them (green, orange, red, Flip, about 80 ms apart). On the first 3 cards of each cycle this
   plays 0.3 s after every change of the screen (a new card, a flip, hints, Don't know); after that, only when the
@@ -574,6 +578,7 @@ so learners never download it. All admin pages work on mobile (tables collapse i
 | `loop.defaultSize` | int | `10` | Default cards per session (must be in `sizeOptions`; admin label "Cards per session: default") |
 | `loop.maxSize` | int | `50` | Server-side cap for `POST /loops`; no choice may exceed it. Admin label "Cards per session: maximum", with a hint under the field explaining this |
 | `loop.continueSeconds` | int | `10` | Countdown on the break between rounds before it continues by itself (0–30; 0 = no countdown; FR-L31, D-068). Admin label "Seconds before the next round starts", with a hint |
+| `loop.nextSeconds` | int | `10` | After "I don't know", Next counts down and moves to the next card by itself (0–30; 0 = no countdown; FR-L28, D-069). Admin label "Seconds before the next card (after “I don’t know”)", with a hint |
 | `guests.enabled` | bool | `true` | Allow guests to run loops |
 | `guests.loopSize` | int | `5` | Fixed cards per guest session (server-enforced; admin label "Cards per guest session") |
 | `guests.loopsPerHour` | int | `10` | Guest loops per hour per IP |

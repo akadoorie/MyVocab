@@ -204,6 +204,8 @@ export const strings = {
     continueCaption: 'to next round',
     /** Said once to screen readers when the countdown starts (D-067). */
     continuingIn: (seconds: number) => `Continuing in ${seconds} seconds`,
+    /** Said once to screen readers when Next starts counting down (D-069). */
+    nextIn: (seconds: number) => `Next card in ${seconds} seconds`,
     insufficient: (n: number, topic: string) =>
       `Only ${n} new ${n === 1 ? 'card' : 'cards'} in ${topic}, starting with ${n}`,
     homeConfirmTitle: 'Back to Home?',

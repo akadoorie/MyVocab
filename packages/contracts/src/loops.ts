@@ -17,6 +17,8 @@ export const metaResponseSchema = z.object({
   undoWindowSeconds: z.number().int(),
   /** Seconds before the break between rounds continues by itself; 0 = never (D-068). */
   continueSeconds: z.number().int(),
+  /** Seconds before Next moves on by itself after "I don't know"; 0 = never (D-069). */
+  nextSeconds: z.number().int(),
   maintenance: z.object({ enabled: z.boolean(), message: z.string() }),
   turnstileSiteKey: z.string(),
 });

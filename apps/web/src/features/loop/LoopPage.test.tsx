@@ -18,11 +18,13 @@ function setup(
     routes = {},
     count = CARDS.length,
     continueSeconds,
+    nextSeconds,
   }: {
     isGuest?: boolean;
     routes?: Parameters<typeof mockFetch>[0];
     count?: number;
     continueSeconds?: number;
+    nextSeconds?: number;
   } = {},
 ) {
   // /api/me answers with a signed-in learner, /api/meta with the test settings.
@@ -35,6 +37,7 @@ function setup(
     selection: { sourceLang: 'en', targetLang: 'he', topicId: null, size: 5 },
     isGuest,
     ...(continueSeconds === undefined ? {} : { continueSeconds }),
+    ...(nextSeconds === undefined ? {} : { nextSeconds }),
   });
   const router = createMemoryRouter(
     [
@@ -440,6 +443,57 @@ describe('LoopPage', () => {
     expect(screen.getByRole('heading', { name: 'Round 2 · 1 card left' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
     expect(progress()).toBe('Round 1 · Card 3/3 · 2 known');
+  });
+
+  describe('Next counts down after “I don’t know” (D-069)', () => {
+    const nextLabel = () => btn('Next').querySelector('.lbtn__label')?.textContent;
+    const tick = (seconds: number) => {
+      for (let i = 0; i < seconds; i++) act(() => vi.advanceTimersByTime(1000));
+    };
+
+    it('shows the seconds under Next and moves to the next card at 0', () => {
+      vi.useFakeTimers();
+      setup();
+      expect(nextLabel()).toBe('Next');
+      fireEvent.click(btn('I don’t know Show again soon'));
+      expect(nextLabel()).toBe('Next · 10');
+      expect(btn('Next')).toHaveAccessibleName('Next'); // the digits aren't read out
+      tick(4);
+      expect(nextLabel()).toBe('Next · 6');
+      tick(6);
+      expect(progress()).toBe('Round 1 · Card 2/3 · 0 known');
+      expect(side()).toBe('front');
+      expect(nextLabel()).toBe('Next'); // no countdown on the new card
+    });
+
+    it('any key, tap or scroll stops it for good', () => {
+      vi.useFakeTimers();
+      setup();
+      fireEvent.click(btn('I don’t know Show again soon'));
+      fireEvent.wheel(window);
+      expect(nextLabel()).toBe('Next');
+      tick(15);
+      expect(progress()).toBe('Round 1 · Card 1/3 · 0 known');
+    });
+
+    it('uses the length from the settings; 0 means no countdown', () => {
+      vi.useFakeTimers();
+      setup(undefined, { nextSeconds: 0 });
+      fireEvent.click(btn('I don’t know Show again soon'));
+      expect(nextLabel()).toBe('Next');
+      tick(15);
+      expect(progress()).toBe('Round 1 · Card 1/3 · 0 known');
+    });
+
+    it('not on a card reached with Back', () => {
+      vi.useFakeTimers();
+      setup();
+      fireEvent.click(btn('I know it Show again in future'));
+      fireEvent.click(btn('Back'));
+      expect(nextLabel()).toBe('Next');
+      tick(15);
+      expect(progress()).toBe('Round 1 · Card 1/3 · 1 known');
+    });
   });
 
   describe('the break between rounds (D-067)', () => {

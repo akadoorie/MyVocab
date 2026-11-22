@@ -557,6 +557,33 @@ body {
       display: none;
     }
   }
+  /* Next's countdown after "I don't know" (D-069): a light pie inside the round button drains
+     clockwise over the countdown (--countdown-s), paused with it. */
+  .lbtn.has-countdown .lbtn__shape::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: conic-gradient(rgba(255, 255, 255, 0.26) var(--drain), transparent 0);
+    animation: lbtn-drain var(--countdown-s, 10s) linear forwards;
+    pointer-events: none;
+  }
+  .lbtn.has-countdown.is-countdown-paused .lbtn__shape::before {
+    animation-play-state: paused;
+  }
+  @keyframes lbtn-drain {
+    from {
+      --drain: 100%;
+    }
+    to {
+      --drain: 0%;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lbtn.has-countdown .lbtn__shape::before {
+      display: none;
+    }
+  }
   /* The nudge (D-066): the available answer buttons and Flip pump once, then a soft shine
      sweeps across them, one after the other (nudge-1..4). Disabled or locked buttons stay
      still, and a press cancels it. */
@@ -1361,4 +1388,11 @@ body {
   .crown--fly .crown__spin {
     animation: none;
   }
+}
+
+/* Animatable angle for Next's countdown pie (D-069). */
+@property --drain {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 100%;
 }

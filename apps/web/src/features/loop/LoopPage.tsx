@@ -24,6 +24,7 @@ import { FlipCard } from './FlipCard';
 import { clearLoop, loadLoop, saveLoop, type StoredLoop } from './loop-storage';
 import { CycleBreak, DEFAULT_CONTINUE_SECONDS, ShortcutsMenu, Summary } from './LoopScreens';
 import { CrumpleGhost, type Crumple } from './CrumpleGhost';
+import { useCountdown } from './useCountdown';
 import { useLoopShortcuts } from './useLoopShortcuts';
 import { useSwipe } from './useSwipe';
 
@@ -35,6 +36,8 @@ const NUDGE_DELAY_MS = 300;
 const NUDGE_IDLE_MS = 4000;
 /** Long enough for the staggered pump and shine to finish (base.css). */
 const NUDGE_MS = 1700;
+/** Next's countdown after "I don't know", when the session doesn't say (D-069). */
+const DEFAULT_NEXT_SECONDS = 10;
 
 /**
  * Whether the buttons should nudge now (D-066). `step` changes whenever the screen changes state
@@ -240,6 +243,15 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
     !confirmLeave && motionAllowed(),
   );
 
+  // After "I don't know", Next counts down and moves on by itself; any tap, key or scroll stops
+  // it (D-069). Only in the Revealed phase, not on a card reached with Back.
+  const nextSeconds = stored.nextSeconds ?? DEFAULT_NEXT_SECONDS;
+  const next = useCountdown(nextSeconds, () => act('NEXT'), {
+    enabled: state.phase === 'revealed',
+    paused: confirmLeave !== null,
+    resetKey: `${state.cycle}-${state.index}-${state.phase}`,
+  });
+
   const progress = loopProgress(state);
   const id = currentCardId(state);
   const card = id === null ? undefined : cards.get(id);
@@ -377,6 +389,9 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
       <p className="sr-only" aria-live="polite">
         {announcement}
       </p>
+      <p className="sr-only" aria-live="polite">
+        {next.counting ? strings.loop.nextIn(nextSeconds) : ''}
+      </p>
 
       <div className="sticky bottom-0 -mx-4 flex flex-col gap-4 bg-gradient-to-t from-bg via-bg to-transparent px-4 pt-4 pb-4 md:relative md:mx-0 md:bg-none md:px-0 md:pt-0 md:pb-8">
         <ButtonBar
@@ -388,6 +403,9 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           lockedTip={lockedTip}
           onSignIn={startGoogleSignIn}
           nudging={nudging}
+          nextCountdown={
+            next.counting ? { left: next.left, running: next.running, seconds: nextSeconds } : null
+          }
         />
       </div>
       {ghost}

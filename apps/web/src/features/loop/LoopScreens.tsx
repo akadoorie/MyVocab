@@ -12,6 +12,7 @@ import {
   useApplause,
   useSoundSetting,
 } from './Celebration';
+import { useCountdown } from './useCountdown';
 
 /** Animations are skipped for "reduce motion" (and where it can't be detected, e.g. tests). */
 function motionAllowed(): boolean {
@@ -27,47 +28,6 @@ function useFocusOnMount<T extends HTMLElement>() {
 
 /** Seconds before the break moves on by itself, when the session doesn't say (D-067, D-068). */
 export const DEFAULT_CONTINUE_SECONDS = 10;
-
-/**
- * Counts down from `seconds` and calls `onDone` at 0 (D-067). Any tap, click or key cancels it
- * for good; it pauses while `paused` (the "Are you sure?" question) or while the page is hidden.
- */
-function useCountdown(seconds: number, onDone: () => void, paused: boolean) {
-  const [left, setLeft] = useState(seconds);
-  const [cancelled, setCancelled] = useState(false);
-  const [hidden, setHidden] = useState(() => document.visibilityState === 'hidden');
-  useEffect(() => {
-    if (cancelled) return;
-    const cancel = () => setCancelled(true);
-    const visibility = () => setHidden(document.visibilityState === 'hidden');
-    window.addEventListener('pointerdown', cancel, true);
-    window.addEventListener('keydown', cancel, true);
-    document.addEventListener('visibilitychange', visibility);
-    return () => {
-      window.removeEventListener('pointerdown', cancel, true);
-      window.removeEventListener('keydown', cancel, true);
-      document.removeEventListener('visibilitychange', visibility);
-    };
-  }, [cancelled]);
-  // The latest callback, so a parent re-render doesn't restart the count.
-  const done = useRef(onDone);
-  useEffect(() => {
-    done.current = onDone;
-  });
-  // 0 seconds: no countdown at all, Continue waits (D-068).
-  const counting = !cancelled && seconds > 0;
-  const running = counting && !paused && !hidden;
-  useEffect(() => {
-    if (!running) return;
-    if (left === 0) {
-      done.current();
-      return;
-    }
-    const t = window.setTimeout(() => setLeft((n) => n - 1), 1000);
-    return () => window.clearTimeout(t);
-  }, [running, left]);
-  return { left, counting, running };
-}
 
 /**
  * The break between rounds (PRD FR-L31, D-067): "Round 3 · 2 cards left", what was known, then
@@ -99,7 +59,7 @@ export function CycleBreak({
   seconds?: number;
 }) {
   const focusRef = useFocusOnMount<HTMLButtonElement>();
-  const { left, counting, running } = useCountdown(seconds, onContinue, paused);
+  const { left, counting, running } = useCountdown(seconds, onContinue, { paused });
   return (
     <section className="glass m-auto flex w-full max-w-lg flex-col items-center gap-8 px-6 py-12 text-center">
       <div className="flex flex-col gap-3">
