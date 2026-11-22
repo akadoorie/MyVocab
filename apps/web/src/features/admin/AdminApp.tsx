@@ -16,11 +16,12 @@ import { UsersPage } from './UsersPage';
 const NAV = [
   { to: '/admin', label: s.nav.dashboard, end: true },
   { to: '/admin/items', label: s.nav.items },
-  { to: '/admin/trash', label: s.nav.trash },
   { to: '/admin/topics', label: s.nav.topics },
   { to: '/admin/languages', label: s.nav.languages },
   { to: '/admin/import', label: s.nav.import },
   { to: '/admin/users', label: s.nav.users },
+  // Trash sits near the end, just before Settings (D-075).
+  { to: '/admin/trash', label: s.nav.trash },
   { to: '/admin/settings', label: s.nav.settings },
   { to: '/admin/audit', label: s.nav.audit },
 ];

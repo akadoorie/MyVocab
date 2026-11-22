@@ -7,13 +7,14 @@ import {
 } from '@myvocab/contracts';
 import { isSupportedScript } from '@myvocab/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { useToast } from '../../components/Toast';
 import { adminStrings as s } from '../../strings-admin';
 import { adminApi, errorMessage } from './admin-api';
 import { LANGUAGE_PRESETS } from './language-presets';
 import { Badge, ErrorState, Field, ghostButton, inputClass, Loading, PageTitle } from './ui';
+import { useReorderAnimation } from './useReorderAnimation';
 
 /**
  * A slug suggestion from a topic name: "Home & Garden" → "home-garden". Accents are dropped;
@@ -85,13 +86,30 @@ export function TopicsPage() {
       fail(e);
     },
   });
+  const topics = list.data?.topics ?? [];
+  // The list moves at once (rolled back if the server refuses), so the swap animates without a
+  // wait (D-076).
   const reorder = useMutation({
     mutationFn: (order: number[]) => adminApi.reorderTopics(order),
+    onMutate: (order: number[]) => {
+      const previous = list.data;
+      if (previous) {
+        const byId = new Map(previous.topics.map((c) => [c.id, c]));
+        queryClient.setQueryData(['admin', 'topics'], {
+          ...previous,
+          topics: order.map((id) => byId.get(id)!),
+        });
+      }
+      return { previous };
+    },
     onSuccess: () => done(s.topics.updated),
-    onError: fail,
+    onError: (e, _order, context) => {
+      if (context?.previous) queryClient.setQueryData(['admin', 'topics'], context.previous);
+      fail(e);
+    },
   });
-
-  const topics = list.data?.topics ?? [];
+  const listRef = useRef<HTMLUListElement>(null);
+  const snapshotOrder = useReorderAnimation(listRef, topics.map((c) => c.id).join(','));
 
   const slugValue = slug.trim();
   const takenBy = topics.find((c) => c.slug === slugValue);
@@ -109,6 +127,7 @@ export function TopicsPage() {
     const order = topics.map((c) => c.id);
     const [id] = order.splice(index, 1);
     order.splice(index + delta, 0, id!);
+    snapshotOrder(id!);
     reorder.mutate(order);
   };
 
@@ -185,10 +204,11 @@ export function TopicsPage() {
             <span className="text-center">{s.topics.columns.order}</span>
             <span />
           </div>
-          <ul className="flex flex-col gap-2" aria-label={s.topics.title}>
+          <ul ref={listRef} className="flex flex-col gap-2" aria-label={s.topics.title}>
             {topics.map((c, index) => (
               <li
                 key={c.id}
+                data-id={c.id}
                 // An inactive topic is dimmed, so it stands out without an "Inactive" badge (D-061).
                 className={`flex flex-wrap items-center gap-3 rounded-[14px] border border-border bg-surface p-3 md:grid md:items-center ${TOPIC_COLUMNS} ${c.isActive ? '' : 'opacity-55'}`}
               >

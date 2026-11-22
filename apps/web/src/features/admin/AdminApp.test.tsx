@@ -255,6 +255,47 @@ describe('AdminApp', () => {
     expect(screen.queryByText('Inactive')).not.toBeInTheDocument();
   });
 
+  describe('topics: moving one with the arrows (D-076)', () => {
+    const topic = (id: number, name: string) => ({
+      id,
+      slug: name.toLowerCase(),
+      name,
+      isActive: true,
+      sortOrder: id,
+      itemCount: 0,
+      excludesTopicId: null,
+    });
+    const names = () =>
+      [...document.querySelectorAll('ul[aria-label="Topics"] li[data-id]')].map(
+        (li) => li.querySelector('p')?.textContent,
+      );
+
+    it('moves at once, before the server answers', async () => {
+      let answer: (r: Response) => void = () => undefined;
+      render('/admin/topics', {
+        'GET /api/admin/topics': () =>
+          Response.json({ topics: [topic(1, 'Home'), topic(2, 'Nature')] }),
+        'PUT /api/admin/topics/order': () => new Promise<Response>((r) => (answer = r)),
+      });
+      fireEvent.click(await screen.findByRole('button', { name: 'Home ↓' }));
+      await waitFor(() => expect(names()).toEqual(['Nature', 'Home']));
+      answer(Response.json({ topics: [topic(2, 'Nature'), topic(1, 'Home')] }));
+    });
+
+    it('goes back if the server refuses', async () => {
+      let answer: (r: Response) => void = () => undefined;
+      render('/admin/topics', {
+        'GET /api/admin/topics': () =>
+          Response.json({ topics: [topic(1, 'Home'), topic(2, 'Nature')] }),
+        'PUT /api/admin/topics/order': () => new Promise<Response>((r) => (answer = r)),
+      });
+      fireEvent.click(await screen.findByRole('button', { name: 'Home ↓' }));
+      await waitFor(() => expect(names()).toEqual(['Nature', 'Home']));
+      answer(Response.json({ error: { code: 'INTERNAL', message: 'nope' } }, { status: 500 }));
+      await waitFor(() => expect(names()).toEqual(['Home', 'Nature']));
+    });
+  });
+
   it('settings: "Cards per session: maximum" explains itself under the field', async () => {
     render('/admin/settings', { 'GET /api/admin/settings': () => Response.json({}) });
     const field = await screen.findByLabelText('Cards per session: maximum');

@@ -546,7 +546,7 @@ so learners never download it. All admin pages work on mobile (tables collapse i
   (all fields and lists + topic slugs) that is **kept permanently**.
 
 ### 7.4 Topics (`/admin/topics`)
-- **FR-A30** CRUD: slug (lowercase, `a-z0-9-`), name, active, sort order (reorder), and **"Can't be combined with"** (one other topic, kept both ways; refused while items are in both; D-046). The list reads as a table on desktop, under the headings "Topic | Can't be combined with | Active | Order": the pairing dropdown lists the other topics' names, with "— (none)" first for no pairing; the Active checkbox has no word beside it; an inactive topic's row is dimmed. On phones each topic is a card whose fields carry those labels (D-061). An item with two such topics can't be saved in the editor, and is an error in a CSV import. The add form fills the slug from
+- **FR-A30** CRUD: slug (lowercase, `a-z0-9-`), name, active, sort order (reorder), and **"Can't be combined with"** (one other topic, kept both ways; refused while items are in both; D-046). The list reads as a table on desktop, under the headings "Topic | Can't be combined with | Active | Order": the pairing dropdown lists the other topics' names, with "— (none)" first for no pairing; the Active checkbox has no word beside it; an inactive topic's row is dimmed. On phones each topic is a card whose fields carry those labels (D-061). The ↑ / ↓ arrows move a topic at once (rolled back if the server refuses), with the rows sliding to their new places and the moved one glowing briefly (D-076; none with reduced motion). An item with two such topics can't be saved in the editor, and is an error in a CSV import. The add form fills the slug from
   the name as it is typed ("Home & Garden" → `home-garden`) until the admin edits the slug; a hint under the field says
   what it is for, and an invalid or already-used slug is reported under the field while typing (Add stays disabled). Deleting a topic that still has
   items is blocked: deactivate it instead, or remove it from those items first.
@@ -993,7 +993,8 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
 - **Cycle break / Summary**: a glassy card with large numbers and the 3D buttons.
 - **Toasts**: bottom-center on mobile (above the button bar), top-right on desktop (below the header, clear of the
   loop buttons); auto-dismiss; `aria-live="polite"`.
-- **Admin**: a left sidebar (collapses into a top menu on mobile); content max width about 1100px.
+- **Admin**: a left sidebar (collapses into a top menu on mobile); content max width about 1100px. Menu order:
+  Dashboard, Items, Topics, Languages, Import, Users, Trash, Settings, Audit log (D-075).
 
 ### 9.8 Microcopy (centralized in `apps/web/src/strings.ts`)
 All UI strings live in one module, keyed (e.g. `loop.know = "Know"`, `loop.hints = "Hints"`, `loop.flip = "Flip"`,
