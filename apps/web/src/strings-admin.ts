@@ -211,8 +211,15 @@ export const adminStrings = {
     add: 'Add topic',
     /** "Can't be combined with" (D-046). */
     excludesLabel: (name: string) => `${name}: can't be combined with`,
-    combinable: 'Combinable with any topic',
-    notWith: (name: string) => `Can't be combined with ${name}`,
+    /** The list's column headings on desktop (D-061); on phones they label the fields. */
+    columns: {
+      topic: 'Topic',
+      excludes: 'Can’t be combined with',
+      active: 'Active',
+      order: 'Order',
+    },
+    /** No pairing: the topic combines with any other (D-061). */
+    noExclusion: '— (none)',
     created: 'Topic created',
     updated: 'Topic updated',
     deleted: 'Topic deleted',

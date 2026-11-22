@@ -223,6 +223,38 @@ describe('AdminApp', () => {
     expect(screen.getByText(/^Arabic is inactive: learners won’t see this card/)).toBeVisible();
   });
 
+  it('topics: the pairing lists topic names, "— (none)" first; an inactive topic has no badge (D-061)', async () => {
+    const topic = (id: number, name: string, extra = {}) => ({
+      id,
+      slug: name.toLowerCase(),
+      name,
+      isActive: true,
+      sortOrder: id,
+      itemCount: 0,
+      excludesTopicId: null,
+      ...extra,
+    });
+    render('/admin/topics', {
+      'GET /api/admin/topics': () =>
+        Response.json({
+          topics: [
+            topic(1, 'Home', { excludesTopicId: 2 }),
+            topic(2, 'Nature', { excludesTopicId: 1 }),
+            topic(3, 'Travel', { isActive: false }),
+          ],
+        }),
+    });
+    const home = await screen.findByRole('combobox', { name: "Home: can't be combined with" });
+    expect(
+      within(home)
+        .getAllByRole('option')
+        .map((o) => o.textContent),
+    ).toEqual(['— (none)', 'Nature', 'Travel']);
+    expect(home).toHaveValue('2');
+    expect(screen.getByRole('checkbox', { name: 'Travel active' })).not.toBeChecked();
+    expect(screen.queryByText('Inactive')).not.toBeInTheDocument();
+  });
+
   it('settings: "Cards per session: maximum" explains itself under the field', async () => {
     render('/admin/settings', { 'GET /api/admin/settings': () => Response.json({}) });
     const field = await screen.findByLabelText('Cards per session: maximum');

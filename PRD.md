@@ -223,8 +223,8 @@ private content repository. It never appears in the public code repo or any publ
   **enforces** it for guests whatever the request says (both the count and starting a session). Signed-in learners
   never see a "Sample set" option; **admins** do, so they can play exactly what guests get.
 - **FR-L7** The start card shows **"N cards available"** for the current selection, with N in yellow (debounced
-  300 ms; counts only playable items (FR-L40); excludes known items for signed-in users). It sits under the fields
-  (D-055). The Amount field is labeled **"Cards per
+  300 ms; counts only playable items (FR-L40); excludes known items for signed-in users). It sits right under the card's
+  heading, before the fields, with "Reset to defaults" beside it (D-060). The Amount field is labeled **"Cards per
   session"** (D-054).
 - **FR-L7a Amounts above the count** (D-057): all five amounts stay visible, but those above the "N cards
   available" count are disabled (greyed out); the smallest (10) always stays selectable. A chosen amount that is
@@ -522,7 +522,7 @@ so learners never download it. All admin pages work on mobile (tables collapse i
   (all fields and lists + topic slugs) that is **kept permanently**.
 
 ### 7.4 Topics (`/admin/topics`)
-- **FR-A30** CRUD: slug (lowercase, `a-z0-9-`), name, active, sort order (reorder), and **"Can't be combined with"** (one other topic, kept both ways; refused while items are in both; D-046). An item with two such topics can't be saved in the editor, and is an error in a CSV import. The add form fills the slug from
+- **FR-A30** CRUD: slug (lowercase, `a-z0-9-`), name, active, sort order (reorder), and **"Can't be combined with"** (one other topic, kept both ways; refused while items are in both; D-046). The list reads as a table on desktop, under the headings "Topic | Can't be combined with | Active | Order": the pairing dropdown lists the other topics' names, with "— (none)" first for no pairing; the Active checkbox has no word beside it; an inactive topic's row is dimmed. On phones each topic is a card whose fields carry those labels (D-061). An item with two such topics can't be saved in the editor, and is an error in a CSV import. The add form fills the slug from
   the name as it is typed ("Home & Garden" → `home-garden`) until the admin edits the slug; a hint under the field says
   what it is for, and an invalid or already-used slug is reported under the field while typing (Add stays disabled). Deleting a topic that still has
   items is blocked: deactivate it instead, or remove it from those items first.
@@ -917,10 +917,12 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   front side up. Don't know keeps the flip. A swipe slides the card out sideways (FR-L29b).
 
 ### 9.5 Start card (look)
+- Under the heading, first: the "N cards available" line, with "Reset to defaults" on its right when shown
+  (D-060).
 - Each field has a label and either a select (languages, topic) or a segmented control (amount). Phones and
   desktop share one layout (D-055): From and To on one line with a small round **switch button** (⇄) between
   them that swaps the two languages (disabled when they are the same), then Topic and Cards per session on the
-  next line (D-046), then the "N cards available" line. Both lines share one grid: Topic sits exactly under From
+  next line (D-046). Both lines share one grid: Topic sits exactly under From
   and Cards per session under To, with the same widths, heights and label positions (D-056).
 - **Default style** (value unchanged): looks chosen (bright value text, filled selected option), subtle solid
   outline, a small violet "Default" tag on the right (not on phones, where each field shares its line;

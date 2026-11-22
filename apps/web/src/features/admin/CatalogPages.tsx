@@ -29,6 +29,9 @@ export function slugify(name: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+/** The Topics list's columns on desktop, shared by the headings and every row (D-061). */
+const TOPIC_COLUMNS = 'md:grid-cols-[minmax(0,1fr)_14rem_4rem_7rem_9.5rem] md:gap-3';
+
 /** `/admin/topics` (FR-A30). */
 export function TopicsPage() {
   const queryClient = useQueryClient();
@@ -169,126 +172,161 @@ export function TopicsPage() {
       ) : topics.length === 0 ? (
         <p className="py-8 text-center text-muted">{s.topics.empty}</p>
       ) : (
-        <ul className="flex flex-col gap-2" aria-label={s.topics.title}>
-          {topics.map((c, index) => (
-            <li
-              key={c.id}
-              className="flex flex-wrap items-center gap-3 rounded-[14px] border border-border bg-surface p-3"
-            >
-              {editing?.id === c.id ? (
-                <form
-                  className="flex flex-1 flex-wrap gap-2"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    update.mutate({
-                      id: c.id,
-                      body: { name: editing.name.trim(), slug: editing.slug.trim() },
-                    });
-                  }}
-                >
-                  <input
-                    autoComplete="off"
-                    aria-label={s.topics.name}
-                    value={editing.name}
-                    maxLength={60}
-                    onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                    className={`${inputClass} md:w-56`}
-                  />
-                  <input
-                    autoComplete="off"
-                    aria-label={s.topics.slug}
-                    value={editing.slug}
-                    maxLength={50}
-                    onChange={(e) => setEditing({ ...editing, slug: e.target.value.toLowerCase() })}
-                    className={`${inputClass} md:w-56`}
-                  />
-                  <button type="submit" className={ghostButton}>
-                    {s.common.save}
-                  </button>
-                  <button type="button" className={ghostButton} onClick={() => setEditing(null)}>
-                    {s.common.cancel}
-                  </button>
-                </form>
-              ) : (
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium">{c.name}</p>
-                  <p className="text-xs text-muted">
-                    {c.slug} · {s.topics.items(c.itemCount)}
-                  </p>
-                </div>
-              )}
-              {/* "Can't be combined with" (D-046): set on either topic, applies both ways. */}
-              <select
-                aria-label={s.topics.excludesLabel(c.name)}
-                value={c.excludesTopicId ?? ''}
-                onChange={(e) =>
-                  update.mutate({
-                    id: c.id,
-                    body: {
-                      excludesTopicId: e.target.value === '' ? null : Number(e.target.value),
-                    },
-                  })
-                }
-                className={`${inputClass} md:w-64`}
+        <div className="flex flex-col gap-2">
+          {/* Column headings, desktop only: on phones each row wraps and labels its own fields
+              (D-061). Hidden from screen readers: every control carries its own name. */}
+          <div
+            aria-hidden="true"
+            className={`hidden px-3 text-sm font-medium text-muted md:grid md:items-end ${TOPIC_COLUMNS}`}
+          >
+            <span>{s.topics.columns.topic}</span>
+            <span>{s.topics.columns.excludes}</span>
+            <span className="text-center">{s.topics.columns.active}</span>
+            <span className="text-center">{s.topics.columns.order}</span>
+            <span />
+          </div>
+          <ul className="flex flex-col gap-2" aria-label={s.topics.title}>
+            {topics.map((c, index) => (
+              <li
+                key={c.id}
+                // An inactive topic is dimmed, so it stands out without an "Inactive" badge (D-061).
+                className={`flex flex-wrap items-center gap-3 rounded-[14px] border border-border bg-surface p-3 md:grid md:items-center ${TOPIC_COLUMNS} ${c.isActive ? '' : 'opacity-55'}`}
               >
-                <option value="">{s.topics.combinable}</option>
-                {topics
-                  .filter((other) => other.id !== c.id)
-                  .map((other) => (
-                    <option key={other.id} value={other.id}>
-                      {s.topics.notWith(other.name)}
-                    </option>
-                  ))}
-              </select>
-              <label className="flex min-h-11 items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={c.isActive}
-                  aria-label={s.topics.activeLabel(c.name)}
-                  onChange={(e) =>
-                    update.mutate({ id: c.id, body: { isActive: e.target.checked } })
-                  }
-                  className="h-5 w-5 accent-[var(--accent)]"
-                />
-                {c.isActive ? s.common.active : <Badge>{s.common.inactive}</Badge>}
-              </label>
-              <div className="flex gap-1">
-                <button
-                  type="button"
-                  className={ghostButton}
-                  disabled={index === 0 || reorder.isPending}
-                  aria-label={`${c.name} ↑`}
-                  onClick={() => move(index, -1)}
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  className={ghostButton}
-                  disabled={index === topics.length - 1 || reorder.isPending}
-                  aria-label={`${c.name} ↓`}
-                  onClick={() => move(index, 1)}
-                >
-                  ↓
-                </button>
-                <button
-                  type="button"
-                  className={ghostButton}
-                  onClick={() => setEditing({ id: c.id, name: c.name, slug: c.slug })}
-                >
-                  {s.common.edit}
-                </button>
-                <button
-                  type="button"
-                  className={`${ghostButton} text-dontknow`}
-                  onClick={() => setDeleting(c)}
-                >
-                  {s.common.delete}
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+                {editing?.id === c.id ? (
+                  <form
+                    // Name and slug stacked in the Topic column, so the other columns stay put.
+                    className="flex w-full min-w-0 flex-col gap-2"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      update.mutate({
+                        id: c.id,
+                        body: { name: editing.name.trim(), slug: editing.slug.trim() },
+                      });
+                    }}
+                  >
+                    <input
+                      autoComplete="off"
+                      aria-label={s.topics.name}
+                      value={editing.name}
+                      maxLength={60}
+                      onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                      className={inputClass}
+                    />
+                    <input
+                      autoComplete="off"
+                      aria-label={s.topics.slug}
+                      value={editing.slug}
+                      maxLength={50}
+                      onChange={(e) =>
+                        setEditing({ ...editing, slug: e.target.value.toLowerCase() })
+                      }
+                      className={inputClass}
+                    />
+                    <div className="flex gap-2">
+                      <button type="submit" className={ghostButton}>
+                        {s.common.save}
+                      </button>
+                      <button
+                        type="button"
+                        className={ghostButton}
+                        onClick={() => setEditing(null)}
+                      >
+                        {s.common.cancel}
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="w-full min-w-0">
+                    <p className="font-medium">{c.name}</p>
+                    <p className="text-xs text-muted">
+                      {c.slug} · {s.topics.items(c.itemCount)}
+                    </p>
+                  </div>
+                )}
+                {/* "Can't be combined with" (D-046): set on either topic, applies both ways. The
+                  options are the topic names; "—" means no pairing (D-061). */}
+                <div className="flex w-full flex-col gap-1 md:w-auto">
+                  <span aria-hidden="true" className="text-xs text-muted md:hidden">
+                    {s.topics.columns.excludes}
+                  </span>
+                  <select
+                    aria-label={s.topics.excludesLabel(c.name)}
+                    value={c.excludesTopicId ?? ''}
+                    onChange={(e) =>
+                      update.mutate({
+                        id: c.id,
+                        body: {
+                          excludesTopicId: e.target.value === '' ? null : Number(e.target.value),
+                        },
+                      })
+                    }
+                    className={inputClass}
+                  >
+                    <option value="">{s.topics.noExclusion}</option>
+                    {topics
+                      .filter((other) => other.id !== c.id)
+                      .map((other) => (
+                        <option key={other.id} value={other.id}>
+                          {other.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                <label className="flex min-h-11 items-center gap-2 text-sm md:justify-center">
+                  <input
+                    type="checkbox"
+                    checked={c.isActive}
+                    aria-label={s.topics.activeLabel(c.name)}
+                    onChange={(e) =>
+                      update.mutate({ id: c.id, body: { isActive: e.target.checked } })
+                    }
+                    className="h-5 w-5 accent-[var(--accent)]"
+                  />
+                  {/* The word only on phones; desktop has the "Active" heading (D-061). */}
+                  <span aria-hidden="true" className="md:hidden">
+                    {s.topics.columns.active}
+                  </span>
+                </label>
+                <div className="flex gap-1 md:justify-center">
+                  <button
+                    type="button"
+                    className={ghostButton}
+                    disabled={index === 0 || reorder.isPending}
+                    aria-label={`${c.name} ↑`}
+                    onClick={() => move(index, -1)}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    className={ghostButton}
+                    disabled={index === topics.length - 1 || reorder.isPending}
+                    aria-label={`${c.name} ↓`}
+                    onClick={() => move(index, 1)}
+                  >
+                    ↓
+                  </button>
+                </div>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    className={ghostButton}
+                    onClick={() => setEditing({ id: c.id, name: c.name, slug: c.slug })}
+                  >
+                    {s.common.edit}
+                  </button>
+                  <button
+                    type="button"
+                    className={`${ghostButton} text-dontknow`}
+                    onClick={() => setDeleting(c)}
+                  >
+                    {s.common.delete}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       {deleting && (
         <ConfirmDialog

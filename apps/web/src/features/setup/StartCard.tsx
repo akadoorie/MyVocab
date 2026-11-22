@@ -220,9 +220,26 @@ export function StartCard({
         </div>
       )}
       <div className="glass p-5 md:p-7">
-        <h2 id="start-title" className="mb-4 text-xl font-semibold">
+        <h2 id="start-title" className="mb-2 text-xl font-semibold">
           {strings.setup.title}
         </h2>
+
+        {/* The count first, before the fields (D-060), with "Reset to defaults" beside it. */}
+        <div className="mb-4 flex min-h-6 items-center justify-between gap-3">
+          {availableLine}
+          {differsFromDefaults(effective, defaults) && (
+            <button
+              type="button"
+              className="text-sm text-accent underline-offset-2 hover:underline"
+              onClick={() => {
+                setError(null);
+                setChoices(defaults);
+              }}
+            >
+              {strings.setup.reset}
+            </button>
+          )}
+        </div>
 
         {/* Phones and desktop alike: From ⇄ To on one line, Topic and Amount on the next (D-055).
             One grid for both lines, so Topic sits exactly under From and Amount under To, same
@@ -407,23 +424,6 @@ export function StartCard({
               }
             </Field>
           </div>
-        </div>
-
-        {/* The count, under Topic and Amount on phones too (D-055). */}
-        <div className="mt-4 flex min-h-6 items-center justify-between gap-3">
-          {availableLine}
-          {differsFromDefaults(effective, defaults) && (
-            <button
-              type="button"
-              className="text-sm text-accent underline-offset-2 hover:underline"
-              onClick={() => {
-                setError(null);
-                setChoices(defaults);
-              }}
-            >
-              {strings.setup.reset}
-            </button>
-          )}
         </div>
 
         {isDesktop && (
