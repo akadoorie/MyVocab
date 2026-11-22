@@ -333,14 +333,37 @@ body {
     width: 100%;
     height: 100%;
   }
-  /* On the card front the hints area reaches the card's bottom (D-078): covered, the dots fill
-     it around a notch for the Flip button; revealed, the text still stops above the Flip row. */
+  /* On the card front the hints reach the card's bottom (D-078, D-079): covered, the dots fill
+     it around a notch for the Flip button; revealed, the text runs down too, fading softly where
+     it passes Flip, with room after the last line so it always scrolls clear of the button. */
   .flip-card__front {
     --flip-row: 52px;
     --flip-notch: 54px;
+    /* Flip's centre, measured from the hints area's bottom-right corner, and its fade. */
+    --flip-cx: 18px;
+    --flip-cy: 18px;
+    --flip-r0: 30px;
+    --flip-r1: 54px;
+  }
+  .flip-card__front .hints-cover.is-open .hints-area__scroll > div {
+    padding-bottom: var(--flip-row);
   }
   .flip-card__front .hints-cover.is-open .hints-area__scroll {
-    bottom: var(--flip-row);
+    --flip-fade: radial-gradient(
+      circle at calc(100% - var(--flip-cx)) calc(100% - var(--flip-cy)),
+      transparent var(--flip-r0),
+      #000 var(--flip-r1)
+    );
+    -webkit-mask-image: var(--flip-fade);
+    mask-image: var(--flip-fade);
+  }
+  /* With more below, the bottom fade and the Flip fade together. */
+  .flip-card__front .hints-cover.is-open .hints-area.has-more .hints-area__scroll {
+    -webkit-mask-image:
+      var(--flip-fade), linear-gradient(180deg, #000 calc(100% - 2.25rem), transparent);
+    mask-image: var(--flip-fade), linear-gradient(180deg, #000 calc(100% - 2.25rem), transparent);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
   }
   .flip-card__front .hints-cover__button {
     clip-path: polygon(
@@ -356,6 +379,10 @@ body {
     .flip-card__front {
       --flip-row: 64px;
       --flip-notch: 62px;
+      --flip-cx: 16px;
+      --flip-cy: 20px;
+      --flip-r0: 38px;
+      --flip-r1: 68px;
     }
   }
   /* "Hide hints", next to the Flip button's row (D-050); only seen with keyboard focus (D-078). */
@@ -375,6 +402,10 @@ body {
   .hints-hide:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+    /* Seen only with keyboard focus, over the hints text (D-079). */
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: var(--surface-2);
   }
   @media (min-width: 768px) {
     .hints-hide {
