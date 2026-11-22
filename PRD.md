@@ -210,9 +210,10 @@ private content repository. It never appears in the public code repo or any publ
   **explanation** instead of a translation. While the two languages are the same, a short muted note under the
   fields says "Same language: the back shows an explanation".
 - **FR-L6 Guest amount**: guests see the Amount field fixed at **5** with a lock icon. It cannot be changed. A
-  **temporary toast** says: **"Sign-in to choose more cards per session."**, where **"Sign-in"** is a link that
-  starts sign-in (D-043), and auto-dismisses after 2 s (D-045). On desktop it appears inside the Amount field, on its
-  right side (the lock and the 5 stay visible), instead of the toast corner (D-044). It appears:
+  **temporary message** says **"Sign-in to change"**, where **"Sign-in"** is a link that starts sign-in (D-043),
+  and goes away after 2 s (D-045). It appears over the Cards per session field (on desktop on its right side, the lock
+  and the 5 staying visible; on phones over the whole narrow field, on one line), so it shows where the field is however far the page is scrolled
+  (D-044, D-070; phones used a toast before, which appeared far from the field). It appears:
   - once automatically, the first time a guest sees the start card in a browser session, and
   - every time the guest taps/clicks the locked Amount field.
   The server **enforces** 5 for guests regardless of the request (§12.1).
@@ -992,7 +993,7 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
 ### 9.8 Microcopy (centralized in `apps/web/src/strings.ts`)
 All UI strings live in one module, keyed (e.g. `loop.know = "Know"`, `loop.hints = "Hints"`, `loop.flip = "Flip"`,
 `card.multipleMeanings = "Multiple meanings"`, `setup.sameLanguageNote = "Same language: the back shows an
-explanation"`, `setup.guestAmountToast = "Sign-in to choose more cards per session."`), so a
+explanation"`, `setup.guestAmountToast = "Sign-in to change"`), so a
 future i18n library can replace it without touching components.
 
 ---

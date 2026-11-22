@@ -13,7 +13,6 @@ import { Link } from 'react-router';
 import { Button3D } from '../../components/Button3D';
 import { Field, Segmented } from '../../components/Field';
 import { SwapIcon } from '../../components/Icons';
-import { useToast } from '../../components/Toast';
 import { api } from '../../lib/api';
 import { startGoogleSignIn, type SessionState } from '../../lib/session';
 import { readFlag, writeFlag } from '../../lib/storage';
@@ -23,9 +22,8 @@ import { useDebounced } from './useDebounced';
 import { useStartLoop } from './useStartLoop';
 
 const GUEST_TOAST_FLAG = 'myvocab.guestAmountToast';
-/** How long the guest amount message stays: the toast on phones, inside the field on desktop (D-045). */
-const GUEST_TOAST_MS = 2000;
-const AMOUNT_TIP_MS = GUEST_TOAST_MS;
+/** How long the guest message stays over the Cards per session field (D-045, D-070). */
+const AMOUNT_TIP_MS = 2000;
 /** How long the Topic counts are kept for a direction before asking again (D-064). */
 const COUNTS_STALE_MS = 5 * 60_000;
 
@@ -45,13 +43,12 @@ export function StartCard({
   meta: MetaResponse;
   session: SessionState;
   initialSelection?: StartChoices | undefined;
-  /** Hold back the automatic guest toast (a failed sign-in notice is showing, FR-L56). */
+  /** Hold back the automatic guest message (a failed sign-in notice is showing, FR-L56). */
   quiet?: boolean;
 }) {
   const isGuest = session.isGuest;
   const isAdmin = session.user?.role === 'admin';
   const isDesktop = useMediaQuery(DESKTOP_QUERY, true);
-  const toast = useToast();
   const {
     start: startLoop,
     starting,
@@ -73,30 +70,17 @@ export function StartCard({
       : defaults,
   );
 
-  const guestToast = useMemo(
-    () => ({
-      lead: { label: strings.nav.signInLink, onClick: startGoogleSignIn },
-      message: strings.setup.guestAmountToast,
-      // Short on phones (D-045): a scroll pauses the timer, so a long toast seemed stuck.
-      durationMs: GUEST_TOAST_MS,
-    }),
-    [],
-  );
-
-  // The guest amount message (FR-L6). On desktop it covers the Amount field itself for a few
-  // seconds (D-044); on phones it is a toast.
+  // The guest amount message (FR-L6): "Sign-in to change" covers the Cards per session field
+  // itself for a few seconds, on phones and desktop alike (D-044, D-070), so it shows where the
+  // field is, however far the page is scrolled.
   const [amountTip, setAmountTip] = useState(false);
   const amountTimer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(amountTimer.current), []);
   const showGuestMessage = useCallback(() => {
-    if (!isDesktop) {
-      toast.show(guestToast);
-      return;
-    }
     setAmountTip(true);
     window.clearTimeout(amountTimer.current);
     amountTimer.current = window.setTimeout(() => setAmountTip(false), AMOUNT_TIP_MS);
-  }, [isDesktop, toast, guestToast]);
+  }, []);
 
   // FR-L6: the guest message appears once per browser session automatically.
   const shownRef = useRef(false);
@@ -402,7 +386,7 @@ export function StartCard({
                       <span aria-hidden="true">🔒</span>
                       <span className="font-semibold">{meta.guest.loopSize}</span>
                     </button>
-                    {/* Desktop: the message covers the field itself (D-044). */}
+                    {/* The message covers the field itself (D-044, D-070). */}
                     <div aria-live="polite">
                       {amountTip && (
                         <p className="amount-tip">

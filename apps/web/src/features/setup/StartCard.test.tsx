@@ -66,7 +66,7 @@ function setup(session: typeof guest | typeof learner = guest) {
 
 const field = (label: string) =>
   screen.getByLabelText(label, { exact: true }).closest('[data-default]');
-const TOAST = 'Sign-in to choose more cards per session.';
+const TOAST = 'Sign-in to change';
 /** The "N cards available" line's text. */
 const availableLine = () =>
   screen.queryAllByText(
@@ -74,7 +74,7 @@ const availableLine = () =>
   )[0]?.textContent;
 /** The toast's text is split: a "Sign-in" link, then the rest of the sentence (D-043). */
 const toastShown = () => screen.queryAllByRole('status').some((s) => s.textContent === TOAST);
-/** On desktop the message covers the Amount field instead of a toast (D-044). */
+/** The message covers the Cards per session field, never a toast (D-044, D-070). */
 const fieldTipShown = () => document.querySelector('.amount-tip')?.textContent === TOAST;
 const shown = () => toastShown() || fieldTipShown();
 
@@ -199,7 +199,7 @@ describe('StartCard', () => {
     expect(fieldTipShown()).toBe(true);
   });
 
-  it('on phones the guest message is a toast, not over the field', async () => {
+  it('on phones too the guest message covers the field, not a toast (D-070)', async () => {
     vi.stubGlobal('matchMedia', (query: string) => ({
       matches: false,
       media: query,
@@ -208,8 +208,8 @@ describe('StartCard', () => {
     }));
     mockApi();
     setup();
-    await waitFor(() => expect(toastShown()).toBe(true));
-    expect(fieldTipShown()).toBe(false);
+    await waitFor(() => expect(fieldTipShown()).toBe(true));
+    expect(toastShown()).toBe(false);
     vi.unstubAllGlobals();
   });
 

@@ -392,6 +392,15 @@ body {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
     font-size: 0.8rem;
   }
+  /* Phones: the field is narrow, so the message covers all of it, on one line (D-070). */
+  @media (max-width: 767px) {
+    .amount-tip {
+      left: 0;
+      max-width: none;
+      justify-content: center;
+      white-space: nowrap;
+    }
+  }
 
   /* "Sign-in required" over the locked green pill (D-043): the pill's own size and shape. */
   .locked-tip {

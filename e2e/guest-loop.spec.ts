@@ -6,10 +6,7 @@ const progress = (page: Page) => page.getByTestId('progress');
 const card = (page: Page) => page.getByTestId('flip-card');
 const button = (page: Page, name: string) => page.getByRole('button', { name, exact: true }).last();
 
-test('a guest starts with the defaults and plays a loop to the summary', async ({
-  page,
-  isMobile,
-}) => {
+test('a guest starts with the defaults and plays a loop to the summary', async ({ page }) => {
   await page.goto('/');
 
   // Defaults: EN → HE, the Sample set (D-038), amount locked at 5, all "default".
@@ -44,12 +41,10 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   await expect(startCard.getByText(/cards? available/)).toBeVisible();
 
   // The sign-in message appears once automatically, and again when tapping the locked amount.
-  // "Sign-in" is a link at the start of the sentence (D-043). On phones it is a toast; on desktop
-  // it covers the Amount field itself (D-044).
-  const toast = isMobile
-    ? page.getByRole('status').filter({ hasText: 'to choose more cards per session.' })
-    : startCard.locator('.amount-tip');
-  await expect(toast).toHaveText('Sign-in to choose more cards per session.');
+  // "Sign-in" is a link at the start (D-043). It covers the field itself, on phones too (D-044,
+  // D-070).
+  const toast = startCard.locator('.amount-tip');
+  await expect(toast).toHaveText('Sign-in to change');
   await expect(toast.getByRole('button', { name: 'Sign-in' })).toBeVisible();
   await startCard.getByRole('button', { name: /Cards per session: 5/ }).click();
   await expect(toast).toBeVisible();

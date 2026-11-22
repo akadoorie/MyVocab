@@ -19,7 +19,7 @@ describe('Landing: back from a failed sign-in (FR-L56)', () => {
     expect(router.state.location.search).toBe('');
     // The automatic guest toast is held back so it doesn't contradict the notice.
     await new Promise((r) => setTimeout(r, 50)); // after the address was cleaned
-    expect(screen.queryByText(/Sign-in to choose more cards/)).not.toBeInTheDocument();
+    expect(document.querySelector('.amount-tip')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });

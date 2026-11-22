@@ -70,8 +70,8 @@ export const strings = {
     availableSuffix: (n: number) => `${n === 1 ? 'card' : 'cards'} available`,
     checking: 'Checking…',
     guestAmountLocked: 'Guests always get 5 cards',
-    /** After the "Sign-in" link (D-043): "Sign-in to choose more cards per session." */
-    guestAmountToast: 'to choose more cards per session.',
+    /** After the "Sign-in" link, over the Cards per session field (D-043, D-070): "Sign-in to change". */
+    guestAmountToast: 'to change',
     signInToStart: 'Sign-in to start',
     emptyTitle: 'You know every card in this selection 🎉',
     emptyBody: 'Change the selection, or open My known words to bring some back.',
