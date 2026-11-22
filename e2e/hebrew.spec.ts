@@ -34,7 +34,7 @@ test('a first visit is in Hebrew, right-to-left, and switches to English', async
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
 });
 
-test('a Hebrew session: Hebrew buttons, Next on the left, Flip in the bottom-left corner', async ({
+test('a Hebrew session: Hebrew buttons, Next on the left, Flip still bottom-right, direction on the left', async ({
   page,
 }, testInfo) => {
   await page.goto('/');
@@ -58,7 +58,10 @@ test('a Hebrew session: Hebrew buttons, Next on the left, Flip in the bottom-lef
     .getByRole('button', { name: 'היפוך' })
     .first()
     .boundingBox())!;
-  expect(flip.x + flip.width / 2).toBeLessThan(card.x + card.width / 2);
+  expect(flip.x + flip.width / 2).toBeGreaterThan(card.x + card.width / 2);
+  // The direction label stays on the card's left too.
+  const chip = (await page.getByTestId('flip-card').getByText('EN → HE').first().boundingBox())!;
+  expect(chip.x + chip.width / 2).toBeLessThan(card.x + card.width / 2);
 
   // Keyboard (desktop): mirrored like the buttons, ← is Next.
   if (testInfo.project.name === 'desktop') {

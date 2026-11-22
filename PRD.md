@@ -1018,10 +1018,11 @@ the typecheck. Components read the active language's strings through `strings.ts
   "נדרשת התחברות" (the link last). The slogan's last word, "ביעילות", gets the same drop-and-stick animation as "stick"
   (D-037), mirrored: it tilts the other way and the shine sweeps from the right.
 - **Mirroring (RTL):** the layout follows the page direction (logical CSS properties): Back is on the right and
-  Next on the left, their chevrons and the "←" of Home point the other way, Flip sits in the card's bottom-left
-  corner (with the hints' notch and fade there), the padlocks sit on the buttons' top-right edge, and the summary
+  Next on the left, their chevrons and the "←" of Home point the other way, the padlocks sit on the buttons' top-right edge, and the summary
   crown sits on the card's upper-right corner and flies in from the top right. Swipes and arrow keys are mirrored
   like the buttons: swipe right or ← for Next, swipe left or → for Back.
+- **Not mirrored:** in every language, Flip stays in the card's bottom-right corner (with the hints' notch and
+  fade there), and the direction label (e.g. "EN → HE") stays on the left of the card front.
 - **Names:** language names come from the UI strings ("אנגלית", "עברית"); topics have an optional Hebrew name
   (`name_he`, FR-A30), shown in the Hebrew UI when set, otherwise the English name.
 - **Server messages:** errors that reach learners (the daily card limit, guest session limits, sign-in needed,

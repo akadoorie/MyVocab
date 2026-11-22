@@ -9,7 +9,11 @@ import { HintsCover } from './HintsCover';
  * The "Clicked: …" chip on a card reached with Back (FR-L29a, D-049): short, its colour tells the
  * two Knows apart; the orange one's caption is there for screen readers only.
  */
-const CHIP: Record<CardAnswer, { color: string; text: string; extra?: string; mark: string }> = {
+// A function, not a constant: it must read the strings of the language active now (D-080).
+const chips = (): Record<
+  CardAnswer,
+  { color: string; text: string; extra?: string; mark: string }
+> => ({
   know: { color: 'text-know', text: strings.card.answeredKnow, mark: '✓' },
   knowAgain: {
     color: 'text-again',
@@ -18,7 +22,7 @@ const CHIP: Record<CardAnswer, { color: string; text: string; extra?: string; ma
     mark: '✓',
   },
   dontKnow: { color: 'text-dontknow', text: strings.card.answeredDontKnow, mark: '✗' },
-};
+});
 
 /** The chip above the answer: what the main answer lines are (PRD §9.3, D-024). */
 function mainHeadline(card: CardView): string {
@@ -134,6 +138,7 @@ export function FlipCard({
   const front = side === 'front';
   const Answer = card.answer.numbered ? 'ol' : 'ul';
   // On both faces; the test id goes on the front one only.
+  const CHIP = chips();
   const answerChip = (face: 'front' | 'back') =>
     answer && (
       <p
@@ -174,8 +179,9 @@ export function FlipCard({
     <div className={`flip-card ${front ? '' : 'is-flipped'}`}>
       <div className="flip-card__inner" data-testid={tid('flip-card')} data-side={side}>
         <div className="flip-card__face flip-card__front" inert={!front} aria-hidden={!front}>
-          {/* One line with the direction, on phones too (D-049). */}
-          <div className="flex items-center justify-between gap-2">
+          {/* One line with the direction, on phones too (D-049). The direction stays on the left in
+              every language (D-080): reversed on right-to-left pages, so the answer chip goes right. */}
+          <div className="flex items-center justify-between gap-2 rtl:flex-row-reverse">
             <p className="chip shrink-0">{label}</p>
             {answerChip('front')}
           </div>

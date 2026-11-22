@@ -377,25 +377,6 @@ body {
       0 100%
     );
   }
-  /* Right-to-left pages (D-080): Flip sits in the bottom-left corner, so the notch and the fade
-     around it move there too. */
-  :root[dir='rtl'] .flip-card__front .hints-cover.is-open .hints-area__scroll {
-    --flip-fade: radial-gradient(
-      circle at var(--flip-cx) calc(100% - var(--flip-cy)),
-      transparent var(--flip-r0),
-      #000 var(--flip-r1)
-    );
-  }
-  :root[dir='rtl'] .flip-card__front .hints-cover__button {
-    clip-path: polygon(
-      0 0,
-      100% 0,
-      100% 100%,
-      var(--flip-notch) 100%,
-      var(--flip-notch) calc(100% - var(--flip-notch)),
-      0 calc(100% - var(--flip-notch))
-    );
-  }
   @media (min-width: 768px) {
     .flip-card__front {
       --flip-row: 64px;
@@ -406,11 +387,12 @@ body {
       --flip-r1: 68px;
     }
   }
-  /* "Hide hints", next to the Flip button's row (D-050); only seen with keyboard focus (D-078). */
+  /* "Hide hints", next to the Flip button's row (D-050); only seen with keyboard focus (D-078).
+     On the left, away from Flip, which stays bottom-right in every language (D-080). */
   .hints-hide {
     position: absolute;
     bottom: 24px;
-    inset-inline-start: 22px;
+    left: 22px;
     padding: 6px 2px;
     border: 0;
     background: none;
@@ -431,7 +413,7 @@ body {
   @media (min-width: 768px) {
     .hints-hide {
       bottom: 42px;
-      inset-inline-start: 42px;
+      left: 42px;
     }
   }
   .hints-cover__tap {
@@ -1261,7 +1243,8 @@ body {
   /* A little smaller on phones, leaving more room for the hints (D-051). */
   --size: 48px;
   position: absolute;
-  inset-inline-end: 14px;
+  /* Bottom-right in every language, Hebrew too (D-080). */
+  right: 14px;
   bottom: 14px;
   grid-template-rows: var(--size);
 }
@@ -1279,7 +1262,7 @@ body {
   }
   .flip-card__flip {
     --size: 64px;
-    inset-inline-end: 24px;
+    right: 24px;
     bottom: 24px;
   }
   .flip-card__flip .lbtn__icon svg {

@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { activateLocale } from '../../strings';
 import { makeCard } from '../../test/fixtures';
 import { FlipCard } from './FlipCard';
 
@@ -14,6 +15,20 @@ describe('FlipCard', () => {
     expect(face('front')).toHaveAttribute('aria-hidden', 'false');
     expect(face('back')).toHaveAttribute('aria-hidden', 'true');
     expect(face('back')).toHaveAttribute('inert');
+  });
+
+  it('labels the answer chip in the active language (D-080)', () => {
+    activateLocale('he');
+    render(
+      <FlipCard
+        card={makeCard(1)}
+        side="front"
+        hintsShown={false}
+        onFlip={vi.fn()}
+        answer="dontKnow"
+      />,
+    );
+    expect(screen.getByTestId('answer-chip')).toHaveTextContent('בחרתם: לא ידעתי');
   });
 
   it('shows hints and synonyms on the front after Hints', () => {
