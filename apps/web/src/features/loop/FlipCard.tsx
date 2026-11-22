@@ -108,6 +108,8 @@ export function FlipCard({
   onToggleHints = () => undefined,
   decorative = false,
   answer = null,
+  pulse = false,
+  nudging = false,
 }: {
   card: CardView;
   side: CardSide;
@@ -119,6 +121,10 @@ export function FlipCard({
   decorative?: boolean;
   /** The answer already given, on a card reached with Back (FR-L29a): shown as a chip. */
   answer?: CardAnswer | null;
+  /** Flip pulses gently until it's first used in the session (D-066). */
+  pulse?: boolean;
+  /** Pump once and shine with the answer buttons (D-066); not while it pulses. */
+  nudging?: boolean;
 }) {
   const tid = (id: string) => (decorative ? undefined : id);
   const label = `${card.direction.source.toUpperCase()} → ${card.direction.target.toUpperCase()}`;
@@ -142,7 +148,7 @@ export function FlipCard({
       kind="round"
       icon={<FlipIcon />}
       label={strings.loop.flip}
-      className="flip-card__flip"
+      className={`flip-card__flip ${pulse ? 'is-breathing' : nudging ? 'is-nudging nudge-4' : ''}`}
       hideLabel
       title={strings.loop.flipTitle}
       onClick={(e) => {

@@ -534,6 +534,95 @@ body {
         0 0 0 6px var(--glow);
     }
   }
+  /* The nudge (D-066): the available answer buttons and Flip pump once, then a soft shine
+     sweeps across them, one after the other (nudge-1..4). Disabled or locked buttons stay
+     still, and a press cancels it. */
+  .lbtn__shape {
+    position: relative;
+    overflow: hidden;
+  }
+  /* The shape is positioned (for the shine): the icon and label need their own layer too, or
+     the shape paints over them. They come after it, so they stay on top. */
+  .lbtn__icon,
+  .lbtn__label {
+    position: relative;
+  }
+  .lbtn.nudge-1 {
+    --nudge-delay: 0ms;
+  }
+  .lbtn.nudge-2 {
+    --nudge-delay: 80ms;
+  }
+  .lbtn.nudge-3 {
+    --nudge-delay: 160ms;
+  }
+  .lbtn.nudge-4 {
+    --nudge-delay: 240ms;
+  }
+  .lbtn.is-nudging:not(:disabled, [aria-disabled='true'], :active) .lbtn__shape,
+  .lbtn.is-nudging:not(:disabled, [aria-disabled='true'], :active) .lbtn__icon,
+  .lbtn--pill.is-nudging:not(:disabled, [aria-disabled='true'], :active) .lbtn__label {
+    animation: lbtn-nudge 460ms ease-in-out var(--nudge-delay, 0ms) both;
+  }
+  .lbtn.is-nudging:not(:disabled, [aria-disabled='true'], :active) .lbtn__shape::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+        105deg,
+        transparent 35%,
+        rgba(255, 255, 255, 0.34) 50%,
+        transparent 65%
+      )
+      no-repeat;
+    background-size: 250% 100%;
+    animation: lbtn-shine 800ms ease-out calc(var(--nudge-delay, 0ms) + 380ms) both;
+    pointer-events: none;
+  }
+  @keyframes lbtn-nudge {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    45% {
+      transform: scale(1.08);
+    }
+  }
+  @keyframes lbtn-shine {
+    from {
+      background-position: 150% 0;
+    }
+    to {
+      background-position: -50% 0;
+    }
+  }
+  /* Flip pulses gently until it's first used in the session (D-066). */
+  .lbtn.is-breathing:not(:disabled, [aria-disabled='true'], :active) .lbtn__shape,
+  .lbtn.is-breathing:not(:disabled, [aria-disabled='true'], :active) .lbtn__icon {
+    animation: lbtn-breathe 2.2s ease-in-out infinite;
+  }
+  @keyframes lbtn-breathe {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.07);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lbtn.is-nudging .lbtn__shape,
+    .lbtn.is-nudging .lbtn__icon,
+    .lbtn.is-nudging .lbtn__label,
+    .lbtn.is-breathing .lbtn__shape,
+    .lbtn.is-breathing .lbtn__icon {
+      animation: none;
+    }
+    .lbtn.is-nudging .lbtn__shape::after {
+      display: none;
+    }
+  }
   /* Pills (the three answers): icon + label inside the pill, on every screen size. */
   .lbtn--pill {
     --size: 60px;

@@ -319,6 +319,12 @@ private content repository. It never appears in the public code repo or any publ
   stays available (Hints works only while the front shows). The layout does not change: the round **Next turns
   violet and pumps** (a gentle grow-and-shrink with a soft ring) until it is pressed, so the way on is clear; with
   reduced motion it shows a steady ring instead (D-031).
+- **FR-L28a The nudge** (D-066): to show what to press, the enabled answer pills and Flip pump once and a soft
+  shine sweeps across them (green, orange, red, Flip, about 80 ms apart). On the first 3 cards of each cycle this
+  plays 0.3 s after every change of the screen (a new card, a flip, hints, Don't know); after that, only when the
+  user waits 4 s without acting. Flip pulses gently until it is first used in the session (remembered across a
+  refresh). Disabled or locked buttons, Back, Stop and Next (which has its own pump) don't take part; nothing
+  moves with reduced motion.
 - **FR-L29 Next**: moves to the next card (enabled in the Revealed phase, and on a card answered earlier that was
   reached with Back). The next card enters front side up with a short rise-in (no reverse-flip animation).
 - **FR-L29a Back and changing an answer** (owner request, 2026-11-19): the round **Back** button (or **←**) shows the

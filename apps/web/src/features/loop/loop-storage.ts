@@ -46,6 +46,8 @@ const storedLoopSchema = z.object({
   isGuest: z.boolean(),
   /** The summary's celebration was shown (FR-L32a); after Back it isn't repeated. */
   celebrated: z.boolean().optional(),
+  /** Flip was pressed in this session: it stops pulsing (D-066). */
+  flipped: z.boolean().optional(),
 });
 
 export type StoredLoop = {
@@ -55,6 +57,7 @@ export type StoredLoop = {
   selection: StartChoices;
   isGuest: boolean;
   celebrated?: boolean;
+  flipped?: boolean;
 };
 
 /**

@@ -29,6 +29,34 @@ import { useSwipe } from './useSwipe';
 
 /** How long "Sign-in required" covers the locked green button (D-043). */
 const LOCKED_TIP_MS = 1500;
+/** The nudge (D-066): full on the first cards of each cycle, then only when the user waits. */
+const NUDGE_CARDS = 3;
+const NUDGE_DELAY_MS = 300;
+const NUDGE_IDLE_MS = 4000;
+/** Long enough for the staggered pump and shine to finish (base.css). */
+const NUDGE_MS = 1700;
+
+/**
+ * Whether the buttons should nudge now (D-066). `step` changes whenever the screen changes state
+ * (a new card, a flip, hints, Don't know). On the first cards of a cycle every change nudges,
+ * shortly after; after that, only a pause of a few seconds does. Off for "reduce motion".
+ */
+function useNudge(step: string, full: boolean, enabled: boolean): boolean {
+  // The step the nudge is playing for: a new step drops the class, so the next one restarts.
+  const [playing, setPlaying] = useState<string | null>(null);
+  useEffect(() => {
+    if (!enabled) return;
+    const timers: number[] = [];
+    const play = () => {
+      setPlaying(step);
+      timers.push(window.setTimeout(() => setPlaying(null), NUDGE_MS));
+    };
+    if (full) timers.push(window.setTimeout(play, NUDGE_DELAY_MS));
+    timers.push(window.setTimeout(play, NUDGE_IDLE_MS));
+    return () => timers.forEach((t) => window.clearTimeout(t));
+  }, [step, full, enabled]);
+  return playing === step;
+}
 
 export type KnownSink = {
   /** A Know was made (signed-in learners queue it, PRD §6.4). */
@@ -95,13 +123,15 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   // The summary celebrates once per session (FR-L32a), also across Back and a refresh.
   const [celebrated, setCelebrated] = useState(stored.celebrated ?? false);
   const markCelebrated = useCallback(() => setCelebrated(true), []);
+  // Flip pulses until it's first used in the session, also across a refresh (D-066).
+  const [flipped, setFlipped] = useState(stored.flipped ?? false);
 
   // Persist on every change; Stop and the end of the loop clear it (FR-L33).
   useEffect(() => {
     if (state.phase === 'stopped' || state.phase === 'finished') clearLoop();
-    else saveLoop({ ...stored, state, celebrated });
+    else saveLoop({ ...stored, state, celebrated, flipped });
     if (state.phase === 'stopped') navigate('/', { replace: true });
-  }, [state, stored, navigate, celebrated]);
+  }, [state, stored, navigate, celebrated, flipped]);
 
   // "Only N new cards in Home…" once, when the loop starts (FR-L8).
   const notice = (location.state as LoopStartNotice | null)?.insufficient;
@@ -163,6 +193,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
         );
       }
       if (type === 'FLIP') {
+        setFlipped(true);
         setAnnouncement(
           state.side === 'front' ? strings.card.showingAnswer : strings.card.showingFront,
         );
@@ -202,6 +233,12 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
     [act, state.phase, confirmLeave, stored.isGuest, showLocked],
   );
   useLoopShortcuts(onShortcut);
+
+  const nudging = useNudge(
+    `${state.cycle}-${state.index}-${state.phase}-${state.side}-${state.hintsShown}`,
+    state.index < NUDGE_CARDS,
+    !confirmLeave && motionAllowed(),
+  );
 
   const progress = loopProgress(state);
   const id = currentCardId(state);
@@ -324,6 +361,8 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
             onFlip={() => act('FLIP')}
             onToggleHints={() => act('TOGGLE_HINTS')}
             answer={shownAnswer}
+            pulse={!flipped && motionAllowed()}
+            nudging={nudging}
           />
         </div>
       </div>
@@ -341,6 +380,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           onLocked={showLocked}
           lockedTip={lockedTip}
           onSignIn={startGoogleSignIn}
+          nudging={nudging}
         />
       </div>
       {ghost}

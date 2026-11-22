@@ -16,13 +16,15 @@ function setup(
   {
     isGuest = true,
     routes = {},
-  }: { isGuest?: boolean; routes?: Parameters<typeof mockFetch>[0] } = {},
+    count = CARDS.length,
+  }: { isGuest?: boolean; routes?: Parameters<typeof mockFetch>[0]; count?: number } = {},
 ) {
   // /api/me answers with a signed-in learner, /api/meta with the test settings.
   const fetchSpy = mockFetch(routes);
+  const ids = Array.from({ length: count }, (_, i) => i + 1);
   saveLoop({
-    cards: CARDS,
-    state: createLoop([1, 2, 3], 42),
+    cards: ids.map((n) => makeCard(n)),
+    state: createLoop(ids, 42),
     undoWindowSeconds: 4,
     selection: { sourceLang: 'en', targetLang: 'he', topicId: null, size: 5 },
     isGuest,
@@ -217,6 +219,70 @@ describe('LoopPage', () => {
     fireEvent.keyDown(window, { key: 'k' });
     expect(tip()).toHaveTextContent('Sign-in required');
     expect(progress()).toBe('Cycle 1 · Card 1/3 · 0 known');
+  });
+
+  describe('the nudge (D-066)', () => {
+    /** Motion allowed (no "reduce motion"), unless `reduce`. */
+    const motion = (reduce = false) =>
+      vi.stubGlobal('matchMedia', (q: string) => ({
+        matches: q.includes('no-preference') ? !reduce : reduce,
+        media: q,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      }));
+    const nudging = (name: string) => btn(name).classList.contains('is-nudging');
+    const answers = ['I know it Show again in future', 'I don’t know Show again soon'];
+    afterEach(() => vi.unstubAllGlobals());
+
+    it('on the first cards, the available answers pump shortly after each change; Back and Stop never', () => {
+      motion();
+      vi.useFakeTimers();
+      setup();
+      for (const name of answers) expect(nudging(name)).toBe(false);
+      act(() => vi.advanceTimersByTime(300));
+      for (const name of answers) expect(nudging(name)).toBe(true);
+      for (const name of ['Back', 'Stop', 'Next']) expect(nudging(name)).toBe(false);
+      act(() => vi.advanceTimersByTime(1700));
+      for (const name of answers) expect(nudging(name)).toBe(false);
+      // A flip is a change too.
+      fireEvent.click(btn('Flip'));
+      act(() => vi.advanceTimersByTime(300));
+      expect(nudging(answers[0]!)).toBe(true);
+    });
+
+    it('after the first three cards of a cycle, only a pause of 4 seconds nudges', () => {
+      motion();
+      vi.useFakeTimers();
+      setup(undefined, { count: 5 });
+      for (let i = 0; i < 3; i++) {
+        fireEvent.click(btn('I don’t know Show again soon'));
+        fireEvent.click(btn('Next'));
+      }
+      expect(progress()).toBe('Cycle 1 · Card 4/5 · 0 known');
+      act(() => vi.advanceTimersByTime(300));
+      expect(nudging(answers[0]!)).toBe(false);
+      act(() => vi.advanceTimersByTime(3700));
+      expect(nudging(answers[0]!)).toBe(true);
+    });
+
+    it('Flip pulses until it is first used, and stays still after a refresh', () => {
+      motion();
+      setup();
+      const flip = () => btn('Flip');
+      expect(flip()).toHaveClass('is-breathing');
+      fireEvent.click(flip());
+      expect(flip()).not.toHaveClass('is-breathing');
+      expect(loadLoop()?.flipped).toBe(true);
+    });
+
+    it('nothing moves with "reduce motion"', () => {
+      motion(true);
+      vi.useFakeTimers();
+      setup();
+      act(() => vi.advanceTimersByTime(5000));
+      for (const name of answers) expect(nudging(name)).toBe(false);
+      expect(btn('Flip')).not.toHaveClass('is-breathing');
+    });
   });
 
   it('signed-in: Know (forever), Know (ask again), Don’t know; ask again is never recorded', () => {

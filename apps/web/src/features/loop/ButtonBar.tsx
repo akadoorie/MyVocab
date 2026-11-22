@@ -88,6 +88,7 @@ export function ButtonBar({
   onLocked,
   lockedTip = false,
   onSignIn,
+  nudging = false,
 }: {
   state: LoopState;
   onAction: (type: LoopActionType) => void;
@@ -98,6 +99,8 @@ export function ButtonBar({
   /** Show "Sign-in required" over the locked green button (for 1.5 seconds, D-043). */
   lockedTip?: boolean;
   onSignIn?: () => void;
+  /** Pump once and shine, to show what to press (D-066); disabled buttons stay still. */
+  nudging?: boolean;
 }) {
   const btn = (type: LoopActionType) => ({
     disabled: !canDispatch(state, type),
@@ -109,6 +112,8 @@ export function ButtonBar({
   const revealed = state.phase === 'revealed';
   // The three answer pills carry their label only, on every screen (D-058, base.css).
   const trio = 'lbtn--trio';
+  // Green, orange, red one after the other (base.css: nudge-1..3).
+  const nudge = (n: number) => (nudging ? `is-nudging nudge-${n}` : '');
   return (
     <div className="grid grid-cols-12 items-start gap-x-3 gap-y-5 pb-1 [grid-template-areas:'know_know_know_know_again_again_again_again_dk_dk_dk_dk'_'stop_stop_stop_stop_back_back_back_back_next_next_next_next'] md:grid-cols-[auto_auto_1fr_1fr_1.1fr_auto] md:gap-x-6 md:[grid-template-areas:'stop_back_know_again_dk_next']">
       <LoopButton
@@ -132,7 +137,7 @@ export function ButtonBar({
           label={strings.loop.know}
           caption={strings.loop.knowCaption}
           name={strings.loop.knowName}
-          className={`[grid-area:know] ${trio}`}
+          className={`[grid-area:know] ${trio} ${nudge(1)}`}
           {...btn('KNOW')}
         />
       ) : (
@@ -144,7 +149,7 @@ export function ButtonBar({
           caption={strings.loop.knowCaption}
           name={strings.loop.knowNameGuest}
           title={strings.loop.signInToEnable}
-          className={`[grid-area:know] ${trio}`}
+          className={`[grid-area:know] ${trio} ${nudge(1)}`}
           locked
           aria-disabled
           onClick={onLocked}
@@ -171,12 +176,12 @@ export function ButtonBar({
         label={strings.loop.know}
         caption={strings.loop.againCaption}
         name={strings.loop.againName}
-        className={`[grid-area:again] ${trio}`}
+        className={`[grid-area:again] ${trio} ${nudge(2)}`}
         {...btn('KNOW_AGAIN')}
       />
       <LoopButton
         kind="dontknow"
-        className={`[grid-area:dk] ${trio}`}
+        className={`[grid-area:dk] ${trio} ${nudge(3)}`}
         icon={null}
         label={strings.loop.dontKnow}
         caption={strings.loop.dontKnowCaption}
