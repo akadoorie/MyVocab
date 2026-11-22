@@ -18,8 +18,8 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   await expect(startCard.getByLabel('To', { exact: true })).toHaveValue('he');
   await expect(startCard.getByLabel('Topic', { exact: true })).toHaveValue('sample');
   // The locked entries are drawn grey in the open list, "Sample set" stays bright (D-041):
-  // "All topics" and a topic under the "Topics" entry, all top-level, disabled and unselectable
-  // (Chrome ignores the colour of disabled options inside an optgroup).
+  // "All topics" and a topic under the separator line, all top-level, disabled and unselectable
+  // (Chrome ignores the colour of disabled options inside an optgroup; D-062 line).
   const colors = await startCard.getByLabel('Topic', { exact: true }).evaluate((el) => {
     const opts = [...(el as HTMLSelectElement).options];
     const color = (o: HTMLOptionElement | undefined) => (o ? getComputedStyle(o).color : '');

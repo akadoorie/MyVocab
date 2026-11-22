@@ -26,8 +26,6 @@ const GUEST_TOAST_FLAG = 'myvocab.guestAmountToast';
 /** How long the guest amount message stays: the toast on phones, inside the field on desktop (D-045). */
 const GUEST_TOAST_MS = 2000;
 const AMOUNT_TIP_MS = GUEST_TOAST_MS;
-/** Three non-breaking spaces: indents a topic under the guests' "Topics" heading (D-041). */
-const INDENT = String.fromCharCode(160).repeat(3);
 
 export type { LoopStartNotice } from './useStartLoop';
 
@@ -318,15 +316,13 @@ export function StartCard({
                     <option value="" disabled>
                       {strings.setup.general}
                     </option>
-                    {/* No optgroup here: desktop Chrome draws disabled options inside a group in
-                        its own light grey and ignores ours (D-041). A disabled "Topics" entry
-                        stands in for the heading, and the topics are indented under it. */}
-                    <option value="topics-heading" disabled className="topic-heading">
-                      {strings.setup.topicsGroup}
-                    </option>
+                    {/* A line between the special choices and the topics, all left-aligned (D-062).
+                        No optgroup: desktop Chrome draws disabled options inside a group in its
+                        own light grey and ignores ours (D-041). */}
+                    {meta.topics.length > 0 && <hr />}
                     {meta.topics.map((c) => (
                       <option key={c.id} value={c.id} disabled>
-                        {INDENT + c.name}
+                        {c.name}
                       </option>
                     ))}
                   </select>
@@ -358,16 +354,14 @@ export function StartCard({
                     <option value="sample">{strings.setup.sampleSet}</option>
                   )}
                   <option value="">{strings.setup.general}</option>
-                  {/* The real topics under a heading, apart from "All topics" (D-040). */}
-                  {meta.topics.length > 0 && (
-                    <optgroup label={strings.setup.topicsGroup}>
-                      {meta.topics.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
+                  {/* A line between the special choices and the real topics, all left-aligned
+                      (D-062; replaces the "Topics" heading of D-040). */}
+                  {meta.topics.length > 0 && <hr />}
+                  {meta.topics.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
                 </select>
               )
             }

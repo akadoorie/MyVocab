@@ -285,14 +285,15 @@ describe('StartCard', () => {
     });
   });
 
-  it('lists the real topics under a "Topics" heading, apart from "All topics" (D-040)', () => {
+  it('lists the topics under a line, apart from "All topics", all at the top level (D-062)', () => {
     mockApi();
     setup(learner);
     const topic = screen.getByLabelText('Topic', { exact: true }) as HTMLSelectElement;
-    const byName = (name: string) => [...topic.options].find((o) => o.textContent === name);
-    expect(byName('All topics')?.parentElement).toBe(topic);
-    const group = byName('Home')?.parentElement;
-    expect(group?.tagName).toBe('OPTGROUP');
-    expect(group).toHaveAttribute('label', 'Topics');
+    expect([...topic.children].map((c) => (c.tagName === 'HR' ? '---' : c.textContent))).toEqual([
+      'All topics',
+      '---',
+      'Home',
+    ]);
+    expect(topic.querySelector('optgroup')).toBeNull();
   });
 });

@@ -193,7 +193,7 @@ private content repository. It never appears in the public code repo or any publ
 |---|---|---|
 | Source language | Active languages | **English** |
 | Target language | Active languages | **Hebrew** |
-| Topic | "All topics", then the active topics (by `sort_order`) under a **"Topics"** heading (D-040) | **All topics** |
+| Topic | "All topics" (admins and guests: "Sample set" first), a separator line, then the active topics (by `sort_order`), all aligned left (D-062; replaces the "Topics" heading of D-040) | **All topics** |
 | Amount (signed-in) | **10 / 20 / 30 / 40 / 50** (segmented control) | **10** |
 | Amount (guest) | **5**, fixed and locked | **5** |
 
@@ -217,8 +217,8 @@ private content repository. It never appears in the public code repo or any publ
   - every time the guest taps/clicks the locked Amount field.
   The server **enforces** 5 for guests regardless of the request (§12.1).
 - **FR-L6a Guest topic: the Sample set** (D-038): guests play only items marked **"Include in Sample set"**, across
-  every topic. Their Topic dropdown shows **"Sample set"** selected, with "All topics" and every topic listed below it
-  **greyed out and unselectable**, and a lock icon on the field (no note; D-054). They still
+  every topic. Their Topic dropdown shows **"Sample set"** selected, then "All topics", a separator line and every
+  topic (D-062), all but "Sample set" **greyed out and unselectable**, and a lock icon on the field (no note; D-054). They still
   choose the languages, and the "N cards available" count only counts the sample set. The server
   **enforces** it for guests whatever the request says (both the count and starting a session). Signed-in learners
   never see a "Sample set" option; **admins** do, so they can play exactly what guests get.

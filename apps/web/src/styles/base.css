@@ -696,9 +696,6 @@ body {
   .topic-locked option:disabled {
     color: #6a6290;
   }
-  .topic-locked option.topic-heading {
-    font-weight: 600;
-  }
 
   /* The home page slogan (D-037): the first words fade in; "stick" drops in, bounces off twice
      and sticks on the third try with a soft squash, then a faint shine runs across it. Each word

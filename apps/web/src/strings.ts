@@ -57,8 +57,6 @@ export const strings = {
     topic: 'Topic',
     /** No topic filter: every item (D-039; was "General"). */
     general: 'All topics',
-    /** The heading over the real topics in the Topic dropdown (D-040). */
-    topicsGroup: 'Topics',
     /** The items guests play (D-038); admins can pick it too, to check it. */
     sampleSet: 'Sample set',
     amount: 'Cards per session',
