@@ -555,11 +555,11 @@ so learners never download it. All admin pages work on mobile (tables collapse i
 | `defaults.sourceLang` | lang code | `"en"` | Start card default source |
 | `defaults.targetLang` | lang code | `"he"` | Start card default target |
 | `defaults.topicId` | int \| null | `null` (All topics) | Start card default topic |
-| `loop.sizeOptions` | int[] | `[10,20,30,40,50]` | Amount choices for signed-in learners |
-| `loop.defaultSize` | int | `10` | Default amount (must be in `sizeOptions`) |
-| `loop.maxSize` | int | `50` | Server-side cap for `POST /loops`; no amount choice may exceed it. Admin label "Maximum amount", with a hint under the field explaining this |
+| `loop.sizeOptions` | int[] | `[10,20,30,40,50]` | Cards-per-session choices for signed-in learners (admin label "Cards per session: choices", D-059) |
+| `loop.defaultSize` | int | `10` | Default cards per session (must be in `sizeOptions`; admin label "Cards per session: default") |
+| `loop.maxSize` | int | `50` | Server-side cap for `POST /loops`; no choice may exceed it. Admin label "Cards per session: maximum", with a hint under the field explaining this |
 | `guests.enabled` | bool | `true` | Allow guests to run loops |
-| `guests.loopSize` | int | `5` | Fixed guest amount (server-enforced) |
+| `guests.loopSize` | int | `5` | Fixed cards per guest session (server-enforced; admin label "Cards per guest session") |
 | `guests.loopsPerHour` | int | `10` | Guest loops per hour per IP |
 | `users.cardsPerDay` | int | `500` | Cards served per learner per UTC day (admins exempt) |
 | `undo.windowSeconds` | int | `5` | Seconds a Know waits in the queue before it is sent (1–15; FR-L51). Admin label "Seconds before a Know is saved" |

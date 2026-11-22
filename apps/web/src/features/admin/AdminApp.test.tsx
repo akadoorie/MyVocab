@@ -223,11 +223,11 @@ describe('AdminApp', () => {
     expect(screen.getByText(/^Arabic is inactive: learners won’t see this card/)).toBeVisible();
   });
 
-  it('settings: "Maximum amount" explains itself under the field', async () => {
+  it('settings: "Cards per session: maximum" explains itself under the field', async () => {
     render('/admin/settings', { 'GET /api/admin/settings': () => Response.json({}) });
-    const field = await screen.findByLabelText('Maximum amount');
+    const field = await screen.findByLabelText('Cards per session: maximum');
     expect(field).toHaveAccessibleDescription(
-      'The largest amount allowed in the amount choices above. Settings won’t save if a choice is bigger.',
+      'The largest number allowed in the choices above. Settings won’t save if a choice is bigger.',
     );
   });
 });

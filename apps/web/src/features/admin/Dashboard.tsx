@@ -56,7 +56,7 @@ export function Dashboard() {
       <section className="rounded-[14px] border border-border bg-surface p-5">
         <h2 className="text-lg font-semibold">{s.dashboard.sampleByDirection}</h2>
         <p className="mt-1 mb-3 text-sm text-muted">{s.dashboard.sampleByDirectionHelp}</p>
-        <ul className="grid gap-2 sm:grid-cols-2">
+        <ul className="grid max-w-sm gap-2">
           {d.items.sampleByDirection.map((row) => (
             <li key={`${row.source}-${row.target}`} className="flex justify-between gap-3 text-sm">
               <span>
@@ -72,7 +72,7 @@ export function Dashboard() {
       {d.items.byLang.length > 0 && (
         <section className="rounded-[14px] border border-border bg-surface p-5">
           <h2 className="mb-3 text-lg font-semibold">{s.dashboard.byLanguage}</h2>
-          <ul className="grid gap-2 sm:grid-cols-2">
+          <ul className="grid max-w-sm gap-2">
             {d.items.byLang.map((row) => (
               <li key={row.lang} className="flex justify-between gap-3 text-sm">
                 <span>{name(row.lang)}</span>

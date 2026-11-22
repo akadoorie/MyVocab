@@ -274,7 +274,7 @@ export const adminStrings = {
     /** Short explanations under some fields. */
     hints: {
       'loop.maxSize':
-        'The largest amount allowed in the amount choices above. Settings won’t save if a choice is bigger.',
+        'The largest number allowed in the choices above. Settings won’t save if a choice is bigger.',
     },
     groups: {
       defaults: 'Start card defaults',
@@ -288,11 +288,11 @@ export const adminStrings = {
       'defaults.sourceLang': 'Default source language',
       'defaults.targetLang': 'Default target language',
       'defaults.topicId': 'Default topic',
-      'loop.sizeOptions': 'Amount choices (comma-separated)',
-      'loop.defaultSize': 'Default amount',
-      'loop.maxSize': 'Maximum amount',
+      'loop.sizeOptions': 'Cards per session: choices (comma-separated)',
+      'loop.defaultSize': 'Cards per session: default',
+      'loop.maxSize': 'Cards per session: maximum',
       'guests.enabled': 'Guests can start sessions',
-      'guests.loopSize': 'Guest session size',
+      'guests.loopSize': 'Cards per guest session',
       'guests.loopsPerHour': 'Guest sessions per hour (per network)',
       'users.cardsPerDay': 'Cards per learner per day',
       'undo.windowSeconds': 'Seconds before a Know is saved',
