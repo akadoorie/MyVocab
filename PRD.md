@@ -610,6 +610,9 @@ so learners never download it. All admin pages work on mobile (tables collapse i
 - **FR-A70** A read-only list: time, actor, action, entity type/id, summary. Filters: actor, action, entity type, date
   range. Row detail shows the pretty-printed `details` JSON (snapshots, before/after).
 - **FR-A71** No API exists to modify or delete audit entries.
+- **FR-A72** Storage limitation for users and guests (the privacy page says one month): the hourly Cron Trigger
+  deletes audit entries about them (`entity_type` `usage` or `user`: limit hits, account deletion, role and ban
+  changes) after 30 days. Admin and content history (items, imports, topics, languages, settings) is kept.
 
 ---
 
@@ -1047,7 +1050,7 @@ Cloudflare Worker "myvocab"
    ├─ static assets (apps/web/dist, SPA fallback)
    ├─ /api/*  → Hono app
    │     routes → services → repository interfaces → Drizzle/D1 implementations
-   ├─ Cron Trigger (hourly) → Trash purge + old usage counters cleanup
+   ├─ Cron Trigger (hourly) → Trash purge + old usage counters and user audit entries cleanup
    └─ bindings: DB (D1), RL_* (Workers Rate Limiting, burst limits), ASSETS
    ▼
 Cloudflare D1 "myvocab-prod" (SQLite; no public endpoint)
@@ -1260,7 +1263,7 @@ CREATE TABLE app_settings (
   updated_at  INTEGER NOT NULL
 );
 
--- Append-only audit log (no update/delete API)
+-- Append-only audit log (no update/delete API); cron deletes 'usage'/'user' entries after 30 days
 CREATE TABLE audit_log (
   id             INTEGER PRIMARY KEY,
   actor_user_id  TEXT,                                 -- no FK: keep history even if the user is deleted
@@ -1504,7 +1507,7 @@ In test, Turnstile uses Cloudflare's documented **test keys** (always-pass / alw
    - No endpoint lets a user change their own role. The Better Auth `role` field is `input: false`.
    - Content writes happen only on `/api/admin/*`, behind **both** locks. There is no export endpoint.
 4. **A compromised admin or an honest mistake:** no bulk "delete all" endpoints; CSV import is append-only; item
-   deletes go to a 1-day Trash; every item change is audited with before/after; the audit log is append-only.
+   deletes go to a 1-day Trash; every item change is audited with before/after; the audit log is append-only (entries about users and guests are deleted after 30 days).
 5. **Recovery:** D1 **Time Travel** point-in-time restore (7-day window on the free plan) + vocabulary snapshots in the
    private content repo + owner-run full exports. The implementation must confirm Time Travel is still free on the
    Workers Free plan; if not, **flag it to the owner** and do not enable anything paid. The README documents the
@@ -1553,7 +1556,7 @@ The app must show cards to its users, so scraping can be made **slow, costly and
 | Headers | `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (deny camera/mic/geolocation) |
 | Test backdoors | `/api/test/*` registered only when `ENVIRONMENT=test`; production startup asserts it is absent |
 | Supply chain | Lockfile committed; Dependabot; `pnpm` with build scripts allowed only for approved packages |
-| Privacy | Store only Google id, email, name, avatar URL, known items, usage counters (hashed IP). Account deletion. Privacy page |
+| Privacy | Store only Google id, email, name, avatar URL, known items, usage counters (hashed IP), and an audit log (entries about users and guests, with user ids or hashed IPs, are deleted after 30 days; admin and content history is kept). Cloudflare keeps its request logs for a few days (may include IP and browser details); the privacy page says so. Account deletion. Privacy page |
 
 Answers are sent to the browser at practice start **by design** (self-assessment; a learner peeking only cheats themselves).
 

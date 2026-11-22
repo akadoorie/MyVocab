@@ -288,7 +288,10 @@ export const appSettings = sqliteTable('app_settings', {
   updatedAt: integer('updated_at').notNull(),
 });
 
-/** Append-only audit log (no update/delete API). No FK on the actor: history outlives users. */
+/**
+ * Append-only audit log (no update/delete API); the hourly cron deletes entries about users and
+ * guests after 30 days (FR-A72). No FK on the actor: history outlives users.
+ */
 export const auditLog = sqliteTable(
   'audit_log',
   {

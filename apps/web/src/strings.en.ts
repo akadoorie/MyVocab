@@ -175,14 +175,16 @@ export const en = {
       'A daily counter of the cards you were served, to keep the service fair for everyone.',
       'For guests: an hourly counter of practices per network address. The address itself is never stored, only a one-way keyed hash of it.',
       'A sign-in session cookie (HttpOnly). It holds no personal data.',
+      'An audit log, kept to protect the service. About you, it records only when you reach a usage limit (your user id, or for guests the hashed network address), when you delete your account, and admin changes to your account (role or ban). These entries are deleted after one month. It holds no IP addresses.',
+      'Technical request logs kept for a few days by our hosting provider, Cloudflare. They may include your IP address and browser details.',
     ],
     whyTitle: 'Why',
     why: 'To remember which words you already know, to keep you signed in, and to protect the service from bulk copying and abuse.',
     notTitle: 'What we don’t store',
-    not: 'Your Google password or Google tokens, your IP address, your browser details, or anything about what you do on other sites.',
+    not: 'Your Google password or Google tokens, your IP address or browser details (other than in Cloudflare’s request logs above), or anything about what you do on other sites.',
     deleteTitle: 'Delete your data',
     delete:
-      'Open Account and choose “Delete my account”. Your account, sessions, known words and counters are deleted at once. Hashed guest counters expire after 48 hours.',
+      'Open Account and choose “Delete my account”. Your account, sessions, known words and counters are deleted at once. Hashed guest counters expire after 48 hours. Audit log entries about you are deleted after one month. Cloudflare’s request logs expire on their own after a few days.',
   },
   practice: {
     /** The three answer buttons and the captions under them (FR-L27a, D-030). */

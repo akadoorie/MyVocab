@@ -7,7 +7,7 @@ const app = createApp();
 
 export default {
   fetch: app.fetch,
-  /** Hourly (PRD FR-A23): Trash purge, usage counter and expired session cleanup. Counts only. */
+  /** Hourly (PRD FR-A23): Trash purge, usage counter, audit log and expired session cleanup. Counts only. */
   async scheduled(_controller, env, ctx) {
     const container = createContainer(env.DB, loadConfig(env));
     ctx.waitUntil(

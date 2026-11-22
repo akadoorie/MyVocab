@@ -324,6 +324,14 @@ describe('Trash (FR-A20–24)', () => {
   });
 
   it('the hourly cron purges only items older than the retention, with snapshots', async () => {
+    // Audit entries about users and guests go after 30 days; admin and content history stays.
+    const day = 24 * 3600_000;
+    const monthAgo = Date.now() - 31 * day;
+    await env.DB.prepare(
+      "INSERT INTO audit_log (actor_email, action, entity_type, entity_id, created_at) VALUES (NULL, 'limit.exceeded', 'usage', 'old-limit', ?), (NULL, 'limit.exceeded', 'usage', 'new-limit', ?), (NULL, 'user.self_delete', 'user', 'old-user', ?), ('admin@example.com', 'item.update', 'item', 'old-item', ?)",
+    )
+      .bind(monthAgo, Date.now() - 29 * day, monthAgo, monthAgo)
+      .run();
     await setSetting('trash.retentionHours', 2);
     const old = await itemId('fx-word-1');
     const recent = await itemId('fx-word-2');
@@ -344,7 +352,7 @@ describe('Trash (FR-A20–24)', () => {
       turnstileHostname: null,
       ownerEmails: new Set(),
     }).maintenance.hourly();
-    expect(result).toMatchObject({ purged: 1, usageRows: 2 });
+    expect(result).toMatchObject({ purged: 1, usageRows: 2, auditRows: 2 });
     expect(await env.DB.prepare('SELECT id FROM items WHERE id = ?').bind(old).first()).toBeNull();
     expect(
       await env.DB.prepare('SELECT id FROM items WHERE id = ?').bind(recent).first(),
@@ -355,6 +363,13 @@ describe('Trash (FR-A20–24)', () => {
     expect(purge?.actor_user_id).toBeNull();
     expect(JSON.parse(purge!.details)).toMatchObject({ auto: true, snapshot: { itemId: old } });
     expect(await count('usage_counters')).toBe(1);
+    const left = await env.DB.prepare(
+      "SELECT entity_id, actor_email FROM audit_log WHERE entity_id IN ('old-limit', 'new-limit', 'old-user', 'old-item') ORDER BY entity_id",
+    ).all();
+    expect(left.results).toEqual([
+      { entity_id: 'new-limit', actor_email: null },
+      { entity_id: 'old-item', actor_email: 'admin@example.com' },
+    ]);
   });
 });
 
