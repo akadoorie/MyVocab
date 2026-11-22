@@ -32,9 +32,10 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
       enabled: opts.filter((o) => !o.disabled).length,
     };
   });
+  // Above the line (D-063): "Sample set" in the accent colour, the locked "All topics" grey.
   expect(colors).toEqual({
-    sample: 'rgb(241, 238, 251)',
-    allTopics: 'rgb(106, 98, 144)',
+    sample: 'rgb(155, 130, 255)',
+    allTopics: 'rgb(133, 122, 174)',
     topic: 'rgb(106, 98, 144)',
     topicDisabled: true,
     enabled: 1,

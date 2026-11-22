@@ -312,8 +312,10 @@ export function StartCard({
                     value="sample"
                     onChange={() => {}}
                   >
-                    <option value="sample">{strings.setup.sampleSet}</option>
-                    <option value="" disabled>
+                    <option value="sample" className="topic-special">
+                      {strings.setup.sampleSet}
+                    </option>
+                    <option value="" disabled className="topic-special">
                       {strings.setup.general}
                     </option>
                     {/* A line between the special choices and the topics, all left-aligned (D-062).
@@ -351,9 +353,13 @@ export function StartCard({
                 >
                   {isAdmin && (
                     // Admins can play exactly what guests get (D-038).
-                    <option value="sample">{strings.setup.sampleSet}</option>
+                    <option value="sample" className="topic-special">
+                      {strings.setup.sampleSet}
+                    </option>
                   )}
-                  <option value="">{strings.setup.general}</option>
+                  <option value="" className="topic-special">
+                    {strings.setup.general}
+                  </option>
                   {/* A line between the special choices and the real topics, all left-aligned
                       (D-062; replaces the "Topics" heading of D-040). */}
                   {meta.topics.length > 0 && <hr />}

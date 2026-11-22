@@ -193,7 +193,7 @@ private content repository. It never appears in the public code repo or any publ
 |---|---|---|
 | Source language | Active languages | **English** |
 | Target language | Active languages | **Hebrew** |
-| Topic | "All topics" (admins and guests: "Sample set" first), a separator line, then the active topics (by `sort_order`), all aligned left (D-062; replaces the "Topics" heading of D-040) | **All topics** |
+| Topic | "All topics" (admins and guests: "Sample set" first), a separator line, then the active topics (by `sort_order`), all aligned left (D-062; replaces the "Topics" heading of D-040). In the open list on desktop the special choices above the line sit on a lighter band in bold accent text (a guest's locked "All topics" in grey; D-063) | **All topics** |
 | Amount (signed-in) | **10 / 20 / 30 / 40 / 50** (segmented control) | **10** |
 | Amount (guest) | **5**, fixed and locked | **5** |
 

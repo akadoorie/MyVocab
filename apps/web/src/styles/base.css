@@ -696,6 +696,17 @@ body {
   .topic-locked option:disabled {
     color: #6a6290;
   }
+  /* The special choices above the line ("Sample set", "All topics", D-063): their own lighter
+     band, accent-coloured and bold, apart from the topics below. Desktop browsers honour this in
+     the open list; phone pickers mostly ignore it. Locked for guests: grey text on the band. */
+  select option.topic-special {
+    background-color: #382e62;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  select option.topic-special:disabled {
+    color: #857aae;
+  }
 
   /* The home page slogan (D-037): the first words fade in; "stick" drops in, bounces off twice
      and sticks on the third try with a soft squash, then a faint shine runs across it. Each word
