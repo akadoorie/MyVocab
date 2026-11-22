@@ -292,12 +292,15 @@ export const adminStrings = {
         'After “I don’t know”, Next counts down and moves to the next card by itself. 0 turns it off.',
       'practice.maxSize':
         'The largest number allowed in the choices above. Settings won’t save if a choice is bigger.',
+      'stats.registeredUsersMin':
+        'Guests and learners see the count under the slogan only from this number. Admins always see it.',
     },
     groups: {
       defaults: 'Start card defaults',
       practices: 'Practices',
       guests: 'Guests',
       limits: 'Limits',
+      home: 'Home page',
       maintenance: 'Maintenance',
       trash: 'Trash',
     },
@@ -312,6 +315,7 @@ export const adminStrings = {
       'guests.practiceSize': 'Cards per guest practice',
       'guests.practicesPerHour': 'Guest practices per hour (per network)',
       'users.cardsPerDay': 'Cards per learner per day',
+      'stats.registeredUsersMin': 'Show “Registered users” from',
       'undo.windowSeconds': 'Seconds before a Know is saved',
       'practice.continueSeconds': 'Seconds before the next round starts',
       'practice.nextSeconds': 'Seconds before the next card (after “I don’t know”)',

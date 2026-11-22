@@ -154,6 +154,7 @@ function SettingsForm({
         {num('guests.practicesPerHour')}
       </Group>
       <Group title={s.settings.groups.limits}>{num('users.cardsPerDay')}</Group>
+      <Group title={s.settings.groups.home}>{num('stats.registeredUsersMin')}</Group>
       <Group title={s.settings.groups.maintenance}>
         {bool('maintenance.enabled')}
         <TextField

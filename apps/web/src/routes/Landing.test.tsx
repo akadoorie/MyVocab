@@ -1,6 +1,6 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { mockFetch, renderRoutes } from '../test/render';
+import { mockFetch, renderRoutes, TEST_USER } from '../test/render';
 import { Landing } from './Landing';
 
 afterEach(() => vi.restoreAllMocks());
@@ -96,15 +96,37 @@ describe('Landing: guest sign-in banner (FR-L9, D-033)', () => {
 });
 
 describe('Landing: registered users (D-036)', () => {
+  const count = (registeredUsers: number) => ({
+    'GET /api/stats/registered-users': () => Response.json({ registeredUsers, showFrom: 100 }),
+  });
+
   it('shows "Registered users: N" under the slogan', async () => {
-    mockFetch(
-      { 'GET /api/stats/registered-users': () => Response.json({ registeredUsers: 1234 }) },
-      null,
-    );
+    mockFetch(count(1234), null);
     renderRoutes(routes, ['/']);
     const line = await screen.findByTestId('registered-users');
     expect(line).toHaveTextContent('Registered users: 1,234');
     expect(screen.getByText('1,234')).toHaveClass('text-hint'); // yellow, like the version
+  });
+
+  it('below the threshold, hides it from guests and learners but shows it to admins (D-082)', async () => {
+    mockFetch(count(99), null);
+    renderRoutes(routes, ['/']);
+    await screen.findByRole('heading', { level: 1 });
+    await waitFor(() => expect(screen.queryByTestId('registered-users')).toBeNull());
+    cleanup();
+    vi.restoreAllMocks();
+
+    mockFetch(count(100), { ...TEST_USER });
+    renderRoutes(routes, ['/']);
+    expect(await screen.findByTestId('registered-users')).toHaveTextContent(
+      'Registered users: 100',
+    );
+    cleanup();
+    vi.restoreAllMocks();
+
+    mockFetch(count(0), { ...TEST_USER, role: 'admin' });
+    renderRoutes(routes, ['/']);
+    expect(await screen.findByTestId('registered-users')).toHaveTextContent('Registered users: 0');
   });
 
   it('shows nothing when the count fails to load', async () => {

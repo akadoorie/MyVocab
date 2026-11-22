@@ -27,6 +27,8 @@ export type MetaResponse = z.infer<typeof metaResponseSchema>;
 /** GET /api/stats/registered-users: accounts that are not admins and not banned (D-036). */
 export const registeredUsersResponseSchema = z.object({
   registeredUsers: z.number().int().nonnegative(),
+  /** The home page shows the count from this number on; admins always see it (D-082). */
+  showFrom: z.number().int().nonnegative(),
 });
 export type RegisteredUsersResponse = z.infer<typeof registeredUsersResponseSchema>;
 

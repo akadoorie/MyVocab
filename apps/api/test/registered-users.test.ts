@@ -23,7 +23,16 @@ describe('GET /api/stats/registered-users (D-036)', () => {
 
     const res = await api('/stats/registered-users');
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ registeredUsers: 2 });
+    expect(await res.json()).toEqual({ registeredUsers: 2, showFrom: 100 });
+  });
+
+  it('tells the page the admin threshold for showing it (D-082)', async () => {
+    await env.DB.prepare(
+      `INSERT INTO app_settings (key, value, updated_at) VALUES ('stats.registeredUsersMin', '0', ?)`,
+    )
+      .bind(Date.now())
+      .run();
+    expect(await (await api('/stats/registered-users')).json()).toMatchObject({ showFrom: 0 });
   });
 
   it('keeps the count for 30 minutes, then counts again', async () => {

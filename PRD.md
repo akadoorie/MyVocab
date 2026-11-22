@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Product** | MyVocab: learn words and expressions in a shrinking loop |
+| **Product** | MyVocab: learn words and expressions in practices that shrink as you learn |
 | **Version** | 1.1 (v1 scope) |
-| **Date** | 2026-11-17 |
-| **Status** | Approved design. Implementation starts only after the owner says **"Go"** |
+| **Updated** | 2026-11-23 |
+| **Status** | Live; this document describes the current product |
 | **Implementation prompt** | `AGENT_PROMPT.md` (local only: git-ignored, never committed to the public repo) |
 
 ---
@@ -38,17 +38,17 @@
 MyVocab is a modern web application for learning new words and expressions/idioms, from any language to any
 language. v1 supports **English** and **Hebrew**.
 
-**The core idea: a shrinking loop.**
+**The core idea: a shrinking practice.**
 The learner picks a closed group of items, which are shown one by one as **flip cards** in a practice. In each round the
 learner marks the items they already know. When a round ends, a new round begins with **only the items they didn't
 know**, in a new random order. The practice ends when a round has no "Don't know" items left (all were marked "Know"),
-or when the learner presses **Stop**.
+or when the learner leaves it with **Home**.
 
 **Example (English → Hebrew).** The group: Calculator (מחשבון), TV (טלויזיה), Phone (טלפון), Bed (מיטה),
 Cupboard (ארון).
 - Round 1 shows all 5. The learner marks "Know" for *Calculator* and *Bed*, and "Don't know" for the other 3.
 - Round 2 shows *TV*, *Phone*, *Cupboard* in a new random order.
-- The practice continues until a round ends with every shown item marked "Know", or the learner presses Stop.
+- The practice continues until a round ends with every shown item marked "Know", or the learner leaves with Home.
 
 **Translation or explanation.** The front of the card always shows the item's text. If the learner chose two
 different languages (EN → HE), the back shows the **translation**. If they chose the same language (EN → EN), the back
@@ -107,8 +107,7 @@ private content repository. It never appears in the public code repo or any publ
 ## 4. Glossary
 | Term | Definition |
 |---|---|
-| **Item** | The basic content unit: one word or expression in its **language** (e.g. English "Swift"). It holds the multiple-meanings flag, topics, translations, explanation, synonyms and hints (§8.1). Its `text` is always what the front of the card shows. |
-| **Type** | *Removed (D-046).* Items have no type: a word, an expression or anything else, classified by its **topics** (e.g. "Idioms", "Expressions (except Idioms)"). |
+| **Item** | The basic content unit: one word or expression in its **language** (e.g. English "Swift"). It holds the multiple-meanings flag, topics, translations, explanation, synonyms and hints (§8.1). Its `text` is always what the front of the card shows. Items have no type: a word, an expression or anything else is classified by its **topics** (e.g. "Idioms", "Expressions (except Idioms)"; D-046). |
 | **Translation** | For each **other** language, up to three ordered lists (D-024, D-025): the **meaning** (`translation_meaning`, required to play into that language: what it means, e.g. "The truth came out"; for a plain word, simply its translation, e.g. `he: ["מהיר", "סנונית"]`), the **parallel** (`translation_parallel`, optional: an equivalent expression, e.g. "The cat is out of the bag") and the **literal translation** (`translation_literal`, optional: word for word, e.g. "The awl came out of the sack"). A plain word keeps only the meaning. An item never has a translation of any kind into its own language. |
 | **Explanation** | An ordered list of explanations **in the item's own language**, one entry per meaning. |
 | **Synonym** | An alternative word or expression in the item's language. Synonyms have their own list and are shown in a "Synonyms" section next to the hints. |
@@ -116,13 +115,13 @@ private content repository. It never appears in the public code repo or any publ
 | **Multiple meanings** | A flag (`multipleMeanings`) the admin sets when the item has two or more meanings (e.g. "Date": a day / a fruit). The learner sees a badge on the front. It can't be computed from list lengths: "Happy" → ["שמח", "מאושר"] has two translations but one meaning. |
 | **Card** | What the learner sees in a practice: one item + the target language chosen on the start card. **Not stored** in the database. On screen it is a **flip card**: the item on the **front**; the translation or explanation, hints and synonyms on the **back**. |
 | **Direction** | Source language → target language, e.g. EN→HE. The source is always the item's language. |
-| **Hints (button)** | Reveals the hints and synonyms on the front of the card. |
+| **Hints cover** | The shimmering cover over the hints and synonyms on the front of the card: a tap reveals them, a tap on them covers them again (FR-L25). |
 | **Flip** | Turning the on-screen card over (front ↔ back). It can be done any number of times and **has no effect on grading**. |
 | **Amount** | The number of cards in a practice (learners: 10/20/30/40/50; guests: always 5). |
-| **Practice** | One run over a group of cards, called a **"Practice"** in the UI too ("Configure your practice", "Practice completed", "New practice"; Hebrew "תרגול"). The code uses the same word (D-081; it was "Session" in the UI and "loop" in the code, D-018). Settings keys, the API (`/api/practices`) and the known-words column `known_in_round` (with its check `ck_known_round`; the table is rebuilt) were renamed with it (migration 0009). |
-| **Round** | One pass over the practice's remaining cards, a **"Round"** in the UI ("Round 2 · Card 1/3", "Round 3 · 2 cards left", "Rounds" on the summary; Hebrew "סבב") and in the code (D-081; the code said "cycle" before, D-067). |
+| **Practice** | One run over a group of cards, called a **"Practice"** in the UI too ("Configure your practice", "Practice completed", "New practice"; Hebrew "תרגול"). The code, the API (`/api/practices`), the settings keys (`practice.*`) and the database use the same word (D-081). |
+| **Round** | One pass over the practice's remaining cards, a **"Round"** in the UI ("Round 2 · Card 1/3", "Round 3 · 2 cards left", "Rounds" on the summary; Hebrew "סבב"), in the code and in the database (`known_in_round`; D-067, D-081). |
 | **Known item** | An item a signed-in learner marked "Know" in one direction (e.g. EN → HE). It is excluded from their future practices **in that direction only** until returned (D-028); the explanation direction (EN → EN) is a direction of its own. |
-| **Topic** | A topic (Home, Nature, …). An item can have many, or none. **All topics** (formerly "General") is virtual: every item, including items without a topic (D-039). |
+| **Topic** | A topic (Home, Nature, …). An item can have many, or none. **All topics** is virtual: every item, including items without a topic (D-039). |
 | **Content repo** | The **private** GitHub repo `MyVocab-Content` that holds vocabulary files (starter set, import batches, snapshots). |
 
 **How the back of the card is chosen** (illustrative items):
@@ -155,19 +154,19 @@ private content repository. It never appears in the public code repo or any publ
 | Auth | Better Auth, **Google sign-in only**. `role` = `user` or `admin` |
 | Admin protection | Server-side role check **+ mandatory Cloudflare Access** (emailed one-time code) on `/admin*` and `/api/admin/*` |
 | Start defaults | Source **English**, Target **Hebrew**, Topic **All topics**, Amount **10**, shown in a muted "default" style |
-| Amount | Learners: **10 / 20 / 30 / 40 / 50** (default 10). Guests: **always 5**, locked, with a "sign-in" toast |
+| Amount | Learners: **10 / 20 / 30 / 40 / 50** (default 10). Guests: **always 5**, locked, with a "Sign-in to change" message over the field |
 | Guests | Can run 5-card practices after an invisible **Turnstile** bot check. Their Know marks are **not** remembered |
 | Anti-scraping | Turnstile for guests + strict limits (guests ~10 practices/hour per IP; learners ~500 cards/day) + `noindex` + no third-party content exposure |
 | Content model | One **item** per word, expression or anything else (no type, D-046), in its own language. The three kinds of translation (parallel, meaning, literal; per other language), explanation, synonyms and hints are **ordered lists** stored inside the item row (§11) |
-| Types | None (D-046): topics classify items; "Expressions (except Idioms)" and "Idioms" can't be combined on one item |
+| Topic pairs | Topics classify items (no types, D-046); two topics can be marked as not combinable on one item, e.g. "Expressions (except Idioms)" and "Idioms" |
 | Back of card | Different languages → the **parallel** (or the **meaning** when there is no parallel), then **Meaning** and **Literally** (muted) when present, each under its own headline; same language → **explanation**. Hints + synonyms always below |
 | Multiple meanings | Admin-set flag. Shown as a "◆ Multiple meanings" badge on the front |
 | Card UI | A glassy, violet-glowing **flip card** with a 3D flip animation and a round **Flip** button on both sides |
-| Hints | A **Hints** toggle button shows or hides hints + synonyms on the front. Flipping always shows them on the back |
+| Hints | On the front, hints + synonyms sit under a live cover that a tap reveals and a tap covers again (D-047, D-078). The back always shows them |
 | Flip | The round **Flip** button on the card (front and back), or Space/F; a tap elsewhere on the card does nothing (D-047). It toggles front ↔ back any number of times and never affects grading |
-| Known memory | **Any** green "I know it" (any round) is remembered per **item and direction** and hides the item in that direction (D-028). The orange "I know it · Show again in future" (signed-in learners) is not remembered: the word stays in the pool (FR-L27a) |
+| Known memory | **Any** green "I know it" (any round) is remembered per **item and direction** and hides the item in that direction (D-028). The amber "I know it · Show again in future" is never remembered: the word stays in the pool (FR-L27a) |
 | Known list | "My known words": search/filter/sort; return items to practices (single, selected, all filtered) |
-| Know tap | Advances immediately; Back (or swipe right) returns to the card, and its answer can be changed (FR-L29a) |
+| Know tap | Advances immediately; Back (or a swipe toward Back) returns to the card, and its answer can be changed (FR-L29a) |
 | Topics | Many-to-many. "All topics" = all items |
 | Content sources | Agent-written starter set (in the private content repo) → then admins add manually or by CSV bulk upload |
 | UI language | **Hebrew by default**, English on request: a switch in the footer, remembered in the browser (D-080). Hebrew pages are right-to-left. The admin area stays English. Content renders in its own direction |
@@ -179,9 +178,10 @@ private content repository. It never appears in the public code repo or any publ
 ## 6. Functional requirements: Learner
 
 ### 6.1 Landing page and start card
-- **FR-L1** The landing page (`/`) shows the slogan, with **"Registered users: N"** in small muted text under it (the number in yellow, like the version) for
-  everyone (fetched once when the page opens; hidden if it fails to load, D-036) (when the page loads or is refreshed on Home, the first words
-  fade in and "stick" drops in, bounces off twice and sticks on the third try with a soft squash and a faint shine, about
+- **FR-L1** The landing page (`/`) shows the slogan, with **"Registered users: N"** in small muted text under it (the number in yellow, like the version):
+  for guests and learners only once N reaches the admin setting `stats.registeredUsersMin` (default 100), for admins
+  always, even at 0 (D-082; fetched once when the page opens; hidden if it fails to load, D-036) (when the page loads or is refreshed on Home, the first words
+  fade in and the last word ("stick"; Hebrew "ביעילות") drops in, bounces off twice and sticks on the third try with a soft squash and a faint shine, about
   3s; not when coming back to Home inside the app; a short fade with reduced motion, D-034, D-037), the app version (a small yellow "v1.N" next to the name, D-032), a short hero, a 3-step "How it works" section with a **"Buttons"** guide
   (a small copy of each answer button as it looks in a practice: the same gradient, glossy edge, glow and ledge, label only, with its caption under it, D-058; and what it does; for guests the green one is dark, with a
   small yellow lock, and its line ends "(Sign-in to enable)", the whole "Sign-in to enable" a link that starts sign-in, D-030, D-042, D-071), and the **Start card**.
@@ -193,14 +193,14 @@ private content repository. It never appears in the public code repo or any publ
 |---|---|---|
 | Source language | Active languages | **English** |
 | Target language | Active languages | **Hebrew** |
-| Topic | "All topics" (admins and guests: "Sample set" first), a separator line, then the active topics (by `sort_order`), all aligned left (D-062; replaces the "Topics" heading of D-040). In the open list on desktop the special choices above the line sit on a lighter band in bold accent text (a guest's locked "All topics" in grey; D-063) | **All topics** |
+| Topic | "All topics" (admins and guests: "Sample set" first), a separator line, then the active topics (by `sort_order`), all aligned left (D-062). In the open list on desktop the special choices above the line sit on a lighter band in bold accent text (a guest's locked "All topics" in grey; D-063) | **All topics** |
 | Amount (signed-in) | **10 / 20 / 30 / 40 / 50** (segmented control) | **10** |
 | Amount (guest) | **5**, fixed and locked | **5** |
 
 - **FR-L3 Default styling**: a default value must still read as **chosen**: same background and bright `--text`
   value as a selected one (the selected option of a segmented control is filled the same way), with a subtle solid
   `--border` outline and a small violet **"Default"** tag. As soon as the user changes it, the field gets a solid
-  `--accent` outline and the tag disappears (owner feedback, 2026-11-18: the muted look made defaults seem unset).
+  `--accent` outline and the tag disappears.
   When any field differs from its default, a **"Reset to defaults"** link appears. The user can press **Start**
   immediately without touching anything.
 - **FR-L4** "New practice" from the summary starts the next practice with the same selection right away (FR-L32,
@@ -213,8 +213,8 @@ private content repository. It never appears in the public code repo or any publ
   **temporary message** says **"Sign-in to change"**, where **"Sign-in"** is a link that starts sign-in (D-043),
   and goes away after 2 s (D-045). It appears over the Cards per practice field (on desktop on its right side, the lock
   and the 5 staying visible; on phones over the whole narrow field, on one line), so it shows where the field is however far the page is scrolled
-  (D-044, D-070; phones used a toast before, which appeared far from the field). It appears:
-  - once automatically, the first time a guest sees the start card in a browser session, and
+  (D-044, D-070). It appears:
+  - once automatically, the first time a guest sees the start card while the browser tab is open, and
   - every time the guest taps/clicks the locked Amount field.
   The server **enforces** 5 for guests regardless of the request (§12.1).
 - **FR-L6a Guest topic: the Sample set** (D-038): guests play only items marked **"Include in Sample set"**, across
@@ -237,7 +237,7 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L8** If fewer cards are available than the amount, the practice starts with all available cards and shows a notice
   ("Only 7 new cards in Home, starting with 7"). If 0 are available: an empty state ("You know every card in this
   selection 🎉") with links to change the selection or open "My known words".
-- **FR-L9** Guests see a subtle banner: "Sign-in with Google to remember the words you already know, choose different topics and bigger sessions."
+- **FR-L9** Guests see a subtle banner: "Sign-in with Google to remember the words you already know, choose different topics and bigger practices."
   "Sign-in with Google" is a link that starts sign-in. A soft violet light runs round the banner's frame three times
   (about 7s a lap), then the frame keeps a steady faint glow; with reduced motion, only the glow (D-033).
 - **FR-L10** Guests pass an **invisible Cloudflare Turnstile** check when they press Start (§14.3). In the rare case
@@ -270,7 +270,7 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L23** Header progress: `Round 2 · Card 1/3 · 2 known` (known = total known in this practice).
 - **FR-L24** Buttons and phases:
 
-| Phase | Know | Hints (cover) | Flip | Don't know | Back | Next | Stop |
+| Phase | Know | Hints (cover) | Flip | Don't know | Back | Next | Home |
 |---|---|---|---|---|---|---|---|
 | **Deciding**, card not answered yet | enabled | enabled\* | enabled | enabled | enabled\*\* | **disabled** | enabled |
 | **Deciding**, card answered earlier (reached with Back) | enabled | enabled\* | enabled | enabled | enabled\*\* | **enabled** | enabled |
@@ -278,20 +278,19 @@ private content repository. It never appears in the public code repo or any publ
 
 \* Hints: the live cover on the card front (D-047), usable whenever the **front** is showing (a toggle).
 \*\* Back is disabled on the first card of a round (FR-L29a).
-**Know · ask again** (signed-in learners, FR-L27a) is enabled and disabled exactly like Know.
+**Know · ask again** (FR-L27a) is enabled and disabled exactly like Know; for guests the green Know stays locked (FR-L27a).
 
 - **FR-L25 Hints** (D-047): on the **front**, the hints and synonyms sit under a **live cover**: a cloud of tiny
   shimmering dots over the blurred text, with a small "Tap to see hints" label, so it is clear it can be tapped.
   Tapping the cover (or pressing **H**) reveals them (the dots scatter and fade, the text sharpens); a **clean tap on
   the revealed hints** (or **H**) covers them again, but never a drag, a tap that stops a scroll, or a tap within
   0.35 s of scrolling, so scrolling never hides them (D-078). A "Hide hints" button stays for keyboard and screen
-  reader users, out of sight until it has keyboard focus (D-078; it was a visible link, D-050). **Long hints** (D-050): the hints and synonyms sit in their own
+  reader users, out of sight until it has keyboard focus (D-078). **Long hints** (D-050): the hints and synonyms sit in their own
   area, the room left between the divider and the Flip button's row; when they don't fit, only that area scrolls,
   with a thin violet scrollbar and the last lines fading out while there is more below (the word and the Flip button
   never move). On the front the hints reach down to the card's bottom (D-078, D-079): covered, the dots fill it with
   a notch around the Flip button; revealed, the text runs down too, fading softly where it passes Flip, with room
-  after the last line so at the end of the scroll it rests above the Flip button (before, both ended above the Flip
-  row, D-050). The back
+  after the last line so at the end of the scroll it rests above the Flip button. The back
   works the same way under the answer. **Synonyms come first**, then one empty line (a tighter 1rem gap on phones, D-051), then the hint sentences. On phones the Flip button is 48px (64px on desktop), leaving more room for the hints (D-051). The cover is a real button ("Tap to see hints" / "Hide hints", `aria-expanded`); the hidden text is not
   read out until revealed; it is at least 4.5rem tall, so a one-line hint is still easy to tap; with reduced motion
   the dots stand still. There is **no Hints button**. The state survives flipping back and forth and is remembered per card
@@ -304,9 +303,8 @@ private content repository. It never appears in the public code repo or any publ
   **any number of times**, in both phases. **Flipping has no effect on grading** and is not recorded.
 - **FR-L27 Know** (available on either side while Deciding): removes the card from the practice (it won't appear in the
   next round), records it as known in this round, and **immediately** shows the next card (front side up). A Know made
-  by mistake is fixed with **Back** and then **Don't know** (FR-L29a). The earlier **Undo bar** (with its countdown)
-  was removed on 2026-11-19 at the owner's request (D-019): Back covers it and works for any card of the round.
-- **FR-L27a Know · ask again** (signed-in learners; owner request, 2026-11-19, D-023): a second, **amber** Know
+  by mistake is fixed with **Back** and then **Don't know** (FR-L29a); there is no separate Undo (D-019).
+- **FR-L27a Know · ask again** (D-023): a second, **amber** Know
   button between Know and Don't know. Inside the practice it is exactly Know: the card leaves the practice, counts in
   "N known" and in the summary, plays the Know animation, and the next card shows. The difference: it is **not
   recorded** in the learner's known items (FR-L50), so the word stays in the pool and may be drawn again in any later
@@ -315,9 +313,9 @@ private content repository. It never appears in the public code repo or any publ
   **"Show again in future"**; red **"I don't know"** with **"Show again soon"**. Guests see all three, with the same
   labels and captions (D-042): nothing is ever stored for them (FR-L55), so the amber one does for them exactly what
   it says and is their "I know it", while the green **"Don't show again"** is shown **locked**: a darker green, a
-  yellow padlock on its top-left edge, off, titled "Sign-in to enable". Tapping it (or pressing K) marks nothing
-  and shows **"Sign-in required"** over that button for 1.5 seconds, "Sign-in" being a link that starts sign-in
-  (D-043); it is `aria-disabled` rather than `disabled`, so it can still be tapped and focused.
+  yellow padlock on its top-left edge (top-right in Hebrew), off, titled "Sign-in to enable". Tapping it (or pressing K)
+  marks nothing and shows **"Sign-in required"** (Hebrew "נדרשת התחברות") over that button for 1.5 seconds, the
+  "Sign-in" part being a link that starts sign-in (D-043); it is `aria-disabled` rather than `disabled`, so it can still be tapped and focused.
 - **FR-L28 Don't know** (available on either side while Deciding): adds the card to the next round. If the card is
   showing its front, it **flips automatically** to the back (answer + hints + synonyms). The phase becomes
   **Revealed**: the three answer pills stay in place but disable, **Next** enables and receives focus, and Flip
@@ -338,7 +336,7 @@ private content repository. It never appears in the public code repo or any publ
   moves with reduced motion.
 - **FR-L29 Next**: moves to the next card (enabled in the Revealed phase, and on a card answered earlier that was
   reached with Back). The next card enters front side up with a short rise-in (no reverse-flip animation).
-- **FR-L29a Back and changing an answer** (owner request, 2026-11-19): the round **Back** button (or **←**) shows the
+- **FR-L29a Back and changing an answer**: the round **Back** button (or **←**; **→** in Hebrew) shows the
   previous card of the current round, card by card, down to the first card of the round (earlier rounds are out of
   reach). On the round break and the summary, **"← Back to the last card"** returns to the round's last card. A card
   reached with Back (or Next) **always shows its front**, even if it was showing its back when left, with its hints
@@ -354,20 +352,20 @@ private content repository. It never appears in the public code repo or any publ
     turn the summary into a round break, or the reverse.
   - Answers are derived from the practice state (`known` for this round, with an "ask again" flag, and `nextRound`), so
     there is no separate store.
-- **FR-L29b Swipe** (phones, touch only; owner request, 2026-11-19): **swipe left = Next**, **swipe right = Back**,
-  only when that action is allowed. The card follows the finger with a slight tilt; past about 70 px (or a quick flick)
+- **FR-L29b Swipe** (phones, touch only): **swipe left = Next**, **swipe right = Back** (mirrored in Hebrew, where
+  Next sits on the left: swipe right = Next, swipe left = Back; D-080), only when that action is allowed. The card follows the finger with a slight tilt; past about 70 px (or a quick flick)
   it slides out and the action runs, otherwise it springs back. When the action isn't allowed it moves only a little,
   with resistance. A mostly vertical drag is ignored, a tap does nothing, and with "reduce motion" there is no movement
   (the action just happens). There is no on-screen hint; the buttons stay.
-- **FR-L30 Stop**: there is no Stop button since D-072 (it did exactly what Home does); **Home** in the header (or
-  Esc) ends the practice, after asking **"Back to Home? This will stop the practice. Are you sure?"** with **Yes** /
+- **FR-L30 Leaving a practice**: **Home** in the header (or Esc) ends the practice (there is no separate Stop
+  button, D-072), after asking **"Back to Home? This will stop the practice. Are you sure?"** with **Yes** /
   **No** (FR-L30a). **Yes** ends the practice and returns to `/`; already-made Know marks are kept (and flushed, §6.4).
   **No** continues where it was.
 - **FR-L30a Home from the practice**: the practice header has a **"← Home"** button, outlined so it reads as a control (it is
   the only way out of a practice, D-072); it is not pumped or nudged, so it doesn't compete with the answers. Because it leaves the
-  practice, it first asks **"Back to Home? This will stop the practice. Are you sure?"** with **Yes** / **No**. **Yes** = Stop (FR-L30);
+  practice, it first asks **"Back to Home? This will stop the practice. Are you sure?"** with **Yes** / **No**. **Yes** ends the practice (FR-L30);
   **No** closes the question and the practice continues where it was. While the question is open, practice shortcuts are
-  ignored and Esc means No (owner request, 2026-11-18).
+  ignored and Esc means No.
 - **FR-L31 Round break**: when a round ends and "Don't know" cards remain, an interstitial shows
   "Round 3 · 2 cards left", a recap ("You knew 5 of 8 — 3 to go."), then **Home** and **Continue** side by side as on
   the summary, with "to next round" under Continue (D-067). **Continue** (or Enter) starts the next round; it counts
@@ -383,7 +381,7 @@ private content repository. It never appears in the public code repo or any publ
   problem (no new cards left, the daily limit, a failed check) is shown under the buttons, where Home stays available.
   It waits while the start settings load, and if they can't load it falls back to the start card, pre-filled.
   **Home** goes to the start card with the defaults. Guests also see "Sign-in to skip words that no longer need to repeat".
-- **FR-L32a Celebration** (owner request, 2026-11-19): when the summary appears, a burst of **confetti** in the app's
+- **FR-L32a Celebration**: when the summary appears, a burst of **confetti** in the app's
   colours shoots up from the bottom corners and flutters down for about 3 seconds (a canvas drawn by the app, no
   library; none with "reduce motion"), and a short **applause** plays (`/sounds/applause.wav`, 2.3 s, mono, about
   150 KB, loaded only then). A **🔊 Sound on / 🔇 Sound off** switch on the summary turns it off; the choice is
@@ -395,13 +393,15 @@ private content repository. It never appears in the public code repo or any publ
     new completion, so the celebration and the crown's flight happen again.
   - **The crown**: as the last confetti falls (about 2.4 s), a yellow crown flies in slowly (about 2 s) along one
     smooth arc (no pause on the way) from the top-left of
-    the screen and lands, tilted, on the **upper-left corner** of the summary card with a small bounce. It stays there,
+    the screen and lands, tilted, on the **upper-left corner** of the summary card with a small bounce (mirrored in
+    Hebrew: from the top right, onto the upper-right corner; D-080). It stays there,
     and on later visits to the summary in the same practice it is already in place (no flight). With "reduce motion"
     it is simply there from the start.
 - **FR-L33** The practice state (including the current card's side and whether its hints are shown) is saved in
-  `sessionStorage`, so a page refresh resumes the same practice. Stop or finishing clears it.
-- **FR-L34** Desktop keyboard shortcuts (listed in a "Keyboard shortcuts" popover in the practice header): **K** Know, **A** Know · ask again (signed-in learners), **D** Don't know, **H** Hints,
-  **Space/F** Flip, **←** Back, **→** Next, **Enter** Next or Continue, **Esc** Home (asks first, FR-L30a). Shortcuts respect the enabled/disabled state.
+  `sessionStorage`, so a page refresh resumes the same practice. Leaving with Home or finishing clears it.
+- **FR-L34** Desktop keyboard shortcuts (listed in a "Keyboard shortcuts" popover in the practice header): **K** Know (signed-in learners; guests see the sign-in tip), **A** Know · ask again, **D** Don't know, **H** Hints,
+  **Space/F** Flip, **←** Back, **→** Next (mirrored in Hebrew: **→** Back, **←** Next; letter keys also work on a
+  Hebrew keyboard layout, D-080), **Enter** Next or Continue, **Esc** Home (asks first, FR-L30a). Shortcuts respect the enabled/disabled state.
 
 ### 6.3 What the back of the card shows
 The front always shows the item text. The back depends only on whether the two languages are the **same or
@@ -444,14 +444,14 @@ different**:
   EN → EN (the explanation direction) and in EN → AR. Separate items are not affected either: the Hebrew item "מהיר"
   still appears in HE → EN practices.
 - **FR-L55** Guests: nothing is queued or stored.
-- **FR-L56 Failed sign-in** (owner request, 2026-11-18): the server rewrites Better Auth's error redirect to one of two
+- **FR-L56 Failed sign-in**: the server rewrites Better Auth's error redirect to one of two
   neutral addresses, never carrying the error code or its description: `/?signin=refused` when the account may not
   sign in (a banned account) and `/?signin=error` for anything else. Better Auth's banned text is replaced by a
   neutral one, so **"banned" never appears** in the address bar or the page. The start page then shows a notice that
   **stays until dismissed** (✕), above the hero:
   - refused: "We couldn't sign you in with this Google account. You can keep learning as a guest.";
   - error: "Sign-in didn't complete. Please try again."
-  The automatic guest "sign-in" toast (FR-L6) is held back on that visit, so the two never contradict each
+  The automatic guest "Sign-in to change" message (FR-L6) is held back on that visit, so the two never contradict each
   other. The address is cleaned at once, so a refresh doesn't repeat the notice. A ban with an end date simply stops
   refusing once it ends.
 
@@ -472,7 +472,7 @@ different**:
 
 ### 6.6 Account
 - **FR-L70** Sign in / sign out with Google (header button; avatar menu when signed in).
-- **FR-L71** **Delete my account** (in the avatar menu → Account page; typed confirmation). Deletes the user, sessions,
+- **FR-L71** **Delete my account** (in the avatar menu → Account page; typed confirmation). Deletes the user, sign-ins,
   accounts, known items and usage counters (cascade). Owners can't delete themselves while they are the last admin.
 - **FR-L72** A minimal **Privacy** page: what is stored (Google id, email, name, avatar, known items, daily usage
   counters, hashed IPs for rate limiting), why, and how to delete it.
@@ -518,7 +518,7 @@ so learners never download it. All admin pages work on mobile (tables collapse i
     active ones first (a Hebrew item on English, an English item on Hebrew). Above the card, a heading names the direction and the kind ("English → Hebrew ·
     Translation") with one line on what the back shows; a direction that isn't ready shows what to add instead of a
     card ("add a meaning in Hebrew", "add an explanation"). It uses the server's card builder (§12.4), so it always
-    matches what learners see, with the practice's Hints toggle. On desktop each card is drawn at the practice card's exact size for the window and scaled
+    matches what learners see, with the practice's hints cover. On desktop each card is drawn at the practice card's exact size for the window and scaled
     down to fit the admin column (a true miniature: same text size, wrapping and spacing in proportion).
   - **Warnings** (badges; they never block saving):
     - not playable for a direction (no translation into X, or no explanation);
@@ -570,11 +570,11 @@ so learners never download it. All admin pages work on mobile (tables collapse i
   available to learners.
 
 ### 7.6 Users (`/admin/users`)
-- **FR-A40** List: avatar, name, email, role, **Owner** badge, created, last seen (from the latest session refresh, day
+- **FR-A40** List: avatar, name, email, role, **Owner** badge, created, last seen (from the latest sign-in refresh, day
   precision; never written per request, §11.2), banned. Search by name/email.
 - **FR-A41** **Make admin / Remove admin**. Rules: owners (in `ADMIN_EMAILS`) can't be demoted; an admin can't demote
   themselves; the last remaining admin can't be demoted.
-- **FR-A42** **Ban / Unban** (with an optional reason). Banning revokes all the user's sessions. Admins can't ban
+- **FR-A42** **Ban / Unban** (with an optional reason). Banning signs the user out everywhere. Admins can't ban
   themselves or owners.
 
 ### 7.7 Settings (`/admin/settings`)
@@ -592,6 +592,7 @@ so learners never download it. All admin pages work on mobile (tables collapse i
 | `guests.practiceSize` | int | `5` | Fixed cards per guest practice (server-enforced; admin label "Cards per guest practice") |
 | `guests.practicesPerHour` | int | `10` | Guest practices per hour per IP |
 | `users.cardsPerDay` | int | `500` | Cards served per learner per UTC day (admins exempt) |
+| `stats.registeredUsersMin` | int | `100` | "Registered users: N" shows on the home page from this N on; admins always see it (D-082). Admin group "Home page", label "Show “Registered users” from" |
 | `undo.windowSeconds` | int | `5` | Seconds a Know waits in the queue before it is sent (1–15; FR-L51). Admin label "Seconds before a Know is saved" |
 | `maintenance.enabled` | bool | `false` | Show banner + block practices for non-admins |
 | `maintenance.message` | string | `""` | Banner text (≤ 280 chars) |
@@ -646,7 +647,7 @@ This JSON shape is used by the API, the admin editor and the JSON export (illust
 | `synonyms` | Ordered list in `lang` (≤ 20 entries, each ≤ 100 chars) |
 | `hints` | Ordered list in `lang` (≤ 20 entries, each ≤ 500 chars) |
 | `status` | `published` (default) or `draft` (hidden from practices) |
-| `in_sample_set` | Guests play only these items (D-038). Off for new items; every item that existed when it was added was put in |
+| `in_sample_set` | Guests play only these items (D-038). Off for new items |
 
 - The meaning is required to play an item into a language; the parallel and the literal translation are optional
   (D-024, D-025). Example, the Hebrew idiom "יצא המרצע מן השק" in English: parallel "The cat is out of the bag",
@@ -683,9 +684,9 @@ The same normalization (case-insensitive, NFC) is used to de-duplicate entries w
 |---|---|---|
 | `lang` | yes | A known language code (`en`, `he`), active or not (D-027) |
 | `text` | yes | Item text (≤ 200 chars) |
-| `type` | no | Old, optional (D-046): `word` or `expr`. `expr` puts the item in "Expressions (except Idioms)" unless it is in a topic that excludes it; otherwise ignored. The export no longer writes it |
+| `type` | no | Accepted from older files (D-046): `word` or `expr`. `expr` puts the item in "Expressions (except Idioms)" unless it is in a topic that excludes it; otherwise ignored. The export doesn't write it |
 | `multiple_meanings` | no | `true` / `false` (default `false`) |
-| `topics` | no | Topic slugs, `|`-separated. Older files may call this column `categories` (still read, D-039) |
+| `topics` | no | Topic slugs, `|`-separated. The column name `categories` is accepted too (D-039) |
 | `translation_parallel_<code>` | no | One column per language, e.g. `translation_parallel_he`: the parallel (equivalent word or expression) in that language, `|`-separated. The column of the row's own `lang` must be empty |
 | `translation_meaning_<code>` | no | One column per language: the meaning in that language, `|`-separated. The row's own `lang` column must be empty |
 | `translation_literal_<code>` | no | One column per language: the literal (word-for-word) translation in that language, `|`-separated, or `=parallel` when it is the same as the parallel (D-026). The row's own `lang` column must be empty |
@@ -700,8 +701,8 @@ Rules:
 - A translation column for an unknown language is a file error. A value in the row's own language column is a row
   error ("An English item can't have an English translation; use `explanation`"). Errors name the column as it is in
   the file.
-- **Old column names** (before D-024) are still read: `translation_<code>` is the meaning (D-025) and
-  `literal_<code>` the literal translation. An old and a new name for the same list in one file is a duplicate column.
+- **Alternative column names** are accepted: `translation_<code>` is the meaning (D-025) and `literal_<code>` the
+  literal translation. An old and a new name for the same list in one file is a duplicate column.
 - **Merge semantics** (an import never deletes or overwrites):
   - An item matches an existing **non-deleted** item on (`lang`, normalized `text`); otherwise it is created.
   - Topics are unioned. Parallel, meaning and literal entries (per language), explanation entries, synonyms and hints are appended
@@ -728,8 +729,8 @@ Rules:
 columns a file needs are required; the others may be left out.
 ```csv
 lang,text,multiple_meanings,topics,translation_meaning_he,translation_meaning_en,explanation,synonyms,hints,status
-en,Swift,word,true,,מהיר|סנונית,,"Moving or able to move very fast|A small bird that flies very fast",fast|quick|rapid,"He gave a swift reply.|A swift nested under the roof.",published
-he,מהיר,word,false,,,fast|quick,"שנע או פועל במהירות רבה",זריז,"הרכבת המהירה הגיעה בזמן.",published
+en,Swift,true,,מהיר|סנונית,,"Moving or able to move very fast|A small bird that flies very fast",fast|quick|rapid,"He gave a swift reply.|A swift nested under the roof.",published
+he,מהיר,false,,fast|quick,"שנע או פועל במהירות רבה",זריז,"הרכבת המהירה הגיעה בזמן.",published
 ```
 
 ### 8.4 Starter set
@@ -822,7 +823,7 @@ myvocab-export-2026-11-16-1430/
 ### 9.1 Design tokens (dark theme only)
 | Token | Value | Use |
 |---|---|---|
-The look follows the owner's mockup (D-017): a deep navy-violet night, glassy cards with a violet glow, and
+The look (D-017): a deep navy-violet night, glassy cards with a violet glow, and
 glossy, glowing pressable buttons.
 
 | Token | Value | Use |
@@ -837,8 +838,8 @@ glossy, glowing pressable buttons.
 | `--know` | `#2BD46A → #16A34A` | Know pill (white text) |
 | `--again` | `#F8A920 → #C96A05` | Know · ask again pill (amber, white text; FR-L27a) |
 | `--dontknow` | `#FB4D6D → #E11D48` | Don't know pill (white text), destructive actions |
-| `--hint` | `#FACC15` icon on `#4A3718 → #30230E` | Hints round button |
-| `--round` | `#3E2D7E → #251A50` | Stop, Next and Flip round buttons (white icon) |
+| `--hint` | `#FACC15` | Yellow accents: the version, counts, padlocks |
+| `--round` | `#3E2D7E → #251A50` | Back, Next and Flip round buttons (white icon) |
 | `--stop` | `#2E2650` | Secondary actions (e.g. Home) |
 | `--card-glow` | `0 0 0 1px #6D4CFF66, 0 0 32px #6D4CFF40, 0 20px 50px #0009` | Flip card edge glow + elevation |
 
@@ -856,9 +857,9 @@ and a colored glow around. The practice uses two shapes:
   know"), on phones and desktop alike (no ✓ / ✕ icons, D-058). On phones the three pills share the row. Each has a small italic muted caption
   under it ("Don't show again", "Show again in future", "Show again soon"), which may wrap onto two lines on a
   phone. For guests the green pill is locked: a darker green (dimmed, not grey), disabled, with a small yellow padlock
-  (no background) on its top-left edge, shown on phones too where the pills hide their icons (D-042).
+  (no background) on its top-left edge (top-right in Hebrew), on phones too (D-042).
 - **Round buttons** (Back, Next; Flip on the card): an icon in a circle (56px mobile, 64px desktop) with an
-  italic muted caption underneath ("Back", "Next"). (No Hints button since D-047: hints are on the card.)
+  italic muted caption underneath ("Back", "Next"). Hints are on the card itself (D-047).
 Disabled buttons lose glow and ledge and look muted. Base mechanics:
 ```css
 .btn3d {
@@ -879,10 +880,11 @@ Disabled buttons lose glow and ledge and look muted. Base mechanics:
 ### 9.3 The flip card (look)
 - A glassy card: a translucent violet gradient over `--surface`, a 1px violet border with `--card-glow`, radius 28px,
   and a subtle top highlight. Generous padding (24px mobile, 40px desktop).
-- **Front**: a pill chip at the top left ("EN → HE · WORDS", uppercase, violet text on `--surface-2`); the item text
-  centered, large and bold; under it, when applicable, a
-  small pill badge "◆ Multiple meanings" (`--surface-2` background, `--accent` text). After Hints: a thin divider,
-  then the hints as a muted list and a "Synonyms: …" line (or "Hint is not available").
+- **Front**: a pill chip at the top left in every language ("EN → HE", uppercase, violet text on `--surface-2`;
+  D-080), with the answer chip on the right on a card reached with Back; the item text centered, large and bold;
+  under it, when applicable, a small pill badge "◆ Multiple meanings" (`--surface-2` background, `--accent` text).
+  Then a thin divider and the hints area: the hints cover, or (revealed) a "Synonyms: …" line and the hints as a
+  muted list (or "Hint is not available").
 - **Back**: for a translation, centered sections, each under a small uppercase headline (D-024, D-025): the main
   answer, large and bold ("Parallel", or "Meaning" when there is no parallel); under a parallel, **"Meaning"** in
   `--text`, semibold, a size below the answer; then **"Literally"** in `--text-muted` at the hints' size, the least
@@ -891,9 +893,9 @@ Disabled buttons lose glow and ledge and look muted. Base mechanics:
   chip and the explanation lines (numbered when there are two or more, smaller when long). Then a thin divider;
   then
   **Hints** as a muted list and a "Synonyms: …" line (or "Hint is not available").
-- A round **Flip** button (↻) sits in the bottom-right corner of **both** faces, so the card can be turned back from
-  the answer side too.
-- **Size** (owner request, 2026-11-18): in the practice the card has a **fixed height** that never changes when it flips,
+- A round **Flip** button (↻) sits in the bottom-right corner of **both** faces, in every language, so the card can be
+  turned back from the answer side too.
+- **Size**: in the practice the card has a **fixed height** that never changes when it flips,
   shows hints, or moves to the next card: on phones it fills the space between the header and the buttons; on desktop
   it is `clamp(420px, 58vh, 600px)`. Both faces share one grid cell. A face with more content than fits scrolls
   inside the card.
@@ -902,9 +904,9 @@ Disabled buttons lose glow and ledge and look muted. Base mechanics:
   it, in the space kept for them.
 
 ```
-FRONT, after Hints               BACK, after Flip (EN → HE)
+FRONT, hints revealed            BACK, after Flip (EN → HE)
 ┌────────────────────────────┐   ┌────────────────────────────┐
-│ EN → HE · Words            │   │ Translation                │
+│ EN → HE                    │   │          MEANING           │
 │           Date             │   │           תאריך            │
 │   ◆ Multiple meanings      │   │            תמר             │
 │ ────────────────────────── │   │ ────────────────────────── │
@@ -937,12 +939,11 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
 - After **Don't know** on the front, the same flip animation plays automatically.
 - **Next** / **Know**: the next card enters front side up, rising in (≈ 260ms: from slightly lower, smaller and
   transparent to full size; a plain 150ms fade with reduced motion).
-- **Know animation** (owner idea, 2026-11-18): a decorative copy of the card **crumples like paper** and is **sucked
+- **Know animation**: a decorative copy of the card **crumples like paper** and is **sucked
   along a curve into the "N known" counter** in the header, which pops (bigger, green) as it lands. After a quick
   green ✓ glow the card folds into ~10 triangular facets, each tilting its own way in 3D with its own light or shadow,
   like real crumpled paper; the wad shrinks and turns as it flies. About 0.8s in total, and the next card rises in at
-  the same time, so Know never feels slow. Reduced motion: no crumple. (A first, simpler "squash into a ball"
-  version was tried and dropped in favour of this one.) Know · ask again plays the same animation, with an amber
+  the same time, so Know never feels slow. Reduced motion: no crumple. Know · ask again plays the same animation, with an amber
   glow. Back has no reverse crumple: the earlier card simply rises in,
   front side up. Don't know keeps the flip. A swipe slides the card out sideways (FR-L29b).
 
@@ -958,7 +959,7 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   outline, a small violet "Default" tag on the right (not on phones, where each field shares its line;
   D-053, D-055). **Selected style** (user changed it): the same, with a solid
   `--accent` outline and no tag.
-- **Guest amount**: a single "5" pill with a lock icon; tapping it shows the "sign-in" toast (FR-L6).
+- **Guest amount**: a single "5" with a lock icon; tapping it shows the "Sign-in to change" message over the field (FR-L6).
 - The "Same language: the back shows an explanation" note (FR-L5) appears under the language fields when they match.
 - The card's heading is **"Configure your practice"**.
 - The large **Start** button (accent color, pressable ledge): on desktop it sits under the fields, with the "N new
@@ -970,27 +971,27 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   keeps the CSP strict). The per-weight files give each subset a `unicode-range`, so a browser downloads only the
   subsets a page shows (D-027).
 - Item text (front): `clamp(2rem, 6vw, 3.5rem)`, weight 600. Answer lines (back): `clamp(1.5rem, 4.5vw, 2.25rem)`;
-  long explanation lines step down to `1.125rem–1.25rem`. Hints, synonyms and the literal translation: 1.125rem on every screen (raised from 1rem on phones at the owner's request), `--text-muted`.
+  long explanation lines step down to `1.125rem–1.25rem`. Hints, synonyms and the literal translation: 1.125rem on every screen, `--text-muted`.
 - Every piece of content text gets `dir` and `lang` from its language (`he` → `rtl`). The UI chrome follows the UI
   language (D-080): Hebrew pages are RTL, English pages LTR; the admin area is always LTR English.
 
 ### 9.7 Layouts
 - **Landing**: header (logo "MyVocab", sign-in / avatar, an "Admin" link for admins as a full-page navigation); hero
-  ("Learn words until they stick"); How it works (1. Pick languages and a topic, or just press Start ·
-  2. Use Hints or Flip, then mark what you know · 3. Repeat the words that you didn’t know, till nothing is left), then "Buttons" (the three answer
-  buttons as small coloured icons, each with one line on what it does); Start card; footer (Privacy,
-  GitHub). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
-- **Practice header**: the MyVocab logo mark (two stacked cards) and the progress `Round 1 • Card 2/10 • 1 known` on the
-  left; on the right, on desktop a "⌨ Keyboard shortcuts" link that opens a small popover listing the shortcuts, and
+  ("Learn words until they stick"; Hebrew "ללמוד מילים וביטויים לפסיכומטרי ביעילות"); How it works (1. Pick languages and a topic, or just press Start ·
+  2. Use Hints or Flip, then mark what you know · 3. Repeat the words that you didn’t know, till nothing is left), then "Buttons" (a small copy
+  of each answer pill with its caption, each with one line on what it does; D-058); Start card; footer (Privacy, and the
+  language switch, D-080). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
+- **Practice header**: the MyVocab logo mark (two stacked cards) and the progress `Round 1 • Card 2/10 • 1 known` at the
+  start (left; right in Hebrew); at the other end, on desktop a "⌨ Keyboard shortcuts" link that opens a small popover listing the shortcuts, and
   "← Home" (asks before stopping the practice, FR-L30a).
 - **Practice buttons**: on desktop, one row under the card, in this order: `Back · I know it (green) ·
-  I know it (amber) · I don't know · Next` (round, pill, pill, pill, round; no Stop since D-072; the green pill locked for
-  guests); after I don't know the row stays the same, the answers disabled and Next pumping (D-031). Flip is
+  I know it (amber) · I don't know · Next` (round, pill, pill, pill, round; the green pill locked for
+  guests; mirrored in Hebrew); after I don't know the row stays the same, the answers disabled and Next pumping (D-031). Flip is
   on the card itself.
 - **Practice (mobile, 360–767px)**: the flip card fills the space above; the buttons form a **sticky bottom bar** in the
   thumb zone, in two rows: the three answer pills on top (**I know it · I know it · I don't know**, three equal pills
   with their captions), and the round
-  Back (left) and Next (right) (with captions) below, so the two main actions stay big (no Stop, D-072). Back's
+  Back (left) and Next (right) (with captions) below, so the two main actions stay big (mirrored in Hebrew). Back's
   circle lines up with the green pill's left end and Next's with the red pill's right end (D-073). After Don't know, the
   layout stays: the answer pills disable and the round Next pumps (FR-L28, FR-L29a, D-031).
 - **Practice (desktop ≥ 768px)**: a centered column of about 1100px; the card is wide (≈ 2.3 : 1) and the pills carry
@@ -1001,7 +1002,7 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
 - **Admin**: a left sidebar (collapses into a top menu on mobile); content max width about 1100px. Menu order:
   Dashboard, Items, Topics, Languages, Import, Users, Trash, Settings, Audit log (D-075). A top bar on every screen shows "MyVocab · Admin"
   and an outlined **"← Home"** button top right, as in a practice (D-077); on phones a "Menu" button (named "Admin
-  menu") opens the menu. There is no "Back to MyVocab" link at the bottom of the menu any more.
+  menu") opens the menu.
 
 ### 9.8 Microcopy (`apps/web/src/strings.en.ts` and `strings.he.ts`)
 All learner-facing UI strings live in two modules with the same keys, English and Hebrew (e.g. `practice.know` =
@@ -1025,7 +1026,7 @@ the typecheck. Components read the active language's strings through `strings.ts
   fade there), and the direction label (e.g. "EN → HE") stays on the left of the card front.
 - **Names:** language names come from the UI strings ("אנגלית", "עברית"); topics have an optional Hebrew name
   (`name_he`, FR-A30), shown in the Hebrew UI when set, otherwise the English name.
-- **Server messages:** errors that reach learners (the daily card limit, guest session limits, sign-in needed,
+- **Server messages:** errors that reach learners (the daily card limit, guest practice limits, sign-in needed,
   maintenance, deleting the last admin) are shown from the UI strings by error code. A maintenance message the
   admin wrote is shown as written.
 - **Other:** dates in "My known words" use Hebrew formatting in the Hebrew UI; the Turnstile challenge uses the UI
@@ -1047,7 +1048,7 @@ Cloudflare Worker "myvocab"
    ├─ /api/*  → Hono app
    │     routes → services → repository interfaces → Drizzle/D1 implementations
    ├─ Cron Trigger (hourly) → Trash purge + old usage counters cleanup
-   └─ bindings: DB (D1), RATE_LIMITER (Workers Rate Limiting, burst limits), ASSETS
+   └─ bindings: DB (D1), RL_* (Workers Rate Limiting, burst limits), ASSETS
    ▼
 Cloudflare D1 "myvocab-prod" (SQLite; no public endpoint)
 
@@ -1066,7 +1067,7 @@ Turnstile siteverify (Cloudflare) ◀── guest POST /practices token check
 | Auth | Better Auth (Google provider, admin plugin) with the Drizzle/D1 adapter |
 | Bot check | Cloudflare Turnstile (invisible/managed widget; server-side siteverify) |
 | JWT (Cloudflare Access) | `jose` (RS256 against the team JWKS) |
-| CSV | An RFC 4180-compliant parser/serializer (e.g. `papaparse`), wrapped behind an interface in core |
+| CSV | An RFC 4180 parser and serializer in `packages/core` (`csv/`) |
 | Scripts | `tsx` Node scripts for seed/export (cross-platform) driving `wrangler` |
 | Tests | Vitest, `@cloudflare/vitest-pool-workers`, Playwright, Testing Library |
 | Lint / format | ESLint (typescript-eslint, react-hooks, jsx-a11y) + Prettier |
@@ -1077,16 +1078,17 @@ MyVocab/
 ├─ apps/
 │  ├─ web/                        React SPA
 │  │  └─ src/
-│  │     ├─ routes/               route modules (landing, practice, known, account, privacy, admin/*)
+│  │     ├─ routes/               Layout, Landing (hero, Buttons guide), Privacy
 │  │     ├─ features/
-│  │     │  ├─ setup/             start card (defaults, default/selected styling, guest lock + toast, Turnstile)
-│  │     │  ├─ practice/              practice screen, FlipCard, usePractice (wraps core reducer), useSwipe, known queue
-│  │     │  ├─ known/             My known words
+│  │     │  ├─ setup/             start card (defaults, default/selected styling, guest lock + message, Turnstile)
+│  │     │  ├─ practice/          practice screen, FlipCard, ButtonBar, round break + summary, swipe + shortcuts, saved practice
+│  │     │  ├─ known/             My known words + the known queue
+│  │     │  ├─ account/           Account page
 │  │     │  └─ admin/             lazy-loaded admin feature modules + ListEditor
-│  │     ├─ components/           Button3D, FlipCard, Card, Panel, Toast, Dialog, Select, Segmented…
-│  │     ├─ lib/                  api client (typed via contracts), auth hooks, storage helpers
+│  │     ├─ components/           Button3D, ConfirmDialog, Field, Icons, Toast, UserMenu, SignInPrompt
+│  │     ├─ lib/                  api client (typed via contracts), sign-in, UI language, storage helpers
 │  │     ├─ styles/               tokens.css, base.css
-│  │     └─ strings.ts
+│  │     └─ strings.ts · strings.en.ts · strings.he.ts · strings-admin.ts
 │  └─ api/                        Hono Worker
 │     ├─ src/
 │     │  ├─ index.ts              Worker entry: fetch (Hono) + scheduled (cron)
@@ -1094,23 +1096,23 @@ MyVocab/
 │     │  ├─ config.ts             Zod-validated env
 │     │  ├─ container.ts          per-request DI wiring
 │     │  ├─ auth/                 Better Auth instance factory, Access JWT verifier, Turnstile verifier
-│     │  ├─ middleware/           session, requireUser, requireAdmin, rateLimit, securityHeaders, noindex, errors
-│     │  ├─ routes/               public.ts, me.ts, admin/*.ts
-│     │  ├─ services/             PracticeService, KnownItemsService, ItemAdminService, CsvImportService,
-│     │  │                        TopicService, UserAdminService, SettingsService, AuditService, TrashService,
-│     │  │                        UsageLimitService
+│     │  ├─ middleware/           requireAdmin, burst limits, mutation guard, API headers, errors
+│     │  ├─ routes/               public.ts, me.ts, admin.ts (+ test-only.ts in test)
+│     │  ├─ services/             PracticeService, KnownItemsService, AccountService, CsvImportService,
+│     │  │                        SettingsService, UsageLimitService, MaintenanceService, admin/ (catalog,
+│     │  │                        items, users, operations)
 │     │  ├─ repositories/
-│     │  │  ├─ interfaces/        ItemRepository, KnownItemRepository, TopicRepository, UsageRepository, …
+│     │  │  ├─ interfaces.ts      repository interfaces
 │     │  │  └─ d1/                Drizzle implementations
 │     │  └─ db/schema.ts
 │     ├─ migrations/              generated SQL
-│     ├─ scripts/                 seed.ts, export.ts (owner-run, local only)
+│     ├─ scripts/                 seed.ts, export.ts, update-translations.ts (owner-run, local only)
 │     └─ wrangler.jsonc
 ├─ packages/
 │  ├─ core/                       pure domain logic, zero runtime deps
-│  │  └─ src/ practice/ (reducer, shuffle) · card/ (answer strategies + card builder) · item/ (item validation rules,
+│  │  └─ src/ practice/ (reducer, round order, seeded random) · card/ (answer strategies + card builder) · item/ (item validation rules,
 │  │          shared by the editor, the API and CSV) · text/ (normalize, script check) · csv/ (row schema, merge
-│  │          planner, serializer) · setup/ (defaults resolution)
+│  │          planner, serializer) · setup/ (defaults resolution) · lang/ (languages)
 │  └─ contracts/                  Zod request/response schemas + inferred types
 ├─ seed/sample.csv                SYNTHETIC rows only (≤ 20), for tests/CI
 ├─ scripts/check-no-vocabulary.ts CI guard (§8.5)
@@ -1303,7 +1305,7 @@ follow these rules:
 5. **No writes from blocked or unverified requests**: a guest's Turnstile token is verified before any D1 write;
    usage caps are checked before incrementing, so an over-limit request writes nothing; `limit.exceeded` is audited
    at most once per subject per period; burst limits use the Workers Rate Limiting binding, not D1.
-6. **No per-request writes**: Better Auth refreshes a session at most once a day (`updateAge` ≥ 1 day); "last seen"
+6. **No per-request writes**: Better Auth refreshes a sign-in at most once a day (`updateAge` ≥ 1 day); "last seen"
    comes from that refresh. Known marks are batched (FR-L51).
 7. **Optimistic concurrency**: every item update is `UPDATE … WHERE id = ? AND version = ?` with `version = version + 1`.
    If no row changed → 409 `CONFLICT`. The audit insert in the same batch is conditional on the update having applied
@@ -1354,8 +1356,8 @@ LIMIT :n;
 | Method | Path | Description |
 |---|---|---|
 | GET | `/health` | `{ ok: true, version }` |
-| GET | `/meta` | `{ languages[], topics[], defaults: { sourceLang, targetLang, topicId, size }, sizeOptions, guest: { enabled, practiceSize }, undoWindowSeconds, maintenance, turnstileSiteKey }` |
-| GET | `/stats/registered-users` | `{ registeredUsers: number }`: accounts that are not admins and not banned; kept 30 minutes per Worker instance (D-036) |
+| GET | `/meta` | `{ languages[], topics[], defaults: { sourceLang, targetLang, topicId, size }, sizeOptions, guest: { enabled, practiceSize }, undoWindowSeconds, continueSeconds, nextSeconds, maintenance, turnstileSiteKey }` |
+| GET | `/stats/registered-users` | `{ registeredUsers: number, showFrom: number }` (`showFrom` = `stats.registeredUsersMin`, D-082): accounts that are not admins and not banned; kept 30 minutes per Worker instance (D-036) |
 | GET | `/practices/available?source&target&topicId&sample` | `{ available: number }` (excludes known items if signed in; guests always count the Sample set, admins with `sample=true`, D-038) |
 | GET | `/practices/available-by-topic?source&target` | `{ all, sample, topics: { [topicId]: number } }`: every count for one direction, for the start card (excludes known items if signed in; guests get the full counts, D-064) |
 | POST | `/practices` | Body `{ source, target, topicId: number \| null, size?, sample?, turnstileToken? }` (guests always get the Sample set; admins with `sample: true`, D-038) → `{ requested, returned, cards: CardView[] }` |
@@ -1383,7 +1385,7 @@ type CardView = {
 };
 ```
 **`POST /practices` rules**
-- **Guest** (no session): `turnstileToken` is **required** and verified server-side (Turnstile siteverify, single use,
+- **Guest** (not signed in): `turnstileToken` is **required** and verified server-side (Turnstile siteverify, single use,
   hostname check) **before any D1 write**. Failure → 403 `BOT_CHECK_FAILED`. `size` is **ignored** and forced to
   `guests.practiceSize` (5). Counted against `guests.practicesPerHour` per hashed IP. Exceeding it → 429 `RATE_LIMITED` with a
   "sign in or try later" message.
@@ -1397,19 +1399,19 @@ type CardView = {
 ### 12.2 Auth and current user
 | Method | Path | Description |
 |---|---|---|
-| * | `/auth/*` | Better Auth handler (Google sign-in, callback, sign-out, session) |
+| * | `/auth/*` | Better Auth handler (Google sign-in, callback, sign-out, current sign-in) |
 | GET | `/me` | `{ user: { id, name, email, image, role, isOwner } \| null }` |
 | DELETE | `/me` | Delete own account (body `{ confirm: "DELETE" }`) |
 
-### 12.3 Learner (requires a session)
+### 12.3 Learner (requires sign-in)
 | Method | Path | Description |
 |---|---|---|
-| POST | `/me/known` | Body `{ items: { itemId, target, round }[] }` (≤ 100). Idempotent upsert per item + target, keeps the earliest `known_at` |
+| POST | `/me/known` | Body `{ items: { itemId, target, round }[] }` (≤ 100; `cycle` is accepted for `round` from pages opened before D-081). Idempotent upsert per item + target, keeps the earliest `known_at` |
 | DELETE | `/me/known/:itemId?target=` | Undo one direction; without `target`, every direction of the item (older clients, D-028) |
 | POST | `/me/known/restore` | Body `{ marks: { itemId, target }[] }` (≤ 500), **or** `{ filter: { q?, lang?, target?, topicId? } }`, **or** `{ itemIds: number[] }` (every direction, older clients) → `{ restored }` |
 | GET | `/me/known?q&lang&target&topicId&sort&cursor` | Paginated known items, one row per item + direction |
 
-`user_id` is **always** taken from the session, never from the request.
+`user_id` is **always** taken from the signed-in user, never from the request.
 
 ### 12.4 Admin (requires an admin role **and** a valid Cloudflare Access JWT)
 | Method | Path | Description |
@@ -1439,7 +1441,7 @@ There is intentionally **no** HTTP endpoint for exporting the database (export i
 ### 12.5 Test-only (exists only when `ENVIRONMENT=test`)
 | Method | Path | Description |
 |---|---|---|
-| POST | `/test/session` | Create a session for a seeded test user `{ role }` (for Playwright). **Never registered in production**; startup asserts this |
+| POST | `/test/session` | Sign in a seeded test user `{ role }` (for Playwright). **Never registered in production**; startup asserts this |
 
 In test, Turnstile uses Cloudflare's documented **test keys** (always-pass / always-fail) to exercise both paths.
 
@@ -1448,11 +1450,9 @@ In test, Turnstile uses Cloudflare's documented **test keys** (always-pass / alw
 ## 13. Authentication and roles
 
 ### 13.1 Sign-in
-- **Google only** via Better Auth. The session is in an `HttpOnly; Secure; SameSite=Lax` cookie, DB-backed (the `session` table).
-  No tokens in `localStorage`. Session refresh at most once a day (§11.2 rule 6).
+- **Google only** via Better Auth. The sign-in is kept in an `HttpOnly; Secure; SameSite=Lax` cookie, backed by Better
+  Auth's `session` table. No tokens in `localStorage`. The sign-in is refreshed at most once a day (§11.2 rule 6).
 - Better Auth must be instantiated per request inside the Worker (bindings come from `env`).
-- If Better Auth cannot run reliably on Workers + D1, the fallback is Arctic (Google OAuth) + our own `session` table
-  with the same cookie semantics. Record the choice in the decisions log.
 
 ### 13.2 Who is an admin
 - `user.role` ∈ {`user`, `admin`}; default `user`. It is **never** writable from client input.
@@ -1462,8 +1462,8 @@ In test, Turnstile uses Cloudflare's documented **test keys** (always-pass / alw
 - The UI shows the "Admin" link and admin routes only when `/api/me` says `role = admin`. **This is cosmetic.**
 
 ### 13.3 Lock 1: server-side role check
-- The `requireAdmin` middleware is mounted on the whole `/api/admin` router. It loads the session from the DB:
-  no session → 401; `role ≠ admin` or banned → 403.
+- The `requireAdmin` middleware is mounted on the whole `/api/admin` router. It loads the signed-in user from the DB:
+  not signed in → 401; `role ≠ admin` or banned → 403.
 
 ### 13.4 Lock 2: Cloudflare Access (mandatory)
 - A Cloudflare Zero Trust **Access application** (free for ≤ 50 users) covers the paths `/admin*` and `/api/admin/*`
@@ -1471,10 +1471,10 @@ In test, Turnstile uses Cloudflare's documented **test keys** (always-pass / alw
 - **Defense in depth inside the Worker**: `requireAdmin` also verifies the `Cf-Access-Jwt-Assertion` header:
   - The RS256 signature against `https://<CF_ACCESS_TEAM_DOMAIN>/cdn-cgi/access/certs` (JWKS cached), `aud` contains
     `CF_ACCESS_AUD`, `iss` matches the team domain, and the token isn't expired.
-  - The Access JWT `email` must equal the session user's email (case-insensitive).
-  - If anything is missing or invalid → 403, even with an admin session (**fails closed** if Access is misconfigured).
+  - The Access JWT `email` must equal the signed-in user's email (case-insensitive).
+  - If anything is missing or invalid → 403, even when signed in as an admin (**fails closed** if Access is misconfigured).
 - The "Admin" link uses **full-page navigation** (`<a href="/admin">`, not client-side routing), so Cloudflare Access
-  can intercept it. The admin API client treats an Access redirect / non-JSON 401/403 as "Access session expired" and
+  can intercept it. The admin API client treats an Access redirect / non-JSON 401/403 as "the Access sign-in expired" and
   reloads `/admin`.
 - `ENVIRONMENT=development|test`: the Access check is skipped (local only). `ENVIRONMENT=production`: startup **asserts**
   that `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` are set, and the check cannot be disabled.
@@ -1492,7 +1492,7 @@ In test, Turnstile uses Cloudflare's documented **test keys** (always-pass / alw
    - The Cloudflare API token used by CI has the **narrowest scope** (this account's Workers Scripts + this D1 only). It
      is stored only in the GitHub **`production` Environment** (deployment branch `main`, owner as required reviewer)
      and rotated periodically.
-   - **Public repo hardening**: a ruleset on `main` (PR required, CI must pass, no force-push or deletion); **CodeQL**;
+   - **Public repo hardening**: **CodeQL**;
      **secret scanning with push protection**; **Dependabot** alerts and version updates; GitHub Actions pinned to a
      commit SHA with a minimal `permissions:` block; fork PRs never receive secrets; `pull_request_target` with a PR
      checkout is never used; deploys require write access + approval.
@@ -1500,7 +1500,7 @@ In test, Turnstile uses Cloudflare's documented **test keys** (always-pass / alw
      gitignored; `.dev.vars.example` holds placeholders). Migrations run only from the approved deploy job.
 3. **API abuse:**
    - Guest endpoints are **read-only** (apart from the usage counter, written only after Turnstile passes).
-   - `/api/me/*` writes only the caller's own rows. `user_id` comes from the session, never from the request (no IDOR).
+   - `/api/me/*` writes only the caller's own rows. `user_id` comes from the signed-in user, never from the request (no IDOR).
    - No endpoint lets a user change their own role. The Better Auth `role` field is `input: false`.
    - Content writes happen only on `/api/admin/*`, behind **both** locks. There is no export endpoint.
 4. **A compromised admin or an honest mistake:** no bulk "delete all" endpoints; CSV import is append-only; item
@@ -1520,7 +1520,7 @@ In test, Turnstile uses Cloudflare's documented **test keys** (always-pass / alw
 | Shared caches / CDN | `Cache-Control: no-store` on all `/api/*` responses |
 | Third-party services | No third-party analytics, fonts, CDNs, error trackers or AI APIs receive content. Fonts are self-hosted. Cloudflare Web Analytics is cookieless and collects page views only (no API bodies). Turnstile receives only its challenge data, never content |
 | Logs | Worker logs record ids, counts, status codes and timings, **never** item text, CSV contents or request/response bodies. The audit log stores vocabulary snapshots inside the private D1 only |
-| Browser storage | `sessionStorage` holds the current practice (needed to resume after a refresh) and is cleared on Stop/finish. `localStorage` holds only item ids (known queue), never text |
+| Browser storage | `sessionStorage` holds the current practice (needed to resume after a refresh) and is cleared when the practice ends or is left with Home. `localStorage` holds only item ids (known queue), never text |
 | Future AI features | Sending content to an AI provider is a future, explicit owner decision (not in v1) |
 
 ### 14.3 Anti-scraping (bulk copying by scripts)
@@ -1548,7 +1548,7 @@ The app must show cards to its users, so scraping can be made **slow, costly and
 | XSS | React escaping; **no** `dangerouslySetInnerHTML`; strict CSP: `default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; style-src 'self'; img-src 'self' https://lh3.googleusercontent.com data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com` (adjust only as strictly needed for Google sign-in, Turnstile and Cloudflare Web Analytics) |
 | Clickjacking | `frame-ancestors 'none'` (+ `X-Frame-Options: DENY`) |
 | CSRF | `SameSite=Lax` cookies + Better Auth origin checks + `Origin` must equal `APP_URL` on all mutating `/api/*` requests + JSON content type required |
-| Session theft | HttpOnly/Secure cookies; session expiry (e.g. 30 days rolling for users); banning revokes sessions |
+| Stolen sign-in | HttpOnly/Secure cookies; sign-ins expire (e.g. 30 days rolling for users); banning signs the user out everywhere |
 | Information leakage | Generic error messages in production (no SQL/stack traces); details only in Worker logs (without content) |
 | Headers | `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (deny camera/mic/geolocation) |
 | Test backdoors | `/api/test/*` registered only when `ENVIRONMENT=test`; production startup asserts it is absent |
@@ -1566,7 +1566,7 @@ Answers are sent to the browser at practice start **by design** (self-assessment
 | Performance | Learner path JS ≤ 200 KB gzipped (admin lazy-loaded; Turnstile script loaded only for guests). LCP < 2.5 s on mid-range mobile over 4G. Button response < 50 ms (the practice is local). Flip animation at 60 fps (transform-only) |
 | Accessibility | WCAG 2.2 AA: contrast, visible focus, full keyboard operation, ARIA labels/live regions (announce Back with the card's answer, flip side, hints shown, round changes, toasts), `prefers-reduced-motion` respected (no 3D flip; crossfade instead). The default/selected field styles are not conveyed by color alone (the "Default" tag + outline style) |
 | Browsers | The last 2 versions of Chrome, Edge, Firefox and Safari; iOS Safari 16+; Android Chrome |
-| RTL | Correct rendering of Hebrew content (and mixed Hebrew/English) via per-element `dir`/`lang` on both card faces |
+| RTL | Hebrew pages are right-to-left (D-080); content renders in its own direction (and mixed Hebrew/English correctly) via per-element `dir`/`lang` on both card faces |
 | Reliability | Known marks are never lost silently (persistent queue + retries). A tab opened before a deploy whose lazily loaded part (e.g. the admin area) no longer exists reloads itself once to pick up the new version, instead of showing "'text/html' is not a valid JavaScript MIME type" (`vite:preloadError`; at most one automatic reload per 15 s, so a real error still shows) |
 | Database budget | Stays within the D1 free tier by design (§11.2) |
 | Cost | Runs on the Cloudflare Workers Free (+ Turnstile, Access free tiers) and GitHub Free plans. Upgrade path: Workers Paid ($5/mo) |
@@ -1584,7 +1584,7 @@ Cloudflare Access: free for ≤ 50 users. Turnstile: free.
 ## 16. Hosting, deployment and operations
 - **Worker** `myvocab`, configured in `apps/api/wrangler.jsonc`:
   - `assets.directory` → `../web/dist`, `not_found_handling: "single-page-application"`, `run_worker_first: ["/api/*"]`.
-  - Bindings: `DB` (D1 `myvocab-prod`), `RATE_LIMITER` (Rate Limiting), cron trigger `0 * * * *` (Trash purge +
+  - Bindings: `DB` (D1 `myvocab-prod`), `RL_PRACTICES`, `RL_AVAILABLE`, `RL_AUTH`, `RL_IMPORT`, `RL_ADMIN` (Rate Limiting), cron trigger `0 * * * *` (Trash purge +
     usage counter cleanup).
   - Vars: `ENVIRONMENT`, `APP_URL`, `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`, `TURNSTILE_SITE_KEY`.
   - Secrets (`wrangler secret put`): `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAILS`,
@@ -1609,12 +1609,12 @@ Cloudflare Access: free for ≤ 50 users. Turnstile: free.
 ## 17. Testing strategy
 | Level | Tooling | Must cover |
 |---|---|---|
-| Unit | Vitest | Every `practiceReducer` transition: Know/Don't know/Show hints/Flip/Next/Continue/Stop; `FLIP` toggles `side` any number of times in both phases and never changes grading; `TOGGLE_HINTS` works only on the front, toggles on and off, resets on the next card and never changes grading; `DONT_KNOW` on the front sets `side = back`; new cards start on the front with hints hidden; round building; the **order differs** rule (seeded RNG); Back card by card (front up, never into an earlier round) and from the round break / summary; Next only on answered cards; changing an answer both ways (no duplicates in the next round). Answer strategies (translation vs explanation chosen by same/different languages, playability, line order, numbering); `buildCard` output; item validation (no same-language translation, list limits, duplicates, `lang` absent from the update schema); multiple-meanings warnings; the mixed-script check; `normalize`; CSV row validation (incl. the three `translation_<kind>_<code>` columns, the old column names, and the own-language column rule), merge planning (incl. the `multiple_meanings` OR rule), **CSV serializer**; start-card defaults resolution (settings → defaults; guest size = 5) |
+| Unit | Vitest | Every `practiceReducer` transition: Know/Don't know/hints/Flip/Next/Back/Continue/Stop (leaving with Home); `FLIP` toggles `side` any number of times in both phases and never changes grading; `TOGGLE_HINTS` works only on the front, toggles on and off, resets on the next card and never changes grading; `DONT_KNOW` on the front sets `side = back`; new cards start on the front with hints hidden; round building; the **order differs** rule (seeded RNG); Back card by card (front up, never into an earlier round) and from the round break / summary; Next only on answered cards; changing an answer both ways (no duplicates in the next round). Answer strategies (translation vs explanation chosen by same/different languages, playability, line order, numbering); `buildCard` output; item validation (no same-language translation, list limits, duplicates, `lang` absent from the update schema); multiple-meanings warnings; the mixed-script check; `normalize`; CSV row validation (incl. the three `translation_<kind>_<code>` columns, the old column names, and the own-language column rule), merge planning (incl. the `multiple_meanings` OR rule), **CSV serializer**; start-card defaults resolution (settings → defaults; guest size = 5) |
 | Integration | Vitest + `@cloudflare/vitest-pool-workers` (local D1, migrations applied) | Practice selection by topic/direction (translation vs explanation playability; the SQL rule agrees with `isPlayable` on fixtures); known items excluded **in every direction**; the DB CHECK rejects a same-language translation even through a direct repository write; item PATCH with a stale `version` → 409 and **no** audit row; **guest size forced to 5 even if a larger size is sent**; **guest without/with an invalid Turnstile token → 403 and zero D1 writes**; guest hourly cap → 429 with zero writes after the first `limit.exceeded` entry; learner daily cap → 429 with remaining allowance; admin exempt from caps; learner size must be in `sizeOptions`; admin endpoints → 401 guest / 403 user / 403 admin without an Access JWT in production mode / 403 on an email mismatch; item create/update + audit rows (before/after of changed lists); Trash: delete hides from practices and known lists, restore brings known marks back, restore blocked on a duplicate, purge cascades + snapshot; CSV dry run vs commit, merge rules, error and warning rows; idempotent `POST /me/known`; user A can't touch user B's known rows; `/api/*` responses carry `noindex` + `no-store` headers; settings validation (defaults must be active languages, etc.) |
 | Scripts | Vitest (Node) against a local D1 | `db:seed` falls back to `seed/sample.csv` when `CONTENT_DIR` is missing; **export round-trip**: seed → `db:export --local --content-only` → import into an empty D1 → identical content; full export produces `manifest.json` row counts that match the tables, valid JSON per table (item lists as real arrays/objects), and a `schema.sql` that recreates the schema in a fresh SQLite |
 | Guard | CI | `check:no-vocabulary` fails on a committed non-fixture `.csv`/`.sql`/export, or a `seed/sample.csv` over 20 rows |
-| Component | Vitest + Testing Library | Button states per phase; FlipCard (button/keyboard flipping, a card tap does nothing, the hints cover on the front and the hints always on the back, multiple-meanings badge, numbered explanation lines, hidden face `inert`, live-region text, reduced-motion path); start card default vs selected styling + "Reset to defaults" + same-language note; guest locked amount + toast (auto once per session, on tap); Back, the "Clicked" chip, ← / →, and answer changes reaching the Know queue; ListEditor add/edit/delete/reorder + 409 handling; RTL rendering on both faces |
-| E2E | Playwright (mobile 390×844 + desktop 1280×800) | Guest: landing → press Start without changing anything (defaults EN→HE, All topics, Words) → 5-card practice to the summary (incl. Hints on the front, then Flip showing hints on the back, Flip back and forth by button and by tapping the card, Know from the back side, Don't know → auto-flip → Next, Know → Back → Don't know; touch swipes left = Next and right = Back); guest sees the sign-in toast and can't change the amount. Signed-in (test session): choose 20 → practice; Know → appears in My known words → no longer offered in the other direction → Return to practices → available again. Admin: create an item with translations, explanation, synonyms, hints and multiple meanings; preview both directions; delete to Trash; restore. CSV: dry run with errors and warnings, then commit |
+| Component | Vitest + Testing Library | Button states per phase; FlipCard (button/keyboard flipping, a card tap does nothing, the hints cover on the front and the hints always on the back, multiple-meanings badge, numbered explanation lines, hidden face `inert`, live-region text, reduced-motion path); start card default vs selected styling + "Reset to defaults" + same-language note; guest locked amount + message (automatically once per tab, and on tap); Back, the "Clicked" chip, ← / →, and answer changes reaching the Know queue; ListEditor add/edit/delete/reorder + 409 handling; RTL rendering on both faces |
+| E2E | Playwright (mobile 390×844 + desktop 1280×800) | Guest: landing → press Start without changing anything (defaults EN→HE, Sample set) → 5-card practice to the summary (incl. revealing the hints on the front, then Flip showing hints on the back, Flip back and forth by button and by key, Know from the back side, Don't know → auto-flip → Next, Know → Back → Don't know; touch swipes left = Next and right = Back); guest sees the "Sign-in to change" message and can't change the amount. Hebrew: the default UI, right-to-left, the language switch, mirrored buttons, keys and swipes. Signed-in (test sign-in): choose 20 → practice; Know → appears in My known words → no longer offered in the other direction → Return to practices → available again. Admin: create an item with translations, explanation, synonyms, hints and multiple meanings; preview both directions; delete to Trash; restore. CSV: dry run with errors and warnings, then commit |
 | Manual (post-deploy) | Phone + desktop | Play a practice (check the flip and hints feel on a real phone); guest Turnstile works invisibly; sign in; known list; `/admin` → Cloudflare Access asks for a one-time code; a non-admin email is refused by Access; a normal user calling `/api/admin/*` → 403; `pnpm db:export` and `--content-only` work from the owner's machine; the D1 dashboard shows rows read/written well within the free tier |
 
 CI fails on lint, type or test errors, a guard failure, or if `packages/core` coverage < 90%.
@@ -1627,11 +1627,11 @@ CI fails on lint, type or test errors, a guard failure, or if `packages/core` co
 | M0 | Scaffold | Monorepo, strict TS, ESLint/Prettier, Vitest, CI (+ `check:no-vocabulary`), Worker serving the SPA shell + `/api/health`, tokens + Button3D |
 | M1 | Core domain | Practice reducer (`FLIP`/`side`, `TOGGLE_HINTS`/`hintsShown`), shuffle, answer strategies + `buildCard`, item validation rules, normalization + mixed-script check, CSV row schema + merge planner + serializer, setup defaults resolution, ≥ 90% coverage |
 | M2 | Database & content | Drizzle schema + migrations per §11 (JSON list columns + CHECKs, partial indexes, `WITHOUT ROWID` where supported, cascade indexes), repositories, `CsvImportService`, `seed/sample.csv` (synthetic), `pnpm db:seed` (`CONTENT_DIR` + fallback), the starter set + README written to `../MyVocab-Content/` (private, outside the public repo) |
-| M3 | Learning experience | `/meta`, `/practices/available`, `/practices` (guest rules, Turnstile before writes, usage limits); landing, start card (defaults, default/selected styling, same-language note, guest lock + toast), **FlipCard** with Hints + practice screen, round break, summary; guest E2E |
-| M4 | Auth & known items | Better Auth Google, `/me`, known endpoints (per item), known queue + Undo, My known words, account deletion, privacy page, learner amounts + daily cap |
+| M3 | Learning experience | `/meta`, `/practices/available`, `/practices` (guest rules, Turnstile before writes, usage limits); landing, start card (defaults, default/selected styling, same-language note, guest lock + message), **FlipCard** with the hints cover + practice screen, round break, summary; guest E2E |
+| M4 | Auth & known items | Better Auth Google, `/me`, known endpoints (per item), known queue, My known words, account deletion, privacy page, learner amounts + daily cap |
 | M5 | Admin | Both locks, dashboard, item editor (fixed language, translations per other language, explanation, synonyms, hints, multiple meanings, warnings) + ListEditor + optimistic concurrency + flip-card preview, topics, languages, users, settings (incl. defaults and limits), audit log, Trash + cron |
 | M6 | CSV import UI & export | Import UI (template, upload, dry-run report with errors/warnings, commit); `pnpm db:export` (full + `--content-only`) with round-trip tests; README "Export & migrate your data" |
-| M7 | Hardening & release | Security headers/CSP, `noindex`/`robots.txt`, burst rate limits, write-discipline checks (§11.2), a11y pass, full E2E, deploy workflow + approval env, ruleset, CodeQL, Dependabot, README setup + restore guide |
+| M7 | Hardening & release | Security headers/CSP, `noindex`/`robots.txt`, burst rate limits, write-discipline checks (§11.2), a11y pass, full E2E, deploy workflow + approval env, CodeQL, Dependabot, README setup + restore guide |
 
 Detailed acceptance criteria are in `AGENT_PROMPT.md` (local only, git-ignored).
 

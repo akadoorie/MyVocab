@@ -59,8 +59,12 @@ export const publicRoutes = new Hono<AppEnv>()
     });
   })
   .get('/stats/registered-users', async (c) => {
-    const registeredUsers = await c.get('container').accounts.registeredUsers();
-    return c.json<RegisteredUsersResponse>({ registeredUsers });
+    const { accounts, settings } = c.get('container');
+    const [registeredUsers, s] = await Promise.all([accounts.registeredUsers(), settings.get()]);
+    return c.json<RegisteredUsersResponse>({
+      registeredUsers,
+      showFrom: s['stats.registeredUsersMin'],
+    });
   })
   .get('/practices/available', burstLimit('RL_AVAILABLE', ipKey), async (c) => {
     const q = parseOrThrow(availableQuerySchema, c.req.query());

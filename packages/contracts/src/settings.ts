@@ -20,6 +20,8 @@ export const settingsSchema = z.object({
   'guests.practiceSize': z.number().int().min(1).max(50).default(5),
   'guests.practicesPerHour': z.number().int().min(1).max(1000).default(10),
   'users.cardsPerDay': z.number().int().min(1).max(100000).default(500),
+  /** "Registered users: N" shows on the home page from this count; admins always see it (D-082). */
+  'stats.registeredUsersMin': z.number().int().min(0).max(1_000_000).default(100),
   'undo.windowSeconds': z.number().int().min(1).max(15).default(5),
   'maintenance.enabled': z.boolean().default(false),
   'maintenance.message': z.string().max(280).default(''),

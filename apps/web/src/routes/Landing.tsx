@@ -64,7 +64,7 @@ export function Landing() {
       <div className="flex flex-col gap-6">
         <div>
           <HeroTitle text={strings.landing.heroTitle} />
-          <RegisteredUsers />
+          <RegisteredUsers isAdmin={session.user?.role === 'admin'} />
         </div>
         <p className="text-lg text-muted">{strings.landing.heroBody}</p>
         {session.isGuest && !session.loading && (
@@ -136,7 +136,8 @@ export function Landing() {
  * opens (no refetching while it is open); the server keeps the count 30 minutes. Hidden until it
  * loads, and if it fails.
  */
-function RegisteredUsers() {
+/** Shown from the admin's threshold on (default 100); admins always see it (D-082). */
+function RegisteredUsers({ isAdmin }: { isAdmin: boolean }) {
   const users = useQuery({
     queryKey: ['registered-users'],
     queryFn: api.registeredUsers,
@@ -146,6 +147,7 @@ function RegisteredUsers() {
     retry: false,
   });
   if (users.data === undefined) return null;
+  if (!isAdmin && users.data.registeredUsers < users.data.showFrom) return null;
   return (
     <p className="mt-2 text-sm text-muted" data-testid="registered-users">
       {strings.landing.registeredUsersLabel}{' '}
