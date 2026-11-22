@@ -61,14 +61,15 @@ export function ButtonGuide({ isGuest, headingId }: { isGuest: boolean; headingI
               {row.locked && (
                 <>
                   {' ('}
+                  {/* The whole "Sign-in to enable" is the link (D-071). */}
                   <button
                     type="button"
                     onClick={startGoogleSignIn}
                     className="font-semibold text-accent underline underline-offset-2 hover:text-text"
                   >
-                    {strings.nav.signInLink}
-                  </button>{' '}
-                  {g.toEnable})
+                    {strings.nav.signInLink} {g.toEnable}
+                  </button>
+                  )
                 </>
               )}
             </span>

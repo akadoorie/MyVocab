@@ -184,7 +184,7 @@ private content repository. It never appears in the public code repo or any publ
   fade in and "stick" drops in, bounces off twice and sticks on the third try with a soft squash and a faint shine, about
   3s; not when coming back to Home inside the app; a short fade with reduced motion, D-034, D-037), the app version (a small yellow "v1.N" next to the name, D-032), a short hero, a 3-step "How it works" section with a **"Buttons"** guide
   (a small copy of each answer button as it looks in a session: the same gradient, glossy edge, glow and ledge, label only, with its caption under it, D-058; and what it does; for guests the green one is dark, with a
-  small yellow lock, and its line ends "(Sign-in to enable)", D-030, D-042), and the **Start card**.
+  small yellow lock, and its line ends "(Sign-in to enable)", the whole "Sign-in to enable" a link that starts sign-in, D-030, D-042, D-071), and the **Start card**.
   Desktop: hero and start card side by side. Mobile: stacked, with the **Start** button right under the hero text
   (and the guest sign-in note), above the start card's fields, so it can be pressed without scrolling (D-021).
 - **FR-L2** Start card fields and **defaults** (the defaults come from admin settings, §7.7):

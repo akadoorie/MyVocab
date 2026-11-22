@@ -77,8 +77,8 @@ describe('Landing: the Buttons guide under How it works (D-030)', () => {
     expect(section.querySelector('.mini-btn--know.is-locked')).not.toBeNull();
     expect(section.querySelectorAll('.mini-btn__lock')).toHaveLength(1);
     expect(section.querySelector('.mini-btn--again.is-locked')).toBeNull();
-    // "Sign-in" in "(Sign-in to enable)" is a link that starts sign-in (D-043).
-    expect(within(section).getByRole('button', { name: 'Sign-in' })).toBeInTheDocument();
+    // "Sign-in to enable" is one link that starts sign-in (D-043, D-071).
+    expect(within(section).getByRole('button', { name: 'Sign-in to enable' })).toBeInTheDocument();
   });
 });
 

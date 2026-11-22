@@ -42,8 +42,8 @@ export const strings = {
     buttonsTitle: 'Buttons',
     buttonGuide: {
       know: "Don’t show it again. You can bring it back from 'My known words'.",
-      /** For guests the green button is locked (D-042): the text, then "(Sign-in to enable)" with a
-          "Sign-in" link (D-043). */
+      /** For guests the green button is locked (D-042): the text, then "(Sign-in to enable)", the
+          whole "Sign-in to enable" a link (D-043, D-071). */
       knowGuest: "Don’t show it again. You can bring it back from 'My known words'.",
       toEnable: 'to enable',
       again: 'Don’t show again in this session; it shows up again in future sessions.',
