@@ -42,7 +42,7 @@ export const en = {
     steps: [
       'Pick languages and a topic, or just press Start',
       'Use Hints or Flip, then mark what you know',
-      'Repeat until nothing is left',
+      'Repeat the words that you didn’t know, till nothing is left',
     ],
     /** Under the slogan, for everyone (D-036). */
     registeredUsersLabel: 'Registered users:',

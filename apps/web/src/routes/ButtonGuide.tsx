@@ -62,18 +62,22 @@ export function ButtonGuide({ isGuest, headingId }: { isGuest: boolean; headingI
               {row.text}
               {row.locked && (
                 <>
-                  {/* A button counts as neutral for the text direction, so in Hebrew the
+                  {' '}
+                  {/* One unit that wraps as a whole, so "(" never stays behind on the line
+                      above. A button counts as neutral for the text direction, so in Hebrew the
                       brackets get a right-to-left mark inside them to mirror properly (D-080). */}
-                  {` (${mark}`}
-                  {/* The whole "Sign-in to enable" is the link (D-071). */}
-                  <button
-                    type="button"
-                    onClick={startGoogleSignIn}
-                    className="font-semibold text-accent underline underline-offset-2 hover:text-text"
-                  >
-                    {strings.nav.signInLink} {g.toEnable}
-                  </button>
-                  {`${mark})`}
+                  <span className="whitespace-nowrap">
+                    {`(${mark}`}
+                    {/* The whole "Sign-in to enable" is the link (D-071). */}
+                    <button
+                      type="button"
+                      onClick={startGoogleSignIn}
+                      className="font-semibold text-accent underline underline-offset-2 hover:text-text"
+                    >
+                      {strings.nav.signInLink} {g.toEnable}
+                    </button>
+                    {`${mark})`}
+                  </span>
                 </>
               )}
             </span>
