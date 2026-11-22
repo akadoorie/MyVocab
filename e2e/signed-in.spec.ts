@@ -59,7 +59,7 @@ test('Know → My known words (ask again is not kept) → hidden only in that di
   // Fewer than 10 left: the session starts with all of them and says so (FR-L8).
   if (enHe < 10) await expect(page.getByText(`Only ${enHe} new cards in All topics`)).toBeVisible();
   await expect(page.getByTestId('progress')).toHaveText(
-    `Cycle 1 · Card 1/${Math.min(enHe, 10)} · 0 known`,
+    `Round 1 · Card 1/${Math.min(enHe, 10)} · 0 known`,
   );
 
   // Know the first card, then stop the loop.

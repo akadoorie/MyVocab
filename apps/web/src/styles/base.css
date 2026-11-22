@@ -534,6 +534,29 @@ body {
         0 0 0 6px var(--glow);
     }
   }
+  /* Continue's countdown on the break between rounds (D-067): a light band draining from
+     right to left over the button. */
+  .countdown-fill {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.18);
+    transform-origin: left;
+    animation: countdown-drain linear forwards;
+    pointer-events: none;
+  }
+  @keyframes countdown-drain {
+    from {
+      transform: scaleX(1);
+    }
+    to {
+      transform: scaleX(0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .countdown-fill {
+      display: none;
+    }
+  }
   /* The nudge (D-066): the available answer buttons and Flip pump once, then a soft shine
      sweeps across them, one after the other (nudge-1..4). Disabled or locked buttons stay
      still, and a press cancels it. */

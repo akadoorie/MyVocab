@@ -63,7 +63,7 @@ afterEach(() => {
 describe('LoopPage', () => {
   it('starts on the front with Next disabled and the decision buttons enabled', () => {
     setup();
-    expect(progress()).toBe('Cycle 1 · Card 1/3 · 0 known');
+    expect(progress()).toBe('Round 1 · Card 1/3 · 0 known');
     expect(side()).toBe('front');
     expect(btn('Next')).toBeDisabled();
     for (const name of [
@@ -128,7 +128,7 @@ describe('LoopPage', () => {
     fireEvent.click(btn('I know it Show again in future'));
     expect(front()).toBeNull(); // the next card arrives covered
     fireEvent.click(btn('Back'));
-    expect(progress()).toBe('Cycle 1 · Card 1/3 · 1 known');
+    expect(progress()).toBe('Round 1 · Card 1/3 · 1 known');
     expect(front()).not.toBeNull(); // still open, as it was left
     expect(btn('Hide hints')).toBeInTheDocument();
   });
@@ -140,7 +140,7 @@ describe('LoopPage', () => {
     fireEvent.click(btn('I don’t know Show again soon'));
     expect(side()).toBe('back');
     fireEvent.click(btn('Back'));
-    expect(progress()).toBe('Cycle 1 · Card 1/3 · 1 known');
+    expect(progress()).toBe('Round 1 · Card 1/3 · 1 known');
     expect(side()).toBe('front');
     // A guest's Know is the orange one (D-042).
     // Short on screen; the orange one's caption is there for screen readers (D-049).
@@ -152,7 +152,7 @@ describe('LoopPage', () => {
     );
     expect(btn('Next')).toBeEnabled(); // answered, so Next skips ahead without answering again
     fireEvent.click(btn('Next'));
-    expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known');
+    expect(progress()).toBe('Round 1 · Card 2/3 · 1 known');
     expect(side()).toBe('front'); // even though it was showing its back when we left it
     expect(screen.getByTestId('answer-chip')).toHaveTextContent('Clicked: I don’t know');
     fireEvent.click(btn('Next'));
@@ -169,13 +169,13 @@ describe('LoopPage', () => {
     fireEvent.click(btn('Back'));
     fireEvent.click(btn('I don’t know Show again soon'));
     expect(sink.onUnknow).toHaveBeenCalledTimes(1);
-    expect(progress()).toBe('Cycle 1 · Card 1/3 · 0 known');
+    expect(progress()).toBe('Round 1 · Card 1/3 · 0 known');
     expect(side()).toBe('back');
     fireEvent.click(btn('Next'));
     fireEvent.click(btn('Back'));
     fireEvent.click(btn('I know it Don’t show again'));
     expect(sink.onKnow).toHaveBeenCalledTimes(2);
-    expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known');
+    expect(progress()).toBe('Round 1 · Card 2/3 · 1 known');
     // Know again on a card already known changes nothing in the queue.
     fireEvent.click(btn('Back'));
     fireEvent.click(btn('I know it Don’t show again'));
@@ -196,9 +196,9 @@ describe('LoopPage', () => {
     expect(screen.getByText('Show again in future')).toBeInTheDocument();
     expect(screen.getByText('Show again soon')).toBeInTheDocument();
     fireEvent.keyDown(window, { key: 'k' });
-    expect(progress()).toBe('Cycle 1 · Card 1/3 · 0 known');
+    expect(progress()).toBe('Round 1 · Card 1/3 · 0 known');
     fireEvent.keyDown(window, { key: 'a' });
-    expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known');
+    expect(progress()).toBe('Round 1 · Card 2/3 · 1 known');
   });
 
   it('tapping the locked green button (or K) shows "Sign-in required" over it for 1.5 seconds (D-043)', () => {
@@ -211,14 +211,14 @@ describe('LoopPage', () => {
     expect(
       within(tip() as HTMLElement).getByRole('button', { name: 'Sign-in' }),
     ).toBeInTheDocument();
-    expect(progress()).toBe('Cycle 1 · Card 1/3 · 0 known'); // nothing is marked
+    expect(progress()).toBe('Round 1 · Card 1/3 · 0 known'); // nothing is marked
     act(() => vi.advanceTimersByTime(1400));
     expect(tip()).not.toBeNull();
     act(() => vi.advanceTimersByTime(100));
     expect(tip()).toBeNull();
     fireEvent.keyDown(window, { key: 'k' });
     expect(tip()).toHaveTextContent('Sign-in required');
-    expect(progress()).toBe('Cycle 1 · Card 1/3 · 0 known');
+    expect(progress()).toBe('Round 1 · Card 1/3 · 0 known');
   });
 
   describe('the nudge (D-066)', () => {
@@ -258,7 +258,7 @@ describe('LoopPage', () => {
         fireEvent.click(btn('I don’t know Show again soon'));
         fireEvent.click(btn('Next'));
       }
-      expect(progress()).toBe('Cycle 1 · Card 4/5 · 0 known');
+      expect(progress()).toBe('Round 1 · Card 4/5 · 0 known');
       act(() => vi.advanceTimersByTime(300));
       expect(nudging(answers[0]!)).toBe(false);
       act(() => vi.advanceTimersByTime(3700));
@@ -304,7 +304,7 @@ describe('LoopPage', () => {
     expect(screen.getByText('Show again soon')).toBeInTheDocument();
 
     fireEvent.click(btn('I know it Show again in future'));
-    expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known'); // counts like Know in the session
+    expect(progress()).toBe('Round 1 · Card 2/3 · 1 known'); // counts like Know in the session
     expect(sink.onKnow).not.toHaveBeenCalled();
     expect(loadLoop()?.state.known[0]?.again).toBe(true); // a refresh keeps it
     fireEvent.click(btn('Back'));
@@ -329,7 +329,7 @@ describe('LoopPage', () => {
     fireEvent.click(btn('Back'));
     fireEvent.click(btn('I know it Show again in future'));
     expect(sink.onUnknow).toHaveBeenCalledWith(sink.onKnow.mock.calls[0]![0].id, 'he');
-    expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known');
+    expect(progress()).toBe('Round 1 · Card 2/3 · 1 known');
     fireEvent.click(btn('Back'));
     fireEvent.click(btn('I know it Don’t show again'));
     expect(sink.onKnow).toHaveBeenCalledTimes(2);
@@ -345,9 +345,9 @@ describe('LoopPage', () => {
     setup();
     fireEvent.keyDown(window, { key: 'a' });
     fireEvent.keyDown(window, { key: 'ArrowLeft' });
-    expect(progress()).toBe('Cycle 1 · Card 1/3 · 1 known');
+    expect(progress()).toBe('Round 1 · Card 1/3 · 1 known');
     fireEvent.keyDown(window, { key: 'ArrowRight' });
-    expect(progress()).toBe('Cycle 1 · Card 2/3 · 1 known');
+    expect(progress()).toBe('Round 1 · Card 2/3 · 1 known');
   });
 
   it('Session completed plays the applause; the sound switch turns it off and is remembered', () => {
@@ -426,13 +426,72 @@ describe('LoopPage', () => {
     fireEvent.click(btn('I know it Show again in future'));
     expect(screen.getByRole('heading', { name: 'Session completed' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
-    expect(progress()).toBe('Cycle 1 · Card 3/3 · 3 known');
+    expect(progress()).toBe('Round 1 · Card 3/3 · 3 known');
     expect(loadLoop()).not.toBeNull(); // the session is alive again
     fireEvent.click(btn('I don’t know Show again soon'));
     fireEvent.click(btn('Next'));
-    expect(screen.getByRole('heading', { name: 'Cycle 2 · 1 card left' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Round 2 · 1 card left' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
-    expect(progress()).toBe('Cycle 1 · Card 3/3 · 2 known');
+    expect(progress()).toBe('Round 1 · Card 3/3 · 2 known');
+  });
+
+  describe('the break between rounds (D-067)', () => {
+    const toBreak = () => {
+      const router = setup();
+      fireEvent.click(btn('I know it Show again in future'));
+      fireEvent.click(btn('I know it Show again in future'));
+      fireEvent.click(btn('I don’t know Show again soon'));
+      fireEvent.click(btn('Next'));
+      expect(screen.getByRole('heading', { name: 'Round 2 · 1 card left' })).toBeInTheDocument();
+      return router;
+    };
+    const continueButton = () => screen.getByTestId('continue');
+    const tick = (seconds: number) => {
+      for (let i = 0; i < seconds; i++) act(() => vi.advanceTimersByTime(1000));
+    };
+
+    it('shows what was known, "to next round", and moves on by itself after 7 seconds', () => {
+      vi.useFakeTimers();
+      toBreak();
+      expect(screen.getByText('You knew 2 of 3 — 1 to go.')).toBeInTheDocument();
+      expect(screen.getByText('to next round')).toBeInTheDocument();
+      expect(continueButton()).toHaveTextContent('Continue · 7');
+      expect(continueButton()).toHaveAccessibleName('Continue'); // the digits aren't read out
+      tick(3);
+      expect(continueButton()).toHaveTextContent('Continue · 4');
+      tick(4);
+      expect(progress()).toBe('Round 2 · Card 1/1 · 2 known');
+    });
+
+    it('any key or tap stops the countdown for good', () => {
+      vi.useFakeTimers();
+      toBreak();
+      fireEvent.keyDown(window, { key: 'x' });
+      expect(continueButton()).toHaveTextContent(/^Continue$/);
+      tick(10);
+      expect(screen.getByRole('heading', { name: 'Round 2 · 1 card left' })).toBeInTheDocument();
+    });
+
+    it('a tap stops it too', () => {
+      vi.useFakeTimers();
+      toBreak();
+      fireEvent.pointerDown(document.body);
+      tick(10);
+      expect(screen.getByRole('heading', { name: 'Round 2 · 1 card left' })).toBeInTheDocument();
+    });
+
+    it('Home asks first, then ends the session; Esc asks too', async () => {
+      const router = toBreak();
+      fireEvent.keyDown(window, { key: 'Escape' });
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toHaveTextContent('This will stop the session. Are you sure?');
+      fireEvent.click(within(dialog).getByRole('button', { name: 'No' }));
+      expect(screen.queryByRole('dialog')).toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+      fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Yes' }));
+      await waitFor(() => expect(router.state.location.pathname).toBe('/'));
+      expect(loadLoop()).toBeNull();
+    });
   });
 
   it('supports keyboard shortcuts', () => {
@@ -447,9 +506,9 @@ describe('LoopPage', () => {
     expect(side()).toBe('back');
     (document.activeElement as HTMLElement).blur();
     fireEvent.keyDown(window, { key: 'Enter' });
-    expect(progress()).toBe('Cycle 1 · Card 2/3 · 0 known');
+    expect(progress()).toBe('Round 1 · Card 2/3 · 0 known');
     fireEvent.keyDown(window, { key: 'a' }); // a guest's Know (D-042)
-    expect(progress()).toBe('Cycle 1 · Card 3/3 · 1 known');
+    expect(progress()).toBe('Round 1 · Card 3/3 · 1 known');
   });
 
   it('reaches a cycle break, continues, and ends with a summary', () => {
@@ -458,9 +517,9 @@ describe('LoopPage', () => {
     fireEvent.click(btn('I know it Show again in future'));
     fireEvent.click(btn('I don’t know Show again soon'));
     fireEvent.click(btn('Next'));
-    expect(screen.getByRole('heading', { name: 'Cycle 2 · 1 card left' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Round 2 · 1 card left' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
-    expect(progress()).toBe('Cycle 2 · Card 1/1 · 2 known');
+    expect(progress()).toBe('Round 2 · Card 1/1 · 2 known');
     fireEvent.click(btn('I know it Show again in future'));
     const summary = screen
       .getByRole('heading', { name: 'Session completed' })
@@ -492,7 +551,7 @@ describe('LoopPage', () => {
       const newSession = screen.getByRole('button', { name: 'New session' });
       await waitFor(() => expect(newSession).toBeEnabled()); // once the settings have loaded
       fireEvent.click(newSession);
-      await waitFor(() => expect(progress()).toBe('Cycle 1 · Card 1/2 · 0 known'));
+      await waitFor(() => expect(progress()).toBe('Round 1 · Card 1/2 · 0 known'));
       expect(posted).toEqual([{ source: 'en', target: 'he', topicId: null, size: 5 }]);
       expect(router.state.location.pathname).toBe('/loop');
       expect(loadLoop()?.cards.map((c) => c.itemId)).toEqual([7, 8]);
@@ -573,7 +632,7 @@ describe('LoopPage', () => {
     const dialog = screen.getByRole('dialog', { name: 'Back to Home?' });
     expect(dialog).toHaveTextContent('This will stop the session. Are you sure?');
     fireEvent.keyDown(window, { key: 'k' }); // ignored while the question is open
-    expect(progress()).toBe('Cycle 1 · Card 1/3 · 0 known');
+    expect(progress()).toBe('Round 1 · Card 1/3 · 0 known');
     fireEvent.click(within(dialog).getByRole('button', { name: 'No' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/loop');

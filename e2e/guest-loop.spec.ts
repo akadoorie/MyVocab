@@ -57,7 +57,7 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   // Start without changing anything (invisible Turnstile with Cloudflare's test keys).
   await startCard.getByRole('button', { name: 'Start' }).click();
   await expect(page).toHaveURL(/\/loop$/);
-  await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 0 known');
+  await expect(progress(page)).toHaveText('Round 1 · Card 1/5 · 0 known');
 
   // Hints sit on the front under a live cover (D-047): a tap reveals, another covers. (A card
   // without hints or synonyms has no cover; the admin preview test always has one.)
@@ -93,19 +93,19 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   // "Sign-in required" covers the locked button for a second, then goes (D-043).
   await expect(page.locator('.locked-tip')).toHaveText('Sign-in required');
   await expect(page.locator('.locked-tip')).toHaveCount(0, { timeout: 3000 });
-  await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 0 known');
+  await expect(progress(page)).toHaveText('Round 1 · Card 1/5 · 0 known');
   await button(page, 'I know it Show again in future').click();
-  await expect(progress(page)).toHaveText('Cycle 1 · Card 2/5 · 1 known');
+  await expect(progress(page)).toHaveText('Round 1 · Card 2/5 · 1 known');
   await expect(card(page)).toHaveAttribute('data-side', 'front');
   // Back shows that card again (front up, with its answer); Don't know changes the answer.
   await button(page, 'Back').click();
-  await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 1 known');
+  await expect(progress(page)).toHaveText('Round 1 · Card 1/5 · 1 known');
   await expect(card(page)).toHaveAttribute('data-side', 'front');
   await expect(page.getByTestId('answer-chip')).toHaveText(/Clicked: I know it/);
   await button(page, 'I don’t know Show again soon').click();
-  await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 0 known');
+  await expect(progress(page)).toHaveText('Round 1 · Card 1/5 · 0 known');
   await button(page, 'Next').click();
-  await expect(progress(page)).toHaveText('Cycle 1 · Card 2/5 · 0 known');
+  await expect(progress(page)).toHaveText('Round 1 · Card 2/5 · 0 known');
 
   // Don't know → auto-flip → the answers stay but turn off, and Next pumps.
   await button(page, 'I don’t know Show again soon').click();
@@ -114,11 +114,11 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   await expect(button(page, 'I don’t know Show again soon')).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Next', exact: true })).toHaveClass(/is-urgent/);
   await button(page, 'Next').click();
-  await expect(progress(page)).toHaveText('Cycle 1 · Card 3/5 · 0 known');
+  await expect(progress(page)).toHaveText('Round 1 · Card 3/5 · 0 known');
 
   // A refresh resumes the same loop.
   await page.reload();
-  await expect(progress(page)).toHaveText('Cycle 1 · Card 3/5 · 0 known');
+  await expect(progress(page)).toHaveText('Round 1 · Card 3/5 · 0 known');
 
   // Know everything else; continue through cycle breaks until the summary.
   for (let i = 0; i < 20; i++) {
@@ -132,7 +132,7 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
 
   // New session starts the next loop right away, with the same choices (FR-L32).
   await page.getByRole('button', { name: 'New session' }).click();
-  await expect(progress(page)).toHaveText(/^Cycle 1 · Card 1\/\d+ · 0 known$/);
+  await expect(progress(page)).toHaveText(/^Round 1 · Card 1\/\d+ · 0 known$/);
   await expect(page).toHaveURL(/\/loop$/);
 });
 
@@ -161,19 +161,19 @@ test('on touch, swipe left is Next and swipe right is Back', async ({ page }) =>
     .getByRole('region', { name: 'Configure your session' })
     .getByRole('button', { name: 'Start' })
     .click();
-  await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 0 known');
+  await expect(progress(page)).toHaveText('Round 1 · Card 1/5 · 0 known');
   // Not answered yet: swiping left does nothing.
   await swipe(page, -160);
-  await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 0 known');
+  await expect(progress(page)).toHaveText('Round 1 · Card 1/5 · 0 known');
   await button(page, 'I don’t know Show again soon').click();
   await swipe(page, -160);
-  await expect(progress(page)).toHaveText('Cycle 1 · Card 2/5 · 0 known');
+  await expect(progress(page)).toHaveText('Round 1 · Card 2/5 · 0 known');
   await expect(card(page)).toHaveAttribute('data-side', 'front');
   // A short swipe springs back; a full one goes back, front side up.
   await swipe(page, 20);
-  await expect(progress(page)).toHaveText('Cycle 1 · Card 2/5 · 0 known');
+  await expect(progress(page)).toHaveText('Round 1 · Card 2/5 · 0 known');
   await swipe(page, 160);
-  await expect(progress(page)).toHaveText('Cycle 1 · Card 1/5 · 0 known');
+  await expect(progress(page)).toHaveText('Round 1 · Card 1/5 · 0 known');
   await expect(card(page)).toHaveAttribute('data-side', 'front');
 });
 

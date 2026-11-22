@@ -266,15 +266,37 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
     ),
   );
 
+  // "Back to Home?" on the session screen and on the break between rounds (FR-L30a, D-067).
+  const leaveDialog = confirmLeave && (
+    <ConfirmDialog
+      title={
+        confirmLeave === 'home' ? strings.loop.homeConfirmTitle : strings.loop.stopConfirmTitle
+      }
+      body={strings.loop.homeConfirmBody}
+      confirmLabel={strings.loop.yes}
+      cancelLabel={strings.loop.no}
+      onConfirm={() => {
+        setConfirmLeave(null);
+        act('STOP');
+      }}
+      onCancel={() => setConfirmLeave(null)}
+    />
+  );
+
   if (state.phase === 'cycleBreak') {
     return (
       <main id="main" className="mx-auto flex min-h-dvh w-full max-w-[640px] flex-col px-4 py-6">
         <CycleBreak
           cycle={state.cycle + 1}
           remaining={progress.remaining}
+          knew={progress.cycleSize - progress.remaining}
+          total={progress.cycleSize}
           onContinue={() => act('CONTINUE')}
           onBack={() => act('BACK')}
+          onHome={() => setConfirmLeave('home')}
+          paused={confirmLeave !== null}
         />
+        {leaveDialog}
         {ghost}
       </main>
     );
@@ -327,23 +349,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
             <span aria-hidden="true">←</span> {strings.nav.home}
           </button>
         </div>
-        {confirmLeave && (
-          <ConfirmDialog
-            title={
-              confirmLeave === 'home'
-                ? strings.loop.homeConfirmTitle
-                : strings.loop.stopConfirmTitle
-            }
-            body={strings.loop.homeConfirmBody}
-            confirmLabel={strings.loop.yes}
-            cancelLabel={strings.loop.no}
-            onConfirm={() => {
-              setConfirmLeave(null);
-              act('STOP');
-            }}
-            onCancel={() => setConfirmLeave(null)}
-          />
-        )}
+        {leaveDialog}
       </header>
 
       <div
@@ -388,7 +394,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   );
 }
 
-/** "Cycle 1 · Card 2/5 · 1 known" → ["Cycle 1 · Card 2/5 · ", "1 known"]: the counter is the target. */
+/** "Round 1 · Card 2/5 · 1 known" → ["Round 1 · Card 2/5 · ", "1 known"]: the counter is the target. */
 function splitKnown(text: string): [string, string] {
   const at = text.lastIndexOf(' · ') + 3;
   return [text.slice(0, at), text.slice(at)];

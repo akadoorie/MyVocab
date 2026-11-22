@@ -192,10 +192,18 @@ export const strings = {
     continue: 'Continue',
     back: 'Back',
     backToCard: 'Back to the last card',
+    /** The UI says "round"; the code keeps "cycle" (D-067). */
     progress: (cycle: number, card: number, size: number, known: number) =>
-      `Cycle ${cycle} · Card ${card}/${size} · ${known} known`,
+      `Round ${cycle} · Card ${card}/${size} · ${known} known`,
     cycleBreak: (cycle: number, left: number) =>
-      `Cycle ${cycle} · ${left} ${left === 1 ? 'card' : 'cards'} left`,
+      `Round ${cycle} · ${left} ${left === 1 ? 'card' : 'cards'} left`,
+    /** Under the heading on the break between rounds (D-067). */
+    cycleRecap: (knew: number, total: number, left: number) =>
+      `You knew ${knew} of ${total} — ${left} to go.`,
+    /** Under Continue on the break (D-067). */
+    continueCaption: 'to next round',
+    /** Said once to screen readers when the countdown starts (D-067). */
+    continuingIn: (seconds: number) => `Continuing in ${seconds} seconds`,
     insufficient: (n: number, topic: string) =>
       `Only ${n} new ${n === 1 ? 'card' : 'cards'} in ${topic}, starting with ${n}`,
     homeConfirmTitle: 'Back to Home?',
@@ -251,7 +259,7 @@ export const strings = {
   summary: {
     title: 'Session completed',
     cards: 'Cards',
-    cycles: 'Cycles',
+    cycles: 'Rounds',
     alreadyKnew: 'Already knew',
     learnedHere: 'Learned here',
     newLoop: 'New session',

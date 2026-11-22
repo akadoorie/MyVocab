@@ -120,7 +120,7 @@ private content repository. It never appears in the public code repo or any publ
 | **Flip** | Turning the on-screen card over (front ↔ back). It can be done any number of times and **has no effect on grading**. |
 | **Amount** | The number of cards in a loop (learners: 10/20/30/40/50; guests: always 5). |
 | **Loop** | One learning session over a group of cards. **In the UI it is called a "Session"** ("Configure your session", "Session completed", "New session"); "loop" stays the technical term in this spec and in the code (D-018). |
-| **Cycle** | One pass over the loop's remaining cards. |
+| **Cycle** | One pass over the loop's remaining cards. **In the UI it is called a "Round"** ("Round 2 · Card 1/3", "Round 3 · 2 cards left", "Rounds" on the summary); "cycle" stays the technical term in this spec and in the code (D-067). |
 | **Known item** | An item a signed-in learner marked "Know" in one direction (e.g. EN → HE). It is excluded from their future loops **in that direction only** until returned (D-028); the explanation direction (EN → EN) is a direction of its own. |
 | **Topic** | A topic (Home, Nature, …). An item can have many, or none. **All topics** (formerly "General") is virtual: every item, including items without a topic (D-039). |
 | **Content repo** | The **private** GitHub repo `MyVocab-Content` that holds vocabulary files (starter set, import batches, snapshots). |
@@ -356,7 +356,13 @@ private content repository. It never appears in the public code repo or any publ
   **No** closes the question and the loop continues where it was. While the question is open, loop shortcuts are
   ignored and Esc means No (owner request, 2026-11-18).
 - **FR-L31 Cycle break**: when a cycle ends and "Don't know" cards remain, an interstitial shows
-  "Cycle 3 · 2 cards left" with a **Continue** button (Enter also continues).
+  "Round 3 · 2 cards left", a recap ("You knew 5 of 8 — 3 to go."), then **Home** and **Continue** side by side as on
+  the summary, with "to next round" under Continue (D-067). **Continue** (or Enter) starts the next round; it counts
+  down from 7 ("Continue · 7, 6…", with a light band draining across it) and starts the next round by itself at 0.
+  Any tap, click or key stops the countdown for good; it pauses while the page is hidden; screen readers hear
+  "Continuing in 7 seconds" once; with reduced motion only the numbers count. **Home** (or Esc) asks "Back to
+  Home? This will stop the session. Are you sure?" first, as during a card (FR-L30a). "← Back to the last card"
+  stays.
 - **FR-L32 End of loop**: when a cycle ends with no "Don't know" cards, a summary shows the total cards, the number of
   cycles, **Already knew** (known in cycle 1) vs **Learned here** (known in cycle ≥ 2), and buttons **New session**
   and **Home**. **New session** starts the next session at once with the same selection (languages, topic,

@@ -25,27 +25,115 @@ function useFocusOnMount<T extends HTMLElement>() {
   return ref;
 }
 
-/** "Cycle 3 · 2 cards left" with Continue (PRD FR-L31). */
+/** Seconds before the break moves on to the next round by itself (D-067). */
+export const CONTINUE_SECONDS = 7;
+
+/**
+ * Counts down from `seconds` and calls `onDone` at 0 (D-067). Any tap, click or key cancels it
+ * for good; it pauses while `paused` (the "Are you sure?" question) or while the page is hidden.
+ */
+function useCountdown(seconds: number, onDone: () => void, paused: boolean) {
+  const [left, setLeft] = useState(seconds);
+  const [cancelled, setCancelled] = useState(false);
+  const [hidden, setHidden] = useState(() => document.visibilityState === 'hidden');
+  useEffect(() => {
+    if (cancelled) return;
+    const cancel = () => setCancelled(true);
+    const visibility = () => setHidden(document.visibilityState === 'hidden');
+    window.addEventListener('pointerdown', cancel, true);
+    window.addEventListener('keydown', cancel, true);
+    document.addEventListener('visibilitychange', visibility);
+    return () => {
+      window.removeEventListener('pointerdown', cancel, true);
+      window.removeEventListener('keydown', cancel, true);
+      document.removeEventListener('visibilitychange', visibility);
+    };
+  }, [cancelled]);
+  // The latest callback, so a parent re-render doesn't restart the count.
+  const done = useRef(onDone);
+  useEffect(() => {
+    done.current = onDone;
+  });
+  const running = !cancelled && !paused && !hidden;
+  useEffect(() => {
+    if (!running) return;
+    if (left === 0) {
+      done.current();
+      return;
+    }
+    const t = window.setTimeout(() => setLeft((n) => n - 1), 1000);
+    return () => window.clearTimeout(t);
+  }, [running, left]);
+  return { left, counting: !cancelled, running };
+}
+
+/**
+ * The break between rounds (PRD FR-L31, D-067): "Round 3 · 2 cards left", what was known, then
+ * Home and Continue side by side as on the summary. Continue counts down and moves on by itself.
+ */
 export function CycleBreak({
   cycle,
   remaining,
+  knew,
+  total,
   onContinue,
   onBack,
+  onHome,
+  paused = false,
 }: {
   cycle: number;
   remaining: number;
+  /** Known in the round that just ended, of `total` cards. */
+  knew: number;
+  total: number;
   onContinue: () => void;
   onBack: () => void;
+  /** Asks first (the dialog lives in the loop page). */
+  onHome: () => void;
+  /** The "Are you sure?" question is open: the countdown waits. */
+  paused?: boolean;
 }) {
   const focusRef = useFocusOnMount<HTMLButtonElement>();
+  const { left, counting, running } = useCountdown(CONTINUE_SECONDS, onContinue, paused);
   return (
     <section className="glass m-auto flex w-full max-w-lg flex-col items-center gap-8 px-6 py-12 text-center">
-      <h1 className="text-3xl font-bold tracking-tight">
-        {strings.loop.cycleBreak(cycle, remaining)}
-      </h1>
-      <Button3D size="lg" ref={focusRef} onClick={onContinue}>
-        {strings.loop.continue}
-      </Button3D>
+      <div className="flex flex-col gap-3">
+        <h1 className="text-3xl font-bold tracking-tight">
+          {strings.loop.cycleBreak(cycle, remaining)}
+        </h1>
+        <p className="text-muted">{strings.loop.cycleRecap(knew, total, remaining)}</p>
+      </div>
+      <div className="flex items-start gap-3">
+        <Button3D variant="stop" onClick={onHome}>
+          {strings.summary.home}
+        </Button3D>
+        <div className="flex flex-col items-center gap-2">
+          <Button3D
+            ref={focusRef}
+            onClick={onContinue}
+            className="relative overflow-hidden"
+            data-testid="continue"
+          >
+            {strings.loop.continue}
+            {counting && <span aria-hidden="true">{` · ${left}`}</span>}
+            {counting && (
+              // The time left, draining across the button (not with "reduce motion").
+              <span
+                aria-hidden="true"
+                className="countdown-fill"
+                style={{
+                  animationDuration: `${CONTINUE_SECONDS}s`,
+                  animationPlayState: running ? 'running' : 'paused',
+                }}
+              />
+            )}
+          </Button3D>
+          <span className="lbtn__caption">{strings.loop.continueCaption}</span>
+        </div>
+      </div>
+      <p className="sr-only" aria-live="polite">
+        {counting ? strings.loop.continuingIn(CONTINUE_SECONDS) : ''}
+      </p>
       <BackToLastCard onBack={onBack} />
     </section>
   );
@@ -151,7 +239,7 @@ export function Summary({
   );
 }
 
-/** "← Back to the last card" on the cycle break and the summary (PRD FR-L29a). */
+/** "← Back to the last card" on the break between rounds and the summary (PRD FR-L29a). */
 function BackToLastCard({ onBack }: { onBack: () => void }) {
   return (
     <button
