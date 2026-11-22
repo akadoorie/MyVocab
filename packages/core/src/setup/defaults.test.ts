@@ -14,7 +14,7 @@ const ctx: StartContext = {
     defaults: { sourceLang: 'en', targetLang: 'he', topicId: null },
     sizeOptions: [10, 20, 30, 40, 50],
     defaultSize: 10,
-    guestLoopSize: 5,
+    guestPracticeSize: 5,
   },
   activeLanguages: ['en', 'he'],
   activeTopicIds: [1, 2],

@@ -10,14 +10,14 @@ import {
   registeredUsersResponseSchema,
   restoreKnownResponseSchema,
   socialSignInResponseSchema,
-  startLoopResponseSchema,
+  startPracticeResponseSchema,
   type AvailableQuery,
   type ErrorCode,
   type KnownListQuery,
   type KnownMarkInput,
   type RestoreKnownRequest,
   type SocialSignInRequest,
-  type StartLoopRequest,
+  type StartPracticeRequest,
 } from '@myvocab/contracts';
 import { z } from 'zod';
 
@@ -73,16 +73,16 @@ export const api = {
     const params = new URLSearchParams({ source: q.source, target: q.target });
     if (q.topicId !== undefined) params.set('topicId', String(q.topicId));
     if (q.sample !== undefined) params.set('sample', q.sample);
-    return request(`/loops/available?${params}`, availableResponseSchema);
+    return request(`/practices/available?${params}`, availableResponseSchema);
   },
   /** Every count for one direction, for the Topic list (D-064). */
   availableByTopic: (source: string, target: string) =>
     request(
-      `/loops/available-by-topic?${new URLSearchParams({ source, target })}`,
+      `/practices/available-by-topic?${new URLSearchParams({ source, target })}`,
       availableByTopicResponseSchema,
     ),
-  startLoop: (body: StartLoopRequest) =>
-    request('/loops', startLoopResponseSchema, json('POST', body)),
+  startPractice: (body: StartPracticeRequest) =>
+    request('/practices', startPracticeResponseSchema, json('POST', body)),
 
   // Current user (PRD §12.2)
   me: () => request('/me', meResponseSchema),

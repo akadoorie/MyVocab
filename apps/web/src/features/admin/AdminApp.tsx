@@ -76,7 +76,7 @@ export function AdminApp() {
       >
         Skip to content
       </a>
-      {/* One top bar on every screen (D-077): the title, and "← Home" top right as in a session. */}
+      {/* One top bar on every screen (D-077): the title, and "← Home" top right as in a practice. */}
       <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:border-b-0 md:pt-6 md:pr-0 md:pb-2 md:pl-3">
         <span className="font-semibold whitespace-nowrap md:text-lg">
           My<span className="text-accent">Vocab</span> · {s.title}

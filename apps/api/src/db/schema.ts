@@ -255,13 +255,13 @@ export const userKnownItems = sqliteTable(
       .notNull()
       .references(() => items.id, { onDelete: 'cascade' }),
     knownTarget: text('known_target').notNull(),
-    knownInCycle: integer('known_in_cycle').notNull(),
+    knownInRound: integer('known_in_round').notNull(),
     knownAt: integer('known_at').notNull(),
   },
   (t) => [
     primaryKey({ columns: [t.userId, t.itemId, t.knownTarget] }),
     index('ix_known_item').on(t.itemId),
-    check('ck_known_cycle', sql`known_in_cycle >= 1`),
+    check('ck_known_round', sql`known_in_round >= 1`),
   ],
 );
 

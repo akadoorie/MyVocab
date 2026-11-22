@@ -17,7 +17,7 @@ import { D1ImportWriter } from './repositories/d1/import-writer';
 import { D1ItemRepository } from './repositories/d1/items';
 import { D1KnownRepository } from './repositories/d1/known';
 import { D1LanguageRepository } from './repositories/d1/languages';
-import { D1LoopRepository } from './repositories/d1/loops';
+import { D1PracticeRepository } from './repositories/d1/practices';
 import { D1SettingsRepository } from './repositories/d1/settings';
 import { D1UsageRepository } from './repositories/d1/usage';
 import { AccountService } from './services/account-service';
@@ -27,7 +27,7 @@ import { OpsAdminService } from './services/admin/ops-admin-service';
 import { UserAdminService } from './services/admin/user-admin-service';
 import { CsvImportService } from './services/csv-import-service';
 import { KnownItemsService } from './services/known-items-service';
-import { LoopService } from './services/loop-service';
+import { PracticeService } from './services/practice-service';
 import { MaintenanceService } from './services/maintenance-service';
 import { SettingsService } from './services/settings-service';
 import { UsageLimitService } from './services/usage-limit-service';
@@ -87,10 +87,10 @@ export function createContainer(
     },
     maintenance: new MaintenanceService({ db, items: adminItems }),
     accounts: new AccountService({ accounts: new D1AccountRepository(db) }),
-    loops: new LoopService({
+    practices: new PracticeService({
       languages,
       topics,
-      loops: new D1LoopRepository(db),
+      practices: new D1PracticeRepository(db),
       settings,
       limits,
       botCheck: new TurnstileVerifier(

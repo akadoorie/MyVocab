@@ -10,7 +10,7 @@ export const en = {
     /** The switch shows the other language, in that language. */
     switchLabel: 'עברית',
     switchLang: 'he',
-    metaDescription: 'Learn words and expressions in short sessions that shrink as you learn.',
+    metaDescription: 'Learn words and expressions in short practices that shrink as you learn.',
   },
   /** Language names by code, in this UI language; other codes use the name from the server. */
   languageNames: { en: 'English', he: 'Hebrew' } as Record<string, string>,
@@ -49,7 +49,7 @@ export const en = {
     /** The guest banner: the first words start sign-in (D-033). */
     guestBannerLink: 'Sign-in with Google',
     guestBannerRest:
-      ' to remember the words you already know, choose different topics and bigger sessions.',
+      ' to remember the words you already know, choose different topics and bigger practices.',
     /** The answer buttons, explained under "How it works" (D-030). */
     buttonsTitle: 'Buttons',
     buttonGuide: {
@@ -58,12 +58,12 @@ export const en = {
           whole "Sign-in to enable" a link (D-043, D-071). */
       knowGuest: "Don’t show it again. You can bring it back from 'My known words'.",
       toEnable: 'to enable',
-      again: 'Don’t show again in this session; it shows up again in future sessions.',
-      dontKnow: 'Repeat it later in this session, until you know it.',
+      again: 'Don’t show again in this practice; it shows up again in future practices.',
+      dontKnow: 'Repeat it later in this practice, until you know it.',
     },
   },
   setup: {
-    title: 'Configure your session',
+    title: 'Configure your practice',
     source: 'From',
     target: 'To',
     topic: 'Topic',
@@ -71,7 +71,7 @@ export const en = {
     general: 'All topics',
     /** The items guests play (D-038); admins can pick it too, to check it. */
     sampleSet: 'Sample set',
-    amount: 'Cards per session',
+    amount: 'Cards per practice',
     swapLanguages: 'Switch From and To',
     defaultTag: 'Default',
     reset: 'Reset to defaults',
@@ -82,7 +82,7 @@ export const en = {
     availableSuffix: (n: number) => `${n === 1 ? 'card' : 'cards'} available`,
     checking: 'Checking…',
     guestAmountLocked: 'Guests always get 5 cards',
-    /** After the "Sign-in" link, over the Cards per session field (D-043, D-070): "Sign-in to change". */
+    /** After the "Sign-in" link, over the Cards per practice field (D-043, D-070): "Sign-in to change". */
     guestAmountToast: 'to change',
     signInToStart: 'Sign-in to start',
     emptyTitle: 'You know every card in this selection 🎉',
@@ -99,8 +99,8 @@ export const en = {
         : 'You’ve reached today’s card limit. Come back tomorrow!',
     sessionExpired: 'Your session has ended. Please sign-in again.',
     /** The server's refusals, in the UI language (D-080). */
-    guestRateLimited: 'Too many sessions for now. Sign-in or try again later.',
-    guestsDisabled: 'Sign-in to start a session.',
+    guestRateLimited: 'Too many practices for now. Sign-in or try again later.',
+    guestsDisabled: 'Sign-in to start a practice.',
   },
   auth: {
     signInFailed: 'Sign-in didn’t complete. Please try again.',
@@ -135,7 +135,7 @@ export const en = {
     selectRow: (text: string, direction: string) => `Select ${text} (${direction})`,
     clearSelection: 'Clear selection',
     confirmTitle: (n: number) => `Return ${n} ${n === 1 ? 'word' : 'words'} to practice?`,
-    confirmBody: 'They will show up again in your future sessions, in the directions shown.',
+    confirmBody: 'They will show up again in your future practices, in the directions shown.',
     confirm: 'Return them',
     cancel: 'Cancel',
     returned: (n: number) => `${n} ${n === 1 ? 'word is' : 'words are'} back in practice`,
@@ -146,7 +146,7 @@ export const en = {
     retry: 'Try again',
     emptyTitle: 'No known words yet',
     emptyBody:
-      'When you press the green Know on a card, the word lands here and stops appearing in sessions in that direction (for example English → Hebrew). You can bring it back at any time.',
+      'When you press the green Know on a card, the word lands here and stops appearing in practices in that direction (for example English → Hebrew). You can bring it back at any time.',
     noMatches: 'Nothing matches these filters.',
   },
   account: {
@@ -173,7 +173,7 @@ export const en = {
       'Your Google account id, email address, name and profile picture link, when you sign-in with Google.',
       'The words you marked as known (item, the direction you were learning, the round and the date).',
       'A daily counter of the cards you were served, to keep the service fair for everyone.',
-      'For guests: an hourly counter of sessions per network address. The address itself is never stored, only a one-way keyed hash of it.',
+      'For guests: an hourly counter of practices per network address. The address itself is never stored, only a one-way keyed hash of it.',
       'A sign-in session cookie (HttpOnly). It holds no personal data.',
     ],
     whyTitle: 'Why',
@@ -184,7 +184,7 @@ export const en = {
     delete:
       'Open Account and choose “Delete my account”. Your account, sessions, known words and counters are deleted at once. Hashed guest counters expire after 48 hours.',
   },
-  loop: {
+  practice: {
     /** The three answer buttons and the captions under them (FR-L27a, D-030). */
     know: 'I know it',
     dontKnow: 'I don’t know',
@@ -209,13 +209,13 @@ export const en = {
     continue: 'Continue',
     back: 'Back',
     backToCard: 'Back to the last card',
-    /** The UI says "round"; the code keeps "cycle" (D-067). */
-    progress: (cycle: number, card: number, size: number, known: number) =>
-      `Round ${cycle} · Card ${card}/${size} · ${known} known`,
-    cycleBreak: (cycle: number, left: number) =>
-      `Round ${cycle} · ${left} ${left === 1 ? 'card' : 'cards'} left`,
+    /** The UI says "round"; the code keeps "round" (D-067). */
+    progress: (round: number, card: number, size: number, known: number) =>
+      `Round ${round} · Card ${card}/${size} · ${known} known`,
+    roundBreak: (round: number, left: number) =>
+      `Round ${round} · ${left} ${left === 1 ? 'card' : 'cards'} left`,
     /** Under the heading on the break between rounds (D-067). */
-    cycleRecap: (knew: number, total: number, left: number) =>
+    roundRecap: (knew: number, total: number, left: number) =>
       `You knew ${knew} of ${total} — ${left} to go.`,
     /** Under Continue on the break (D-067). */
     continueCaption: 'to next round',
@@ -226,7 +226,7 @@ export const en = {
     insufficient: (n: number, topic: string) =>
       `Only ${n} new ${n === 1 ? 'card' : 'cards'} in ${topic}, starting with ${n}`,
     homeConfirmTitle: 'Back to Home?',
-    homeConfirmBody: 'This will stop the session. Are you sure?',
+    homeConfirmBody: 'This will stop the practice. Are you sure?',
     yes: 'Yes',
     no: 'No',
     shortcutsTitle: 'Keyboard shortcuts',
@@ -276,12 +276,12 @@ export const en = {
       `Card ${card} of ${size}${answer ? `. ${answer}` : ''}`,
   },
   summary: {
-    title: 'Session completed',
+    title: 'Practice completed',
     cards: 'Cards',
-    cycles: 'Rounds',
+    rounds: 'Rounds',
     alreadyKnew: 'Already knew',
     learnedHere: 'Learned here',
-    newLoop: 'New session',
+    newPractice: 'New practice',
     nothingLeft: 'No new cards left for these choices. Go Home to pick others.',
     home: 'Home',
     guestNote: 'Sign-in to skip words that no longer need to repeat',

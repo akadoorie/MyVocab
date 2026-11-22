@@ -52,7 +52,7 @@ run(
     '--command',
     // With a shell (Windows) the SQL needs quotes to stay one argument; without one (CI) it must not.
     quoteForShell(
-      `INSERT INTO app_settings (key, value, updated_at) VALUES ('guests.loopsPerHour', '100', ${Date.now()})`,
+      `INSERT INTO app_settings (key, value, updated_at) VALUES ('guests.practicesPerHour', '100', ${Date.now()})`,
     ),
   ],
   apiDir,

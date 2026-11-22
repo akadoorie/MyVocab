@@ -233,7 +233,7 @@ describe('GET /api/admin/items and preview', () => {
     expect(body.items.map((i) => i.text)).toEqual(['orphan']);
   });
 
-  it('previews the card of every playable direction with the loop card builder', async () => {
+  it('previews the card of every playable direction with the practice card builder', async () => {
     const id = await itemId('fx-word-2');
     const cards = await (
       await req(`/admin/items/${id}/preview`)
@@ -249,21 +249,21 @@ describe('Trash (FR-A20–24)', () => {
   async function markKnown(cookie: string, id: number) {
     await authed(cookie, '/me/known', {
       method: 'POST',
-      json: { items: [{ itemId: id, target: 'he', cycle: 1 }] },
+      json: { items: [{ itemId: id, target: 'he', round: 1 }] },
     });
   }
 
-  it('delete hides an item from loops and known lists; restore brings the known mark back', async () => {
+  it('delete hides an item from practices and known lists; restore brings the known mark back', async () => {
     const learner = await signIn('user');
     const id = await itemId('fx-word-1');
     await markKnown(learner.cookie, id);
-    const before = await (await req('/loops/available?source=en&target=he')).json();
+    const before = await (await req('/practices/available?source=en&target=he')).json();
 
     expect((await req(`/admin/items/${id}`, { method: 'DELETE' })).status).toBe(200);
     expect((await req(`/admin/items/${id}`)).status).toBe(404);
     const known = await (await authed(learner.cookie, '/me/known')).json<{ items: unknown[] }>();
     expect(known.items).toHaveLength(0);
-    const after = await (await req('/loops/available?source=en&target=he')).json();
+    const after = await (await req('/practices/available?source=en&target=he')).json();
     expect(after).toEqual({ available: (before as { available: number }).available - 1 });
 
     const trash = await (

@@ -8,16 +8,27 @@ export const KNOWN_PAGE_SIZE = 50;
 
 /**
  * One Know mark. With `itemId`, `target` names the direction: the mark hides the item only in
- * sessions into that language (FR-L50, D-028). Target = the item's language is the explanation
+ * practices into that language (FR-L50, D-028). Target = the item's language is the explanation
  * direction.
  */
-export const knownMarkSchema = z
-  .object({
-    itemId: itemIdSchema,
-    target: langCodeSchema,
-    cycle: z.number().int().min(1).max(10_000),
-  })
-  .strict();
+export const knownMarkSchema = z.preprocess(
+  // A page still running the version before the rename sends `cycle`: read it as `round`, so
+  // its marks are kept. Remove once no such page can be open.
+  (v) => {
+    if (v && typeof v === 'object' && 'cycle' in v && !('round' in v)) {
+      const { cycle, ...rest } = v as Record<string, unknown>;
+      return { ...rest, round: cycle };
+    }
+    return v;
+  },
+  z
+    .object({
+      itemId: itemIdSchema,
+      target: langCodeSchema,
+      round: z.number().int().min(1).max(10_000),
+    })
+    .strict(),
+);
 export type KnownMarkInput = z.infer<typeof knownMarkSchema>;
 
 /** POST /api/me/known. */
@@ -98,7 +109,7 @@ export const knownItemSchema = z.object({
   }),
   topics: z.array(topicRefSchema),
   knownAt: z.number().int(),
-  knownInCycle: z.number().int().min(1),
+  knownInRound: z.number().int().min(1),
 });
 export type KnownItem = z.infer<typeof knownItemSchema>;
 

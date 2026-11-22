@@ -22,7 +22,7 @@ export type SwipeOptions = {
 };
 
 /**
- * Touch swipes on the session card (PRD FR-L29b): left = Next, right = Back (the caller mirrors
+ * Touch swipes on the practice card (PRD FR-L29b): left = Next, right = Back (the caller mirrors
  * them on right-to-left pages, D-080). The card follows the
  * finger (only a little, with resistance, when that way isn't allowed), then slides out or springs
  * back. Mouse and pen are ignored; a mostly vertical drag is left to the page; the click that ends

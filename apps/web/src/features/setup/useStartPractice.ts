@@ -1,17 +1,17 @@
 import type { MetaResponse } from '@myvocab/contracts';
-import { createLoop, randomSeed, type StartChoices } from '@myvocab/core';
+import { createPractice, randomSeed, type StartChoices } from '@myvocab/core';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { api, ApiError } from '../../lib/api';
 import { ME_QUERY_KEY } from '../../lib/session';
 import { strings, topicName } from '../../strings';
-import { saveLoop } from '../loop/loop-storage';
+import { savePractice } from '../practice/practice-storage';
 import { useTurnstile } from './useTurnstile';
 
-export type LoopStartNotice = { insufficient?: string };
+export type PracticeStartNotice = { insufficient?: string };
 
-/** `started`: on the way to the loop; `empty`: no new cards for these choices; `failed`: see `error`. */
+/** `started`: on the way to the practice; `empty`: no new cards for these choices; `failed`: see `error`. */
 export type StartResult = 'started' | 'empty' | 'failed';
 
 function remainingOf(details: unknown): number {
@@ -20,13 +20,13 @@ function remainingOf(details: unknown): number {
 }
 
 /**
- * Starting a loop (PRD FR-L7–L10), shared by the start card and the summary's "New session"
- * (which starts the next loop with the same choices, without going through the start card). For
+ * Starting a practice (PRD FR-L7–L10), shared by the start card and the summary's "New practice"
+ * (which starts the next practice with the same choices, without going through the start card). For
  * guests it runs the invisible Turnstile check; render `containerRef` where an interactive
  * challenge may appear. `meta` may still be loading (`undefined`): `start` then reports a generic
  * error, so callers disable their button until it is there.
  */
-export function useStartLoop({
+export function useStartPractice({
   meta,
   isGuest,
 }: {
@@ -54,7 +54,7 @@ export function useStartLoop({
     setError(null);
     try {
       const turnstileToken = isGuest ? await getToken() : undefined;
-      const res = await api.startLoop({
+      const res = await api.startPractice({
         source: choices.sourceLang,
         target: choices.targetLang,
         topicId: choices.topicId,
@@ -63,9 +63,9 @@ export function useStartLoop({
         ...(turnstileToken ? { turnstileToken } : {}),
       });
       if (res.cards.length === 0) return 'empty';
-      saveLoop({
+      savePractice({
         cards: res.cards,
-        state: createLoop(
+        state: createPractice(
           res.cards.map((c) => c.itemId),
           randomSeed(),
         ),
@@ -84,11 +84,11 @@ export function useStartLoop({
                 const topic = meta.topics.find((c) => c.id === choices.topicId);
                 return topic ? topicName(topic) : strings.setup.general;
               })();
-      const notice: LoopStartNotice =
+      const notice: PracticeStartNotice =
         res.returned < res.requested
-          ? { insufficient: strings.loop.insufficient(res.returned, topicLabel) }
+          ? { insufficient: strings.practice.insufficient(res.returned, topicLabel) }
           : {};
-      navigate('/loop', { state: notice, replace: options.replace ?? false });
+      navigate('/practice', { state: notice, replace: options.replace ?? false });
       return 'started';
     } catch (e) {
       if (e instanceof ApiError && e.code === 'BOT_CHECK_FAILED')

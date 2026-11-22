@@ -3,7 +3,7 @@ import { createMiddleware } from 'hono/factory';
 import type { AppEnv } from '../app';
 import { RateLimitedError } from './errors';
 
-type LimiterName = 'RL_LOOPS' | 'RL_AVAILABLE' | 'RL_AUTH' | 'RL_IMPORT' | 'RL_ADMIN';
+type LimiterName = 'RL_PRACTICES' | 'RL_AVAILABLE' | 'RL_AUTH' | 'RL_IMPORT' | 'RL_ADMIN';
 
 /** Per-IP key: the hashed IP (the same HMAC as the usage counters), never the raw address. */
 export async function ipKey(c: Context<AppEnv>): Promise<string> {

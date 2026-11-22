@@ -26,7 +26,7 @@ export type ItemContent = {
   hints: string[];
 };
 
-/** An item as the card builder and loop selection see it. */
+/** An item as the card builder and practice selection see it. */
 export type ItemData = ItemContent & { id: number };
 
 /** The list fields of an item that hold entries in the item's own language. */

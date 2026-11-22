@@ -14,7 +14,7 @@ describe('reload after a deploy (stale build)', () => {
     expect(event.defaultPrevented).toBe(true);
   });
 
-  it('does not reload again right after a reload, so a real error shows instead of a loop', () => {
+  it('does not reload again right after a reload, so a real error shows instead of a practice', () => {
     const reload = vi.fn();
     handleStaleBuild(failedLoad(), { now: 1_000_000, reload });
     const again = failedLoad();

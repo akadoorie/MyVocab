@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-/** A touch swipe across the session card, as pointer events (PRD FR-L29b). */
+/** A touch swipe across the practice card, as pointer events (PRD FR-L29b). */
 export async function swipe(page: Page, dx: number) {
   const target = page.getByTestId('flip-card');
   const box = (await target.boundingBox())!;

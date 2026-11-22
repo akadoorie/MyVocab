@@ -55,10 +55,10 @@ describe('Landing: the Buttons guide under How it works (D-030)', () => {
       ),
     );
     expect(section).toHaveTextContent(
-      'I know it: Don’t show again in this session; it shows up again in future sessions.',
+      'I know it: Don’t show again in this practice; it shows up again in future practices.',
     );
     expect(section).toHaveTextContent(
-      'I don’t know: Repeat it later in this session, until you know it.',
+      'I don’t know: Repeat it later in this practice, until you know it.',
     );
     expect(section.querySelector('.is-locked')).toBeNull();
   });
@@ -71,7 +71,7 @@ describe('Landing: the Buttons guide under How it works (D-030)', () => {
       "I know it: Don’t show it again. You can bring it back from 'My known words'. (Sign-in to enable)",
     );
     expect(section).toHaveTextContent(
-      'I know it: Don’t show again in this session; it shows up again in future sessions.',
+      'I know it: Don’t show again in this practice; it shows up again in future practices.',
     );
     expect(section).not.toHaveTextContent('sign-in to use');
     expect(section.querySelector('.mini-btn--know.is-locked')).not.toBeNull();
@@ -90,7 +90,7 @@ describe('Landing: guest sign-in banner (FR-L9, D-033)', () => {
     const banner = link.closest('p');
     expect(banner).toHaveClass('sign-in-glow');
     expect(banner).toHaveTextContent(
-      'Sign-in with Google to remember the words you already know, choose different topics and bigger sessions.',
+      'Sign-in with Google to remember the words you already know, choose different topics and bigger practices.',
     );
   });
 });

@@ -1,7 +1,7 @@
 import { createBrowserRouter, Link } from 'react-router';
 import { AccountPage } from './features/account/AccountPage';
 import { KnownPage } from './features/known/KnownPage';
-import { LoopPage } from './features/loop/LoopPage';
+import { PracticePage } from './features/practice/PracticePage';
 import { Landing } from './routes/Landing';
 import { Layout } from './routes/Layout';
 import { Privacy } from './routes/Privacy';
@@ -33,7 +33,7 @@ export const routes = [
       { path: '*', Component: NotFound },
     ],
   },
-  { path: '/loop', Component: LoopPage },
+  { path: '/practice', Component: PracticePage },
   {
     // The admin bundle is lazy-loaded: learners never download it (PRD §7).
     path: '/admin/*',

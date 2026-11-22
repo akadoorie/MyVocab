@@ -533,7 +533,7 @@ export class D1StatsRepository implements StatsRepository {
         SELECT (SELECT COUNT(*) FROM items WHERE deleted_at IS NOT NULL) AS trash,
                (SELECT COUNT(*) FROM audit_log WHERE created_at >= ${since}
                   AND action = 'limit.exceeded') AS limit_events`),
-      // What guests can play (D-038): the loop's playability rule, sample set only.
+      // What guests can play (D-038): the practice's playability rule, sample set only.
       this.db.all<{ source: string; target: string; count: number }>(sql`
         SELECT s.value AS source, t.value AS target, COUNT(*) AS count
         FROM json_each(${langs}) AS s

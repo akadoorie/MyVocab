@@ -136,7 +136,7 @@ export class KnownItemsService {
         },
         topics: topics.get(r.itemId) ?? [],
         knownAt: r.knownAt,
-        knownInCycle: r.knownInCycle,
+        knownInRound: r.knownInRound,
       };
     });
 

@@ -41,16 +41,16 @@ test('guest pages: no accessibility violations and no CSP violations', async ({ 
   await expectNoViolations(page, 'landing');
 
   await page
-    .getByRole('region', { name: 'Configure your session' })
+    .getByRole('region', { name: 'Configure your practice' })
     .getByRole('button', { name: 'Start' })
     .click();
-  await expect(page).toHaveURL(/\/loop$/);
-  await expectNoViolations(page, 'loop (front)');
+  await expect(page).toHaveURL(/\/practice$/);
+  await expectNoViolations(page, 'practice (front)');
   await page
     .getByRole('button', { name: 'I don’t know Show again soon', exact: true })
     .last()
     .click();
-  await expectNoViolations(page, 'loop (revealed)');
+  await expectNoViolations(page, 'practice (revealed)');
 
   await page.goto('/privacy');
   await expectNoViolations(page, 'privacy');
@@ -81,14 +81,14 @@ test('signed-in and admin pages: no accessibility violations', async ({
   }
 });
 
-test('the loop works with the keyboard only', async ({ page }) => {
+test('the practice works with the keyboard only', async ({ page }) => {
   await page.goto('/');
   const start = page
-    .getByRole('region', { name: 'Configure your session' })
+    .getByRole('region', { name: 'Configure your practice' })
     .getByRole('button', { name: 'Start' });
   await start.focus();
   await page.keyboard.press('Enter');
-  await expect(page).toHaveURL(/\/loop$/);
+  await expect(page).toHaveURL(/\/practice$/);
   const progress = page.getByTestId('progress');
   await expect(progress).toHaveText(/Card 1\/\d+ · 0 known/);
   await page.keyboard.press('h'); // Hints

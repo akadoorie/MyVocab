@@ -379,13 +379,13 @@ describe('users (FR-A40–42)', () => {
 describe('settings (FR-A50)', () => {
   it('validates the merged settings and audits only changed keys', async () => {
     const bad = [
-      { 'loop.defaultSize': 15 },
+      { 'practice.defaultSize': 15 },
       { 'defaults.sourceLang': 'fr' },
-      { 'loop.sizeOptions': [10, 100] },
+      { 'practice.sizeOptions': [10, 100] },
       { 'defaults.topicId': 9999 },
       { 'undo.windowSeconds': 99 },
-      { 'loop.continueSeconds': 31 },
-      { 'loop.continueSeconds': -1 },
+      { 'practice.continueSeconds': 31 },
+      { 'practice.continueSeconds': -1 },
       { unknown: 1 },
     ];
     for (const json of bad) {
@@ -396,10 +396,10 @@ describe('settings (FR-A50)', () => {
     }
     const res = await req('/admin/settings', {
       method: 'PUT',
-      json: { 'loop.sizeOptions': [20, 10], 'undo.windowSeconds': 6, 'guests.enabled': true },
+      json: { 'practice.sizeOptions': [20, 10], 'undo.windowSeconds': 6, 'guests.enabled': true },
     });
     expect(await res.json()).toMatchObject({
-      'loop.sizeOptions': [10, 20],
+      'practice.sizeOptions': [10, 20],
       'undo.windowSeconds': 6,
     });
     const meta = await (
@@ -410,7 +410,7 @@ describe('settings (FR-A50)', () => {
       details: string;
     }>();
     expect(Object.keys(JSON.parse(audit!.details).changes).sort()).toEqual([
-      'loop.sizeOptions',
+      'practice.sizeOptions',
       'undo.windowSeconds',
     ]);
   });
@@ -421,7 +421,7 @@ describe('settings (FR-A50)', () => {
     expect(await meta()).toBe(10);
     const res = await req('/admin/settings', {
       method: 'PUT',
-      json: { 'loop.continueSeconds': 0 },
+      json: { 'practice.continueSeconds': 0 },
     });
     expect(res.status).toBe(200);
     expect(await meta()).toBe(0);
@@ -432,9 +432,10 @@ describe('settings (FR-A50)', () => {
       (await (await api('/meta')).json<{ nextSeconds: number }>()).nextSeconds;
     expect(await meta()).toBe(10);
     expect(
-      (await req('/admin/settings', { method: 'PUT', json: { 'loop.nextSeconds': 31 } })).status,
+      (await req('/admin/settings', { method: 'PUT', json: { 'practice.nextSeconds': 31 } }))
+        .status,
     ).toBe(400);
-    await req('/admin/settings', { method: 'PUT', json: { 'loop.nextSeconds': 5 } });
+    await req('/admin/settings', { method: 'PUT', json: { 'practice.nextSeconds': 5 } });
     expect(await meta()).toBe(5);
   });
 });

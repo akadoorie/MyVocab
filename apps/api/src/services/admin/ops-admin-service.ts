@@ -40,7 +40,7 @@ export class OpsAdminService {
   async updateSettings(patch: SettingsUpdate, actor: Actor): Promise<Settings> {
     const current = await this.deps.settings.get();
     const next: Settings = { ...current, ...patch } as Settings;
-    next['loop.sizeOptions'] = [...new Set(next['loop.sizeOptions'])].sort((a, b) => a - b);
+    next['practice.sizeOptions'] = [...new Set(next['practice.sizeOptions'])].sort((a, b) => a - b);
 
     const [languages, topics] = await Promise.all([
       this.deps.languages.listAll(),
@@ -59,11 +59,11 @@ export class OpsAdminService {
     if (topicId !== null && !topics.some((c) => c.id === topicId && c.isActive)) {
       problem('defaults.topicId', 'Must be an active topic or All topics');
     }
-    if (!next['loop.sizeOptions'].includes(next['loop.defaultSize'])) {
-      problem('loop.defaultSize', 'Must be one of the amount choices');
+    if (!next['practice.sizeOptions'].includes(next['practice.defaultSize'])) {
+      problem('practice.defaultSize', 'Must be one of the amount choices');
     }
-    if (next['loop.sizeOptions'].some((n) => n > next['loop.maxSize'])) {
-      problem('loop.sizeOptions', 'Amount choices can’t exceed the maximum amount');
+    if (next['practice.sizeOptions'].some((n) => n > next['practice.maxSize'])) {
+      problem('practice.sizeOptions', 'Amount choices can’t exceed the maximum amount');
     }
     if (problems.length > 0) throw new ValidationError('Invalid settings', problems);
 

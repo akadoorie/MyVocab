@@ -13,7 +13,7 @@ export const metaResponseSchema = z.object({
     size: z.number().int(),
   }),
   sizeOptions: z.array(z.number().int()),
-  guest: z.object({ enabled: z.boolean(), loopSize: z.number().int() }),
+  guest: z.object({ enabled: z.boolean(), practiceSize: z.number().int() }),
   undoWindowSeconds: z.number().int(),
   /** Seconds before the break between rounds continues by itself; 0 = never (D-068). */
   continueSeconds: z.number().int(),
@@ -30,7 +30,7 @@ export const registeredUsersResponseSchema = z.object({
 });
 export type RegisteredUsersResponse = z.infer<typeof registeredUsersResponseSchema>;
 
-/** Query of GET /api/loops/available. */
+/** Query of GET /api/practices/available. */
 export const availableQuerySchema = z
   .object({
     source: langCode,
@@ -45,7 +45,7 @@ export type AvailableQuery = z.infer<typeof availableQuerySchema>;
 export const availableResponseSchema = z.object({ available: z.number().int().nonnegative() });
 export type AvailableResponse = z.infer<typeof availableResponseSchema>;
 
-/** Query of GET /api/loops/available-by-topic (D-064): one direction, every count at once. */
+/** Query of GET /api/practices/available-by-topic (D-064): one direction, every count at once. */
 export const availableByTopicQuerySchema = z
   .object({ source: langCode, target: langCode })
   .strict();
@@ -63,8 +63,8 @@ export const availableByTopicResponseSchema = z.object({
 });
 export type AvailableByTopicResponse = z.infer<typeof availableByTopicResponseSchema>;
 
-/** Body of POST /api/loops. */
-export const startLoopRequestSchema = z
+/** Body of POST /api/practices. */
+export const startPracticeRequestSchema = z
   .object({
     source: langCode,
     target: langCode,
@@ -75,7 +75,7 @@ export const startLoopRequestSchema = z
     turnstileToken: z.string().min(1).max(4096).optional(),
   })
   .strict();
-export type StartLoopRequest = z.infer<typeof startLoopRequestSchema>;
+export type StartPracticeRequest = z.infer<typeof startPracticeRequestSchema>;
 
 const langDir = { lang: langCode, dir };
 
@@ -100,9 +100,9 @@ export const cardViewSchema = z.object({
   extrasLang: z.object(langDir),
 }) satisfies z.ZodType<CardView>;
 
-export const startLoopResponseSchema = z.object({
+export const startPracticeResponseSchema = z.object({
   requested: z.number().int(),
   returned: z.number().int(),
   cards: z.array(cardViewSchema),
 });
-export type StartLoopResponse = z.infer<typeof startLoopResponseSchema>;
+export type StartPracticeResponse = z.infer<typeof startPracticeResponseSchema>;

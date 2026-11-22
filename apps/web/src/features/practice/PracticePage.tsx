@@ -2,11 +2,11 @@ import {
   answerOf,
   canDispatch,
   currentCardId,
-  loopProgress,
-  loopReducer,
-  loopSummary,
+  practiceProgress,
+  practiceReducer,
+  practiceSummary,
   type KnownMark,
-  type LoopActionType,
+  type PracticeActionType,
 } from '@myvocab/core';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
@@ -17,20 +17,20 @@ import { api } from '../../lib/api';
 import { startGoogleSignIn, useSession } from '../../lib/session';
 import { strings } from '../../strings';
 import { useKnownQueue } from '../known/KnownQueueProvider';
-import { useStartLoop, type LoopStartNotice } from '../setup/useStartLoop';
+import { useStartPractice, type PracticeStartNotice } from '../setup/useStartPractice';
 import { BackArrow, LogoMark } from '../../components/Icons';
 import { ButtonBar } from './ButtonBar';
 import { FlipCard } from './FlipCard';
-import { clearLoop, loadLoop, saveLoop, type StoredLoop } from './loop-storage';
-import { CycleBreak, DEFAULT_CONTINUE_SECONDS, ShortcutsMenu, Summary } from './LoopScreens';
+import { clearPractice, loadPractice, savePractice, type StoredPractice } from './practice-storage';
+import { RoundBreak, DEFAULT_CONTINUE_SECONDS, ShortcutsMenu, Summary } from './PracticeScreens';
 import { CrumpleGhost, type Crumple } from './CrumpleGhost';
 import { useCountdown } from './useCountdown';
-import { useLoopShortcuts } from './useLoopShortcuts';
+import { usePracticeShortcuts } from './usePracticeShortcuts';
 import { useSwipe } from './useSwipe';
 
 /** How long "Sign-in required" covers the locked green button (D-043). */
 const LOCKED_TIP_MS = 1500;
-/** The nudge (D-066): full on the first cards of each cycle, then only when the user waits. */
+/** The nudge (D-066): full on the first cards of each round, then only when the user waits. */
 const NUDGE_CARDS = 3;
 const NUDGE_DELAY_MS = 300;
 const NUDGE_IDLE_MS = 4000;
@@ -41,12 +41,12 @@ const NUDGE_MS = 1700;
 
 /** A full nudge (pump, then shine) or the shine alone (the repeats, D-074). */
 export type NudgeKind = 'full' | 'shine';
-/** Next's countdown after "I don't know", when the session doesn't say (D-069). */
+/** Next's countdown after "I don't know", when the practice doesn't say (D-069). */
 const DEFAULT_NEXT_SECONDS = 10;
 
 /**
  * How the buttons should nudge now (D-066, D-074). `step` changes whenever the screen changes state
- * (a new card, a flip, hints, Don't know). On the first cards of a cycle every change nudges,
+ * (a new card, a flip, hints, Don't know). On the first cards of a round every change nudges,
  * shortly after; after that, only a pause of a few seconds does. While the user still waits, a
  * soft shine repeats every 10 seconds. Off for "reduce motion".
  */
@@ -81,22 +81,22 @@ export type KnownSink = {
 const noopSink: KnownSink = { onKnow: () => undefined, onUnknow: () => undefined };
 
 /**
- * The loop screen. Signed-in learners' Know marks go to the Know queue (PRD §6.4); guests' marks
+ * The practice screen. Signed-in learners' Know marks go to the Know queue (PRD §6.4); guests' marks
  * go nowhere (FR-L55). `knownSink` overrides the queue (tests).
  *
- * Keyed by the history entry: "New session" on the summary saves the next loop and navigates to
- * /loop again, which mounts a fresh screen that loads it (FR-L32).
+ * Keyed by the history entry: "New practice" on the summary saves the next practice and navigates to
+ * /practice again, which mounts a fresh screen that loads it (FR-L32).
  */
-export function LoopPage({ knownSink }: { knownSink?: KnownSink }) {
+export function PracticePage({ knownSink }: { knownSink?: KnownSink }) {
   const location = useLocation();
-  return <LoopScreen key={location.key} {...(knownSink ? { knownSink } : {})} />;
+  return <PracticeScreen key={location.key} {...(knownSink ? { knownSink } : {})} />;
 }
 
 const META_QUERY = { queryKey: ['meta'], queryFn: api.meta, staleTime: 60_000 } as const;
 
-function LoopScreen({ knownSink }: { knownSink?: KnownSink }) {
-  const [stored] = useState<StoredLoop | null>(() => loadLoop());
-  // Loaded early (usually cached from the start card), so "New session" is ready at the end.
+function PracticeScreen({ knownSink }: { knownSink?: KnownSink }) {
+  const [stored] = useState<StoredPractice | null>(() => loadPractice());
+  // Loaded early (usually cached from the start card), so "New practice" is ready at the end.
   useQuery(META_QUERY);
   const queue = useKnownQueue();
   const sink = useMemo<KnownSink>(() => {
@@ -105,52 +105,52 @@ function LoopScreen({ knownSink }: { knownSink?: KnownSink }) {
     // A Know waits this long before it's sent, so a quick change of mind costs no request.
     const delayMs = stored.undoWindowSeconds * 1000;
     return {
-      onKnow: (mark, target) => queue.add({ itemId: mark.id, target, cycle: mark.cycle }, delayMs),
+      onKnow: (mark, target) => queue.add({ itemId: mark.id, target, round: mark.round }, delayMs),
       // Drops a pending mark, or deletes it on the server if it was already sent (FR-L53).
       onUnknow: (itemId, target) => queue.undo(itemId, target),
     };
   }, [knownSink, queue, stored]);
 
-  // Leaving the loop screen ends every waiting period: pending marks become final.
+  // Leaving the practice screen ends every waiting period: pending marks become final.
   useEffect(() => () => queue?.finalizeAll(), [queue]);
 
   if (!stored) return <Navigate to="/" replace />;
-  return <Loop stored={stored} knownSink={sink} />;
+  return <Practice stored={stored} knownSink={sink} />;
 }
 
-function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink }) {
+function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: KnownSink }) {
   const navigate = useNavigate();
   const location = useLocation();
   const toast = useToast();
-  const [state, dispatch] = useReducer(loopReducer, stored.state);
+  const [state, dispatch] = useReducer(practiceReducer, stored.state);
   const cards = useMemo(() => new Map(stored.cards.map((c) => [c.itemId, c])), [stored.cards]);
   const nextRef = useRef<HTMLButtonElement>(null);
   const [announcement, setAnnouncement] = useState('');
-  // Stop and Home both ask before ending the session (PRD FR-L30, FR-L30a).
-  // Home (or Esc) asks before ending the session (PRD FR-L30a; there is no Stop button, D-072).
+  // Stop and Home both ask before ending the practice (PRD FR-L30, FR-L30a).
+  // Home (or Esc) asks before ending the practice (PRD FR-L30a; there is no Stop button, D-072).
   const [confirmLeave, setConfirmLeave] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const counterRef = useRef<HTMLSpanElement>(null);
   const [crumple, setCrumple] = useState<Crumple | null>(null);
   const clearCrumple = useCallback(() => setCrumple(null), []);
 
-  // The summary celebrates once per session (FR-L32a), also across Back and a refresh.
+  // The summary celebrates once per practice (FR-L32a), also across Back and a refresh.
   const [celebrated, setCelebrated] = useState(stored.celebrated ?? false);
   const markCelebrated = useCallback(() => setCelebrated(true), []);
-  // Flip pulses until it's first used in the session, also across a refresh (D-066).
+  // Flip pulses until it's first used in the practice, also across a refresh (D-066).
   const [flipped, setFlipped] = useState(stored.flipped ?? false);
   // The card Flip was last used on: it stops nudging there (D-074).
   const [flippedCard, setFlippedCard] = useState<string | null>(null);
 
-  // Persist on every change; Stop and the end of the loop clear it (FR-L33).
+  // Persist on every change; Stop and the end of the practice clear it (FR-L33).
   useEffect(() => {
-    if (state.phase === 'stopped' || state.phase === 'finished') clearLoop();
-    else saveLoop({ ...stored, state, celebrated, flipped });
+    if (state.phase === 'stopped' || state.phase === 'finished') clearPractice();
+    else savePractice({ ...stored, state, celebrated, flipped });
     if (state.phase === 'stopped') navigate('/', { replace: true });
   }, [state, stored, navigate, celebrated, flipped]);
 
-  // "Only N new cards in Home…" once, when the loop starts (FR-L8).
-  const notice = (location.state as LoopStartNotice | null)?.insufficient;
+  // "Only N new cards in Home…" once, when the practice starts (FR-L8).
+  const notice = (location.state as PracticeStartNotice | null)?.insufficient;
   useEffect(() => {
     if (notice) toast.show({ message: notice });
   }, [notice, toast]);
@@ -158,10 +158,10 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   // After Don't know, Next receives focus (FR-L28).
   useEffect(() => {
     if (state.phase === 'revealed') nextRef.current?.focus();
-  }, [state.phase, state.index, state.cycle]);
+  }, [state.phase, state.index, state.round]);
 
   const act = useCallback(
-    (type: LoopActionType) => {
+    (type: PracticeActionType) => {
       if (!canDispatch(state, type)) return;
       const id = currentCardId(state);
       // On a card reached with Back the answer can change (FR-L29a); only changes reach the queue.
@@ -170,7 +170,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
       if ((type === 'DONT_KNOW' || type === 'KNOW_AGAIN') && id !== null && before === 'know')
         knownSink.onUnknow(id, cards.get(id)?.direction.target ?? '');
       if ((type === 'KNOW' || type === 'KNOW_AGAIN') && id !== null) {
-        const mark = { id, cycle: state.cycle };
+        const mark = { id, round: state.round };
         if (type === 'KNOW' && before !== 'know')
           knownSink.onKnow(mark, cards.get(id)?.direction.target ?? '');
         // The known card crumples and flies into the "known" counter (PRD §9.4).
@@ -191,7 +191,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
         }
       }
       if (type === 'BACK') {
-        const offCard = state.phase === 'cycleBreak' || state.phase === 'finished';
+        const offCard = state.phase === 'roundBreak' || state.phase === 'finished';
         const to = (offCard ? state.order.length : state.index) - 1;
         const answer = answerOf(state, state.order[to]!);
         setAnnouncement(
@@ -210,7 +210,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
       }
       if (type === 'FLIP') {
         setFlipped(true);
-        setFlippedCard(`${state.cycle}-${state.index}`);
+        setFlippedCard(`${state.round}-${state.index}`);
         setAnnouncement(
           state.side === 'front' ? strings.card.showingAnswer : strings.card.showingFront,
         );
@@ -219,7 +219,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
         setAnnouncement(strings.card.showingAnswer);
       if (type === 'TOGGLE_HINTS')
         setAnnouncement(state.hintsShown ? strings.card.hintsHidden : strings.card.hintsShown);
-      // A new cycle after the celebration means the session will be completed anew: celebrate
+      // A new round after the celebration means the practice will be completed anew: celebrate
       // (and fly the crown) again when it ends (FR-L32a).
       if (type === 'CONTINUE') setCelebrated(false);
       dispatch({ type });
@@ -239,21 +239,21 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   useEffect(() => () => window.clearTimeout(lockedTimer.current), []);
 
   const onShortcut = useCallback(
-    (action: LoopActionType | 'ENTER') => {
+    (action: PracticeActionType | 'ENTER') => {
       if (confirmLeave) return; // the "are you sure?" question is open
       // "Don't show again" needs signing in (D-042); K says so, like tapping the button (D-043).
       if (action === 'KNOW' && stored.isGuest) return showLocked();
-      if (action === 'ENTER') act(state.phase === 'cycleBreak' ? 'CONTINUE' : 'NEXT');
+      if (action === 'ENTER') act(state.phase === 'roundBreak' ? 'CONTINUE' : 'NEXT');
       else if (action === 'STOP')
         setConfirmLeave(true); // Esc: the same question as Home
       else act(action);
     },
     [act, state.phase, confirmLeave, stored.isGuest, showLocked],
   );
-  useLoopShortcuts(onShortcut);
+  usePracticeShortcuts(onShortcut);
 
   const nudging = useNudge(
-    `${state.cycle}-${state.index}-${state.phase}-${state.side}-${state.hintsShown}`,
+    `${state.round}-${state.index}-${state.phase}-${state.side}-${state.hintsShown}`,
     state.index < NUDGE_CARDS,
     !confirmLeave && motionAllowed(),
   );
@@ -264,10 +264,10 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   const next = useCountdown(nextSeconds, () => act('NEXT'), {
     enabled: state.phase === 'revealed',
     paused: confirmLeave,
-    resetKey: `${state.cycle}-${state.index}-${state.phase}`,
+    resetKey: `${state.round}-${state.index}-${state.phase}`,
   });
 
-  const progress = loopProgress(state);
+  const progress = practiceProgress(state);
   const id = currentCardId(state);
   const card = id === null ? undefined : cards.get(id);
   // The chip shows on a card that already had an answer when it came up (reached with Back).
@@ -288,21 +288,21 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
     <CrumpleGhost key={crumple.key} crumple={crumple} onDone={clearCrumple} />
   ) : null;
   const [progressHead, progressKnown] = splitKnown(
-    strings.loop.progress(
-      progress.cycle,
+    strings.practice.progress(
+      progress.round,
       progress.cardNumber,
-      progress.cycleSize,
+      progress.roundSize,
       progress.knownCount,
     ),
   );
 
-  // "Back to Home?" on the session screen and on the break between rounds (FR-L30a, D-067).
+  // "Back to Home?" on the practice screen and on the break between rounds (FR-L30a, D-067).
   const leaveDialog = confirmLeave && (
     <ConfirmDialog
-      title={strings.loop.homeConfirmTitle}
-      body={strings.loop.homeConfirmBody}
-      confirmLabel={strings.loop.yes}
-      cancelLabel={strings.loop.no}
+      title={strings.practice.homeConfirmTitle}
+      body={strings.practice.homeConfirmBody}
+      confirmLabel={strings.practice.yes}
+      cancelLabel={strings.practice.no}
       onConfirm={() => {
         setConfirmLeave(false);
         act('STOP');
@@ -311,14 +311,14 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
     />
   );
 
-  if (state.phase === 'cycleBreak') {
+  if (state.phase === 'roundBreak') {
     return (
       <main id="main" className="mx-auto flex min-h-dvh w-full max-w-[640px] flex-col px-4 py-6">
-        <CycleBreak
-          cycle={state.cycle + 1}
+        <RoundBreak
+          round={state.round + 1}
           remaining={progress.remaining}
-          knew={progress.cycleSize - progress.remaining}
-          total={progress.cycleSize}
+          knew={progress.roundSize - progress.remaining}
+          total={progress.roundSize}
           onContinue={() => act('CONTINUE')}
           onBack={() => act('BACK')}
           onHome={() => setConfirmLeave(true)}
@@ -335,7 +335,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
       <main id="main" className="mx-auto flex min-h-dvh w-full max-w-[640px] flex-col px-4 py-6">
         <FinishedScreen
           stored={stored}
-          summary={loopSummary(state)}
+          summary={practiceSummary(state)}
           onBack={() => act('BACK')}
           celebrate={!celebrated}
           onCelebrated={markCelebrated}
@@ -373,7 +373,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           <button
             type="button"
             onClick={() => setConfirmLeave(true)}
-            // The only way out of a session now (D-072): a clear bordered button, not a faint link.
+            // The only way out of a practice now (D-072): a clear bordered button, not a faint link.
             className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-[10px] border border-border px-3 text-sm font-medium text-text transition-colors hover:border-accent hover:text-accent md:text-base"
           >
             <BackArrow /> {strings.nav.home}
@@ -383,7 +383,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
       </header>
 
       <div
-        key={`${state.cycle}-${state.index}`}
+        key={`${state.round}-${state.index}`}
         ref={cardRef}
         className="card-enter flex min-h-0 flex-1 flex-col md:h-[clamp(420px,58vh,600px)] md:flex-none"
       >
@@ -399,7 +399,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
             answer={shownAnswer}
             pulse={!flipped && motionAllowed()}
             nudging={
-              state.side === 'front' && flippedCard !== `${state.cycle}-${state.index}`
+              state.side === 'front' && flippedCard !== `${state.round}-${state.index}`
                 ? nudging
                 : null
             }
@@ -411,7 +411,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
         {announcement}
       </p>
       <p className="sr-only" aria-live="polite">
-        {next.counting ? strings.loop.nextIn(nextSeconds) : ''}
+        {next.counting ? strings.practice.nextIn(nextSeconds) : ''}
       </p>
 
       <div className="sticky bottom-0 -mx-4 flex flex-col gap-4 bg-gradient-to-t from-bg via-bg to-transparent px-4 pt-4 pb-4 md:relative md:mx-0 md:bg-none md:px-0 md:pt-0 md:pb-8">
@@ -446,15 +446,15 @@ function motionAllowed(): boolean {
 }
 
 type FinishedProps = {
-  stored: StoredLoop;
-  summary: ReturnType<typeof loopSummary>;
+  stored: StoredPractice;
+  summary: ReturnType<typeof practiceSummary>;
   onBack: () => void;
   celebrate: boolean;
   onCelebrated: () => void;
 };
 
 /**
- * The summary (FR-L32). "New session" starts the next loop with the same choices right away; it
+ * The summary (FR-L32). "New practice" starts the next practice with the same choices right away; it
  * waits while the start settings (/api/meta) load, and if they can't load it falls back to the
  * start card, pre-filled. One Summary throughout, so the celebration never restarts.
  */
@@ -462,13 +462,13 @@ function FinishedScreen({ stored, ...rest }: FinishedProps) {
   const meta = useQuery(META_QUERY);
   const navigate = useNavigate();
   const session = useSession();
-  // The signed-in state now, not when the loop started (a guest may have signed in since).
+  // The signed-in state now, not when the practice started (a guest may have signed in since).
   const isGuest = session.loading ? stored.isGuest : session.isGuest;
-  const { start, starting, error, setError, containerRef } = useStartLoop({
+  const { start, starting, error, setError, containerRef } = useStartPractice({
     meta: meta.data,
     isGuest,
   });
-  const newLoop = () => {
+  const newPractice = () => {
     if (!meta.data) {
       navigate('/', { state: { selection: stored.selection } });
       return;
@@ -482,8 +482,8 @@ function FinishedScreen({ stored, ...rest }: FinishedProps) {
       {...rest}
       isGuest={stored.isGuest}
       onHome={() => navigate('/')}
-      onNewLoop={newLoop}
-      newLoopDisabled={meta.isPending}
+      onNewPractice={newPractice}
+      newPracticeDisabled={meta.isPending}
       starting={starting}
       startingLabel={isGuest ? strings.setup.botCheck : strings.setup.starting}
       error={error}

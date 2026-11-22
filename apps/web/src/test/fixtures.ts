@@ -34,7 +34,7 @@ export const META: MetaResponse = {
   topics: [{ id: 1, slug: 'home', name: 'Home', nameHe: 'בית' }],
   defaults: { sourceLang: 'en', targetLang: 'he', topicId: null, size: 10 },
   sizeOptions: [10, 20, 30, 40, 50],
-  guest: { enabled: true, loopSize: 5 },
+  guest: { enabled: true, practiceSize: 5 },
   undoWindowSeconds: 4,
   continueSeconds: 10,
   nextSeconds: 10,

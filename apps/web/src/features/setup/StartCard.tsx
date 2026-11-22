@@ -19,15 +19,15 @@ import { readFlag, writeFlag } from '../../lib/storage';
 import { DESKTOP_QUERY, useMediaQuery } from '../../lib/useMediaQuery';
 import { languageName, strings, topicName } from '../../strings';
 import { useDebounced } from './useDebounced';
-import { useStartLoop } from './useStartLoop';
+import { useStartPractice } from './useStartPractice';
 
 const GUEST_TOAST_FLAG = 'myvocab.guestAmountToast';
-/** How long the guest message stays over the Cards per session field (D-045, D-070). */
+/** How long the guest message stays over the Cards per practice field (D-045, D-070). */
 const AMOUNT_TIP_MS = 2000;
 /** How long the Topic counts are kept for a direction before asking again (D-064). */
 const COUNTS_STALE_MS = 5 * 60_000;
 
-export type { LoopStartNotice } from './useStartLoop';
+export type { PracticeStartNotice } from './useStartPractice';
 
 /**
  * The start card (PRD §6.1, §9.5). Every field has a default, so Start works immediately: on
@@ -50,27 +50,27 @@ export function StartCard({
   const isAdmin = session.user?.role === 'admin';
   const isDesktop = useMediaQuery(DESKTOP_QUERY, true);
   const {
-    start: startLoop,
+    start: startPractice,
     starting,
     error,
     setError,
     containerRef,
-  } = useStartLoop({
+  } = useStartPractice({
     meta,
     isGuest,
   });
 
   const defaults: StartChoices = useMemo(
-    () => ({ ...meta.defaults, size: isGuest ? meta.guest.loopSize : meta.defaults.size }),
+    () => ({ ...meta.defaults, size: isGuest ? meta.guest.practiceSize : meta.defaults.size }),
     [meta, isGuest],
   );
   const [choices, setChoices] = useState<StartChoices>(() =>
     initialSelection
-      ? { ...initialSelection, size: isGuest ? meta.guest.loopSize : initialSelection.size }
+      ? { ...initialSelection, size: isGuest ? meta.guest.practiceSize : initialSelection.size }
       : defaults,
   );
 
-  // The guest amount message (FR-L6): "Sign-in to change" covers the Cards per session field
+  // The guest amount message (FR-L6): "Sign-in to change" covers the Cards per practice field
   // itself for a few seconds, on phones and desktop alike (D-044, D-070), so it shows where the
   // field is, however far the page is scrolled.
   const [amountTip, setAmountTip] = useState(false);
@@ -93,7 +93,7 @@ export function StartCard({
 
   // Every count for the chosen direction in one request (D-064): the count line and each Topic
   // option read from it, so changing the topic asks nothing. Kept for 5 minutes per direction,
-  // and fetched again each time the start card opens (after a session, words may be known).
+  // and fetched again each time the start card opens (after a practice, words may be known).
   const direction = useDebounced({ source: choices.sourceLang, target: choices.targetLang }, 300);
   const available = useQuery({
     queryKey: ['availableByTopic', direction.source, direction.target, session.user?.id ?? null],
@@ -138,7 +138,7 @@ export function StartCard({
   const defaultSet = defaultFields(effective, defaults);
 
   async function start() {
-    if ((await startLoop(effective)) === 'empty') void available.refetch();
+    if ((await startPractice(effective)) === 'empty') void available.refetch();
   }
 
   const nothingLeft = count === 0;
@@ -379,12 +379,12 @@ export function StartCard({
                     <button
                       id={id}
                       type="button"
-                      aria-label={`${strings.setup.amount}: ${meta.guest.loopSize}. ${strings.setup.guestAmountLocked}`}
+                      aria-label={`${strings.setup.amount}: ${meta.guest.practiceSize}. ${strings.setup.guestAmountLocked}`}
                       onClick={showGuestMessage}
                       className="flex h-[50px] w-full items-center gap-2 rounded-[10px] border border-border bg-surface-2 px-3 text-text max-md:h-[46px]"
                     >
                       <span aria-hidden="true">🔒</span>
-                      <span className="font-semibold">{meta.guest.loopSize}</span>
+                      <span className="font-semibold">{meta.guest.practiceSize}</span>
                     </button>
                     {/* The message covers the field itself (D-044, D-070). */}
                     <div aria-live="polite">

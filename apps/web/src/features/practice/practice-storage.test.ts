@@ -1,12 +1,12 @@
-import { createLoop } from '@myvocab/core';
+import { createPractice } from '@myvocab/core';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { makeCard } from '../../test/fixtures';
-import { loadLoop } from './loop-storage';
+import { loadPractice } from './practice-storage';
 
 beforeEach(() => window.sessionStorage.clear());
 
-describe('loop storage', () => {
-  it('resumes a session saved before D-024 (cards without answer.main / answer.meaning)', () => {
+describe('practice storage', () => {
+  it('resumes a practice saved before D-024 (cards without answer.main / answer.meaning)', () => {
     const card = makeCard(1);
     const {
       main: _main,
@@ -25,57 +25,57 @@ describe('loop storage', () => {
       ...oldExplanation
     } = explanation.answer;
     window.sessionStorage.setItem(
-      'myvocab.loop.v1',
+      'myvocab.practice.v1',
       JSON.stringify({
         cards: [
           { ...card, answer: oldAnswer },
           { ...explanation, answer: oldExplanation },
         ],
-        state: createLoop([1, 2], 3),
+        state: createPractice([1, 2], 3),
         undoWindowSeconds: 4,
         selection: { sourceLang: 'en', targetLang: 'he', topicId: null, size: 5 },
         isGuest: true,
       }),
     );
-    const loop = loadLoop();
-    expect(loop?.cards.map((c) => [c.answer.main, c.answer.meaning])).toEqual([
+    const practice = loadPractice();
+    expect(practice?.cards.map((c) => [c.answer.main, c.answer.meaning])).toEqual([
       ['parallel', []],
       ['explanation', []],
     ]);
-    expect(loop?.cards.every((c) => c.answer.literalSameAsParallel === false)).toBe(true);
+    expect(practice?.cards.every((c) => c.answer.literalSameAsParallel === false)).toBe(true);
   });
 
-  it('resumes a session saved before D-026 (cards without answer.literalSameAsParallel)', () => {
+  it('resumes a practice saved before D-026 (cards without answer.literalSameAsParallel)', () => {
     const card = makeCard(1);
     const { literalSameAsParallel: _s, ...oldAnswer } = card.answer;
     window.sessionStorage.setItem(
-      'myvocab.loop.v1',
+      'myvocab.practice.v1',
       JSON.stringify({
         cards: [{ ...card, answer: oldAnswer }],
-        state: createLoop([1], 3),
+        state: createPractice([1], 3),
         undoWindowSeconds: 4,
         selection: { sourceLang: 'en', targetLang: 'he', topicId: null, size: 5 },
         isGuest: true,
       }),
     );
-    expect(loadLoop()?.cards[0]?.answer).toMatchObject({
+    expect(loadPractice()?.cards[0]?.answer).toMatchObject({
       main: 'meaning',
       literalSameAsParallel: false,
     });
   });
 
-  it('resumes a session saved before D-039 (its topic under the old name categoryId)', () => {
+  it('resumes a practice saved before D-039 (its topic under the old name categoryId)', () => {
     window.sessionStorage.setItem(
-      'myvocab.loop.v1',
+      'myvocab.practice.v1',
       JSON.stringify({
         cards: [makeCard(1)],
-        state: createLoop([1], 3),
+        state: createPractice([1], 3),
         undoWindowSeconds: 4,
         selection: { sourceLang: 'en', targetLang: 'he', categoryId: 3, size: 5 },
         isGuest: false,
       }),
     );
-    expect(loadLoop()?.selection).toEqual({
+    expect(loadPractice()?.selection).toEqual({
       sourceLang: 'en',
       targetLang: 'he',
       topicId: 3,

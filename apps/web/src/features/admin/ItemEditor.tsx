@@ -14,7 +14,7 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { useToast } from '../../components/Toast';
 import { ApiError } from '../../lib/api';
 import { adminStrings as s } from '../../strings-admin';
-import { FlipCard } from '../loop/FlipCard';
+import { FlipCard } from '../practice/FlipCard';
 import { adminApi, errorMessage, fieldErrors } from './admin-api';
 import { ListEditor } from './ListEditor';
 import { ErrorState, inputClass, Loading, PageTitle } from './ui';
@@ -554,7 +554,7 @@ function Editor({
 const PICKER_BUTTONS_MAX = 6;
 
 /**
- * "Preview as learner" (FR-A11): one card at a time, from the same builder as a session. A picker
+ * "Preview as learner" (FR-A11): one card at a time, from the same builder as a practice. A picker
  * chooses the answer language: the other languages first (translation cards), then the item's own
  * language (explanation card). Each choice is marked ready or not, and one that isn't ready says
  * what to add. It opens on the first ready translation language (Hebrew item → English, English
@@ -668,12 +668,12 @@ function Preview({ item, languages }: { item: AdminItem; languages: AdminLanguag
 }
 
 /**
- * The session card's size at this window (LoopPage, desktop): the page is at most 1100px wide with
+ * The practice card's size at this window (PracticePage, desktop): the page is at most 1100px wide with
  * 32px side padding, and the card is clamp(420px, 58vh, 600px) tall. The preview draws the card at
- * exactly that size and scales it down to its column, so it is a true miniature of the session card.
+ * exactly that size and scales it down to its column, so it is a true miniature of the practice card.
  * Null on phones (and where it can't be measured), where the card simply fills the column.
  */
-function useSessionCardFit(ref: RefObject<HTMLDivElement | null>) {
+function usePracticeCardFit(ref: RefObject<HTMLDivElement | null>) {
   const [fit, setFit] = useState<{ width: number; height: number; scale: number } | null>(null);
   useLayoutEffect(() => {
     const el = ref.current;
@@ -703,7 +703,7 @@ function PreviewCard({ card }: { card: CardView }) {
   const [side, setSide] = useState<'front' | 'back'>('front');
   const [hintsShown, setHintsShown] = useState(false);
   const frame = useRef<HTMLDivElement>(null);
-  const fit = useSessionCardFit(frame);
+  const fit = usePracticeCardFit(frame);
   return (
     <div className="flex w-full flex-col gap-5">
       <div

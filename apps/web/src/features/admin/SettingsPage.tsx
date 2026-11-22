@@ -7,11 +7,11 @@ import { adminStrings as s } from '../../strings-admin';
 import { adminApi, errorMessage, fieldErrors } from './admin-api';
 import { ErrorState, inputClass, Loading, PageTitle } from './ui';
 
-type Draft = Omit<Settings, 'loop.sizeOptions'> & { 'loop.sizeOptions': string };
+type Draft = Omit<Settings, 'practice.sizeOptions'> & { 'practice.sizeOptions': string };
 
 const toDraft = (v: Settings): Draft => ({
   ...v,
-  'loop.sizeOptions': v['loop.sizeOptions'].join(', '),
+  'practice.sizeOptions': v['practice.sizeOptions'].join(', '),
 });
 
 /** `/admin/settings` (PRD §7.7, FR-A50). The server validates the merged settings. */
@@ -54,7 +54,7 @@ function SettingsForm({
     setError(null);
     const parsed: Settings = {
       ...draft,
-      'loop.sizeOptions': draft['loop.sizeOptions']
+      'practice.sizeOptions': draft['practice.sizeOptions']
         .split(',')
         .map((v) => Number(v.trim()))
         .filter((n) => Number.isFinite(n) && n > 0),
@@ -134,24 +134,24 @@ function SettingsForm({
           }}
         />
       </Group>
-      <Group title={s.settings.groups.loops}>
+      <Group title={s.settings.groups.practices}>
         <TextField
-          id="loop.sizeOptions"
-          label={label('loop.sizeOptions')}
-          error={errors['loop.sizeOptions']}
-          value={draft['loop.sizeOptions']}
-          onChange={(v) => set('loop.sizeOptions', v)}
+          id="practice.sizeOptions"
+          label={label('practice.sizeOptions')}
+          error={errors['practice.sizeOptions']}
+          value={draft['practice.sizeOptions']}
+          onChange={(v) => set('practice.sizeOptions', v)}
         />
-        {num('loop.defaultSize')}
-        {num('loop.maxSize')}
-        {num('loop.nextSeconds')}
-        {num('loop.continueSeconds')}
+        {num('practice.defaultSize')}
+        {num('practice.maxSize')}
+        {num('practice.nextSeconds')}
+        {num('practice.continueSeconds')}
         {num('undo.windowSeconds')}
       </Group>
       <Group title={s.settings.groups.guests}>
         {bool('guests.enabled')}
-        {num('guests.loopSize')}
-        {num('guests.loopsPerHour')}
+        {num('guests.practiceSize')}
+        {num('guests.practicesPerHour')}
       </Group>
       <Group title={s.settings.groups.limits}>{num('users.cardsPerDay')}</Group>
       <Group title={s.settings.groups.maintenance}>

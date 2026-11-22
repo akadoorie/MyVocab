@@ -21,13 +21,13 @@ describe('DELETE /api/me (FR-L71)', () => {
     const other = await signIn('user', 'stays@example.test');
     await authed(cookie, '/me/known', {
       method: 'POST',
-      json: { items: [{ itemId: await itemId('fx-word-1'), target: 'he', cycle: 1 }] },
+      json: { items: [{ itemId: await itemId('fx-word-1'), target: 'he', round: 1 }] },
     });
     await authed(other.cookie, '/me/known', {
       method: 'POST',
-      json: { items: [{ itemId: await itemId('fx-word-1'), target: 'he', cycle: 1 }] },
+      json: { items: [{ itemId: await itemId('fx-word-1'), target: 'he', round: 1 }] },
     });
-    await authed(cookie, '/loops', {
+    await authed(cookie, '/practices', {
       method: 'POST',
       json: { source: 'en', target: 'he', topicId: null, size: 10 },
     });
@@ -62,7 +62,7 @@ describe('DELETE /api/me (FR-L71)', () => {
   });
 });
 
-describe('POST /api/loops (signed-in learner)', () => {
+describe('POST /api/practices (signed-in learner)', () => {
   const body = { source: 'en', target: 'he', topicId: null };
 
   it('accepts the amounts from the settings without Turnstile and excludes known items', async () => {
@@ -71,34 +71,37 @@ describe('POST /api/loops (signed-in learner)', () => {
     const known = await itemId('fx-word-1');
     await authed(cookie, '/me/known', {
       method: 'POST',
-      json: { items: [{ itemId: known, target: 'he', cycle: 1 }] },
+      json: { items: [{ itemId: known, target: 'he', round: 1 }] },
     });
-    const res = await authed(cookie, '/loops', { method: 'POST', json: { ...body, size: 20 } });
+    const res = await authed(cookie, '/practices', { method: 'POST', json: { ...body, size: 20 } });
     expect(res.status).toBe(200);
-    const loop = await res.json<{ requested: number; cards: { itemId: number }[] }>();
-    expect(loop.requested).toBe(20);
-    expect(loop.cards.map((c) => c.itemId)).not.toContain(known);
+    const practice = await res.json<{ requested: number; cards: { itemId: number }[] }>();
+    expect(practice.requested).toBe(20);
+    expect(practice.cards.map((c) => c.itemId)).not.toContain(known);
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
 
-    const bad = await authed(cookie, '/loops', { method: 'POST', json: { ...body, size: 7 } });
+    const bad = await authed(cookie, '/practices', { method: 'POST', json: { ...body, size: 7 } });
     expect(bad.status).toBe(400);
   });
 
   it('enforces the daily cap with the remaining allowance; admins are exempt', async () => {
     await setSetting('users.cardsPerDay', 12);
     const { cookie } = await signIn();
-    const ok = await authed(cookie, '/loops', { method: 'POST', json: { ...body, size: 10 } });
+    const ok = await authed(cookie, '/practices', { method: 'POST', json: { ...body, size: 10 } });
     expect(ok.status).toBe(200);
     const served = (await ok.json<{ returned: number }>()).returned;
-    const capped = await authed(cookie, '/loops', { method: 'POST', json: { ...body, size: 10 } });
+    const capped = await authed(cookie, '/practices', {
+      method: 'POST',
+      json: { ...body, size: 10 },
+    });
     expect(capped.status).toBe(429);
     const err = await capped.json<{ error: { code: string; details: { remaining: number } } }>();
     expect(err.error).toMatchObject({ code: 'RATE_LIMITED', details: { remaining: 12 - served } });
 
     const admin = await signIn('admin');
     for (let i = 0; i < 3; i++) {
-      const r = await authed(admin.cookie, '/loops', {
+      const r = await authed(admin.cookie, '/practices', {
         method: 'POST',
         json: { ...body, size: 10 },
       });

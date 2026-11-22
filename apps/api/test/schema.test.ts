@@ -1,4 +1,4 @@
-import { env } from 'cloudflare:test';
+import { applyD1Migrations, env, reset } from 'cloudflare:test';
 import { describe, expect, it } from 'vitest';
 
 /** Database-level guarantees from PRD §11 that must survive future migrations. */
@@ -40,7 +40,7 @@ describe('schema', () => {
       .run();
     const known = (target: string) =>
       env.DB.prepare(
-        `INSERT INTO user_known_items (user_id, item_id, known_target, known_in_cycle, known_at)
+        `INSERT INTO user_known_items (user_id, item_id, known_target, known_in_round, known_at)
          SELECT 'u-cascade', id, ?, 1, ? FROM items WHERE text = 'Cascade'`,
       )
         .bind(target, now)
@@ -115,6 +115,55 @@ describe('schema', () => {
     await expect(insertItem('he', 'מהיר', '{"en":["quick"]}')).rejects.toThrow(/UNIQUE/);
     await env.DB.prepare(`UPDATE items SET deleted_at = ? WHERE lang = 'he'`).bind(now).run();
     await expect(insertItem('he', 'מהיר', '{"en":["quick"]}')).resolves.toBeTruthy();
+  });
+
+  it('migration 0009 keeps every known word, now in known_in_round under ck_known_round (D-081)', async () => {
+    // Back to the database as it was before 0009, with known words and an old settings key.
+    await reset();
+    const before = env.TEST_MIGRATIONS.filter((m) => m.name < '0009');
+    await applyD1Migrations(env.DB, before);
+    await insertItem('en', 'Keep', '{"he":["לשמור"]}');
+    await env.DB.prepare(
+      `INSERT INTO "user" (id, name, email, email_verified, created_at, updated_at)
+       VALUES ('u-keep', 'U', 'keep@example.test', 1, ?, ?)`,
+    )
+      .bind(now, now)
+      .run();
+    for (const [target, round, at] of [
+      ['he', 3, 111],
+      ['en', 1, 222],
+    ] as const)
+      await env.DB.prepare(
+        `INSERT INTO user_known_items (user_id, item_id, known_target, known_in_cycle, known_at)
+         SELECT 'u-keep', id, ?, ?, ? FROM items WHERE text = 'Keep'`,
+      )
+        .bind(target, round, at)
+        .run();
+    await env.DB.prepare(
+      `INSERT INTO app_settings (key, value, updated_at) VALUES ('loop.continueSeconds', '7', ?)`,
+    )
+      .bind(now)
+      .run();
+
+    await applyD1Migrations(env.DB, env.TEST_MIGRATIONS);
+
+    const { results } = await env.DB.prepare(
+      `SELECT known_target, known_in_round, known_at FROM user_known_items ORDER BY known_target`,
+    ).all();
+    expect(results).toEqual([
+      { known_target: 'en', known_in_round: 1, known_at: 222 },
+      { known_target: 'he', known_in_round: 3, known_at: 111 },
+    ]);
+    const table = await env.DB.prepare(
+      `SELECT sql FROM sqlite_master WHERE name = 'user_known_items'`,
+    ).first<{ sql: string }>();
+    expect(table?.sql).toContain('ck_known_round');
+    expect(table?.sql).not.toContain('cycle');
+    expect(table?.sql).toMatch(/WITHOUT ROWID\s*$/i);
+    const setting = await env.DB.prepare(
+      `SELECT key, value FROM app_settings WHERE key LIKE '%continueSeconds'`,
+    ).all();
+    expect(setting.results).toEqual([{ key: 'practice.continueSeconds', value: '7' }]);
   });
 
   it('enforces foreign keys', async () => {

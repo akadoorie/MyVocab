@@ -22,7 +22,7 @@ type ToastApi = { show: (toast: ToastInput) => void; dismiss: (id: number) => vo
 
 const ToastContext = createContext<ToastApi | null>(null);
 
-/** Toasts: bottom-center on mobile (above the loop buttons), top-right on desktop (clear of them), auto-dismiss, aria-live (PRD §9.7). */
+/** Toasts: bottom-center on mobile (above the practice buttons), top-right on desktop (clear of them), auto-dismiss, aria-live (PRD §9.7). */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const nextId = useRef(1);

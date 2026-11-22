@@ -1,18 +1,18 @@
-import type { LoopActionType } from '@myvocab/core';
+import type { PracticeActionType } from '@myvocab/core';
 import { useEffect } from 'react';
 import { strings } from '../../strings';
 
 const FORM_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT']);
 
 /**
- * Maps a key to a loop action (PRD FR-L34). Enter means Next or Continue. `code` (the physical
+ * Maps a key to a practice action (PRD FR-L34). Enter means Next or Continue. `code` (the physical
  * key) stands in for a letter typed in another layout, e.g. Hebrew, where K types "ל". On
  * right-to-left pages the arrows are mirrored like the buttons: → is Back, ← is Next (D-080).
  */
 export function actionForKey(
   key: string,
   { code = '', rtl = false }: { code?: string; rtl?: boolean } = {},
-): LoopActionType | 'ENTER' | null {
+): PracticeActionType | 'ENTER' | null {
   const latin =
     key.length === 1 && key.charCodeAt(0) > 127 && /^Key[A-Z]$/.test(code) ? code.slice(3) : key;
   switch (latin.toLowerCase()) {
@@ -44,7 +44,7 @@ export function actionForKey(
  * Desktop keyboard shortcuts. Letter keys are ignored in form fields; Space and Enter are left to
  * a focused button or link so they keep their native meaning there.
  */
-export function useLoopShortcuts(handle: (action: LoopActionType | 'ENTER') => void) {
+export function usePracticeShortcuts(handle: (action: PracticeActionType | 'ENTER') => void) {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;

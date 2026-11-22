@@ -27,14 +27,14 @@ test('a first visit is in Hebrew, right-to-left, and switches to English', async
   // The footer switch names the other language in that language; the choice is remembered.
   await page.getByRole('button', { name: 'English' }).click();
   await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
-  await expect(page.getByRole('region', { name: 'Configure your session' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Configure your practice' })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('region', { name: 'Configure your session' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Configure your practice' })).toBeVisible();
   await page.getByRole('button', { name: 'עברית' }).click();
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
 });
 
-test('a Hebrew session: Hebrew buttons, Next on the left, Flip still bottom-right, direction on the left', async ({
+test('a Hebrew practice: Hebrew buttons, Next on the left, Flip still bottom-right, direction on the left', async ({
   page,
 }, testInfo) => {
   await page.goto('/');
@@ -42,7 +42,7 @@ test('a Hebrew session: Hebrew buttons, Next on the left, Flip still bottom-righ
     .getByRole('region', { name: 'הגדרת התרגול' })
     .getByRole('button', { name: 'התחלה' })
     .click();
-  await expect(page).toHaveURL(/\/loop$/);
+  await expect(page).toHaveURL(/\/practice$/);
   await expect(page.getByTestId('progress')).toHaveText('סבב 1 · כרטיס 1/5 · 0 ידועים');
   await expect(page.getByRole('button', { name: 'לא ידעתי להציג שוב בקרוב' })).toBeVisible();
 

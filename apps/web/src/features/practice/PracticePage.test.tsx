@@ -1,4 +1,4 @@
-import { createLoop } from '@myvocab/core';
+import { createPractice } from '@myvocab/core';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
@@ -6,8 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '../../components/Toast';
 import { makeCard } from '../../test/fixtures';
 import { mockFetch } from '../../test/render';
-import { loadLoop, saveLoop } from './loop-storage';
-import { LoopPage, type KnownSink } from './LoopPage';
+import { loadPractice, savePractice } from './practice-storage';
+import { PracticePage, type KnownSink } from './PracticePage';
 
 const CARDS = [makeCard(1), makeCard(2), makeCard(3)];
 
@@ -30,9 +30,9 @@ function setup(
   // /api/me answers with a signed-in learner, /api/meta with the test settings.
   const fetchSpy = mockFetch(routes);
   const ids = Array.from({ length: count }, (_, i) => i + 1);
-  saveLoop({
+  savePractice({
     cards: ids.map((n) => makeCard(n)),
-    state: createLoop(ids, 42),
+    state: createPractice(ids, 42),
     undoWindowSeconds: 4,
     selection: { sourceLang: 'en', targetLang: 'he', topicId: null, size: 5 },
     isGuest,
@@ -41,10 +41,10 @@ function setup(
   });
   const router = createMemoryRouter(
     [
-      { path: '/loop', element: <LoopPage {...(sink ? { knownSink: sink } : {})} /> },
+      { path: '/practice', element: <PracticePage {...(sink ? { knownSink: sink } : {})} /> },
       { path: '/', element: <p>home page</p> },
     ],
-    { initialEntries: ['/loop'] },
+    { initialEntries: ['/practice'] },
   );
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
@@ -70,7 +70,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('LoopPage', () => {
+describe('PracticePage', () => {
   it('starts on the front with Next disabled and the decision buttons enabled', () => {
     setup();
     expect(progress()).toBe('Round 1 · Card 1/3 · 0 known');
@@ -158,7 +158,7 @@ describe('LoopPage', () => {
 
   it('Back shows the previous card front side up with its answer; Next steps forward again', () => {
     setup();
-    expect(btn('Back')).toBeDisabled(); // first card of the cycle
+    expect(btn('Back')).toBeDisabled(); // first card of the round
     fireEvent.click(btn('I know it Show again in future'));
     fireEvent.click(btn('I don’t know Show again soon'));
     expect(side()).toBe('back');
@@ -188,7 +188,7 @@ describe('LoopPage', () => {
     setup(sink, { isGuest: false });
     fireEvent.click(btn('I know it Don’t show again'));
     expect(sink.onKnow).toHaveBeenCalledTimes(1);
-    expect(sink.onKnow).toHaveBeenCalledWith(expect.objectContaining({ cycle: 1 }), 'he');
+    expect(sink.onKnow).toHaveBeenCalledWith(expect.objectContaining({ round: 1 }), 'he');
     fireEvent.click(btn('Back'));
     fireEvent.click(btn('I don’t know Show again soon'));
     expect(sink.onUnknow).toHaveBeenCalledTimes(1);
@@ -273,7 +273,7 @@ describe('LoopPage', () => {
       expect(nudging(answers[0]!)).toBe(true);
     });
 
-    it('after the first three cards of a cycle, only a pause of 4 seconds nudges', () => {
+    it('after the first three cards of a round, only a pause of 4 seconds nudges', () => {
       motion();
       vi.useFakeTimers();
       setup(undefined, { count: 5 });
@@ -314,7 +314,7 @@ describe('LoopPage', () => {
       motion();
       vi.useFakeTimers();
       setup(undefined, { count: 5 });
-      fireEvent.click(btn('Flip')); // Flip used once: it stops pulsing for the session
+      fireEvent.click(btn('Flip')); // Flip used once: it stops pulsing for the practice
       fireEvent.click(btn('Flip')); // back to the front of the same card
       act(() => vi.advanceTimersByTime(4000));
       expect(btn('Flip').className).not.toMatch(/is-nudging|is-shining/);
@@ -342,7 +342,7 @@ describe('LoopPage', () => {
       expect(flip()).toHaveClass('is-breathing');
       fireEvent.click(flip());
       expect(flip()).not.toHaveClass('is-breathing');
-      expect(loadLoop()?.flipped).toBe(true);
+      expect(loadPractice()?.flipped).toBe(true);
     });
 
     it('nothing moves with "reduce motion"', () => {
@@ -374,9 +374,9 @@ describe('LoopPage', () => {
     expect(screen.getByText('Show again soon')).toBeInTheDocument();
 
     fireEvent.click(btn('I know it Show again in future'));
-    expect(progress()).toBe('Round 1 · Card 2/3 · 1 known'); // counts like Know in the session
+    expect(progress()).toBe('Round 1 · Card 2/3 · 1 known'); // counts like Know in the practice
     expect(sink.onKnow).not.toHaveBeenCalled();
-    expect(loadLoop()?.state.known[0]?.again).toBe(true); // a refresh keeps it
+    expect(loadPractice()?.state.known[0]?.again).toBe(true); // a refresh keeps it
     fireEvent.click(btn('Back'));
     // Short on screen; the orange one's caption is there for screen readers (D-049).
     expect(screen.getByTestId('answer-chip')).toHaveTextContent(
@@ -420,7 +420,7 @@ describe('LoopPage', () => {
     expect(progress()).toBe('Round 1 · Card 2/3 · 1 known');
   });
 
-  it('Session completed plays the applause; the sound switch turns it off and is remembered', () => {
+  it('Practice completed plays the applause; the sound switch turns it off and is remembered', () => {
     window.localStorage.clear();
     const play = vi
       .spyOn(HTMLMediaElement.prototype, 'play')
@@ -452,16 +452,16 @@ describe('LoopPage', () => {
     expect(play).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('crown')).toBeInTheDocument(); // reduced motion here: no flight
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
-    expect(loadLoop()?.celebrated).toBe(true); // survives a refresh too
+    expect(loadPractice()?.celebrated).toBe(true); // survives a refresh too
     fireEvent.click(btn('Next'));
-    expect(screen.getByRole('heading', { name: 'Session completed' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Practice completed' })).toBeInTheDocument();
     expect(play).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('crown')).toBeInTheDocument();
     expect(screen.queryByTestId('confetti')).not.toBeInTheDocument();
     vi.restoreAllMocks();
   });
 
-  it('celebrates again when a new cycle was started after the celebration', () => {
+  it('celebrates again when a new round was started after the celebration', () => {
     window.localStorage.clear();
     const play = vi
       .spyOn(HTMLMediaElement.prototype, 'play')
@@ -470,34 +470,34 @@ describe('LoopPage', () => {
     setup();
     for (let i = 0; i < 3; i++) fireEvent.click(btn('I know it Show again in future'));
     expect(play).toHaveBeenCalledTimes(1);
-    // Back, change the last card to Don't know, then Back to Know again: no new cycle, no repeat.
+    // Back, change the last card to Don't know, then Back to Know again: no new round, no repeat.
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
     fireEvent.click(btn('I don’t know Show again soon'));
     fireEvent.click(btn('Back')); // to card 2
     fireEvent.click(btn('Next')); // card 3 again, answered Don't know
-    fireEvent.click(btn('I know it Show again in future')); // changed back: the session is completed again
-    expect(screen.getByRole('heading', { name: 'Session completed' })).toBeInTheDocument();
+    fireEvent.click(btn('I know it Show again in future')); // changed back: the practice is completed again
+    expect(screen.getByRole('heading', { name: 'Practice completed' })).toBeInTheDocument();
     expect(play).toHaveBeenCalledTimes(1);
-    // Now a real new cycle: Back, Don't know, Next → cycle break → Continue → Know → completed.
+    // Now a real new round: Back, Don't know, Next → round break → Continue → Know → completed.
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
     fireEvent.click(btn('I don’t know Show again soon'));
     fireEvent.click(btn('Next'));
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
     fireEvent.click(btn('I know it Show again in future'));
-    expect(screen.getByRole('heading', { name: 'Session completed' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Practice completed' })).toBeInTheDocument();
     expect(play).toHaveBeenCalledTimes(2);
     vi.restoreAllMocks();
   });
 
-  it('the cycle break and the summary go back to the last card', () => {
+  it('the round break and the summary go back to the last card', () => {
     setup();
     fireEvent.click(btn('I know it Show again in future'));
     fireEvent.click(btn('I know it Show again in future'));
     fireEvent.click(btn('I know it Show again in future'));
-    expect(screen.getByRole('heading', { name: 'Session completed' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Practice completed' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
     expect(progress()).toBe('Round 1 · Card 3/3 · 3 known');
-    expect(loadLoop()).not.toBeNull(); // the session is alive again
+    expect(loadPractice()).not.toBeNull(); // the practice is alive again
     fireEvent.click(btn('I don’t know Show again soon'));
     fireEvent.click(btn('Next'));
     expect(screen.getByRole('heading', { name: 'Round 2 · 1 card left' })).toBeInTheDocument();
@@ -609,17 +609,17 @@ describe('LoopPage', () => {
       expect(screen.getByRole('heading', { name: 'Round 2 · 1 card left' })).toBeInTheDocument();
     });
 
-    it('Home asks first, then ends the session; Esc asks too', async () => {
+    it('Home asks first, then ends the practice; Esc asks too', async () => {
       const router = toBreak();
       fireEvent.keyDown(window, { key: 'Escape' });
       const dialog = screen.getByRole('dialog');
-      expect(dialog).toHaveTextContent('This will stop the session. Are you sure?');
+      expect(dialog).toHaveTextContent('This will stop the practice. Are you sure?');
       fireEvent.click(within(dialog).getByRole('button', { name: 'No' }));
       expect(screen.queryByRole('dialog')).toBeNull();
       fireEvent.click(screen.getByRole('button', { name: 'Home' }));
       fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Yes' }));
       await waitFor(() => expect(router.state.location.pathname).toBe('/'));
-      expect(loadLoop()).toBeNull();
+      expect(loadPractice()).toBeNull();
     });
   });
 
@@ -640,7 +640,7 @@ describe('LoopPage', () => {
     expect(progress()).toBe('Round 1 · Card 3/3 · 1 known');
   });
 
-  it('reaches a cycle break, continues, and ends with a summary', () => {
+  it('reaches a round break, continues, and ends with a summary', () => {
     setup();
     fireEvent.click(btn('I know it Show again in future'));
     fireEvent.click(btn('I know it Show again in future'));
@@ -651,40 +651,40 @@ describe('LoopPage', () => {
     expect(progress()).toBe('Round 2 · Card 1/1 · 2 known');
     fireEvent.click(btn('I know it Show again in future'));
     const summary = screen
-      .getByRole('heading', { name: 'Session completed' })
+      .getByRole('heading', { name: 'Practice completed' })
       .closest('section') as HTMLElement;
     expect(within(summary).getByText('Already knew').nextSibling).toHaveTextContent('2');
     expect(within(summary).getByText('Learned here').nextSibling).toHaveTextContent('1');
-    expect(loadLoop()).toBeNull(); // finishing clears the saved loop
+    expect(loadPractice()).toBeNull(); // finishing clears the saved practice
   });
 
-  describe('New session on the summary (FR-L32)', () => {
+  describe('New practice on the summary (FR-L32)', () => {
     const finish = () => {
       // Signed-in learners have two Knows; the green one is recorded.
       for (let i = 0; i < 3; i++) fireEvent.click(btn('I know it Don’t show again'));
-      expect(screen.getByRole('heading', { name: 'Session completed' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Practice completed' })).toBeInTheDocument();
     };
 
-    it('starts the next session right away with the same choices', async () => {
+    it('starts the next practice right away with the same choices', async () => {
       const posted: unknown[] = [];
       const router = setup(undefined, {
         isGuest: false,
         routes: {
-          'POST /api/loops': (init) => {
+          'POST /api/practices': (init) => {
             posted.push(JSON.parse(String(init?.body)));
             return Response.json({ requested: 5, returned: 2, cards: [makeCard(7), makeCard(8)] });
           },
         },
       });
       finish();
-      const newSession = screen.getByRole('button', { name: 'New session' });
-      await waitFor(() => expect(newSession).toBeEnabled()); // once the settings have loaded
-      fireEvent.click(newSession);
+      const newPractice = screen.getByRole('button', { name: 'New practice' });
+      await waitFor(() => expect(newPractice).toBeEnabled()); // once the settings have loaded
+      fireEvent.click(newPractice);
       await waitFor(() => expect(progress()).toBe('Round 1 · Card 1/2 · 0 known'));
       expect(posted).toEqual([{ source: 'en', target: 'he', topicId: null, size: 5 }]);
-      expect(router.state.location.pathname).toBe('/loop');
-      expect(loadLoop()?.cards.map((c) => c.itemId)).toEqual([7, 8]);
-      expect(loadLoop()?.selection).toMatchObject({ sourceLang: 'en', targetLang: 'he' });
+      expect(router.state.location.pathname).toBe('/practice');
+      expect(loadPractice()?.cards.map((c) => c.itemId)).toEqual([7, 8]);
+      expect(loadPractice()?.selection).toMatchObject({ sourceLang: 'en', targetLang: 'he' });
       expect(
         await screen.findByText('Only 2 new cards in All topics, starting with 2'),
       ).toBeVisible();
@@ -694,13 +694,13 @@ describe('LoopPage', () => {
       const router = setup(undefined, {
         isGuest: false,
         routes: {
-          'POST /api/loops': () => Response.json({ requested: 5, returned: 0, cards: [] }),
+          'POST /api/practices': () => Response.json({ requested: 5, returned: 0, cards: [] }),
         },
       });
       finish();
-      const newSession = screen.getByRole('button', { name: 'New session' });
-      await waitFor(() => expect(newSession).toBeEnabled()); // once the settings have loaded
-      fireEvent.click(newSession);
+      const newPractice = screen.getByRole('button', { name: 'New practice' });
+      await waitFor(() => expect(newPractice).toBeEnabled()); // once the settings have loaded
+      fireEvent.click(newPractice);
       expect(await screen.findByRole('alert')).toHaveTextContent(
         'No new cards left for these choices. Go Home to pick others.',
       );
@@ -712,7 +712,7 @@ describe('LoopPage', () => {
       setup(undefined, {
         isGuest: false,
         routes: {
-          'POST /api/loops': () =>
+          'POST /api/practices': () =>
             Response.json(
               { error: { code: 'RATE_LIMITED', message: 'limit', details: { remaining: 3 } } },
               { status: 429 },
@@ -720,29 +720,29 @@ describe('LoopPage', () => {
         },
       });
       finish();
-      const newSession = screen.getByRole('button', { name: 'New session' });
-      await waitFor(() => expect(newSession).toBeEnabled()); // once the settings have loaded
-      fireEvent.click(newSession);
+      const newPractice = screen.getByRole('button', { name: 'New practice' });
+      await waitFor(() => expect(newPractice).toBeEnabled()); // once the settings have loaded
+      fireEvent.click(newPractice);
       expect(await screen.findByRole('alert')).toHaveTextContent(/You can still get 3 cards today/);
-      expect(screen.getByRole('heading', { name: 'Session completed' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Practice completed' })).toBeInTheDocument();
     });
   });
 
   it('saves progress so a refresh resumes; there is no Stop; Home and Esc ask, then clear it (D-072)', async () => {
     const router = setup();
     fireEvent.click(btn('I know it Show again in future'));
-    expect(loadLoop()?.state.index).toBe(1);
+    expect(loadPractice()?.state.index).toBe(1);
     expect(screen.queryByRole('button', { name: 'Stop' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Home' }));
-    // Home asks first; No keeps the session.
+    // Home asks first; No keeps the practice.
     const dialog = screen.getByRole('dialog', { name: 'Back to Home?' });
-    expect(dialog).toHaveTextContent('This will stop the session. Are you sure?');
+    expect(dialog).toHaveTextContent('This will stop the practice. Are you sure?');
     fireEvent.click(within(dialog).getByRole('button', { name: 'No' }));
-    expect(loadLoop()).not.toBeNull();
+    expect(loadPractice()).not.toBeNull();
     fireEvent.keyDown(window, { key: 'Escape' }); // Esc asks the same question
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Yes' }));
     await vi.waitFor(() => expect(router.state.location.pathname).toBe('/'));
-    expect(loadLoop()).toBeNull();
+    expect(loadPractice()).toBeNull();
   });
 
   it('the Keyboard shortcuts popover lists the keys, and Esc closes it without stopping', () => {
@@ -753,34 +753,34 @@ describe('LoopPage', () => {
     expect(screen.getByText('Next / Continue')).toBeInTheDocument();
     fireEvent.keyDown(toggle, { key: 'Escape' });
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    expect(loadLoop()).not.toBeNull(); // still in the loop
+    expect(loadPractice()).not.toBeNull(); // still in the practice
   });
 
-  it('Home asks first: No keeps the loop (shortcuts paused meanwhile), Yes stops it', async () => {
+  it('Home asks first: No keeps the practice (shortcuts paused meanwhile), Yes stops it', async () => {
     const router = setup();
     fireEvent.click(screen.getByRole('button', { name: /Home/ }));
     const dialog = screen.getByRole('dialog', { name: 'Back to Home?' });
-    expect(dialog).toHaveTextContent('This will stop the session. Are you sure?');
+    expect(dialog).toHaveTextContent('This will stop the practice. Are you sure?');
     fireEvent.keyDown(window, { key: 'k' }); // ignored while the question is open
     expect(progress()).toBe('Round 1 · Card 1/3 · 0 known');
     fireEvent.click(within(dialog).getByRole('button', { name: 'No' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(router.state.location.pathname).toBe('/loop');
-    expect(loadLoop()).not.toBeNull();
+    expect(router.state.location.pathname).toBe('/practice');
+    expect(loadPractice()).not.toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: /Home/ }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Yes' }));
     await vi.waitFor(() => expect(router.state.location.pathname).toBe('/'));
-    expect(loadLoop()).toBeNull();
+    expect(loadPractice()).toBeNull();
   });
 
-  it('redirects home when there is no loop to resume', async () => {
+  it('redirects home when there is no practice to resume', async () => {
     const router = createMemoryRouter(
       [
-        { path: '/loop', element: <LoopPage /> },
+        { path: '/practice', element: <PracticePage /> },
         { path: '/', element: <p>home page</p> },
       ],
-      { initialEntries: ['/loop'] },
+      { initialEntries: ['/practice'] },
     );
     mockFetch({});
     render(

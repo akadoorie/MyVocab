@@ -64,6 +64,13 @@
       "when": 1795392000000,
       "tag": "0008_topic_name_he",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1795395600000,
+      "tag": "0009_practice_round",
+      "breakpoints": true
     }
   ]
 }

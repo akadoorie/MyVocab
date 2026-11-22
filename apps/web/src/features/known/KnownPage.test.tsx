@@ -22,7 +22,7 @@ const ITEMS: KnownItem[] = [
     },
     topics: [{ id: 1, name: 'Home', nameHe: 'בית' }],
     knownAt: Date.UTC(2026, 10, 1),
-    knownInCycle: 1,
+    knownInRound: 1,
   },
   {
     itemId: 12,
@@ -40,7 +40,7 @@ const ITEMS: KnownItem[] = [
     },
     topics: [],
     knownAt: Date.UTC(2026, 10, 2),
-    knownInCycle: 3,
+    knownInRound: 3,
   },
 ];
 
@@ -64,7 +64,7 @@ describe('KnownPage', () => {
     expect(await screen.findByRole('heading', { name: 'Sign-in to continue' })).toBeVisible();
   });
 
-  it('lists known items with direction, answer, topics and the cycle badge', async () => {
+  it('lists known items with direction, answer, topics and the round badge', async () => {
     setup({ 'GET /api/me/known': () => page() });
     const list = await screen.findByRole('list', { name: 'My known words' });
     const rows = within(list).getAllByRole('listitem');
@@ -80,7 +80,7 @@ describe('KnownPage', () => {
     expect(screen.getByText('2 known words')).toBeVisible();
   });
 
-  it('returns one row to the loops', async () => {
+  it('returns one row to the practices', async () => {
     const restore = vi.fn((_init: RequestInit | undefined) => Response.json({ restored: 1 }));
     setup({ 'GET /api/me/known': () => page(), 'POST /api/me/known/restore': restore });
     const rows = await screen.findAllByRole('listitem');

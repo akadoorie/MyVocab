@@ -12,7 +12,7 @@ function langDir(lang: LangCode, languages: LanguageMap): LangDir {
 }
 
 /**
- * Composes one card exactly as the browser shows it (PRD §6.3, FR-L41). Used by `POST /loops`
+ * Composes one card exactly as the browser shows it (PRD §6.3, FR-L41). Used by `POST /practices`
  * and by the admin preview, so both always match. The source language is the item's language.
  */
 export function buildCard(item: ItemData, target: LangCode, languages: LanguageMap): CardView {

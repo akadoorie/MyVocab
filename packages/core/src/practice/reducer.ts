@@ -1,27 +1,27 @@
-import { orderNextCycle } from './cycle-order';
+import { orderNextRound } from './round-order';
 import { shuffle, type RngState } from './random';
 
 /**
- * The shrinking-loop engine (PRD §6.2, §10.4): a pure reducer with no DOM or I/O. Cards are
+ * The shrinking-practice engine (PRD §6.2, §10.4): a pure reducer with no DOM or I/O. Cards are
  * identified by item id; the UI looks up the card content separately.
  */
 
-export type LoopPhase = 'deciding' | 'revealed' | 'cycleBreak' | 'finished' | 'stopped';
+export type PracticePhase = 'deciding' | 'revealed' | 'roundBreak' | 'finished' | 'stopped';
 export type CardSide = 'front' | 'back';
 /**
- * A Know in this loop. `again`: "Know · ask again" (FR-L27a): a Know for this session that is not
+ * A Know in this practice. `again`: "Know · ask again" (FR-L27a): a Know for this practice that is not
  * recorded in the learner's known items, so the word stays in the pool.
  */
-export type KnownMark = { id: number; cycle: number; again?: true };
+export type KnownMark = { id: number; round: number; again?: true };
 
-/** An answer given to a card in the current cycle (FR-L29a). */
+/** An answer given to a card in the current round (FR-L29a). */
 export type CardAnswer = 'know' | 'knowAgain' | 'dontKnow';
 
-export type LoopState = {
-  phase: LoopPhase;
-  /** 1-based cycle number. */
-  cycle: number;
-  /** Card ids of the current cycle, in the order shown. */
+export type PracticeState = {
+  phase: PracticePhase;
+  /** 1-based round number. */
+  round: number;
+  /** Card ids of the current round, in the order shown. */
   order: number[];
   /** Position of the current card in `order`. */
   index: number;
@@ -29,19 +29,19 @@ export type LoopState = {
   /** Whether the current card's hints are shown on the front (FR-L25). */
   hintsShown: boolean;
   /**
-   * Cards of this cycle whose hints cover was left open (D-048): Back or Next onto them shows
-   * it open again. Optional so a session saved before D-048 still loads.
+   * Cards of this round whose hints cover was left open (D-048): Back or Next onto them shows
+   * it open again. Optional so a practice saved before D-048 still loads.
    */
   hintsOpen?: number[];
-  /** "Don't know" cards collected for the next cycle. */
-  nextCycle: number[];
-  /** Cards marked Know in this loop, with the cycle they were marked in. */
+  /** "Don't know" cards collected for the next round. */
+  nextRound: number[];
+  /** Cards marked Know in this practice, with the round they were marked in. */
   known: KnownMark[];
   totalCards: number;
   rng: RngState;
 };
 
-export type LoopAction =
+export type PracticeAction =
   | { type: 'KNOW' }
   | { type: 'KNOW_AGAIN' }
   | { type: 'DONT_KNOW' }
@@ -52,36 +52,36 @@ export type LoopAction =
   | { type: 'CONTINUE' }
   | { type: 'STOP' };
 
-export type LoopActionType = LoopAction['type'];
+export type PracticeActionType = PracticeAction['type'];
 
-/** Starts a loop: cycle 1 is every card, shuffled. */
-export function createLoop(cardIds: readonly number[], seed: RngState): LoopState {
+/** Starts a practice: round 1 is every card, shuffled. */
+export function createPractice(cardIds: readonly number[], seed: RngState): PracticeState {
   const unique = [...new Set(cardIds)];
-  if (unique.length === 0) throw new Error('A loop needs at least one card');
+  if (unique.length === 0) throw new Error('A practice needs at least one card');
   const [order, rng] = shuffle(unique, seed);
   return {
     phase: 'deciding',
-    cycle: 1,
+    round: 1,
     order,
     index: 0,
     side: 'front',
     hintsShown: false,
     hintsOpen: [],
-    nextCycle: [],
+    nextRound: [],
     known: [],
     totalCards: unique.length,
     rng,
   };
 }
 
-/** Whether the card at `index` was left with its hints cover open in this cycle (D-048). */
-function leftOpen(state: LoopState, index: number): boolean {
+/** Whether the card at `index` was left with its hints cover open in this round (D-048). */
+function leftOpen(state: PracticeState, index: number): boolean {
   const id = state.order[index];
   return id !== undefined && (state.hintsOpen ?? []).includes(id);
 }
 
-/** Moves past the current card: the next card, a cycle break, or the end of the loop. */
-function advance(state: LoopState): LoopState {
+/** Moves past the current card: the next card, a round break, or the end of the practice. */
+function advance(state: PracticeState): PracticeState {
   const index = state.index + 1;
   if (index < state.order.length) {
     return {
@@ -95,25 +95,25 @@ function advance(state: LoopState): LoopState {
   return {
     ...state,
     index: state.order.length,
-    phase: state.nextCycle.length > 0 ? 'cycleBreak' : 'finished',
+    phase: state.nextRound.length > 0 ? 'roundBreak' : 'finished',
     side: 'front',
     hintsShown: false,
   };
 }
 
 /**
- * The answer already given to a card in the current cycle (PRD FR-L29a): Know, Don't know, or null
- * when it hasn't been answered yet. Derived from `known` and `nextCycle`, so it can't drift.
+ * The answer already given to a card in the current round (PRD FR-L29a): Know, Don't know, or null
+ * when it hasn't been answered yet. Derived from `known` and `nextRound`, so it can't drift.
  */
-export function answerOf(state: LoopState, id: number): CardAnswer | null {
-  const mark = state.known.find((k) => k.id === id && k.cycle === state.cycle);
+export function answerOf(state: PracticeState, id: number): CardAnswer | null {
+  const mark = state.known.find((k) => k.id === id && k.round === state.round);
   if (mark) return mark.again ? 'knowAgain' : 'know';
-  if (state.nextCycle.includes(id)) return 'dontKnow';
+  if (state.nextRound.includes(id)) return 'dontKnow';
   return null;
 }
 
 /** Which actions are allowed right now (drives the button states in PRD FR-L24). */
-export function canDispatch(state: LoopState, type: LoopActionType): boolean {
+export function canDispatch(state: PracticeState, type: PracticeActionType): boolean {
   const onCard = state.phase === 'deciding' || state.phase === 'revealed';
   switch (type) {
     case 'KNOW':
@@ -132,19 +132,19 @@ export function canDispatch(state: LoopState, type: LoopActionType): boolean {
         (state.phase === 'deciding' && answerOf(state, currentId(state)) !== null)
       );
     case 'BACK':
-      // Card by card to the first card of this cycle; from the cycle break or the summary to its
-      // last card. Earlier cycles are out of reach.
+      // Card by card to the first card of this round; from the round break or the summary to its
+      // last card. Earlier rounds are out of reach.
       return (
-        (onCard && state.index > 0) || state.phase === 'cycleBreak' || state.phase === 'finished'
+        (onCard && state.index > 0) || state.phase === 'roundBreak' || state.phase === 'finished'
       );
     case 'CONTINUE':
-      return state.phase === 'cycleBreak';
+      return state.phase === 'roundBreak';
     case 'STOP':
-      return onCard || state.phase === 'cycleBreak';
+      return onCard || state.phase === 'roundBreak';
   }
 }
 
-export function loopReducer(state: LoopState, action: LoopAction): LoopState {
+export function practiceReducer(state: PracticeState, action: PracticeAction): PracticeState {
   if (!canDispatch(state, action.type)) return state;
   switch (action.type) {
     case 'KNOW':
@@ -155,12 +155,12 @@ export function loopReducer(state: LoopState, action: LoopAction): LoopState {
       const again = action.type === 'KNOW_AGAIN';
       if (answerOf(state, id) === (again ? 'knowAgain' : 'know')) return advance(state);
       const mark: KnownMark = again
-        ? { id, cycle: state.cycle, again }
-        : { id, cycle: state.cycle };
+        ? { id, round: state.round, again }
+        : { id, round: state.round };
       return advance({
         ...state,
-        known: [...state.known.filter((k) => !(k.id === id && k.cycle === state.cycle)), mark],
-        nextCycle: state.nextCycle.filter((n) => n !== id),
+        known: [...state.known.filter((k) => !(k.id === id && k.round === state.round)), mark],
+        nextRound: state.nextRound.filter((n) => n !== id),
       });
     }
     case 'DONT_KNOW': {
@@ -170,9 +170,9 @@ export function loopReducer(state: LoopState, action: LoopAction): LoopState {
         ...state,
         known:
           answer === 'know' || answer === 'knowAgain'
-            ? state.known.filter((k) => !(k.id === id && k.cycle === state.cycle))
+            ? state.known.filter((k) => !(k.id === id && k.round === state.round))
             : state.known,
-        nextCycle: answer === 'dontKnow' ? state.nextCycle : [...state.nextCycle, id],
+        nextRound: answer === 'dontKnow' ? state.nextRound : [...state.nextRound, id],
         phase: 'revealed',
         side: 'back',
       };
@@ -190,7 +190,7 @@ export function loopReducer(state: LoopState, action: LoopAction): LoopState {
       return advance(state);
     case 'BACK': {
       // The card arrives front side up, its hints cover as it was left (FR-L29a, D-048).
-      const from = state.phase === 'cycleBreak' || state.phase === 'finished';
+      const from = state.phase === 'roundBreak' || state.phase === 'finished';
       const index = (from ? state.order.length : state.index) - 1;
       return {
         ...state,
@@ -201,16 +201,16 @@ export function loopReducer(state: LoopState, action: LoopAction): LoopState {
       };
     }
     case 'CONTINUE': {
-      const [order, rng] = orderNextCycle(state.nextCycle, state.order, state.rng);
+      const [order, rng] = orderNextRound(state.nextRound, state.order, state.rng);
       return {
         ...state,
-        cycle: state.cycle + 1,
+        round: state.round + 1,
         order,
         index: 0,
-        nextCycle: [],
+        nextRound: [],
         phase: 'deciding',
         side: 'front',
-        // A new cycle is a fresh try: every card starts covered again (D-048).
+        // A new round is a fresh try: every card starts covered again (D-048).
         hintsShown: false,
         hintsOpen: [],
         rng,
@@ -221,34 +221,34 @@ export function loopReducer(state: LoopState, action: LoopAction): LoopState {
   }
 }
 
-function currentId(state: LoopState): number {
+function currentId(state: PracticeState): number {
   return state.order[state.index] as number;
 }
 
 /** The card on screen, or null outside the deciding/revealed phases. */
-export function currentCardId(state: LoopState): number | null {
+export function currentCardId(state: PracticeState): number | null {
   if (state.phase !== 'deciding' && state.phase !== 'revealed') return null;
   return state.order[state.index] ?? null;
 }
 
-/** Header progress: "Cycle 2 · Card 1/3 · 2 known" (FR-L23). */
-export function loopProgress(state: LoopState) {
+/** Header progress: "Round 2 · Card 1/3 · 2 known" (FR-L23). */
+export function practiceProgress(state: PracticeState) {
   return {
-    cycle: state.cycle,
+    round: state.round,
     cardNumber: Math.min(state.index + 1, state.order.length),
-    cycleSize: state.order.length,
+    roundSize: state.order.length,
     knownCount: state.known.length,
-    /** Cards left for the next cycle (shown on the cycle break). */
-    remaining: state.nextCycle.length,
+    /** Cards left for the next round (shown on the round break). */
+    remaining: state.nextRound.length,
   };
 }
 
-/** End-of-loop summary (FR-L32). */
-export function loopSummary(state: LoopState) {
-  const alreadyKnew = state.known.filter((k) => k.cycle === 1).length;
+/** End-of-practice summary (FR-L32). */
+export function practiceSummary(state: PracticeState) {
+  const alreadyKnew = state.known.filter((k) => k.round === 1).length;
   return {
     totalCards: state.totalCards,
-    cycles: state.cycle,
+    rounds: state.round,
     alreadyKnew,
     learnedHere: state.known.length - alreadyKnew,
   };

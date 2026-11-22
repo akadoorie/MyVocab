@@ -378,9 +378,9 @@ function KnownRow({
           ))}
           <span className="text-muted">{strings.known.knownOn(date)}</span>
           <span
-            className={`rounded-full border px-2 py-0.5 ${item.knownInCycle === 1 ? 'border-know text-know' : 'border-accent text-accent'}`}
+            className={`rounded-full border px-2 py-0.5 ${item.knownInRound === 1 ? 'border-know text-know' : 'border-accent text-accent'}`}
           >
-            {item.knownInCycle === 1 ? strings.known.alreadyKnew : strings.known.learnedHere}
+            {item.knownInRound === 1 ? strings.known.alreadyKnew : strings.known.learnedHere}
           </span>
         </div>
       </div>

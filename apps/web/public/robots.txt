@@ -5,6 +5,6 @@ Allow: /$
 Allow: /privacy
 Disallow: /api/
 Disallow: /admin
-Disallow: /loop
+Disallow: /practice
 Disallow: /known
 Disallow: /account

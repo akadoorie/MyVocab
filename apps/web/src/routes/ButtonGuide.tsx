@@ -4,31 +4,31 @@ import { strings } from '../strings';
 
 /**
  * "Buttons" under "How it works" (D-030): a small copy of each answer button as it looks in a
- * session, with its caption (D-058), and what it does. Guests see the green one locked, as in a session (D-042).
+ * practice, with its caption (D-058), and what it does. Guests see the green one locked, as in a practice (D-042).
  */
 export function ButtonGuide({ isGuest, headingId }: { isGuest: boolean; headingId: string }) {
   const g = strings.landing.buttonGuide;
   /** U+200F RIGHT-TO-LEFT MARK on right-to-left pages; nothing otherwise. */
-  const mark = strings.locale.dir === 'rtl' ? '‏' : '';
+  const mark = strings.locale.dir === 'rtl' ? '\u200f' : '';
   const rows = [
     {
       kind: 'know',
-      label: strings.loop.know,
-      caption: strings.loop.knowCaption,
+      label: strings.practice.know,
+      caption: strings.practice.knowCaption,
       text: isGuest ? g.knowGuest : g.know,
       locked: isGuest,
     },
     {
       kind: 'again',
-      label: strings.loop.know,
-      caption: strings.loop.againCaption,
+      label: strings.practice.know,
+      caption: strings.practice.againCaption,
       text: g.again,
       locked: false,
     },
     {
       kind: 'dontknow',
-      label: strings.loop.dontKnow,
-      caption: strings.loop.dontKnowCaption,
+      label: strings.practice.dontKnow,
+      caption: strings.practice.dontKnowCaption,
       text: g.dontKnow,
       locked: false,
     },
@@ -41,7 +41,7 @@ export function ButtonGuide({ isGuest, headingId }: { isGuest: boolean; headingI
       <ul className="space-y-3">
         {rows.map((row) => (
           <li key={row.kind} className="flex items-start gap-4">
-            {/* A small copy of the session's pill, with its caption under it (D-058). The lock
+            {/* A small copy of the practice's pill, with its caption under it (D-058). The lock
                 sits beside the darkened button, not in it, so it stays bright. */}
             <span aria-hidden="true" className="flex w-36 shrink-0 flex-col items-center">
               <span className="relative inline-flex">

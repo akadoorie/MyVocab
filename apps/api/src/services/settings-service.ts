@@ -25,9 +25,9 @@ export class SettingsService {
       if (parsed.success) merged[key] = parsed.data;
     }
     const settings = merged as Settings;
-    if (!settings['loop.sizeOptions'].includes(settings['loop.defaultSize'])) {
-      settings['loop.defaultSize'] =
-        settings['loop.sizeOptions'][0] ?? defaults['loop.defaultSize'];
+    if (!settings['practice.sizeOptions'].includes(settings['practice.defaultSize'])) {
+      settings['practice.defaultSize'] =
+        settings['practice.sizeOptions'][0] ?? defaults['practice.defaultSize'];
     }
     return settings;
   }

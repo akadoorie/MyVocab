@@ -15,10 +15,10 @@ export function useSession(): SessionState {
   return { user, isGuest: user === null, loading: me.isPending };
 }
 
-/** Where to come back after signing in: the current page, except the loop screen. */
+/** Where to come back after signing in: the current page, except the practice screen. */
 function returnPath(): string {
   const { pathname } = window.location;
-  return pathname.startsWith('/loop') ? '/' : pathname;
+  return pathname.startsWith('/practice') ? '/' : pathname;
 }
 
 /** Starts Google sign-in through Better Auth (PRD §13.1): the server answers with Google's URL. */

@@ -7,7 +7,7 @@ en,sample-word-5,word,false,,מילה-לדוגמה-5,,Synthetic explanation for 
 en,sample-word-6,word,false,home,מילה-לדוגמה-6,,Synthetic explanation for sample word six,,Synthetic hint for word six.,published,true
 en,sample-expression-1,expr,false,,ביטוי-לדוגמה-1,,Synthetic explanation for sample expression one,,Synthetic hint sentence for sample expression one.,published,true
 en,sample-expression-2,expr,false,,ביטוי-לדוגמה-2,,Synthetic explanation for sample expression two,,,published,true
-en,sample-draft-1,word,false,,מילה-טיוטה-1,,Synthetic draft item that never appears in loops,,,draft,true
+en,sample-draft-1,word,false,,מילה-טיוטה-1,,Synthetic draft item that never appears in practices,,,draft,true
 he,מילה-לדוגמה-א,word,false,home,,sample-he-word-a,הסבר לדוגמה למילה א,מילה-נרדפת-א,משפט רמז לדוגמה למילה א.,published,true
 he,מילה-לדוגמה-ב,word,false,nature,,sample-he-word-b,הסבר לדוגמה למילה ב,,,published,true
 he,מילה-לדוגמה-ג,word,false,,,sample-he-word-c,הסבר לדוגמה למילה ג,,משפט רמז לדוגמה למילה ג.,published,true

@@ -1,12 +1,12 @@
 import {
   availableByTopicQuerySchema,
   availableQuerySchema,
-  startLoopRequestSchema,
+  startPracticeRequestSchema,
   type AvailableByTopicResponse,
   type AvailableResponse,
   type MetaResponse,
   type RegisteredUsersResponse,
-  type StartLoopResponse,
+  type StartPracticeResponse,
 } from '@myvocab/contracts';
 import { resolveStartDefaults } from '@myvocab/core';
 import { Hono } from 'hono';
@@ -32,9 +32,9 @@ export const publicRoutes = new Hono<AppEnv>()
           targetLang: s['defaults.targetLang'],
           topicId: s['defaults.topicId'],
         },
-        sizeOptions: s['loop.sizeOptions'],
-        defaultSize: s['loop.defaultSize'],
-        guestLoopSize: s['guests.loopSize'],
+        sizeOptions: s['practice.sizeOptions'],
+        defaultSize: s['practice.defaultSize'],
+        guestPracticeSize: s['guests.practiceSize'],
       },
       activeLanguages: activeLangs.map((l) => l.code),
       activeTopicIds: activeCats.map((x) => x.id),
@@ -49,11 +49,11 @@ export const publicRoutes = new Hono<AppEnv>()
       })),
       topics: activeCats.map(({ id, slug, name, nameHe }) => ({ id, slug, name, nameHe })),
       defaults,
-      sizeOptions: s['loop.sizeOptions'],
-      guest: { enabled: s['guests.enabled'], loopSize: s['guests.loopSize'] },
+      sizeOptions: s['practice.sizeOptions'],
+      guest: { enabled: s['guests.enabled'], practiceSize: s['guests.practiceSize'] },
       undoWindowSeconds: s['undo.windowSeconds'],
-      continueSeconds: s['loop.continueSeconds'],
-      nextSeconds: s['loop.nextSeconds'],
+      continueSeconds: s['practice.continueSeconds'],
+      nextSeconds: s['practice.nextSeconds'],
       maintenance: { enabled: s['maintenance.enabled'], message: s['maintenance.message'] },
       turnstileSiteKey: c.get('config').TURNSTILE_SITE_KEY,
     });
@@ -62,9 +62,9 @@ export const publicRoutes = new Hono<AppEnv>()
     const registeredUsers = await c.get('container').accounts.registeredUsers();
     return c.json<RegisteredUsersResponse>({ registeredUsers });
   })
-  .get('/loops/available', burstLimit('RL_AVAILABLE', ipKey), async (c) => {
+  .get('/practices/available', burstLimit('RL_AVAILABLE', ipKey), async (c) => {
     const q = parseOrThrow(availableQuerySchema, c.req.query());
-    const available = await c.get('container').loops.available(
+    const available = await c.get('container').practices.available(
       {
         source: q.source,
         target: q.target,
@@ -75,13 +75,15 @@ export const publicRoutes = new Hono<AppEnv>()
     );
     return c.json<AvailableResponse>({ available });
   })
-  .get('/loops/available-by-topic', burstLimit('RL_AVAILABLE', ipKey), async (c) => {
+  .get('/practices/available-by-topic', burstLimit('RL_AVAILABLE', ipKey), async (c) => {
     const q = parseOrThrow(availableByTopicQuerySchema, c.req.query());
-    const counts = await c.get('container').loops.availableByTopic(q, await c.get('requester')());
+    const counts = await c
+      .get('container')
+      .practices.availableByTopic(q, await c.get('requester')());
     return c.json<AvailableByTopicResponse>(counts);
   })
-  .post('/loops', burstLimit('RL_LOOPS', ipKey), async (c) => {
-    const body = parseOrThrow(startLoopRequestSchema, await readJson(c.req));
-    const result = await c.get('container').loops.start(body, await c.get('requester')());
-    return c.json<StartLoopResponse>(result);
+  .post('/practices', burstLimit('RL_PRACTICES', ipKey), async (c) => {
+    const body = parseOrThrow(startPracticeRequestSchema, await readJson(c.req));
+    const result = await c.get('container').practices.start(body, await c.get('requester')());
+    return c.json<StartPracticeResponse>(result);
   });

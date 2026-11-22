@@ -19,7 +19,7 @@ async function signIn(page: Page, baseURL: string, email: string) {
 }
 
 async function available(request: APIRequestContext, source: string, target: string) {
-  const res = await request.get(`/api/loops/available?source=${source}&target=${target}`);
+  const res = await request.get(`/api/practices/available?source=${source}&target=${target}`);
   expect(res.ok()).toBe(true);
   return ((await res.json()) as { available: number }).available;
 }
@@ -34,7 +34,7 @@ async function openKnownWords(page: Page) {
   await expect(page).toHaveURL(/\/known$/);
 }
 
-test('Know → My known words (ask again is not kept) → hidden only in that direction → Return to loops', async ({
+test('Know → My known words (ask again is not kept) → hidden only in that direction → Return to practices', async ({
   page,
   baseURL,
 }, testInfo) => {
@@ -47,7 +47,7 @@ test('Know → My known words (ask again is not kept) → hidden only in that di
   await expect(page.getByText('Sign-in with Google to remember')).toHaveCount(0);
 
   // Amounts above the available count are greyed out (D-057); the default 10 always stays.
-  const startCard = page.getByRole('region', { name: 'Configure your session' });
+  const startCard = page.getByRole('region', { name: 'Configure your practice' });
   await expect(startCard.getByText(`${enHe} cards available`)).toBeVisible();
   if (enHe < 20) await expect(startCard.getByRole('radio', { name: '20' })).toBeDisabled();
   await expect(startCard.getByRole('radio', { name: '10' })).toHaveAttribute(
@@ -55,14 +55,14 @@ test('Know → My known words (ask again is not kept) → hidden only in that di
     'true',
   );
   await startCard.getByRole('button', { name: 'Start' }).click();
-  await expect(page).toHaveURL(/\/loop$/);
+  await expect(page).toHaveURL(/\/practice$/);
   // Fewer than 10 left: the session starts with all of them and says so (FR-L8).
   if (enHe < 10) await expect(page.getByText(`Only ${enHe} new cards in All topics`)).toBeVisible();
   await expect(page.getByTestId('progress')).toHaveText(
     `Round 1 · Card 1/${Math.min(enHe, 10)} · 0 known`,
   );
 
-  // Know the first card, then stop the loop.
+  // Know the first card, then stop the practice.
   const known = ((await page.getByTestId('front-text').textContent()) ?? '').trim();
   // Any English word: other specs (admin) may have added synthetic items to the same database.
   expect(known.length).toBeGreaterThan(0);
@@ -95,7 +95,7 @@ test('Know → My known words (ask again is not kept) → hidden only in that di
   await direction.selectOption({ label: 'English → Hebrew' });
   await expect(row).toBeVisible();
 
-  // Return to loops: available again.
+  // Return to practices: available again.
   await row.getByRole('button', { name: 'Return to practice' }).click();
   await expect(page.getByText('1 word is back in practice')).toBeVisible();
   await expect(page.getByText('Nothing matches these filters.')).toBeVisible();

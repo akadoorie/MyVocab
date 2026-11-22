@@ -19,7 +19,7 @@ import { publicRoutes } from './routes/public';
 import { testRoutes } from './routes/test-only';
 import { hashIp } from './services/usage-limit-service';
 import type { Actor } from './repositories/interfaces';
-import type { Requester } from './services/loop-service';
+import type { Requester } from './services/practice-service';
 import { APP_VERSION } from './version';
 
 export type AppEnv = {

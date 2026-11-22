@@ -7,11 +7,11 @@ const progress = (page: Page) => page.getByTestId('progress');
 const card = (page: Page) => page.getByTestId('flip-card');
 const button = (page: Page, name: string) => page.getByRole('button', { name, exact: true }).last();
 
-test('a guest starts with the defaults and plays a loop to the summary', async ({ page }) => {
+test('a guest starts with the defaults and plays a practice to the summary', async ({ page }) => {
   await page.goto('/');
 
   // Defaults: EN → HE, the Sample set (D-038), amount locked at 5, all "default".
-  const startCard = page.getByRole('region', { name: 'Configure your session' });
+  const startCard = page.getByRole('region', { name: 'Configure your practice' });
   await expect(startCard.getByLabel('From', { exact: true })).toHaveValue('en');
   await expect(startCard.getByLabel('To', { exact: true })).toHaveValue('he');
   await expect(startCard.getByLabel('Topic', { exact: true })).toHaveValue('sample');
@@ -47,12 +47,12 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   const toast = startCard.locator('.amount-tip');
   await expect(toast).toHaveText('Sign-in to change');
   await expect(toast.getByRole('button', { name: 'Sign-in' })).toBeVisible();
-  await startCard.getByRole('button', { name: /Cards per session: 5/ }).click();
+  await startCard.getByRole('button', { name: /Cards per practice: 5/ }).click();
   await expect(toast).toBeVisible();
 
   // Start without changing anything (invisible Turnstile with Cloudflare's test keys).
   await startCard.getByRole('button', { name: 'Start' }).click();
-  await expect(page).toHaveURL(/\/loop$/);
+  await expect(page).toHaveURL(/\/practice$/);
   await expect(progress(page)).toHaveText('Round 1 · Card 1/5 · 0 known');
 
   // Hints sit on the front under a live cover (D-047): a tap reveals, another covers. (A card
@@ -114,30 +114,30 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   await button(page, 'Next').click();
   await expect(progress(page)).toHaveText('Round 1 · Card 3/5 · 0 known');
 
-  // A refresh resumes the same loop.
+  // A refresh resumes the same practice.
   await page.reload();
   await expect(progress(page)).toHaveText('Round 1 · Card 3/5 · 0 known');
 
-  // Know everything else; continue through cycle breaks until the summary.
+  // Know everything else; continue through round breaks until the summary.
   for (let i = 0; i < 20; i++) {
-    if (await page.getByRole('heading', { name: 'Session completed' }).isVisible()) break;
+    if (await page.getByRole('heading', { name: 'Practice completed' }).isVisible()) break;
     const cont = page.getByRole('button', { name: 'Continue' });
     if (await cont.isVisible()) await cont.click();
     else await button(page, 'I know it Show again in future').click();
   }
-  await expect(page.getByRole('heading', { name: 'Session completed' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Practice completed' })).toBeVisible();
   await expect(page.getByText('Sign-in to skip words that no longer need to repeat')).toBeVisible();
 
-  // New session starts the next loop right away, with the same choices (FR-L32).
-  await page.getByRole('button', { name: 'New session' }).click();
+  // New practice starts the next practice right away, with the same choices (FR-L32).
+  await page.getByRole('button', { name: 'New practice' }).click();
   await expect(progress(page)).toHaveText(/^Round 1 · Card 1\/\d+ · 0 known$/);
-  await expect(page).toHaveURL(/\/loop$/);
+  await expect(page).toHaveURL(/\/practice$/);
 });
 
 test('on touch, swipe left is Next and swipe right is Back', async ({ page }) => {
   await page.goto('/');
   await page
-    .getByRole('region', { name: 'Configure your session' })
+    .getByRole('region', { name: 'Configure your practice' })
     .getByRole('button', { name: 'Start' })
     .click();
   await expect(progress(page)).toHaveText('Round 1 · Card 1/5 · 0 known');
@@ -156,19 +156,19 @@ test('on touch, swipe left is Next and swipe right is Back', async ({ page }) =>
   await expect(card(page)).toHaveAttribute('data-side', 'front');
 });
 
-test('Home asks first, then ends the session and returns home (no Stop, D-072)', async ({
+test('Home asks first, then ends the practice and returns home (no Stop, D-072)', async ({
   page,
 }) => {
   await page.goto('/');
   await page
-    .getByRole('region', { name: 'Configure your session' })
+    .getByRole('region', { name: 'Configure your practice' })
     .getByRole('button', { name: 'Start' })
     .click();
-  await expect(page).toHaveURL(/\/loop$/);
+  await expect(page).toHaveURL(/\/practice$/);
   await expect(page.getByRole('button', { name: 'Stop' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Home', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Yes' }).click();
   await expect(page).toHaveURL(/\/$/);
-  await page.goto('/loop');
+  await page.goto('/practice');
   await expect(page).toHaveURL(/\/$/); // nothing to resume
 });

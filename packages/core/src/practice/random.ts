@@ -1,6 +1,6 @@
 /**
- * A small seedable PRNG (mulberry32). The loop keeps the generator state inside its own state, so
- * the reducer stays pure and a loop restored from sessionStorage continues identically.
+ * A small seedable PRNG (mulberry32). The practice keeps the generator state inside its own state, so
+ * the reducer stays pure and a practice restored from sessionStorage continues identically.
  */
 
 export type RngState = number;
@@ -28,7 +28,7 @@ export function shuffle<T>(items: readonly T[], state: RngState): [T[], RngState
   return [result, s];
 }
 
-/** A random 32-bit seed for a new loop (uses crypto when available). */
+/** A random 32-bit seed for a new practice (uses crypto when available). */
 export function randomSeed(): RngState {
   const buf = new Uint32Array(1);
   const { crypto } = globalThis as unknown as {

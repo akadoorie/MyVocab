@@ -13,8 +13,8 @@ kept in a private log.
 
 - **Learners** pick languages, a topic and a type (or just press Start), then go through flip
   cards: Hints on the front, Flip to see the answer, Know / Don't know. Guests get 5 cards per
-  loop; signed-in learners (Google) choose 10–50 and their known words are remembered and kept out
-  of future loops in the direction they were marked in. "My known words" lets them bring words back.
+  practice; signed-in learners (Google) choose 10–50 and their known words are remembered and kept out
+  of future practices in the direction they were marked in. "My known words" lets them bring words back.
 - **Admins** manage items (translations, explanation, synonyms, hints, multiple meanings),
   topics, languages, users and settings, import CSV files, restore from Trash and read the
   audit log. The admin area is protected by **two locks**: the admin role and Cloudflare Access.
@@ -31,8 +31,8 @@ flowchart LR
   A[Admin] -- /admin* --> CA[Cloudflare Access<br/>one-time PIN] --> W
 ```
 
-One Worker serves the built SPA and `/api/*` from the same origin. The loop runs entirely in the
-browser after `POST /api/loops` returns the cards. The hourly cron purges the Trash and old usage
+One Worker serves the built SPA and `/api/*` from the same origin. The practice runs entirely in the
+browser after `POST /api/practices` returns the cards. The hourly cron purges the Trash and old usage
 counters.
 
 | Part  | Technology                                                                        |
@@ -47,7 +47,7 @@ apps/web            React SPA (learner pages + lazy-loaded admin area)
 apps/api            Cloudflare Worker: routes → services → repositories → D1
   migrations/       D1 migrations (applied by the deploy workflow)
   scripts/          db:seed and db:export (run on your computer only)
-packages/core       pure domain logic: loop engine, card builder, item validation, CSV
+packages/core       pure domain logic: practice engine, card builder, item validation, CSV
 packages/contracts  Zod request/response schemas shared by web and API
 e2e/                Playwright tests (synthetic data only)
 seed/sample.csv     ≤ 20 obviously fake rows for development and CI
@@ -98,7 +98,7 @@ pnpm dev                                          # http://localhost:5173
   (`apps/web`), and script tests (`db:seed` / `db:export` round trip on throw-away databases).
 - `pnpm e2e` builds the SPA, seeds a separate local database with `seed/sample.csv` only, starts
   `wrangler dev` in test mode and runs the Playwright suite on a 1280×800 and a 390×844 viewport:
-  guest loop, signed-in known words, admin editor and Trash, CSV import, an axe accessibility scan
+  guest practice, signed-in known words, admin editor and Trash, CSV import, an axe accessibility scan
   of every page, keyboard-only use and the security headers. The first run needs
   `pnpm exec playwright install chromium`.
 - CI (`.github/workflows/ci.yml`) runs all of it on every pull request and push. It never sees
@@ -307,7 +307,7 @@ plans (Workers Free, D1, Turnstile, Zero Trust ≤ 50 users, GitHub Free).
     ```sh
     pnpm db:seed -- --file ../MyVocab-Content/starter.csv --remote
     ```
-13. **Check it** on a phone and a desktop: play a loop as a guest (Turnstile is invisible), sign in
+13. **Check it** on a phone and a desktop: play a practice as a guest (Turnstile is invisible), sign in
     with Google, mark a word as known and find it in My known words. Open `/admin`: Cloudflare
     Access asks for a one-time code first; a non-admin email is refused; a signed-in non-admin calling
     `/api/admin/stats` gets 403. In the D1 dashboard, rows read/written stay far below the free
@@ -339,7 +339,7 @@ The restore prints a bookmark of the state you replaced, so you can undo it with
 
 | Service             | Free limit (re-check Cloudflare's pricing pages)    | How MyVocab stays inside it                                           |
 | ------------------- | --------------------------------------------------- | --------------------------------------------------------------------- |
-| Workers             | 100,000 requests/day, 10 ms CPU per request         | Static files are free; the loop runs in the browser                   |
+| Workers             | 100,000 requests/day, 10 ms CPU per request         | Static files are free; the practice runs in the browser               |
 | D1                  | 5 M rows read/day, 100,000 rows written/day, 500 MB | One row per item; batched Know marks; no writes from blocked requests |
 | Turnstile           | Free                                                | Guests only                                                           |
 | Zero Trust (Access) | 50 users                                            | Admins only                                                           |
@@ -352,7 +352,7 @@ Workers Paid ($5/month) raises the limits; nothing in the code has to change.
 - Admin area: the admin role (database session) **and** a verified Cloudflare Access token
   (production), checked on every `/api/admin` request. Every admin change is audit-logged in the
   same database transaction.
-- Guests: invisible Turnstile, 5 cards per loop, hourly cap per hashed IP. Learners: daily card
+- Guests: invisible Turnstile, 5 cards per practice, hourly cap per hashed IP. Learners: daily card
   cap. Burst limits per minute with the Workers Rate Limiting binding.
 - Strict Content Security Policy and security headers on every response; `/api/*` is never cached
   or indexed. CSRF: SameSite cookies, Origin and Content-Type checks on every change.

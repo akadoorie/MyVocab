@@ -1,12 +1,12 @@
-import { canDispatch, type LoopActionType, type LoopState } from '@myvocab/core';
+import { canDispatch, type PracticeActionType, type PracticeState } from '@myvocab/core';
 import type { CSSProperties, MouseEvent, ReactNode, Ref } from 'react';
 import { LockIcon, ChevronBackIcon, ChevronIcon } from '../../components/Icons';
 import { strings } from '../../strings';
 
 type Kind = 'round' | 'hint' | 'know' | 'again' | 'dontknow';
 
-/** A loop button: a 3D circle or pill with an icon, and its caption (PRD §9.2). */
-export function LoopButton({
+/** A practice button: a 3D circle or pill with an icon, and its caption (PRD §9.2). */
+export function PracticeButton({
   kind,
   icon,
   label,
@@ -78,9 +78,9 @@ export function LoopButton({
 }
 
 /**
- * Loop buttons (PRD FR-L24, §9.7). Desktop: one row `Back · three answers · Next`.
+ * Practice buttons (PRD FR-L24, §9.7). Desktop: one row `Back · three answers · Next`.
  * Phones: the three answer pills on top, Back (left) and Next (right) below. No Stop: Home in the
- * header (or Esc) ends the session (D-072). Hints are on the card, under a
+ * header (or Esc) ends the practice (D-072). Hints are on the card, under a
  * live cover (D-047). After "I don't know"
  * the layout stays: the answers are off and Next pumps (D-031). Flip is on the card.
  * The answers (D-030): green "I know it · Don't show again", orange "I know it · Show again in
@@ -99,8 +99,8 @@ export function ButtonBar({
   nudging = null,
   nextCountdown = null,
 }: {
-  state: LoopState;
-  onAction: (type: LoopActionType) => void;
+  state: PracticeState;
+  onAction: (type: PracticeActionType) => void;
   nextRef: Ref<HTMLButtonElement>;
   signedIn?: boolean;
   /** A guest tapped the locked green button: say why (D-043). */
@@ -113,7 +113,7 @@ export function ButtonBar({
   /** After "I don't know", Next counts down and then moves on by itself (D-069). */
   nextCountdown?: { left: number; running: boolean; seconds: number } | null;
 }) {
-  const btn = (type: LoopActionType) => ({
+  const btn = (type: PracticeActionType) => ({
     disabled: !canDispatch(state, type),
     onClick: () => onAction(type),
   });
@@ -128,32 +128,32 @@ export function ButtonBar({
     nudging ? `${nudging === 'full' ? 'is-nudging' : 'is-shining'} nudge-${n}` : '';
   return (
     <div className="grid grid-cols-12 items-start gap-x-3 gap-y-5 pb-1 [grid-template-areas:'know_know_know_know_again_again_again_again_dk_dk_dk_dk'_'back_back_back_back_._._._._next_next_next_next'] md:grid-cols-[auto_1fr_1fr_1.1fr_auto] md:gap-x-6 md:[grid-template-areas:'back_know_again_dk_next']">
-      <LoopButton
+      <PracticeButton
         kind="round"
         className="[grid-area:back] edge-start"
         icon={<ChevronBackIcon />}
-        label={strings.loop.back}
+        label={strings.practice.back}
         {...btn('BACK')}
       />
       {signedIn ? (
-        <LoopButton
+        <PracticeButton
           kind="know"
           icon={null}
-          label={strings.loop.know}
-          caption={strings.loop.knowCaption}
-          name={strings.loop.knowName}
+          label={strings.practice.know}
+          caption={strings.practice.knowCaption}
+          name={strings.practice.knowName}
           className={`[grid-area:know] ${trio} ${nudge(1)}`}
           {...btn('KNOW')}
         />
       ) : (
         // Guests see what signing in adds: the same button, locked (D-042).
-        <LoopButton
+        <PracticeButton
           kind="know"
           icon={null}
-          label={strings.loop.know}
-          caption={strings.loop.knowCaption}
-          name={strings.loop.knowNameGuest}
-          title={strings.loop.signInToEnable}
+          label={strings.practice.know}
+          caption={strings.practice.knowCaption}
+          name={strings.practice.knowNameGuest}
+          title={strings.practice.signInToEnable}
           className={`[grid-area:know] ${trio} ${nudge(1)}`}
           locked
           aria-disabled
@@ -166,37 +166,37 @@ export function ButtonBar({
           <p className="locked-tip pointer-events-auto">
             {/* Text around the link, in either order: "Sign-in required" / "נדרשת התחברות". */}
             {/* The spaces are for screen readers; the flex gap spaces the words on screen. */}
-            {strings.loop.lockedTipBefore && <span>{strings.loop.lockedTipBefore} </span>}
+            {strings.practice.lockedTipBefore && <span>{strings.practice.lockedTipBefore} </span>}
             <button
               type="button"
               onClick={onSignIn}
               className="font-semibold text-accent underline underline-offset-2 hover:text-text"
             >
-              {strings.loop.lockedTipLink}
+              {strings.practice.lockedTipLink}
             </button>
-            {strings.loop.lockedTip && <span> {strings.loop.lockedTip}</span>}
+            {strings.practice.lockedTip && <span> {strings.practice.lockedTip}</span>}
           </p>
         )}
       </div>
-      <LoopButton
+      <PracticeButton
         kind="again"
         icon={null}
-        label={strings.loop.know}
-        caption={strings.loop.againCaption}
-        name={strings.loop.againName}
+        label={strings.practice.know}
+        caption={strings.practice.againCaption}
+        name={strings.practice.againName}
         className={`[grid-area:again] ${trio} ${nudge(2)}`}
         {...btn('KNOW_AGAIN')}
       />
-      <LoopButton
+      <PracticeButton
         kind="dontknow"
         className={`[grid-area:dk] ${trio} ${nudge(3)}`}
         icon={null}
-        label={strings.loop.dontKnow}
-        caption={strings.loop.dontKnowCaption}
-        name={strings.loop.dontKnowName}
+        label={strings.practice.dontKnow}
+        caption={strings.practice.dontKnowCaption}
+        name={strings.practice.dontKnowName}
         {...btn('DONT_KNOW')}
       />
-      <LoopButton
+      <PracticeButton
         ref={nextRef}
         kind="round"
         className={`[grid-area:next] edge-end ${revealed ? 'is-urgent' : ''} ${nextCountdown ? `has-countdown ${nextCountdown.running ? '' : 'is-countdown-paused'}` : ''}`}
@@ -207,7 +207,7 @@ export function ButtonBar({
             }
           : {})}
         icon={<ChevronIcon />}
-        label={strings.loop.next}
+        label={strings.practice.next}
         {...btn('NEXT')}
       />
     </div>

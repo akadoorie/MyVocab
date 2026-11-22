@@ -21,7 +21,7 @@ type ListRow = {
   meaning: string;
   explanation: string;
   known_target: string;
-  known_in_cycle: number;
+  known_in_round: number;
   known_at: number;
 };
 
@@ -78,8 +78,8 @@ export class D1KnownRepository implements KnownRepository {
     // One statement for the whole batch: marks travel as one JSON parameter. Existing rows win
     // (idempotent, keeps the earliest known_at); unknown or trashed items are skipped.
     const res = await this.db.run(sql`
-      INSERT INTO user_known_items (user_id, item_id, known_target, known_in_cycle, known_at)
-      SELECT ${userId}, i.id, json_extract(m.value, '$.target'), json_extract(m.value, '$.cycle'), ${now}
+      INSERT INTO user_known_items (user_id, item_id, known_target, known_in_round, known_at)
+      SELECT ${userId}, i.id, json_extract(m.value, '$.target'), json_extract(m.value, '$.round'), ${now}
       FROM json_each(${JSON.stringify(marks)}) AS m
       JOIN items AS i ON i.id = json_extract(m.value, '$.itemId')
       WHERE i.deleted_at IS NULL
@@ -140,7 +140,7 @@ export class D1KnownRepository implements KnownRepository {
     const conds = filterConditions(userId, filter);
     if (cursor) conds.push(cursorCondition(sort, cursor));
     const rows = await this.db.all<ListRow>(sql`
-      SELECT k.item_id, k.known_target, k.known_in_cycle, k.known_at,
+      SELECT k.item_id, k.known_target, k.known_in_round, k.known_at,
              i.text, i.normalized_text, i.lang, i.multiple_meanings,
              i.translation_parallel AS parallel, i.translation_meaning AS meaning, i.explanation
       FROM user_known_items AS k JOIN items AS i ON i.id = k.item_id
@@ -158,7 +158,7 @@ export class D1KnownRepository implements KnownRepository {
       meaning: JSON.parse(r.meaning) as Record<string, string[]>,
       explanation: JSON.parse(r.explanation) as string[],
       knownTarget: r.known_target,
-      knownInCycle: r.known_in_cycle,
+      knownInRound: r.known_in_round,
       knownAt: r.known_at,
     }));
   }

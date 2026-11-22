@@ -3,7 +3,7 @@ import { readJson, writeJson } from '../../lib/storage';
 import { strings } from '../../strings';
 
 /**
- * The "Session completed" celebration (PRD FR-L32a): a burst of confetti and a short applause.
+ * The "Practice completed" celebration (PRD FR-L32a): a burst of confetti and a short applause.
  * Confetti is skipped with "reduce motion"; the sound can be turned off and stays off on this device.
  */
 

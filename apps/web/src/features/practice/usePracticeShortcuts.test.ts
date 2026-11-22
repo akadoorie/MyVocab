@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { actionForKey } from './useLoopShortcuts';
+import { actionForKey } from './usePracticeShortcuts';
 
 describe('actionForKey (PRD FR-L34)', () => {
   it('maps letters, arrows, Enter and Escape', () => {

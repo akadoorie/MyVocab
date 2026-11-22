@@ -298,9 +298,9 @@ describe('AdminApp', () => {
     });
   });
 
-  it('settings: "Cards per session: maximum" explains itself under the field', async () => {
+  it('settings: "Cards per practice: maximum" explains itself under the field', async () => {
     render('/admin/settings', { 'GET /api/admin/settings': () => Response.json({}) });
-    const field = await screen.findByLabelText('Cards per session: maximum');
+    const field = await screen.findByLabelText('Cards per practice: maximum');
     expect(field).toHaveAccessibleDescription(
       'The largest number allowed in the choices above. Settings won’t save if a choice is bigger.',
     );

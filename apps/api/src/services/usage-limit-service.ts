@@ -39,17 +39,17 @@ export class UsageLimitService {
     private readonly now: Clock = Date.now,
   ) {}
 
-  /** Guests: `limit` loops per hour per hashed IP. */
-  async checkGuestLoop(ipHash: string, limit: number): Promise<LimitDecision> {
+  /** Guests: `limit` practices per hour per hashed IP. */
+  async checkGuestPractice(ipHash: string, limit: number): Promise<LimitDecision> {
     const subject = `ip:${ipHash}`;
     const period = hourPeriod(this.now());
     const used = await this.usage.get(subject, period);
     if (used < limit) return { allowed: true };
-    await this.recordBlock(subject, period, { kind: 'guest.loopsPerHour', limit });
+    await this.recordBlock(subject, period, { kind: 'guest.practicesPerHour', limit });
     return { allowed: false, remaining: 0 };
   }
 
-  async recordGuestLoop(ipHash: string): Promise<void> {
+  async recordGuestPractice(ipHash: string): Promise<void> {
     const now = this.now();
     await this.usage.increment(`ip:${ipHash}`, hourPeriod(now), 1, now);
   }

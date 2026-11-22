@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { KnownQueue, queueStorageKey, type KnownTransport } from './known-queue';
 
 const UNDO = 4000;
-const mark = (itemId: number, cycle = 1) => ({ itemId, target: 'he', cycle });
+const mark = (itemId: number, round = 1) => ({ itemId, target: 'he', round });
 
 function memoryStorage() {
   const data = new Map<string, string>();
@@ -117,16 +117,16 @@ describe('KnownQueue', () => {
   });
 
   it('keeps two directions of the same item apart (D-028)', async () => {
-    queue.add({ itemId: 1, target: 'he', cycle: 1 }, UNDO);
-    queue.add({ itemId: 1, target: 'ar', cycle: 1 }, UNDO); // finalizes the Hebrew mark
+    queue.add({ itemId: 1, target: 'he', round: 1 }, UNDO);
+    queue.add({ itemId: 1, target: 'ar', round: 1 }, UNDO); // finalizes the Hebrew mark
     expect(queue.pending()).toEqual([
-      { itemId: 1, target: 'he', cycle: 1 },
-      { itemId: 1, target: 'ar', cycle: 1 },
+      { itemId: 1, target: 'he', round: 1 },
+      { itemId: 1, target: 'ar', round: 1 },
     ]);
     queue.undo(1, 'ar'); // undoes only the Arabic mark
-    expect(queue.pending()).toEqual([{ itemId: 1, target: 'he', cycle: 1 }]);
+    expect(queue.pending()).toEqual([{ itemId: 1, target: 'he', round: 1 }]);
     await vi.advanceTimersByTimeAsync(UNDO + 2000);
-    expect(t.send.mock.calls.map((c) => c[0])).toEqual([[{ itemId: 1, target: 'he', cycle: 1 }]]);
+    expect(t.send.mock.calls.map((c) => c[0])).toEqual([[{ itemId: 1, target: 'he', round: 1 }]]);
     expect(t.remove).not.toHaveBeenCalled();
 
     // Undo of the sent Hebrew mark asks the server to delete that direction only.
@@ -179,8 +179,8 @@ describe('KnownQueue', () => {
   });
 
   it('ignores invalid marks', () => {
-    queue.add({ itemId: 1, target: '', cycle: 1 }, UNDO);
-    queue.add({ itemId: 0, target: 'he', cycle: 1 }, UNDO);
+    queue.add({ itemId: 1, target: '', round: 1 }, UNDO);
+    queue.add({ itemId: 0, target: 'he', round: 1 }, UNDO);
     expect(queue.pending()).toEqual([]);
   });
 

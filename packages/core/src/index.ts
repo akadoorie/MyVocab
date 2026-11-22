@@ -13,9 +13,9 @@ export * from './card/types';
 export * from './card/strategies';
 export * from './card/build-card';
 
-export * from './loop/random';
-export * from './loop/cycle-order';
-export * from './loop/reducer';
+export * from './practice/random';
+export * from './practice/round-order';
+export * from './practice/reducer';
 
 export * from './setup/defaults';
 

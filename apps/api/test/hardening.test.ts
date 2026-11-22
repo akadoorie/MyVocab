@@ -65,7 +65,7 @@ describe('burst limits (PRD §14.3)', () => {
   it('over the limit: 429 before anything else, and nothing is written', async () => {
     const before = await snapshot();
     const fetchSpy = mockTurnstile(true);
-    const loop = await fetchWith({ RL_LOOPS: refuse }, '/loops', {
+    const practice = await fetchWith({ RL_PRACTICES: refuse }, '/practices', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Origin: ORIGIN },
       body: JSON.stringify({
@@ -75,12 +75,12 @@ describe('burst limits (PRD §14.3)', () => {
         turnstileToken: 't',
       }),
     });
-    expect(loop.status).toBe(429);
+    expect(practice.status).toBe(429);
     expect(fetchSpy).not.toHaveBeenCalled(); // not even the Turnstile call
     fetchSpy.mockRestore();
     const available = await fetchWith(
       { RL_AVAILABLE: refuse },
-      '/loops/available?source=en&target=he',
+      '/practices/available?source=en&target=he',
       {},
     );
     expect(available.status).toBe(429);
@@ -109,15 +109,15 @@ describe('write discipline (PRD §11.2)', () => {
     const id = await itemId('fx-word-1');
     await authed(learner.cookie, '/me/known', {
       method: 'POST',
-      json: { items: [{ itemId: id, target: 'he', cycle: 1 }] },
+      json: { items: [{ itemId: id, target: 'he', round: 1 }] },
     });
     const before = await snapshot();
     const reads = [
       api('/meta'),
-      api('/loops/available?source=en&target=he'),
+      api('/practices/available?source=en&target=he'),
       api('/me'),
       authed(learner.cookie, '/me'),
-      authed(learner.cookie, '/loops/available?source=en&target=en'),
+      authed(learner.cookie, '/practices/available?source=en&target=en'),
       authed(learner.cookie, '/me/known?sort=az'),
       ...[
         '/admin/stats',
@@ -142,18 +142,18 @@ describe('write discipline (PRD §11.2)', () => {
     const before = await snapshot();
     const fetchSpy = mockTurnstile(false);
     const refused = [
-      await api('/loops', {
+      await api('/practices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: '{}',
       }),
-      await postJson('/loops', {
+      await postJson('/practices', {
         source: 'en',
         target: 'he',
         topicId: null,
         turnstileToken: 'x',
       }),
-      await postJson('/me/known', { items: [{ itemId: 1, target: 'he', cycle: 1 }] }),
+      await postJson('/me/known', { items: [{ itemId: 1, target: 'he', round: 1 }] }),
       await authed(learner.cookie, '/admin/items', {
         method: 'POST',
         json: { lang: 'en', text: 'x' },
@@ -165,12 +165,12 @@ describe('write discipline (PRD §11.2)', () => {
     expect(await snapshot()).toBe(before);
   });
 
-  it('a learner loop start writes exactly one usage counter row', async () => {
+  it('a learner practice start writes exactly one usage counter row', async () => {
     const learner = await signIn('user');
     const count = async () =>
       (await env.DB.prepare('SELECT COUNT(*) AS n FROM usage_counters').first<{ n: number }>())!.n;
     expect(await count()).toBe(0);
-    const res = await authed(learner.cookie, '/loops', {
+    const res = await authed(learner.cookie, '/practices', {
       method: 'POST',
       json: { source: 'en', target: 'he', topicId: null, size: 10 },
     });

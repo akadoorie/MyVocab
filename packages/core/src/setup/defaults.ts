@@ -23,7 +23,7 @@ export type StartSettings = {
   };
   sizeOptions: readonly number[];
   defaultSize: number;
-  guestLoopSize: number;
+  guestPracticeSize: number;
 };
 
 export type StartContext = {
@@ -44,14 +44,14 @@ export function resolveStartDefaults(ctx: StartContext): StartChoices {
     sourceLang: pick(settings.defaults.sourceLang),
     targetLang: pick(settings.defaults.targetLang),
     topicId: topicId !== null && activeTopicIds.includes(topicId) ? topicId : null,
-    size: isGuest ? settings.guestLoopSize : resolveSize(settings),
+    size: isGuest ? settings.guestPracticeSize : resolveSize(settings),
   };
 }
 
 function resolveSize(settings: StartSettings): number {
   if (settings.sizeOptions.includes(settings.defaultSize)) return settings.defaultSize;
   const first = settings.sizeOptions[0];
-  if (first === undefined) throw new Error('No loop size options');
+  if (first === undefined) throw new Error('No practice size options');
   return first;
 }
 
@@ -75,7 +75,7 @@ export function isSameLanguage(choices: Pick<StartChoices, 'sourceLang' | 'targe
 
 /**
  * The amount choices worth offering for the available card count (D-057): those not above it.
- * The smallest choice always stays, since a session simply starts with every card there is
+ * The smallest choice always stays, since a practice simply starts with every card there is
  * (FR-L8). While the count is unknown, all of them.
  */
 export function allowedSizes(options: readonly number[], available: number | undefined): number[] {

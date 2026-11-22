@@ -1,6 +1,6 @@
 import type { CardAnswer, CardSide, CardView } from '@myvocab/core';
 import { FlipIcon } from '../../components/Icons';
-import { LoopButton } from './ButtonBar';
+import { PracticeButton } from './ButtonBar';
 import { strings } from '../../strings';
 import { HintsArea } from './HintsArea';
 import { HintsCover } from './HintsCover';
@@ -128,7 +128,7 @@ export function FlipCard({
   decorative?: boolean;
   /** The answer already given, on a card reached with Back (FR-L29a): shown as a chip. */
   answer?: CardAnswer | null;
-  /** Flip pulses gently until it's first used in the session (D-066). */
+  /** Flip pulses gently until it's first used in the practice (D-066). */
   pulse?: boolean;
   /** Pump and shine, or shine alone, with the answer buttons (D-066, D-074); only the shine while it pulses. */
   nudging?: 'full' | 'shine' | null;
@@ -152,11 +152,11 @@ export function FlipCard({
     );
   // The only way to turn the card (with F / Space): a stray tap must not flip it (D-047).
   const flipButton = (
-    <LoopButton
+    <PracticeButton
       kind="round"
       icon={<FlipIcon />}
-      label={strings.loop.flip}
-      // While it pulses (not used yet this session) it still shines with the others, without the
+      label={strings.practice.flip}
+      // While it pulses (not used yet this practice) it still shines with the others, without the
       // pump, which would fight the pulse (D-074).
       className={`flip-card__flip ${
         pulse
@@ -166,7 +166,7 @@ export function FlipCard({
             : ''
       }`}
       hideLabel
-      title={strings.loop.flipTitle}
+      title={strings.practice.flipTitle}
       onClick={(e) => {
         e.stopPropagation();
         onFlip();

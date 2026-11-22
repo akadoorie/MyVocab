@@ -174,7 +174,7 @@ export const he: Strings = {
     delete:
       'פתחו את "חשבון" ובחרו "מחיקת החשבון שלי". החשבון, החיבורים, המילים המוכרות והמונים נמחקים מיד. מוני האורחים המגובבים פגים אחרי 48 שעות.',
   },
-  loop: {
+  practice: {
     know: 'ידעתי',
     dontKnow: 'לא ידעתי',
     knowCaption: 'לא להציג שוב',
@@ -196,11 +196,11 @@ export const he: Strings = {
     continue: 'המשך',
     back: 'הקודם',
     backToCard: 'חזרה לכרטיס הקודם',
-    progress: (cycle: number, card: number, size: number, known: number) =>
-      `סבב ${cycle} · כרטיס ${card}/${size} · ${known} ידועים`,
-    cycleBreak: (cycle: number, left: number) =>
-      `סבב ${cycle} · ${left === 1 ? 'נשאר כרטיס אחד' : `נשארו ${left} כרטיסים`}`,
-    cycleRecap: (knew: number, total: number, left: number) =>
+    progress: (round: number, card: number, size: number, known: number) =>
+      `סבב ${round} · כרטיס ${card}/${size} · ${known} ידועים`,
+    roundBreak: (round: number, left: number) =>
+      `סבב ${round} · ${left === 1 ? 'נשאר כרטיס אחד' : `נשארו ${left} כרטיסים`}`,
+    roundRecap: (knew: number, total: number, left: number) =>
       `ידעתם ${knew} מתוך ${total} — ${left === 1 ? 'נשאר אחד' : `נשארו ${left}`}.`,
     continueCaption: 'לסבב הבא',
     continuingIn: (seconds: number) => `ממשיכים בעוד ${seconds} שניות`,
@@ -255,10 +255,10 @@ export const he: Strings = {
   summary: {
     title: 'התרגול הושלם',
     cards: 'כרטיסים',
-    cycles: 'סבבים',
+    rounds: 'סבבים',
     alreadyKnew: 'ידעתי מראש',
     learnedHere: 'למדתי כאן',
-    newLoop: 'תרגול חדש',
+    newPractice: 'תרגול חדש',
     nothingLeft: 'לא נשארו כרטיסים חדשים לבחירה הזו. חזרו לדף הבית כדי לבחור משהו אחר.',
     home: 'דף הבית',
     guestNote: 'התחברו כדי שנדלג על מילים שאין צורך לחזור עליהן',

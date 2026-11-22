@@ -1,19 +1,19 @@
-import { createLoop } from '@myvocab/core';
+import { createPractice } from '@myvocab/core';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ME_QUERY_KEY } from '../../lib/session';
 import { makeCard } from '../../test/fixtures';
 import { mockFetch, renderRoutes, TEST_USER } from '../../test/render';
-import { saveLoop } from '../loop/loop-storage';
-import { LoopPage } from '../loop/LoopPage';
+import { savePractice } from '../practice/practice-storage';
+import { PracticePage } from '../practice/PracticePage';
 import { queueStorageKey } from './known-queue';
 import { KnownQueueProvider } from './KnownQueueProvider';
 
-/** The loop screen + the real Know queue (PRD §6.4): what ends up in the persistent queue. */
+/** The practice screen + the real Know queue (PRD §6.4): what ends up in the persistent queue. */
 function setup(isGuest: boolean) {
-  saveLoop({
+  savePractice({
     cards: [makeCard(1), makeCard(2)],
-    state: createLoop([1, 2], 7),
+    state: createPractice([1, 2], 7),
     undoWindowSeconds: 4,
     selection: { sourceLang: 'en', targetLang: 'he', topicId: null, size: 10 },
     isGuest,
@@ -21,10 +21,10 @@ function setup(isGuest: boolean) {
   mockFetch({ 'POST /api/me/known': () => Response.json({ saved: 1 }) });
   return renderRoutes(
     [
-      { path: '/loop', element: <LoopPage /> },
+      { path: '/practice', element: <PracticePage /> },
       { path: '/', element: <p>home page</p> },
     ],
-    ['/loop'],
+    ['/practice'],
     (tree) => <KnownQueueProvider>{tree}</KnownQueueProvider>,
   );
 }
@@ -50,7 +50,7 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe('Know marks of a signed-in learner', () => {
-  it('Know queues {itemId, target, cycle} (ids only); Back → Don’t know removes it', async () => {
+  it('Know queues {itemId, target, round} (ids only); Back → Don’t know removes it', async () => {
     const { client } = setup(false);
     // The queue exists once the session is known.
     await waitFor(() => expect(client.getQueryData(ME_QUERY_KEY)).toEqual({ user: TEST_USER }));

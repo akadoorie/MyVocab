@@ -7,7 +7,7 @@ type ListBody = {
     itemId: number;
     text: string;
     knownTarget: string;
-    knownInCycle: number;
+    knownInRound: number;
     knownAt: number;
     answer: { kind: string; lines: string[]; numbered: boolean; lang: string; dir: string };
     topics: { id: number; name: string }[];
@@ -16,7 +16,7 @@ type ListBody = {
   total: number | null;
 };
 
-async function mark(cookie: string, items: { itemId: number; target: string; cycle: number }[]) {
+async function mark(cookie: string, items: { itemId: number; target: string; round: number }[]) {
   return authed(cookie, '/me/known', { method: 'POST', json: { items } });
 }
 
@@ -27,7 +27,7 @@ async function list(cookie: string, query = ''): Promise<ListBody> {
 }
 
 async function available(cookie: string, source: string, target: string) {
-  const res = await authed(cookie, `/loops/available?source=${source}&target=${target}`);
+  const res = await authed(cookie, `/practices/available?source=${source}&target=${target}`);
   return (await res.json<{ available: number }>()).available;
 }
 
@@ -47,20 +47,31 @@ describe('known items require a session', () => {
 });
 
 describe('POST /api/me/known', () => {
+  it('still accepts a mark sent with the old field name `cycle` (a page from before the rename)', async () => {
+    const { cookie } = await signIn();
+    const id = await itemId('fx-word-1');
+    const res = await authed(cookie, '/me/known', {
+      method: 'POST',
+      json: { items: [{ itemId: id, target: 'he', cycle: 2 }] },
+    });
+    expect(await res.json()).toEqual({ saved: 1 });
+    expect((await list(cookie)).items[0]).toMatchObject({ knownInRound: 2 });
+  });
+
   it('is an idempotent upsert per direction that keeps the first mark (D-028)', async () => {
     const { cookie } = await signIn();
     const id = await itemId('fx-word-1');
-    const first = await mark(cookie, [{ itemId: id, target: 'he', cycle: 1 }]);
+    const first = await mark(cookie, [{ itemId: id, target: 'he', round: 1 }]);
     expect(await first.json()).toEqual({ saved: 1 });
     const before = await list(cookie);
-    const again = await mark(cookie, [{ itemId: id, target: 'he', cycle: 3 }]);
+    const again = await mark(cookie, [{ itemId: id, target: 'he', round: 3 }]);
     expect(await again.json()).toEqual({ saved: 0 });
     const after = await list(cookie);
     expect(after.items).toHaveLength(1);
-    expect(after.items[0]).toMatchObject({ knownTarget: 'he', knownInCycle: 1 });
+    expect(after.items[0]).toMatchObject({ knownTarget: 'he', knownInRound: 1 });
     expect(after.items[0]?.knownAt).toBe(before.items[0]?.knownAt);
     // The same item in another direction is a mark of its own: two rows, topics once each.
-    const other = await mark(cookie, [{ itemId: id, target: 'en', cycle: 2 }]);
+    const other = await mark(cookie, [{ itemId: id, target: 'en', round: 2 }]);
     expect(await other.json()).toEqual({ saved: 1 });
     const rows = (await list(cookie)).items;
     expect(rows.map((i) => i.knownTarget).sort()).toEqual(['en', 'he']);
@@ -74,10 +85,10 @@ describe('POST /api/me/known', () => {
     const b = await itemId('fx-word-3');
     await env.DB.prepare('UPDATE items SET deleted_at = ? WHERE id = ?').bind(Date.now(), b).run();
     const res = await mark(cookie, [
-      { itemId: a, target: 'he', cycle: 1 },
-      { itemId: a, target: 'he', cycle: 2 },
-      { itemId: b, target: 'he', cycle: 1 },
-      { itemId: 999_999, target: 'he', cycle: 1 },
+      { itemId: a, target: 'he', round: 1 },
+      { itemId: a, target: 'he', round: 2 },
+      { itemId: b, target: 'he', round: 1 },
+      { itemId: 999_999, target: 'he', round: 1 },
     ]);
     expect(await res.json()).toEqual({ saved: 1 });
     expect(await count('user_known_items')).toBe(1);
@@ -85,11 +96,11 @@ describe('POST /api/me/known', () => {
 
   it('validates the batch strictly', async () => {
     const { cookie } = await signIn();
-    const one = { itemId: 1, target: 'he', cycle: 1 };
+    const one = { itemId: 1, target: 'he', round: 1 };
     for (const json of [
       { items: [] },
       { items: Array.from({ length: 101 }, (_, i) => ({ ...one, itemId: i + 1 })) },
-      { items: [{ ...one, cycle: 0 }] },
+      { items: [{ ...one, round: 0 }] },
       { items: [{ ...one, userId: 'someone-else' }] },
       { items: [one], userId: 'someone-else' },
     ]) {
@@ -103,15 +114,15 @@ describe('POST /api/me/known', () => {
     const enHe = await available(cookie, 'en', 'he');
     const heEn = await available(cookie, 'he', 'en');
     const id = await itemId('fx-word-1');
-    await mark(cookie, [{ itemId: id, target: 'he', cycle: 1 }]);
+    await mark(cookie, [{ itemId: id, target: 'he', round: 1 }]);
     expect(await available(cookie, 'en', 'he')).toBe(enHe - 1);
     // Its explanation direction (EN → EN) is a direction of its own.
     expect(await available(cookie, 'en', 'en')).toBe(enEn);
     expect(await available(cookie, 'he', 'en')).toBe(heEn);
-    await mark(cookie, [{ itemId: id, target: 'en', cycle: 1 }]);
+    await mark(cookie, [{ itemId: id, target: 'en', round: 1 }]);
     expect(await available(cookie, 'en', 'en')).toBe(enEn - 1);
     // A guest's counts are not affected.
-    const guest = await api('/loops/available?source=en&target=he');
+    const guest = await api('/practices/available?source=en&target=he');
     expect((await guest.json<{ available: number }>()).available).toBe(enHe);
   });
 });
@@ -121,8 +132,8 @@ describe('DELETE /api/me/known/:itemId and restore', () => {
     const { cookie } = await signIn();
     const id = await itemId('fx-word-1');
     const both = [
-      { itemId: id, target: 'he', cycle: 1 },
-      { itemId: id, target: 'en', cycle: 1 },
+      { itemId: id, target: 'he', round: 1 },
+      { itemId: id, target: 'en', round: 1 },
     ];
     await mark(cookie, both);
     const one = await authed(cookie, `/me/known/${id}?target=he`, { method: 'DELETE' });
@@ -143,7 +154,7 @@ describe('DELETE /api/me/known/:itemId and restore', () => {
     const a = await signIn('user', 'a@example.test');
     const b = await signIn('user', 'b@example.test');
     const id = await itemId('fx-word-1');
-    await mark(a.cookie, [{ itemId: id, target: 'he', cycle: 1 }]);
+    await mark(a.cookie, [{ itemId: id, target: 'he', round: 1 }]);
     const del = await authed(b.cookie, `/me/known/${id}`, { method: 'DELETE' });
     expect(await del.json()).toEqual({ removed: 0 });
     const restore = await authed(b.cookie, '/me/known/restore', {
@@ -162,7 +173,7 @@ describe('DELETE /api/me/known/:itemId and restore', () => {
     );
     await mark(
       cookie,
-      ids.map((id) => ({ itemId: id, target: 'he', cycle: 1 })),
+      ids.map((id) => ({ itemId: id, target: 'he', round: 1 })),
     );
     const byIds = await authed(cookie, '/me/known/restore', {
       method: 'POST',
@@ -195,8 +206,8 @@ describe('DELETE /api/me/known/:itemId and restore', () => {
     const { cookie } = await signIn();
     const [a, b] = await Promise.all(['fx-word-1', 'fx-word-2'].map((t) => itemId(t)));
     const everything = [a!, b!].flatMap((id) => [
-      { itemId: id, target: 'he', cycle: 1 },
-      { itemId: id, target: 'en', cycle: 1 },
+      { itemId: id, target: 'he', round: 1 },
+      { itemId: id, target: 'en', round: 1 },
     ]);
     const rows = async () =>
       (
@@ -237,11 +248,11 @@ describe('DELETE /api/me/known/:itemId and restore', () => {
 });
 
 describe('GET /api/me/known (FR-L60–63)', () => {
-  it('shows the answer in the marked direction, topics and the cycle', async () => {
+  it('shows the answer in the marked direction, topics and the round', async () => {
     const { cookie } = await signIn();
     await mark(cookie, [
-      { itemId: await itemId('fx-word-2'), target: 'he', cycle: 2 },
-      { itemId: await itemId('fx-word-1'), target: 'en', cycle: 1 },
+      { itemId: await itemId('fx-word-2'), target: 'he', round: 2 },
+      { itemId: await itemId('fx-word-1'), target: 'en', round: 1 },
     ]);
     const { items, total, nextCursor } = await list(cookie, '?sort=az');
     expect(total).toBe(2);
@@ -249,12 +260,12 @@ describe('GET /api/me/known (FR-L60–63)', () => {
     expect(items.map((i) => i.text)).toEqual(['fx-word-1', 'fx-word-2']);
     expect(items[0]).toMatchObject({
       knownTarget: 'en',
-      knownInCycle: 1,
+      knownInRound: 1,
       answer: { kind: 'explanation', lines: ['Explanation one'], numbered: false, dir: 'ltr' },
       topics: [{ name: 'Home' }],
     });
     expect(items[1]).toMatchObject({
-      knownInCycle: 2,
+      knownInRound: 2,
       answer: { kind: 'translation', lines: ['מילה-2א', 'מילה-2ב'], lang: 'he', dir: 'rtl' },
     });
   });
@@ -264,7 +275,7 @@ describe('GET /api/me/known (FR-L60–63)', () => {
     const texts = ['fx-word-1', 'fx-word-3', 'fx-expr-1', 'מילה-א'];
     for (const t of texts) {
       await mark(cookie, [
-        { itemId: await itemId(t), target: t === 'מילה-א' ? 'en' : 'he', cycle: 1 },
+        { itemId: await itemId(t), target: t === 'מילה-א' ? 'en' : 'he', round: 1 },
       ]);
     }
     const names = async (q: string) => (await list(cookie, q)).items.map((i) => i.text).sort();
@@ -283,7 +294,7 @@ describe('GET /api/me/known (FR-L60–63)', () => {
   it('hides items in Trash and shows them again after a restore', async () => {
     const { cookie } = await signIn();
     const id = await itemId('fx-word-1');
-    await mark(cookie, [{ itemId: id, target: 'he', cycle: 1 }]);
+    await mark(cookie, [{ itemId: id, target: 'he', round: 1 }]);
     await env.DB.prepare('UPDATE items SET deleted_at = ? WHERE id = ?').bind(Date.now(), id).run();
     expect((await list(cookie)).items).toHaveLength(0);
     await env.DB.prepare('UPDATE items SET deleted_at = NULL WHERE id = ?').bind(id).run();
@@ -307,7 +318,7 @@ describe('GET /api/me/known (FR-L60–63)', () => {
     }
     await env.DB.batch(stmts);
     await env.DB.prepare(
-      `INSERT INTO user_known_items (user_id, item_id, known_target, known_in_cycle, known_at)
+      `INSERT INTO user_known_items (user_id, item_id, known_target, known_in_round, known_at)
        SELECT ?, i.id, t.value, 1, ? + i.id FROM items AS i, json_each('["en","he"]') AS t
        WHERE i.text LIKE 'bulk-%'`,
     )

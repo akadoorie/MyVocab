@@ -145,7 +145,7 @@ body {
     font-size: 1.125rem;
   }
 
-  /* Loop buttons (PRD §9.2, §9.7): a 3D shape (circle or pill) with a caption under it. On
+  /* Practice buttons (PRD §9.2, §9.7): a 3D shape (circle or pill) with a caption under it. On
      desktop a pill carries its label inside. */
   .lbtn {
     --top: var(--round-top);
@@ -721,7 +721,7 @@ body {
       background-position: -50% 0;
     }
   }
-  /* Flip pulses gently until it's first used in the session (D-066). */
+  /* Flip pulses gently until it's first used in the practice (D-066). */
   .lbtn.is-breathing:not(:disabled, [aria-disabled='true'], :active) .lbtn__shape,
   .lbtn.is-breathing:not(:disabled, [aria-disabled='true'], :active) .lbtn__icon {
     animation: lbtn-breathe 2.2s ease-in-out infinite;
@@ -845,14 +845,14 @@ body {
     }
   }
 
-  /* The small answer buttons under "How it works" (D-030): a scaled-down copy of the session's
+  /* The small answer buttons under "How it works" (D-030): a scaled-down copy of the practice's
      pills (D-058): the same gradient, glossy top edge, coloured glow and ledge, label only. */
   .mini-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     height: 2.25rem;
-    width: 8rem; /* all three the same width, as in a session */
+    width: 8rem; /* all three the same width, as in a practice */
     padding: 0 10px;
     border-radius: 999px;
     background: linear-gradient(180deg, var(--top), var(--bottom));
@@ -866,7 +866,7 @@ body {
     font-weight: 700;
     white-space: nowrap;
   }
-  /* The caption under it, as under the session's pills. */
+  /* The caption under it, as under the practice's pills. */
   .mini-btn__caption {
     margin-top: 10px;
     color: var(--text-muted);
@@ -894,7 +894,7 @@ body {
     --c-ledge: var(--dontknow-ledge);
     --glow: var(--dontknow-glow);
   }
-  /* Locked like the session's green pill for guests (D-042): darker, not grey. */
+  /* Locked like the practice's green pill for guests (D-042): darker, not grey. */
   .mini-btn.is-locked {
     filter: brightness(0.55) saturate(0.85);
   }
@@ -1190,7 +1190,7 @@ body {
 
 /* The flip card (PRD §9.3, §9.4). Both faces share one grid cell, so the card takes the height of
    the taller face and doesn't jump when flipped. */
-/* In the loop the card has a fixed height (the space on a phone, a clamp on desktop), so it never
+/* In the practice the card has a fixed height (the space on a phone, a clamp on desktop), so it never
    changes size when it flips or shows hints; a face with a lot of content scrolls inside. */
 .flip-card {
   display: flex;
@@ -1426,7 +1426,7 @@ body {
   }
 }
 
-/* The crown on the "Session completed" card (PRD FR-L32a): it sits tilted on the upper-left corner;
+/* The crown on the "Practice completed" card (PRD FR-L32a): it sits tilted on the upper-left corner;
    after the celebration it flies in along a curve from the top-left of the screen and lands with
    a small bounce. --crown-dx / --crown-dy are the start offset, measured by the component.
    The flight is three nested layers, each with ONE easing over the whole flight (no waypoints, so

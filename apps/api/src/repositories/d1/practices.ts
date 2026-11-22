@@ -1,7 +1,7 @@
 import type { ItemData, Translations } from '@myvocab/core';
 import { sql, type SQL } from 'drizzle-orm';
 import type { Db } from '../../db/client';
-import type { LoopRepository, LoopSelection, PlayableCounts } from '../interfaces';
+import type { PracticeRepository, PracticeSelection, PlayableCounts } from '../interfaces';
 
 type Row = {
   id: number;
@@ -17,10 +17,10 @@ type Row = {
 };
 
 /**
- * Loop selection (PRD §11.3). The playability rule mirrors the core AnswerStrategy
+ * Practice selection (PRD §11.3). The playability rule mirrors the core AnswerStrategy
  * (`isPlayable`); an integration test checks that both agree.
  */
-function whereClause(s: LoopSelection): SQL {
+function whereClause(s: PracticeSelection): SQL {
   const answer =
     s.source === s.target
       ? sql`json_array_length(i.explanation) > 0`
@@ -37,16 +37,16 @@ function whereClause(s: LoopSelection): SQL {
 }
 
 /** With a topic, start from its links so only that topic's items are read. */
-function fromClause(s: LoopSelection): SQL {
+function fromClause(s: PracticeSelection): SQL {
   return s.topicId === null
     ? sql`FROM items AS i`
     : sql`FROM item_topics AS ic JOIN items AS i ON i.id = ic.item_id AND ic.topic_id = ${s.topicId}`;
 }
 
-export class D1LoopRepository implements LoopRepository {
+export class D1PracticeRepository implements PracticeRepository {
   constructor(private readonly db: Db) {}
 
-  async countPlayable(s: LoopSelection): Promise<number> {
+  async countPlayable(s: PracticeSelection): Promise<number> {
     const row = await this.db.get<{ n: number }>(
       sql`SELECT COUNT(*) AS n ${fromClause(s)} WHERE ${whereClause(s)}`,
     );
@@ -54,9 +54,9 @@ export class D1LoopRepository implements LoopRepository {
   }
 
   async countPlayableByTopic(
-    selection: Pick<LoopSelection, 'source' | 'target' | 'userId'>,
+    selection: Pick<PracticeSelection, 'source' | 'target' | 'userId'>,
   ): Promise<PlayableCounts> {
-    const s: LoopSelection = { ...selection, topicId: null, sampleOnly: false };
+    const s: PracticeSelection = { ...selection, topicId: null, sampleOnly: false };
     const total = await this.db.get<{ n: number; sample: number | null }>(
       sql`SELECT COUNT(*) AS n, SUM(i.in_sample_set) AS sample FROM items AS i WHERE ${whereClause(s)}`,
     );
@@ -73,7 +73,7 @@ export class D1LoopRepository implements LoopRepository {
     };
   }
 
-  async selectPlayable(s: LoopSelection, limit: number): Promise<ItemData[]> {
+  async selectPlayable(s: PracticeSelection, limit: number): Promise<ItemData[]> {
     const rows = await this.db.all<Row>(sql`
       SELECT i.id, i.lang, i.text, i.multiple_meanings, i.translation_parallel AS parallel, i.translation_meaning AS meaning,
       i.translation_literal AS literal,

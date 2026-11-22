@@ -15,7 +15,7 @@ export const adminStrings = {
     audit: 'Audit log',
     import: 'Import',
     backToApp: 'Back to MyVocab',
-    /** The admin area's way back to the app, top right as in a session (D-077). */
+    /** The admin area's way back to the app, top right as in a practice (D-077). */
     home: 'Home',
     menu: 'Admin menu',
     /** The phone menu button's visible text; its name stays "Admin menu" (D-077). */
@@ -59,7 +59,7 @@ export const adminStrings = {
     sampleSet: 'In the Sample set',
     sampleByDirection: 'What guests can play (Sample set)',
     sampleByDirectionHelp:
-      'Published Sample-set items with an answer in each direction. Guests get 5 cards a session.',
+      'Published Sample-set items with an answer in each direction. Guests get 5 cards a practice.',
     users: 'Users',
     admins: 'Admins',
     trash: 'In Trash',
@@ -163,7 +163,7 @@ export const adminStrings = {
     deleteItem: 'Move to Trash',
     deleteTitle: (text: string) => `Move “${text}” to Trash?`,
     deleteBody:
-      'It disappears from sessions and known lists at once. You can restore it from Trash until it is purged.',
+      'It disappears from practices and known lists at once. You can restore it from Trash until it is purged.',
     deleted: 'Moved to Trash',
     conflict: 'This item was changed by someone else. Your last change was not saved.',
     notFound: 'This item doesn’t exist or is in Trash.',
@@ -286,16 +286,16 @@ export const adminStrings = {
     saved: 'Settings saved',
     /** Short explanations under some fields. */
     hints: {
-      'loop.continueSeconds':
+      'practice.continueSeconds':
         'On the break between rounds, Continue counts down and moves on by itself. 0 turns it off.',
-      'loop.nextSeconds':
+      'practice.nextSeconds':
         'After “I don’t know”, Next counts down and moves to the next card by itself. 0 turns it off.',
-      'loop.maxSize':
+      'practice.maxSize':
         'The largest number allowed in the choices above. Settings won’t save if a choice is bigger.',
     },
     groups: {
       defaults: 'Start card defaults',
-      loops: 'Sessions',
+      practices: 'Practices',
       guests: 'Guests',
       limits: 'Limits',
       maintenance: 'Maintenance',
@@ -305,16 +305,16 @@ export const adminStrings = {
       'defaults.sourceLang': 'Default source language',
       'defaults.targetLang': 'Default target language',
       'defaults.topicId': 'Default topic',
-      'loop.sizeOptions': 'Cards per session: choices (comma-separated)',
-      'loop.defaultSize': 'Cards per session: default',
-      'loop.maxSize': 'Cards per session: maximum',
-      'guests.enabled': 'Guests can start sessions',
-      'guests.loopSize': 'Cards per guest session',
-      'guests.loopsPerHour': 'Guest sessions per hour (per network)',
+      'practice.sizeOptions': 'Cards per practice: choices (comma-separated)',
+      'practice.defaultSize': 'Cards per practice: default',
+      'practice.maxSize': 'Cards per practice: maximum',
+      'guests.enabled': 'Guests can start practices',
+      'guests.practiceSize': 'Cards per guest practice',
+      'guests.practicesPerHour': 'Guest practices per hour (per network)',
       'users.cardsPerDay': 'Cards per learner per day',
       'undo.windowSeconds': 'Seconds before a Know is saved',
-      'loop.continueSeconds': 'Seconds before the next round starts',
-      'loop.nextSeconds': 'Seconds before the next card (after “I don’t know”)',
+      'practice.continueSeconds': 'Seconds before the next round starts',
+      'practice.nextSeconds': 'Seconds before the next card (after “I don’t know”)',
       'maintenance.enabled': 'Maintenance mode',
       'maintenance.message': 'Maintenance message',
       'trash.retentionHours': 'Hours before Trash is purged',

@@ -4,6 +4,6 @@ export * from './common';
 export * from './errors';
 export * from './health';
 export * from './known';
-export * from './loops';
+export * from './practices';
 export * from './me';
 export * from './settings';

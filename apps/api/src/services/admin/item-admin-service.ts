@@ -351,7 +351,7 @@ export class ItemAdminService {
   }
 
   /**
-   * Cards for every playable direction, from the same builder as `POST /loops` (FR-A11),
+   * Cards for every playable direction, from the same builder as `POST /practices` (FR-A11),
    * including inactive languages so their cards can be checked before learners see them (D-027).
    */
   async preview(id: number): Promise<CardView[]> {

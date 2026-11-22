@@ -7,7 +7,7 @@ import { KNOWN_BATCH_MAX, knownMarkSchema, type KnownMarkInput } from '@myvocab/
  *   newer Know happens. Final marks are sent in batches (debounced ~2 s).
  * - `flush({ all: true, keepalive: true })` sends everything, pending included, when the page is
  *   hidden or closed.
- * - The queue lives in localStorage, keyed by user id, holding item ids, target codes and cycle
+ * - The queue lives in localStorage, keyed by user id, holding item ids, target codes and round
  *   numbers only (never item text), so unsent marks survive a closed tab.
  * - Failed sends retry with exponential backoff. The server upsert is idempotent, so sending a
  *   mark twice is harmless; entries leave the queue only after the server confirmed them.
@@ -20,7 +20,7 @@ import { KNOWN_BATCH_MAX, knownMarkSchema, type KnownMarkInput } from '@myvocab/
 type Entry = {
   /** item id */ i: number;
   /** target language */ t: string;
-  /** cycle */ c: number;
+  /** round */ c: number;
   /** 1 = final, 0 = pending (still undoable) */ f: 0 | 1;
   /** unique per entry, so a confirmed send never removes a newer mark of the same item */ n: number;
 };
@@ -70,7 +70,7 @@ function isEntry(v: unknown): v is Entry {
   );
 }
 
-const toMark = (e: Entry): KnownMarkInput => ({ itemId: e.i, target: e.t, cycle: e.c });
+const toMark = (e: Entry): KnownMarkInput => ({ itemId: e.i, target: e.t, round: e.c });
 
 let counter = 0;
 const nextNonce = () => Date.now() * 1000 + (counter++ % 1000);
@@ -121,7 +121,7 @@ export class KnownQueue {
     const entries: Entry[] = this.read()
       .filter((e) => entryKey(e) !== key)
       .map((e) => ({ ...e, f: 1 }));
-    entries.push({ i: mark.itemId, t: mark.target, c: mark.cycle, f: 0, n: nextNonce() });
+    entries.push({ i: mark.itemId, t: mark.target, c: mark.round, f: 0, n: nextNonce() });
     this.write(entries);
     this.sent.delete(key);
     this.undoTimers.set(
@@ -147,7 +147,7 @@ export class KnownQueue {
     void Promise.allSettled(inFlight).then(() => this.removeWithRetry(itemId, target, 0));
   }
 
-  /** All pending marks become final (e.g. when the loop screen closes: Undo is gone). */
+  /** All pending marks become final (e.g. when the practice screen closes: Undo is gone). */
   finalizeAll(): void {
     for (const timer of this.undoTimers.values()) clearTimeout(timer);
     this.undoTimers.clear();

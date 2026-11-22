@@ -106,7 +106,7 @@ export interface AuditRepository {
   insert(entry: AuditEntry, now: number): Promise<void>;
 }
 
-export type LoopSelection = {
+export type PracticeSelection = {
   source: string;
   target: string;
   topicId: number | null;
@@ -119,17 +119,17 @@ export type LoopSelection = {
 /** Playable counts for one direction (D-064): all topics, the sample set, each topic by id. */
 export type PlayableCounts = { all: number; sample: number; topics: Record<number, number> };
 
-export interface LoopRepository {
-  countPlayable(selection: LoopSelection): Promise<number>;
+export interface PracticeRepository {
+  countPlayable(selection: PracticeSelection): Promise<number>;
   /** Every count for a direction in two queries (D-064). */
   countPlayableByTopic(
-    selection: Pick<LoopSelection, 'source' | 'target' | 'userId'>,
+    selection: Pick<PracticeSelection, 'source' | 'target' | 'userId'>,
   ): Promise<PlayableCounts>;
   /** Random playable items (PRD §11.3), at most `limit`. */
-  selectPlayable(selection: LoopSelection, limit: number): Promise<ItemData[]>;
+  selectPlayable(selection: PracticeSelection, limit: number): Promise<ItemData[]>;
 }
 
-export type KnownMarkRow = { itemId: number; target: string; cycle: number };
+export type KnownMarkRow = { itemId: number; target: string; round: number };
 
 export type KnownFilterInput = {
   q?: string | undefined;
@@ -156,7 +156,7 @@ export type KnownListRow = {
   meaning: Record<string, string[]>;
   explanation: string[];
   knownTarget: string;
-  knownInCycle: number;
+  knownInRound: number;
   knownAt: number;
 };
 

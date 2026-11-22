@@ -13,11 +13,11 @@ export function sameRelativeOrder(next: readonly number[], previous: readonly nu
 }
 
 /**
- * Orders the cards of a new cycle (PRD FR-L21): shuffled, and — when the cycle has more than one
- * card — different from their relative order in the previous cycle. Up to 10 re-shuffles, then a
+ * Orders the cards of a new round (PRD FR-L21): shuffled, and — when the round has more than one
+ * card — different from their relative order in the previous round. Up to 10 re-shuffles, then a
  * rotation by one, which always differs.
  */
-export function orderNextCycle(
+export function orderNextRound(
   cards: readonly number[],
   previousOrder: readonly number[],
   state: RngState,
