@@ -104,8 +104,8 @@ describe('Hebrew strings', () => {
   it('counts in Hebrew, with "one" spelled out', () => {
     expect(he.known.count(1)).toBe('מילה מוכרת אחת');
     expect(he.known.count(3)).toBe('3 מילים מוכרות');
-    expect(he.practice.roundBreak(2, 1)).toBe('סבב 2 · נשאר כרטיס אחד');
-    expect(he.setup.dailyCap(4)).toContain('עוד 4 כרטיסים');
+    expect(he.practice.roundBreak(2, 1)).toBe('סבב 2 · נשארה כרטיסיה אחת');
+    expect(he.setup.dailyCap(4)).toContain('עוד 4 כרטיסיות');
   });
 
   it('names languages and topics in the UI language', () => {

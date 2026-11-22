@@ -1015,7 +1015,7 @@ the typecheck. Components read the active language's strings through `strings.ts
   language ("English" / "עברית"); the choice is remembered in the browser (`localStorage`). Switching re-renders
   the page in place. The admin area is always English and LTR, whatever the choice.
 - **Hebrew copy:** the learner is addressed in the plural ("בחרו", "לחצו"); first-person labels use the past tense,
-  which is the same for everyone ("ידעתי" / "לא ידעתי"). Counts spell out one ("כרטיס אחד"). The Hebrew slogan is "ללמוד מילים וביטויים לפסיכומטרי ביעילות"; the locked green button's tip reads
+  which is the same for everyone ("ידעתי" / "לא ידעתי"). Counts spell out one ("כרטיסיה אחת"). The Hebrew slogan is "ללמוד מילים וביטויים לפסיכומטרי ביעילות"; the locked green button's tip reads
   "נדרשת התחברות" (the link last). The slogan's last word, "ביעילות", gets the same drop-and-stick animation as "stick"
   (D-037), mirrored: it tilts the other way and the shine sweeps from the right.
 - **Mirroring (RTL):** the layout follows the page direction (logical CSS properties): Back is on the right and
