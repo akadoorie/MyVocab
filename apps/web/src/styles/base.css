@@ -333,7 +333,32 @@ body {
     width: 100%;
     height: 100%;
   }
-  /* "Hide hints", next to the Flip button's row (D-050). */
+  /* On the card front the hints area reaches the card's bottom (D-078): covered, the dots fill
+     it around a notch for the Flip button; revealed, the text still stops above the Flip row. */
+  .flip-card__front {
+    --flip-row: 52px;
+    --flip-notch: 54px;
+  }
+  .flip-card__front .hints-cover.is-open .hints-area__scroll {
+    bottom: var(--flip-row);
+  }
+  .flip-card__front .hints-cover__button {
+    clip-path: polygon(
+      0 0,
+      100% 0,
+      100% calc(100% - var(--flip-notch)),
+      calc(100% - var(--flip-notch)) calc(100% - var(--flip-notch)),
+      calc(100% - var(--flip-notch)) 100%,
+      0 100%
+    );
+  }
+  @media (min-width: 768px) {
+    .flip-card__front {
+      --flip-row: 64px;
+      --flip-notch: 62px;
+    }
+  }
+  /* "Hide hints", next to the Flip button's row (D-050); only seen with keyboard focus (D-078). */
   .hints-hide {
     position: absolute;
     bottom: 24px;
@@ -1114,6 +1139,10 @@ body {
 .flip-card__back {
   transform: rotateY(180deg);
 }
+/* The front's hints reach down beside the Flip button (D-078). */
+.flip-card__front {
+  padding-bottom: 20px;
+}
 .flip-card__flip {
   /* A little smaller on phones, leaving more room for the hints (D-051). */
   --size: 48px;
@@ -1130,6 +1159,9 @@ body {
   .flip-card__face {
     min-height: 420px;
     padding: 36px 40px 100px;
+  }
+  .flip-card__front {
+    padding-bottom: 36px;
   }
   .flip-card__flip {
     --size: 64px;

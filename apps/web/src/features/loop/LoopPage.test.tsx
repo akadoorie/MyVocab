@@ -107,24 +107,37 @@ describe('LoopPage', () => {
     expect(btn('Tap to see hints')).toBeEnabled();
   });
 
-  it('a tap on the cover reveals the hints, "Hide hints" covers them; H too; the card stays put (D-047, D-050)', () => {
+  it('a tap on the cover reveals the hints, a tap on them covers them again; H too; the card stays put (D-047, D-078)', () => {
     setup();
     const front = () => screen.queryByTestId('front-hints');
+    const hints = () => document.querySelector('.flip-card__front .hints-cover') as HTMLElement;
+    const scroller = () => hints().querySelector('.hints-area__scroll') as HTMLElement;
+    const tap = (x = 50, y = 50, dx = 0) => {
+      fireEvent.pointerDown(scroller(), { clientX: x, clientY: y });
+      fireEvent.click(scroller(), { clientX: x + dx, clientY: y });
+    };
     expect(front()).toBeNull();
     expect(screen.queryByRole('button', { name: 'Hints' })).toBeNull(); // no Hints button
     fireEvent.click(btn('Tap to see hints'));
     expect(front()).not.toBeNull();
     expect(side()).toBe('front'); // revealing the hints doesn't flip the card
-    // Open, the cover is out of the way: a tap on the hints keeps them open (D-050)…
     expect(screen.queryByRole('button', { name: 'Tap to see hints' })).toBeNull();
-    fireEvent.click(screen.getByTestId('front-hints'));
+    // A drag (the finger moved) or a tap right after scrolling keeps them open…
+    tap(50, 50, 40);
     expect(front()).not.toBeNull();
-    // …and the "Hide hints" link covers them again.
-    fireEvent.click(btn('Hide hints'));
+    fireEvent.scroll(scroller());
+    tap();
+    expect(front()).not.toBeNull();
+    // …a clean tap covers them again.
+    vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 1000);
+    tap();
     expect(btn('Tap to see hints')).toHaveAttribute('aria-expanded', 'false');
     expect(front()).toBeNull();
+    // H toggles too, and "Hide hints" stays for the keyboard and screen readers.
     fireEvent.keyDown(window, { key: 'h' });
     expect(front()).not.toBeNull();
+    fireEvent.click(btn('Hide hints'));
+    expect(front()).toBeNull();
     // A tap on the card itself does nothing; only the Flip button turns it.
     fireEvent.click(screen.getByTestId('flip-card'));
     expect(side()).toBe('front');

@@ -282,12 +282,14 @@ private content repository. It never appears in the public code repo or any publ
 
 - **FR-L25 Hints** (D-047): on the **front**, the hints and synonyms sit under a **live cover**: a cloud of tiny
   shimmering dots over the blurred text, with a small "Tap to see hints" label, so it is clear it can be tapped.
-  Tapping the cover (or pressing **H**) reveals them (the dots scatter and fade, the text sharpens); the small
-  **"Hide hints"** link next to the Flip button (or **H**) covers them again, while a tap on the revealed hints keeps
-  them open, so scrolling never hides them (D-050). **Long hints** (D-050): the hints and synonyms sit in their own
+  Tapping the cover (or pressing **H**) reveals them (the dots scatter and fade, the text sharpens); a **clean tap on
+  the revealed hints** (or **H**) covers them again, but never a drag, a tap that stops a scroll, or a tap within
+  0.35 s of scrolling, so scrolling never hides them (D-078). A "Hide hints" button stays for keyboard and screen
+  reader users, out of sight until it has keyboard focus (D-078; it was a visible link, D-050). **Long hints** (D-050): the hints and synonyms sit in their own
   area, the room left between the divider and the Flip button's row; when they don't fit, only that area scrolls,
   with a thin violet scrollbar and the last lines fading out while there is more below (the word and the Flip button
-  never move). The cover fills exactly that area, so it ends above the Flip row, never at the card's edge. The back
+  never move). On the front the cover reaches down to the card's bottom, with a notch around the Flip button; once
+  revealed, the text still stops above the Flip row (D-078; before, the cover ended above the Flip row, D-050). The back
   works the same way under the answer. **Synonyms come first**, then one empty line (a tighter 1rem gap on phones, D-051), then the hint sentences. On phones the Flip button is 48px (64px on desktop), leaving more room for the hints (D-051). The cover is a real button ("Tap to see hints" / "Hide hints", `aria-expanded`); the hidden text is not
   read out until revealed; it is at least 4.5rem tall, so a one-line hint is still easy to tap; with reduced motion
   the dots stand still. There is **no Hints button**. The state survives flipping back and forth and is remembered per card

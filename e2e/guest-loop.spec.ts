@@ -61,7 +61,9 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
     await cover.click();
     await expect(page.getByTestId('front-hints')).toBeVisible();
     await expect(card(page)).toHaveAttribute('data-side', 'front'); // revealing doesn't flip
-    await button(page, 'Hide hints').click();
+    // A tap on the revealed hints covers them again (D-078).
+    await page.waitForTimeout(400); // not "right after scrolling"
+    await page.locator('.flip-card__front .hints-area__scroll').click();
     await expect(page.getByTestId('front-hints')).toHaveCount(0);
     await button(page, 'Tap to see hints').click();
     await expect(page.getByTestId('front-hints')).toBeVisible();

@@ -207,10 +207,11 @@ export function FlipCard({
             )}
           </div>
           {hintsShown && (card.hints.length > 0 || card.synonyms.length > 0) && (
-            // Covers the hints again; a tap on the hints keeps them open while scrolling (D-050).
+            // A tap on the hints covers them again (D-078); this button stays for the keyboard and
+            // screen readers, out of sight until it has keyboard focus.
             <button
               type="button"
-              className="hints-hide"
+              className="hints-hide sr-only focus-visible:not-sr-only"
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleHints();

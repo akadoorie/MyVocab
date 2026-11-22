@@ -2,6 +2,10 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { strings } from '../../strings';
 import { HintsArea } from './HintsArea';
 
+/** A tap that moved more than this is a drag, not a tap (D-078). */
+const TAP_SLOP_PX = 10;
+/** A tap this soon after the hints scrolled was meant to stop or adjust the scroll (D-078). */
+const TAP_AFTER_SCROLL_MS = 350;
 /** Dots per square pixel of cover (about one dot per 38 px²). */
 const DENSITY = 1 / 38;
 
@@ -22,9 +26,10 @@ type Dot = {
 
 /**
  * The hints on the card front, under a "live" cover (D-047): a cloud of tiny shimmering dots
- * over the blurred hints invites a tap. Tapping reveals them (the dots scatter and fade); the
- * "Hide hints" link on the card (or H) covers them again, so a tap while scrolling long hints
- * never hides them (D-050). The cover fills the hints area, ending above the Flip row. The cover is a real button; the hidden text isn't read out until shown.
+ * over the blurred hints invites a tap. Tapping reveals them (the dots scatter and fade); a clean
+ * tap on the revealed hints (or H) covers them again, but never a drag, a tap that stops a
+ * scroll, or a tap right after scrolling (D-078). The cover reaches the card's bottom, around the
+ * Flip button (D-078). The cover is a real button; the hidden text isn't read out until shown.
  * With reduced motion the dots stand still. The animation runs only while covered and visible.
  */
 export function HintsCover({
@@ -40,6 +45,10 @@ export function HintsCover({
   children: ReactNode;
 }) {
   const buttonRef = useRef<HTMLButtonElement>(null);
+  // Where and when the last touch or click started, and when the hints last scrolled: only a
+  // clean tap covers them again (D-078).
+  const press = useRef<{ x: number; y: number; at: number } | null>(null);
+  const lastScroll = useRef(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const openRef = useRef(open);
   const wake = useRef<() => void>(() => {});
@@ -123,14 +132,35 @@ export function HintsCover({
   }, [active]);
 
   return (
-    <div className={`hints-cover ${open ? 'is-open' : ''}`}>
+    // A tap on the revealed hints is a shortcut for pointer users (D-078); keyboard and screen
+    // reader users have H and the "Hide hints" button, so this area needs no key handler or role.
+    // eslint-disable-next-line jsx-a11y-x/click-events-have-key-events, jsx-a11y-x/no-static-element-interactions
+    <div
+      className={`hints-cover ${open ? 'is-open' : ''}`}
+      onScrollCapture={() => {
+        lastScroll.current = Date.now();
+      }}
+      onPointerDown={(e) => {
+        press.current = { x: e.clientX, y: e.clientY, at: Date.now() };
+      }}
+      onClick={(e) => {
+        if (!open) return;
+        const start = press.current;
+        const now = Date.now();
+        const moved = start ? Math.hypot(e.clientX - start.x, e.clientY - start.y) : 0;
+        const scrolling = now - lastScroll.current < TAP_AFTER_SCROLL_MS;
+        if (moved > TAP_SLOP_PX || scrolling) return;
+        e.stopPropagation();
+        onToggle();
+      }}
+    >
       {/* The hints scroll on their own when long; covered, they don't (D-050). */}
       <HintsArea locked={!open} hidden={!open}>
         {children}
       </HintsArea>
       {/* Covered: the button over the area, named by its visible label (axe
           label-content-name-mismatch). Open: it stays only for the dots to scatter, out of the
-          way of taps and scrolling; "Hide hints" on the card covers them again (D-050). */}
+          way of taps and scrolling; a tap on the hints covers them again (D-078). */}
       <button
         ref={buttonRef}
         type="button"
