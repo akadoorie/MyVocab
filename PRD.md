@@ -994,7 +994,9 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
 - **Toasts**: bottom-center on mobile (above the button bar), top-right on desktop (below the header, clear of the
   loop buttons); auto-dismiss; `aria-live="polite"`.
 - **Admin**: a left sidebar (collapses into a top menu on mobile); content max width about 1100px. Menu order:
-  Dashboard, Items, Topics, Languages, Import, Users, Trash, Settings, Audit log (D-075).
+  Dashboard, Items, Topics, Languages, Import, Users, Trash, Settings, Audit log (D-075). A top bar on every screen shows "MyVocab · Admin"
+  and an outlined **"← Home"** button top right, as in a session (D-077); on phones a "Menu" button (named "Admin
+  menu") opens the menu. There is no "Back to MyVocab" link at the bottom of the menu any more.
 
 ### 9.8 Microcopy (centralized in `apps/web/src/strings.ts`)
 All UI strings live in one module, keyed (e.g. `loop.know = "Know"`, `loop.hints = "Hints"`, `loop.flip = "Flip"`,

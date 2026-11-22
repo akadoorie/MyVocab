@@ -65,61 +65,65 @@ export function AdminApp() {
           {item.label}
         </NavLink>
       ))}
-      <a href="/" className="mt-4 flex min-h-11 items-center px-3 text-sm text-accent">
-        ← {s.nav.backToApp}
-      </a>
     </nav>
   );
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[1100px] flex-col md:flex-row md:gap-6 md:px-4">
+    <div className="mx-auto flex min-h-dvh w-full max-w-[1100px] flex-col md:px-4">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:m-2 focus:rounded focus:bg-surface focus:p-2"
       >
         Skip to content
       </a>
-      <header className="flex items-center justify-between border-b border-border px-4 py-3 md:hidden">
-        <span className="font-semibold">
+      {/* One top bar on every screen (D-077): the title, and "← Home" top right as in a session. */}
+      <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:border-b-0 md:pt-6 md:pr-0 md:pb-2 md:pl-3">
+        <span className="font-semibold whitespace-nowrap md:text-lg">
           My<span className="text-accent">Vocab</span> · {s.title}
         </span>
-        <button
-          type="button"
-          aria-expanded={menuOpen}
-          aria-controls="admin-menu"
-          onClick={() => setMenuOpen((v) => !v)}
-          className="min-h-11 rounded-[10px] border border-border px-3"
-        >
-          {s.nav.menu}
-        </button>
+        <div className="flex items-center gap-2">
+          <a
+            href="/"
+            className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-[10px] border border-border px-3 text-sm font-medium text-text transition-colors hover:border-accent hover:text-accent md:text-base"
+          >
+            <span aria-hidden="true">←</span> {s.nav.home}
+          </a>
+          <button
+            type="button"
+            aria-expanded={menuOpen}
+            aria-controls="admin-menu"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label={s.nav.menu}
+            className="min-h-11 rounded-[10px] border border-border px-3 whitespace-nowrap md:hidden"
+          >
+            {s.nav.menuShort}
+          </button>
+        </div>
       </header>
       {menuOpen && (
         <div id="admin-menu" className="border-b border-border px-4 py-3 md:hidden">
           {nav}
         </div>
       )}
-      <aside className="hidden w-56 shrink-0 py-6 md:block">
-        <p className="mb-4 px-3 text-lg font-semibold">
-          My<span className="text-accent">Vocab</span> · {s.title}
-        </p>
-        {nav}
-      </aside>
-      <main id="main" className="min-w-0 flex-1 px-4 py-6 md:px-0">
-        <Routes>
-          <Route index element={<Dashboard />} />
-          <Route path="items" element={<ItemsPage />} />
-          <Route path="items/new" element={<NewItemPage />} />
-          <Route path="items/:id" element={<ItemEditorPage />} />
-          <Route path="trash" element={<TrashPage />} />
-          <Route path="topics" element={<TopicsPage />} />
-          <Route path="languages" element={<LanguagesPage />} />
-          <Route path="import" element={<ImportPage />} />
-          <Route path="users" element={<UsersPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="audit" element={<AuditPage />} />
-          <Route path="*" element={<Dashboard />} />
-        </Routes>
-      </main>
+      <div className="flex flex-1 flex-col md:flex-row md:gap-6">
+        <aside className="hidden w-56 shrink-0 py-4 md:block">{nav}</aside>
+        <main id="main" className="min-w-0 flex-1 px-4 py-6 md:px-0">
+          <Routes>
+            <Route index element={<Dashboard />} />
+            <Route path="items" element={<ItemsPage />} />
+            <Route path="items/new" element={<NewItemPage />} />
+            <Route path="items/:id" element={<ItemEditorPage />} />
+            <Route path="trash" element={<TrashPage />} />
+            <Route path="topics" element={<TopicsPage />} />
+            <Route path="languages" element={<LanguagesPage />} />
+            <Route path="import" element={<ImportPage />} />
+            <Route path="users" element={<UsersPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="audit" element={<AuditPage />} />
+            <Route path="*" element={<Dashboard />} />
+          </Routes>
+        </main>
+      </div>
     </div>
   );
 }

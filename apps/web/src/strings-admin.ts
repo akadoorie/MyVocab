@@ -15,7 +15,11 @@ export const adminStrings = {
     audit: 'Audit log',
     import: 'Import',
     backToApp: 'Back to MyVocab',
+    /** The admin area's way back to the app, top right as in a session (D-077). */
+    home: 'Home',
     menu: 'Admin menu',
+    /** The phone menu button's visible text; its name stays "Admin menu" (D-077). */
+    menuShort: 'Menu',
   },
   common: {
     save: 'Save',
