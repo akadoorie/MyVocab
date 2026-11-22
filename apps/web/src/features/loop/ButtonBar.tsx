@@ -1,13 +1,6 @@
 import { canDispatch, type LoopActionType, type LoopState } from '@myvocab/core';
 import type { MouseEvent, ReactNode, Ref } from 'react';
-import {
-  CheckIcon,
-  LockIcon,
-  ChevronBackIcon,
-  ChevronIcon,
-  CrossIcon,
-  StopIcon,
-} from '../../components/Icons';
+import { LockIcon, ChevronBackIcon, ChevronIcon, StopIcon } from '../../components/Icons';
 import { strings } from '../../strings';
 
 type Kind = 'round' | 'hint' | 'know' | 'again' | 'dontknow';
@@ -61,7 +54,7 @@ export function LoopButton({
       <span className="lbtn__icon">{icon}</span>
       <span className={hideLabel ? 'sr-only' : 'lbtn__label'}>{label}</span>
       {locked && (
-        // A yellow lock on the top-left edge: visible on phones too, where the pills hide icons.
+        // A yellow lock on the top-left edge (the answer pills have no icons, D-058).
         <span className="lock-badge lbtn__lock" aria-hidden="true">
           <LockIcon />
         </span>
@@ -114,7 +107,7 @@ export function ButtonBar({
   // way on (PRD FR-L28, §9.7, D-031).
   // (On an earlier card reached with Back, Next is allowed too, but without the pumping.)
   const revealed = state.phase === 'revealed';
-  // Three pills on a phone carry their label only (base.css).
+  // The three answer pills carry their label only, on every screen (D-058, base.css).
   const trio = 'lbtn--trio';
   return (
     <div className="grid grid-cols-12 items-start gap-x-3 gap-y-5 pb-1 [grid-template-areas:'know_know_know_know_again_again_again_again_dk_dk_dk_dk'_'stop_stop_stop_stop_back_back_back_back_next_next_next_next'] md:grid-cols-[auto_auto_1fr_1fr_1.1fr_auto] md:gap-x-6 md:[grid-template-areas:'stop_back_know_again_dk_next']">
@@ -135,7 +128,7 @@ export function ButtonBar({
       {signedIn ? (
         <LoopButton
           kind="know"
-          icon={<CheckIcon />}
+          icon={null}
           label={strings.loop.know}
           caption={strings.loop.knowCaption}
           name={strings.loop.knowName}
@@ -146,7 +139,7 @@ export function ButtonBar({
         // Guests see what signing in adds: the same button, locked (D-042).
         <LoopButton
           kind="know"
-          icon={<CheckIcon />}
+          icon={null}
           label={strings.loop.know}
           caption={strings.loop.knowCaption}
           name={strings.loop.knowNameGuest}
@@ -174,7 +167,7 @@ export function ButtonBar({
       </div>
       <LoopButton
         kind="again"
-        icon={<CheckIcon />}
+        icon={null}
         label={strings.loop.know}
         caption={strings.loop.againCaption}
         name={strings.loop.againName}
@@ -184,7 +177,7 @@ export function ButtonBar({
       <LoopButton
         kind="dontknow"
         className={`[grid-area:dk] ${trio}`}
-        icon={<CrossIcon />}
+        icon={null}
         label={strings.loop.dontKnow}
         caption={strings.loop.dontKnowCaption}
         name={strings.loop.dontKnowName}

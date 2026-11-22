@@ -72,3 +72,21 @@ export function differsFromDefaults(choices: StartChoices, defaults: StartChoice
 export function isSameLanguage(choices: Pick<StartChoices, 'sourceLang' | 'targetLang'>): boolean {
   return choices.sourceLang === choices.targetLang;
 }
+
+/**
+ * The amount choices worth offering for the available card count (D-057): those not above it.
+ * The smallest choice always stays, since a session simply starts with every card there is
+ * (FR-L8). While the count is unknown, all of them.
+ */
+export function allowedSizes(options: readonly number[], available: number | undefined): number[] {
+  if (available === undefined || options.length === 0) return [...options];
+  const smallest = Math.min(...options);
+  return options.filter((n) => n <= available || n === smallest);
+}
+
+/** The chosen amount, lowered to the largest allowed one when it is no longer allowed (D-057). */
+export function fitSize(size: number, allowed: readonly number[]): number {
+  if (allowed.length === 0 || allowed.includes(size)) return size;
+  const lower = allowed.filter((n) => n < size);
+  return lower.length > 0 ? Math.max(...lower) : Math.min(...allowed);
+}

@@ -51,14 +51,14 @@ describe('Landing: the Buttons guide under How it works (D-030)', () => {
     // The signed-in state loads first (until then the page shows the guest version).
     await waitFor(() =>
       expect(section).toHaveTextContent(
-        'I know it: Don’t show it again. You can bring it back from My known words.',
+        "I know it: Don’t show it again. You can bring it back from 'My known words'.",
       ),
     );
     expect(section).toHaveTextContent(
-      'I know it: Done for this session; it shows up again in future sessions.',
+      'I know it: Don’t show again in this session; it shows up again in future sessions.',
     );
     expect(section).toHaveTextContent(
-      'I don’t know: It comes back later in this session, until you know it.',
+      'I don’t know: Repeat it later in this session, until you know it.',
     );
     expect(section.querySelector('.is-locked')).toBeNull();
   });
@@ -68,10 +68,10 @@ describe('Landing: the Buttons guide under How it works (D-030)', () => {
     renderRoutes(routes, ['/']);
     const section = await guide();
     expect(section).toHaveTextContent(
-      'I know it: Don’t show it again. You can bring it back from My known words. (Sign-in to enable)',
+      "I know it: Don’t show it again. You can bring it back from 'My known words'. (Sign-in to enable)",
     );
     expect(section).toHaveTextContent(
-      'I know it: Done for this session; it shows up again in future sessions.',
+      'I know it: Don’t show again in this session; it shows up again in future sessions.',
     );
     expect(section).not.toHaveTextContent('sign-in to use');
     expect(section.querySelector('.mini-btn--know.is-locked')).not.toBeNull();
@@ -90,7 +90,7 @@ describe('Landing: guest sign-in banner (FR-L9, D-033)', () => {
     const banner = link.closest('p');
     expect(banner).toHaveClass('sign-in-glow');
     expect(banner).toHaveTextContent(
-      'Sign-in with Google to remember the words you know and choose bigger sessions.',
+      'Sign-in with Google to remember the words you already know, choose different topics and bigger sessions.',
     );
   });
 });

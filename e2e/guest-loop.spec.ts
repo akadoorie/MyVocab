@@ -17,7 +17,6 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
   await expect(startCard.getByLabel('From', { exact: true })).toHaveValue('en');
   await expect(startCard.getByLabel('To', { exact: true })).toHaveValue('he');
   await expect(startCard.getByLabel('Topic', { exact: true })).toHaveValue('sample');
-  await expect(startCard.getByText('Sign-in to choose any topic.')).toBeVisible();
   // The locked entries are drawn grey in the open list, "Sample set" stays bright (D-041):
   // "All topics" and a topic under the "Topics" entry, all top-level, disabled and unselectable
   // (Chrome ignores the colour of disabled options inside an optgroup).
@@ -41,7 +40,7 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
     enabled: 1,
   });
   await expect(startCard.getByText('Default')).toHaveCount(4); // From, To, Topic, Amount
-  await expect(startCard.getByText(/new cards? available/)).toBeVisible();
+  await expect(startCard.getByText(/cards? available/)).toBeVisible();
 
   // The sign-in message appears once automatically, and again when tapping the locked amount.
   // "Sign-in" is a link at the start of the sentence (D-043). On phones it is a toast; on desktop
@@ -51,7 +50,7 @@ test('a guest starts with the defaults and plays a loop to the summary', async (
     : startCard.locator('.amount-tip');
   await expect(toast).toHaveText('Sign-in to choose more cards per session.');
   await expect(toast.getByRole('button', { name: 'Sign-in' })).toBeVisible();
-  await startCard.getByRole('button', { name: /Amount: 5/ }).click();
+  await startCard.getByRole('button', { name: /Cards per session: 5/ }).click();
   await expect(toast).toBeVisible();
 
   // Start without changing anything (invisible Turnstile with Cloudflare's test keys).

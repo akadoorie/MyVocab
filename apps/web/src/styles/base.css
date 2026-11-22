@@ -596,14 +596,15 @@ body {
       font-size: 1.375rem;
     }
   }
-  /* Three answer pills on a phone (signed-in learners): the label only, a little smaller. */
+  /* The three answer pills carry their label only, on phones and desktop alike (D-058). */
+  .lbtn--trio {
+    column-gap: 0;
+  }
+  .lbtn--trio .lbtn__icon {
+    display: none;
+  }
+  /* On a phone the label is a little smaller. */
   @media (max-width: 767px) {
-    .lbtn--trio {
-      column-gap: 0;
-    }
-    .lbtn--trio .lbtn__icon {
-      display: none;
-    }
     .lbtn--trio .lbtn__label {
       font-size: clamp(0.95rem, 4.3vw, 1.125rem);
     }
@@ -615,47 +616,62 @@ body {
     }
   }
 
-  /* The small answer-button icons under "How it works" (D-030): the same colours as the pills. */
+  /* The small answer buttons under "How it works" (D-030): a scaled-down copy of the session's
+     pills (D-058): the same gradient, glossy top edge, coloured glow and ledge, label only. */
   .mini-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    min-width: 7.5rem;
     justify-content: center;
-    padding: 4px 10px;
+    height: 2.25rem;
+    width: 8rem; /* all three the same width, as in a session */
+    padding: 0 10px;
     border-radius: 999px;
     background: linear-gradient(180deg, var(--top), var(--bottom));
-    box-shadow: 0 3px 0 var(--c-ledge);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+      0 4px 0 var(--c-ledge),
+      0 6px 16px var(--glow);
     color: var(--on-color);
-    font-size: 0.8125rem;
+    font-size: 0.9375rem;
     font-weight: 700;
     white-space: nowrap;
   }
-  .mini-btn svg {
-    width: 14px;
-    height: 14px;
+  /* The caption under it, as under the session's pills. */
+  .mini-btn__caption {
+    margin-top: 10px;
+    color: var(--text-muted);
+    font-size: 0.6875rem;
+    font-style: italic;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
   }
   .mini-btn--know {
     --top: var(--know-top);
     --bottom: var(--know-bottom);
     --c-ledge: var(--know-ledge);
+    --glow: var(--know-glow);
   }
   .mini-btn--again {
     --top: var(--again-top);
     --bottom: var(--again-bottom);
     --c-ledge: var(--again-ledge);
+    --glow: var(--again-glow);
   }
   .mini-btn--dontknow {
     --top: var(--dontknow-top);
     --bottom: var(--dontknow-bottom);
     --c-ledge: var(--dontknow-ledge);
+    --glow: var(--dontknow-glow);
   }
+  /* Locked like the session's green pill for guests (D-042): darker, not grey. */
   .mini-btn.is-locked {
-    filter: brightness(0.38) saturate(0.85);
+    filter: brightness(0.55) saturate(0.85);
   }
   .mini-btn__lock {
-    top: -7px;
-    left: 4px;
+    top: -6px;
+    left: 6px;
     width: 13px;
     height: 13px;
   }

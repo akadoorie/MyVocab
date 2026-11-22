@@ -22,10 +22,10 @@ const learner = {
 };
 const admin = { ...learner, user: { ...learner.user, role: 'admin' as 'user' } };
 
-function mockApi(cards = [makeCard(1), makeCard(2)]) {
+function mockApi(cards = [makeCard(1), makeCard(2)], available = 6) {
   return vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
     const url = String(input);
-    if (url.startsWith('/api/loops/available')) return Response.json({ available: 6 });
+    if (url.startsWith('/api/loops/available')) return Response.json({ available });
     if (url === '/api/loops' && init?.method === 'POST') {
       return Response.json({ requested: 5, returned: cards.length, cards });
     }
@@ -83,7 +83,11 @@ describe('StartCard', () => {
     for (const label of ['From', 'To', 'Topic'])
       expect(field(label)).toHaveAttribute('data-default', 'true');
     expect(screen.getAllByText('Default')).toHaveLength(4); // From, To, Topic, Amount (no Type, D-046)
-    expect(await screen.findByText('6 new cards available')).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        (_, el) => el?.tagName === 'P' && el.textContent === '6 cards available',
+      ),
+    ).toBeInTheDocument();
     expect(screen.queryByText('Reset to defaults')).not.toBeInTheDocument();
   });
 
@@ -109,6 +113,40 @@ describe('StartCard', () => {
     setup(learner);
     expect(startBeforeHeading()).toBe(true);
     vi.unstubAllGlobals();
+  });
+
+  it('greys out the amounts above the available count (D-057)', async () => {
+    mockApi(undefined, 23);
+    setup(learner);
+    const radio = (n: string) => screen.getByRole('radio', { name: n });
+    await waitFor(() => expect(radio('30')).toBeDisabled());
+    expect(radio('40')).toBeDisabled();
+    expect(radio('50')).toBeDisabled();
+    expect(radio('10')).toBeEnabled();
+    expect(radio('20')).toBeEnabled();
+  });
+
+  it('shows a chosen amount above the count as the largest allowed one (D-057)', async () => {
+    mockApi(undefined, 6);
+    setup(learner);
+    fireEvent.click(screen.getByRole('radio', { name: '50' })); // before the count arrives
+    await waitFor(() =>
+      expect(screen.getByRole('radio', { name: '10' })).toHaveAttribute('aria-checked', 'true'),
+    );
+    expect(screen.getByRole('radio', { name: '50' })).toBeDisabled();
+  });
+
+  it('switches From and To, and disables the switch when they match (D-055)', () => {
+    mockApi();
+    setup(learner);
+    const from = screen.getByLabelText<HTMLSelectElement>('From', { exact: true });
+    const to = screen.getByLabelText<HTMLSelectElement>('To', { exact: true });
+    const swap = screen.getByRole('button', { name: 'Switch From and To' });
+    const [a, b] = [from.value, to.value];
+    fireEvent.click(swap);
+    expect([from.value, to.value]).toEqual([b, a]);
+    fireEvent.change(to, { target: { value: b } });
+    expect(swap).toBeDisabled();
   });
 
   it('switches a changed field to the selected style and offers a reset', () => {
@@ -139,9 +177,9 @@ describe('StartCard', () => {
     // "Sign-in" is a link that starts sign-in; there is no separate button.
     expect(screen.getByRole('button', { name: 'Sign-in' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Sign-in with Google' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('radiogroup', { name: 'Amount' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('radiogroup', { name: 'Cards per session' })).not.toBeInTheDocument();
     expect(window.sessionStorage.getItem('myvocab.guestAmountToast')).toBe('1');
-    fireEvent.click(screen.getByRole('button', { name: /Amount: 5/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Cards per session: 5/ }));
     expect(fieldTipShown()).toBe(true);
   });
 
@@ -169,7 +207,7 @@ describe('StartCard', () => {
   it('learners choose the amount and see no guest toast', () => {
     mockApi();
     setup(learner);
-    expect(screen.getByRole('radiogroup', { name: 'Amount' })).toBeInTheDocument();
+    expect(screen.getByRole('radiogroup', { name: 'Cards per session' })).toBeInTheDocument();
     expect(shown()).toBe(false);
   });
 
@@ -217,7 +255,6 @@ describe('StartCard', () => {
       expect(option('Sample set').disabled).toBe(false);
       expect(option('All topics').disabled).toBe(true);
       expect(option('Home').disabled).toBe(true);
-      expect(topic()).toHaveAccessibleDescription('Sign-in to choose any topic.');
     });
 
     it('learners see no Sample set option', () => {

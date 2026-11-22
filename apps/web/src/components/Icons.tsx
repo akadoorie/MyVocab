@@ -112,3 +112,11 @@ export function LogoMark({ className }: { className?: string }) {
     </svg>
   );
 }
+
+/** Two opposite arrows: switch the From and To languages (D-055). */
+export const SwapIcon = () => (
+  <Svg strokeWidth={2.2}>
+    <path d="M4 8h15M15 4l4 4-4 4" />
+    <path d="M20 16H5M9 12l-4 4 4 4" />
+  </Svg>
+);

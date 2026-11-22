@@ -183,7 +183,7 @@ private content repository. It never appears in the public code repo or any publ
   everyone (fetched once when the page opens; hidden if it fails to load, D-036) (when the page loads or is refreshed on Home, the first words
   fade in and "stick" drops in, bounces off twice and sticks on the third try with a soft squash and a faint shine, about
   3s; not when coming back to Home inside the app; a short fade with reduced motion, D-034, D-037), the app version (a small yellow "v1.N" next to the name, D-032), a short hero, a 3-step "How it works" section with a **"Buttons"** guide
-  (a small copy of each answer button, in its colour, and what it does; for guests the green one is dark, with a
+  (a small copy of each answer button as it looks in a session: the same gradient, glossy edge, glow and ledge, label only, with its caption under it, D-058; and what it does; for guests the green one is dark, with a
   small yellow lock, and its line ends "(Sign-in to enable)", D-030, D-042), and the **Start card**.
   Desktop: hero and start card side by side. Mobile: stacked, with the **Start** button right under the hero text
   (and the guest sign-in note), above the start card's fields, so it can be pressed without scrolling (D-021).
@@ -218,16 +218,22 @@ private content repository. It never appears in the public code repo or any publ
   The server **enforces** 5 for guests regardless of the request (§12.1).
 - **FR-L6a Guest topic: the Sample set** (D-038): guests play only items marked **"Include in Sample set"**, across
   every topic. Their Topic dropdown shows **"Sample set"** selected, with "All topics" and every topic listed below it
-  **greyed out and unselectable**, a lock icon on the field, and the note "Sign-in to choose any topic." They still
-  choose the languages, and the "N new cards available" count only counts the sample set. The server
+  **greyed out and unselectable**, and a lock icon on the field (no note; D-054). They still
+  choose the languages, and the "N cards available" count only counts the sample set. The server
   **enforces** it for guests whatever the request says (both the count and starting a session). Signed-in learners
   never see a "Sample set" option; **admins** do, so they can play exactly what guests get.
-- **FR-L7** The start card shows **"N new cards available"** for the current selection (debounced 300 ms; counts only
-  playable items (FR-L40); excludes known items for signed-in users).
+- **FR-L7** The start card shows **"N cards available"** for the current selection, with N in yellow (debounced
+  300 ms; counts only playable items (FR-L40); excludes known items for signed-in users). It sits under the fields
+  (D-055). The Amount field is labeled **"Cards per
+  session"** (D-054).
+- **FR-L7a Amounts above the count** (D-057): all five amounts stay visible, but those above the "N cards
+  available" count are disabled (greyed out); the smallest (10) always stays selectable. A chosen amount that is
+  no longer allowed shows, and starts, as the largest allowed one; the choice comes back when more cards are
+  available again. While a new count loads, the last count's limits stay.
 - **FR-L8** If fewer cards are available than the amount, the loop starts with all available cards and shows a notice
   ("Only 7 new cards in Home, starting with 7"). If 0 are available: an empty state ("You know every card in this
   selection 🎉") with links to change the selection or open "My known words".
-- **FR-L9** Guests see a subtle banner: "Sign-in with Google to remember the words you know and choose bigger sessions."
+- **FR-L9** Guests see a subtle banner: "Sign-in with Google to remember the words you already know, choose different topics and bigger sessions."
   "Sign-in with Google" is a link that starts sign-in. A soft violet light runs round the banner's frame three times
   (about 7s a lap), then the frame keeps a steady faint glow; with reduced motion, only the glow (D-033).
 - **FR-L10** Guests pass an **invisible Cloudflare Turnstile** check when they press Start (§14.3). In the rare case
@@ -816,8 +822,8 @@ glossy, glowing pressable buttons.
 ### 9.2 Pressable-ledge 3D buttons
 Buttons keep the pressable ledge, now glossy: a top-to-bottom gradient, a thin light top edge, the ledge underneath
 and a colored glow around. The loop uses two shapes:
-- **Pills** (the three answers, FR-L27a, D-030): icon (✓ / ✕) + label inside ("I know it", "I know it", "I don't
-  know"). On phones the three pills share the row and carry the label only. Each has a small italic muted caption
+- **Pills** (the three answers, FR-L27a, D-030): the label only inside ("I know it", "I know it", "I don't
+  know"), on phones and desktop alike (no ✓ / ✕ icons, D-058). On phones the three pills share the row. Each has a small italic muted caption
   under it ("Don't show again", "Show again in future", "Show again soon"), which may wrap onto two lines on a
   phone. For guests the green pill is locked: a darker green (dimmed, not grey), disabled, with a small yellow padlock
   (no background) on its top-left edge, shown on phones too where the pills hide their icons (D-042).
@@ -911,10 +917,14 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
   front side up. Don't know keeps the flip. A swipe slides the card out sideways (FR-L29b).
 
 ### 9.5 Start card (look)
-- Five fields stacked on mobile (2-column grid on desktop), each with a label and either a select (languages,
-  topic) or a segmented control (amount). On desktop, Amount sits next to Topic (D-046).
+- Each field has a label and either a select (languages, topic) or a segmented control (amount). Phones and
+  desktop share one layout (D-055): From and To on one line with a small round **switch button** (⇄) between
+  them that swaps the two languages (disabled when they are the same), then Topic and Cards per session on the
+  next line (D-046), then the "N cards available" line. Both lines share one grid: Topic sits exactly under From
+  and Cards per session under To, with the same widths, heights and label positions (D-056).
 - **Default style** (value unchanged): looks chosen (bright value text, filled selected option), subtle solid
-  outline, a small violet "Default" tag on the right. **Selected style** (user changed it): the same, with a solid
+  outline, a small violet "Default" tag on the right (not on phones, where each field shares its line;
+  D-053, D-055). **Selected style** (user changed it): the same, with a solid
   `--accent` outline and no tag.
 - **Guest amount**: a single "5" pill with a lock icon; tapping it shows the "sign-in" toast (FR-L6).
 - The "Same language: the back shows an explanation" note (FR-L5) appears under the language fields when they match.

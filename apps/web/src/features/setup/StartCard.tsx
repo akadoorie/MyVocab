@@ -1,7 +1,9 @@
 import type { MetaResponse } from '@myvocab/contracts';
 import {
+  allowedSizes,
   defaultFields,
   differsFromDefaults,
+  fitSize,
   isSameLanguage,
   type StartChoices,
 } from '@myvocab/core';
@@ -10,6 +12,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { Button3D } from '../../components/Button3D';
 import { Field, Segmented } from '../../components/Field';
+import { SwapIcon } from '../../components/Icons';
 import { useToast } from '../../components/Toast';
 import { api } from '../../lib/api';
 import { startGoogleSignIn, type SessionState } from '../../lib/session';
@@ -69,7 +72,6 @@ export function StartCard({
       ? { ...initialSelection, size: isGuest ? meta.guest.loopSize : initialSelection.size }
       : defaults,
   );
-  const defaultSet = defaultFields(choices, defaults);
 
   const guestToast = useMemo(
     () => ({
@@ -130,11 +132,23 @@ export function StartCard({
     setChoices((c) => ({ ...c, [key]: value }));
   };
 
+  const count = available.data?.available;
+  // Amounts above the available count are greyed out (D-057). While a new count loads, the
+  // last one is kept, so the buttons don't flash enabled.
+  const [lastCount, setLastCount] = useState<number | undefined>(undefined);
+  if (count !== undefined && count !== lastCount) setLastCount(count);
+  const sizes = allowedSizes(meta.sizeOptions, count ?? lastCount);
+  // A chosen amount that is no longer allowed shows (and starts) as the largest allowed one. The
+  // choice itself is kept, so it comes back when more cards are available again.
+  const effective: StartChoices = isGuest
+    ? choices
+    : { ...choices, size: fitSize(choices.size, sizes) };
+  const defaultSet = defaultFields(effective, defaults);
+
   async function start() {
-    if ((await startLoop(choices)) === 'empty') void available.refetch();
+    if ((await startLoop(effective)) === 'empty') void available.refetch();
   }
 
-  const count = available.data?.available;
   const nothingLeft = count === 0;
   const blockedByMaintenance = meta.maintenance.enabled && session.user?.role !== 'admin';
   const guestsDisabled = isGuest && !meta.guest.enabled;
@@ -181,6 +195,22 @@ export function StartCard({
     </>
   );
 
+  // The count stands out in yellow, like the version and the registered users (D-054).
+  const availableLine = (
+    <p className="text-sm text-muted" aria-live="polite">
+      {available.isPending ? (
+        strings.setup.checking
+      ) : count !== undefined ? (
+        <>
+          <span className="font-semibold text-hint">{count}</span>{' '}
+          {strings.setup.availableSuffix(count)}
+        </>
+      ) : (
+        ''
+      )}
+    </p>
+  );
+
   return (
     <section aria-labelledby="start-title" className="flex flex-col gap-6">
       {!isDesktop && (
@@ -194,8 +224,11 @@ export function StartCard({
           {strings.setup.title}
         </h2>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Field label={strings.setup.source} isDefault={defaultSet.has('sourceLang')}>
+        {/* Phones and desktop alike: From ⇄ To on one line, Topic and Amount on the next (D-055).
+            One grid for both lines, so Topic sits exactly under From and Amount under To, same
+            widths; the switch column stays empty on the second line (D-056). */}
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-x-2 gap-y-4 md:gap-x-3">
+          <Field label={strings.setup.source} inRow isDefault={defaultSet.has('sourceLang')}>
             {({ id, className }) => (
               <select
                 id={id}
@@ -211,7 +244,23 @@ export function StartCard({
               </select>
             )}
           </Field>
-          <Field label={strings.setup.target} isDefault={defaultSet.has('targetLang')}>
+          {/* Same height as the selects, so the button sits centred beside them. */}
+          <div className="flex h-[50px] items-center self-end max-md:h-[46px]">
+            <button
+              type="button"
+              aria-label={strings.setup.swapLanguages}
+              title={strings.setup.swapLanguages}
+              disabled={isSameLanguage(choices)}
+              onClick={() => {
+                setError(null);
+                setChoices((c) => ({ ...c, sourceLang: c.targetLang, targetLang: c.sourceLang }));
+              }}
+              className="grid size-8 place-items-center rounded-full border border-border bg-surface-2 text-muted transition-colors hover:border-accent hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-border disabled:hover:text-muted [&>svg]:size-4"
+            >
+              <SwapIcon />
+            </button>
+          </div>
+          <Field label={strings.setup.target} inRow isDefault={defaultSet.has('targetLang')}>
             {({ id, className }) => (
               <select
                 id={id}
@@ -228,54 +277,49 @@ export function StartCard({
             )}
           </Field>
           {isSameLanguage(choices) && (
-            <p className="text-sm text-muted md:col-span-2" role="note">
+            <p className="col-span-3 -mt-2 text-sm text-muted" role="note">
               {strings.setup.sameLanguageNote}
             </p>
           )}
           <Field
             label={strings.setup.topic}
+            inRow
             isDefault={isGuest || (defaultSet.has('topicId') && !choices.sample)}
           >
             {({ id, className }) =>
               isGuest ? (
                 // Guests play the sample set (D-038). The other topics are listed, greyed out
                 // and unselectable, to show what signing in unlocks.
-                <div className="flex flex-col gap-1.5">
-                  <div className="relative">
-                    <select
-                      id={id}
-                      className={`${className} topic-locked pl-9`}
-                      value="sample"
-                      onChange={() => {}}
-                      aria-describedby={`${id}-locked`}
-                    >
-                      <option value="sample">{strings.setup.sampleSet}</option>
-                      <option value="" disabled>
-                        {strings.setup.general}
+                <div className="relative">
+                  <select
+                    id={id}
+                    className={`${className} topic-locked pl-9 max-md:pr-1 max-md:pl-8`}
+                    value="sample"
+                    onChange={() => {}}
+                  >
+                    <option value="sample">{strings.setup.sampleSet}</option>
+                    <option value="" disabled>
+                      {strings.setup.general}
+                    </option>
+                    {/* No optgroup here: desktop Chrome draws disabled options inside a group in
+                        its own light grey and ignores ours (D-041). A disabled "Topics" entry
+                        stands in for the heading, and the topics are indented under it. */}
+                    <option value="topics-heading" disabled className="topic-heading">
+                      {strings.setup.topicsGroup}
+                    </option>
+                    {meta.topics.map((c) => (
+                      <option key={c.id} value={c.id} disabled>
+                        {INDENT + c.name}
                       </option>
-                      {/* No optgroup here: desktop Chrome draws disabled options inside a group in
-                          its own light grey and ignores ours (D-041). A disabled "Topics" entry
-                          stands in for the heading, and the topics are indented under it. */}
-                      <option value="topics-heading" disabled className="topic-heading">
-                        {strings.setup.topicsGroup}
-                      </option>
-                      {meta.topics.map((c) => (
-                        <option key={c.id} value={c.id} disabled>
-                          {INDENT + c.name}
-                        </option>
-                      ))}
-                    </select>
-                    <span
-                      aria-hidden="true"
-                      // On the left, the same lock and size as the Amount field's (D-052).
-                      className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-base leading-none"
-                    >
-                      🔒
-                    </span>
-                  </div>
-                  <p id={`${id}-locked`} className="text-xs text-muted">
-                    {strings.setup.guestTopicLocked}
-                  </p>
+                    ))}
+                  </select>
+                  <span
+                    aria-hidden="true"
+                    // On the left, the same lock and size as the Amount field's (D-052).
+                    className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-base leading-none max-md:left-2.5"
+                  >
+                    🔒
+                  </span>
                 </div>
               ) : (
                 <select
@@ -311,9 +355,9 @@ export function StartCard({
               )
             }
           </Field>
-          {/* Amount sits next to Topic on desktop, where Type used to be (D-046). */}
-          <div>
-            <Field label={strings.setup.amount} isDefault={defaultSet.has('size')}>
+          {/* Amount sits next to Topic, where Type used to be (D-046), under To. */}
+          <div className="col-start-3">
+            <Field label={strings.setup.amount} inRow isDefault={defaultSet.has('size')}>
               {({ id }) =>
                 isGuest ? (
                   <div className="relative">
@@ -322,7 +366,7 @@ export function StartCard({
                       type="button"
                       aria-label={`${strings.setup.amount}: ${meta.guest.loopSize}. ${strings.setup.guestAmountLocked}`}
                       onClick={showGuestMessage}
-                      className="flex min-h-12 w-full items-center gap-2 rounded-[10px] border border-border bg-surface-2 px-3 text-text"
+                      className="flex h-[50px] w-full items-center gap-2 rounded-[10px] border border-border bg-surface-2 px-3 text-text max-md:h-[46px]"
                     >
                       <span aria-hidden="true">🔒</span>
                       <span className="font-semibold">{meta.guest.loopSize}</span>
@@ -351,9 +395,13 @@ export function StartCard({
                     id={id}
                     label={strings.setup.amount}
                     isDefault={defaultSet.has('size')}
-                    value={choices.size}
+                    value={effective.size}
                     onChange={(v) => set('size', v)}
-                    options={meta.sizeOptions.map((n) => ({ value: n, label: String(n) }))}
+                    options={meta.sizeOptions.map((n) => ({
+                      value: n,
+                      label: String(n),
+                      disabled: !sizes.includes(n),
+                    }))}
                   />
                 )
               }
@@ -361,15 +409,10 @@ export function StartCard({
           </div>
         </div>
 
+        {/* The count, under Topic and Amount on phones too (D-055). */}
         <div className="mt-4 flex min-h-6 items-center justify-between gap-3">
-          <p className="text-sm text-muted" aria-live="polite">
-            {available.isPending
-              ? strings.setup.checking
-              : count !== undefined
-                ? strings.setup.available(count)
-                : ''}
-          </p>
-          {differsFromDefaults(choices, defaults) && (
+          {availableLine}
+          {differsFromDefaults(effective, defaults) && (
             <button
               type="button"
               className="text-sm text-accent underline-offset-2 hover:underline"

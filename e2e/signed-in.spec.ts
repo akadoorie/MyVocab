@@ -46,15 +46,21 @@ test('Know → My known words (ask again is not kept) → hidden only in that di
   await expect(page.getByRole('button', { name: 'Account menu' })).toBeVisible();
   await expect(page.getByText('Sign-in with Google to remember')).toHaveCount(0);
 
-  // Signed-in learners choose the amount: 20 (more than the synthetic set has).
+  // Amounts above the available count are greyed out (D-057); the default 10 always stays.
   const startCard = page.getByRole('region', { name: 'Configure your session' });
-  const amount20 = startCard.getByRole('radio', { name: '20' });
-  await amount20.click();
-  await expect(amount20).toHaveAttribute('aria-checked', 'true');
+  await expect(startCard.getByText(`${enHe} cards available`)).toBeVisible();
+  if (enHe < 20) await expect(startCard.getByRole('radio', { name: '20' })).toBeDisabled();
+  await expect(startCard.getByRole('radio', { name: '10' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
   await startCard.getByRole('button', { name: 'Start' }).click();
   await expect(page).toHaveURL(/\/loop$/);
-  await expect(page.getByText(`Only ${enHe} new cards in All topics`)).toBeVisible();
-  await expect(page.getByTestId('progress')).toHaveText(`Cycle 1 · Card 1/${enHe} · 0 known`);
+  // Fewer than 10 left: the session starts with all of them and says so (FR-L8).
+  if (enHe < 10) await expect(page.getByText(`Only ${enHe} new cards in All topics`)).toBeVisible();
+  await expect(page.getByTestId('progress')).toHaveText(
+    `Cycle 1 · Card 1/${Math.min(enHe, 10)} · 0 known`,
+  );
 
   // Know the first card, then stop the loop.
   const known = ((await page.getByTestId('front-text').textContent()) ?? '').trim();

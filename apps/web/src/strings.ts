@@ -36,17 +36,18 @@ export const strings = {
     registeredUsersLabel: 'Registered users:',
     /** The guest banner: the first words start sign-in (D-033). */
     guestBannerLink: 'Sign-in with Google',
-    guestBannerRest: ' to remember the words you know and choose bigger sessions.',
+    guestBannerRest:
+      ' to remember the words you already know, choose different topics and bigger sessions.',
     /** The answer buttons, explained under "How it works" (D-030). */
     buttonsTitle: 'Buttons',
     buttonGuide: {
-      know: 'Don’t show it again. You can bring it back from My known words.',
+      know: "Don’t show it again. You can bring it back from 'My known words'.",
       /** For guests the green button is locked (D-042): the text, then "(Sign-in to enable)" with a
           "Sign-in" link (D-043). */
-      knowGuest: 'Don’t show it again. You can bring it back from My known words.',
+      knowGuest: "Don’t show it again. You can bring it back from 'My known words'.",
       toEnable: 'to enable',
-      again: 'Done for this session; it shows up again in future sessions.',
-      dontKnow: 'It comes back later in this session, until you know it.',
+      again: 'Don’t show again in this session; it shows up again in future sessions.',
+      dontKnow: 'Repeat it later in this session, until you know it.',
     },
   },
   setup: {
@@ -60,14 +61,15 @@ export const strings = {
     topicsGroup: 'Topics',
     /** The items guests play (D-038); admins can pick it too, to check it. */
     sampleSet: 'Sample set',
-    guestTopicLocked: 'Sign-in to choose any topic.',
-    amount: 'Amount',
+    amount: 'Cards per session',
+    swapLanguages: 'Switch From and To',
     defaultTag: 'Default',
     reset: 'Reset to defaults',
     start: 'Start',
     starting: 'Starting…',
     sameLanguageNote: 'Same language: the back shows an explanation',
-    available: (n: number) => `${n} new ${n === 1 ? 'card' : 'cards'} available`,
+    /** After the count, which is shown in yellow: "8 cards available". */
+    availableSuffix: (n: number) => `${n === 1 ? 'card' : 'cards'} available`,
     checking: 'Checking…',
     guestAmountLocked: 'Guests always get 5 cards',
     /** After the "Sign-in" link (D-043): "Sign-in to choose more cards per session." */
@@ -80,7 +82,7 @@ export const strings = {
     emptyGuestBody: 'Try a different language or type.',
     botCheck: 'Checking that you’re human…',
     botCheckFailed: 'The security check didn’t pass. Please try again.',
-    genericError: 'Something went wrong. Please try again.',
+    genericError: 'Something went wrong. Please refresh the page.',
     dailyCap: (remaining: number) =>
       remaining > 0
         ? `You’ve reached today’s card limit. You can still get ${remaining} ${remaining === 1 ? 'card' : 'cards'} today: choose a smaller amount.`

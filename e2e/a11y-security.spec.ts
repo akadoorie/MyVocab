@@ -35,7 +35,7 @@ async function session(page: Page, baseURL: string, role: 'user' | 'admin', name
 test('guest pages: no accessibility violations and no CSP violations', async ({ page }) => {
   const csp = collectCspViolations(page);
   await page.goto('/');
-  await expect(page.getByText(/new cards? available/)).toBeVisible();
+  await expect(page.getByText(/cards? available/)).toBeVisible();
   // The build-time version (D-032): "v1.N", read as "Version v1.N".
   await expect(page.getByTestId('app-version')).toHaveText(/^Version v1\.\d+$/);
   await expectNoViolations(page, 'landing');

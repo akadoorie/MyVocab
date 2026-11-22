@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  allowedSizes,
   defaultFields,
   differsFromDefaults,
+  fitSize,
   isSameLanguage,
   resolveStartDefaults,
   type StartContext,
@@ -84,5 +86,27 @@ describe('default vs selected styling', () => {
   it('detects the same-language (explanation) case', () => {
     expect(isSameLanguage({ sourceLang: 'en', targetLang: 'en' })).toBe(true);
     expect(isSameLanguage(defaults)).toBe(false);
+  });
+});
+
+describe('amount choices vs available cards (D-057)', () => {
+  const options = [10, 20, 30, 40, 50];
+
+  it('offers only the amounts not above the available count', () => {
+    expect(allowedSizes(options, 23)).toEqual([10, 20]);
+    expect(allowedSizes(options, 30)).toEqual([10, 20, 30]);
+    expect(allowedSizes(options, 500)).toEqual(options);
+  });
+
+  it('always keeps the smallest amount, and all of them while the count is unknown', () => {
+    expect(allowedSizes(options, 7)).toEqual([10]);
+    expect(allowedSizes(options, 0)).toEqual([10]);
+    expect(allowedSizes(options, undefined)).toEqual(options);
+  });
+
+  it('lowers a chosen amount that is no longer allowed to the largest allowed one', () => {
+    expect(fitSize(50, [10, 20])).toBe(20);
+    expect(fitSize(20, [10, 20])).toBe(20);
+    expect(fitSize(30, [10])).toBe(10);
   });
 });
