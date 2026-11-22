@@ -188,7 +188,6 @@ export const strings = {
     flip: 'Flip',
     flipTitle: 'Flip the card (F or Space)',
     next: 'Next',
-    stop: 'Stop',
     continue: 'Continue',
     back: 'Back',
     backToCard: 'Back to the last card',
@@ -209,7 +208,6 @@ export const strings = {
     insufficient: (n: number, topic: string) =>
       `Only ${n} new ${n === 1 ? 'card' : 'cards'} in ${topic}, starting with ${n}`,
     homeConfirmTitle: 'Back to Home?',
-    stopConfirmTitle: 'Stop the session?',
     homeConfirmBody: 'This will stop the session. Are you sure?',
     yes: 'Yes',
     no: 'No',
@@ -223,7 +221,7 @@ export const strings = {
       ['←', 'Back'],
       ['→', 'Next'],
       ['Enter', 'Next / Continue'],
-      ['Esc', 'Stop'],
+      ['Esc', 'Home'],
     ] as const,
   },
   card: {

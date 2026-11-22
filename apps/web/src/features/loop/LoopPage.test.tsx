@@ -251,7 +251,7 @@ describe('LoopPage', () => {
       for (const name of answers) expect(nudging(name)).toBe(false);
       act(() => vi.advanceTimersByTime(300));
       for (const name of answers) expect(nudging(name)).toBe(true);
-      for (const name of ['Back', 'Stop', 'Next']) expect(nudging(name)).toBe(false);
+      for (const name of ['Back', 'Next']) expect(nudging(name)).toBe(false);
       act(() => vi.advanceTimersByTime(1700));
       for (const name of answers) expect(nudging(name)).toBe(false);
       // A flip is a change too.
@@ -273,6 +273,44 @@ describe('LoopPage', () => {
       expect(nudging(answers[0]!)).toBe(false);
       act(() => vi.advanceTimersByTime(3700));
       expect(nudging(answers[0]!)).toBe(true);
+    });
+
+    it('while the user still waits, a soft shine repeats every 10 seconds (D-074)', () => {
+      motion();
+      vi.useFakeTimers();
+      setup(undefined, { count: 5 });
+      for (let i = 0; i < 3; i++) {
+        fireEvent.click(btn('I don’t know Show again soon'));
+        fireEvent.click(btn('Next'));
+      }
+      const shining = () => btn(answers[0]!).classList.contains('is-shining');
+      act(() => vi.advanceTimersByTime(4000)); // the idle nudge: pump and shine
+      expect(nudging(answers[0]!)).toBe(true);
+      act(() => vi.advanceTimersByTime(1700));
+      expect(nudging(answers[0]!)).toBe(false);
+      act(() => vi.advanceTimersByTime(4300)); // 10 s: the shine alone
+      expect(shining()).toBe(true);
+      expect(nudging(answers[0]!)).toBe(false);
+      act(() => vi.advanceTimersByTime(1700));
+      expect(shining()).toBe(false);
+      act(() => vi.advanceTimersByTime(8300)); // 20 s: again
+      expect(shining()).toBe(true);
+    });
+
+    it('Flip shines with them only while the card was not flipped yet (D-074)', () => {
+      motion();
+      vi.useFakeTimers();
+      setup(undefined, { count: 5 });
+      fireEvent.click(btn('Flip')); // Flip used once: it stops pulsing for the session
+      fireEvent.click(btn('Flip')); // back to the front of the same card
+      act(() => vi.advanceTimersByTime(4000));
+      expect(btn('Flip').className).not.toMatch(/is-nudging|is-shining/);
+      expect(nudging(answers[0]!)).toBe(true);
+      // The next card: Flip untouched there, so it joins in.
+      fireEvent.click(btn('I don’t know Show again soon'));
+      fireEvent.click(btn('Next'));
+      act(() => vi.advanceTimersByTime(300));
+      expect(btn('Flip')).toHaveClass('is-nudging');
     });
 
     it('Flip pulses until it is first used, and stays still after a refresh', () => {
@@ -668,17 +706,18 @@ describe('LoopPage', () => {
     });
   });
 
-  it('saves progress so a refresh resumes; Stop asks, then clears it and goes home', async () => {
+  it('saves progress so a refresh resumes; there is no Stop; Home and Esc ask, then clear it (D-072)', async () => {
     const router = setup();
     fireEvent.click(btn('I know it Show again in future'));
     expect(loadLoop()?.state.index).toBe(1);
-    fireEvent.click(screen.getAllByRole('button', { name: /Stop/ })[0] as HTMLElement);
-    // Stop asks first, like Home; No keeps the session.
-    const dialog = screen.getByRole('dialog', { name: 'Stop the session?' });
+    expect(screen.queryByRole('button', { name: 'Stop' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+    // Home asks first; No keeps the session.
+    const dialog = screen.getByRole('dialog', { name: 'Back to Home?' });
     expect(dialog).toHaveTextContent('This will stop the session. Are you sure?');
     fireEvent.click(within(dialog).getByRole('button', { name: 'No' }));
     expect(loadLoop()).not.toBeNull();
-    fireEvent.keyDown(window, { key: 'Escape' }); // Esc = Stop, which asks too
+    fireEvent.keyDown(window, { key: 'Escape' }); // Esc asks the same question
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Yes' }));
     await vi.waitFor(() => expect(router.state.location.pathname).toBe('/'));
     expect(loadLoop()).toBeNull();

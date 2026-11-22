@@ -623,7 +623,8 @@ body {
   .lbtn--pill.is-nudging:not(:disabled, [aria-disabled='true'], :active) .lbtn__label {
     animation: lbtn-nudge 460ms ease-in-out var(--nudge-delay, 0ms) both;
   }
-  .lbtn.is-nudging:not(:disabled, [aria-disabled='true'], :active) .lbtn__shape::after {
+  .lbtn.is-nudging:not(:disabled, [aria-disabled='true'], :active) .lbtn__shape::after,
+  .lbtn.is-shining:not(:disabled, [aria-disabled='true'], :active) .lbtn__shape::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -636,8 +637,13 @@ body {
       )
       no-repeat;
     background-size: 250% 100%;
-    animation: lbtn-shine 800ms ease-out calc(var(--nudge-delay, 0ms) + 380ms) both;
+    animation: lbtn-shine 800ms ease-out calc(var(--nudge-delay, 0ms) + var(--shine-after, 380ms))
+      both;
     pointer-events: none;
+  }
+  /* The repeats (D-074): the shine alone, straight away, no pump. */
+  .lbtn.is-shining {
+    --shine-after: 0ms;
   }
   @keyframes lbtn-nudge {
     0%,
@@ -678,7 +684,8 @@ body {
     .lbtn.is-breathing .lbtn__icon {
       animation: none;
     }
-    .lbtn.is-nudging .lbtn__shape::after {
+    .lbtn.is-nudging .lbtn__shape::after,
+    .lbtn.is-shining .lbtn__shape::after {
       display: none;
     }
   }
@@ -742,6 +749,21 @@ body {
     }
     .lbtn--pill .lbtn__label {
       font-size: 1.375rem;
+    }
+  }
+  /* Phones (D-073): Back's circle lines up with the green pill's left end, Next's with the red
+     pill's right end. The button is as wide as its circle, so a longer caption ("Next · 10")
+     spreads both ways under it instead of pushing the circle in. */
+  @media (max-width: 767px) {
+    .lbtn.edge-start,
+    .lbtn.edge-end {
+      width: var(--size);
+    }
+    .lbtn.edge-start {
+      justify-self: start;
+    }
+    .lbtn.edge-end {
+      justify-self: end;
     }
   }
   /* The three answer pills carry their label only, on phones and desktop alike (D-058). */

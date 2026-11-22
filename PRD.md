@@ -327,8 +327,9 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L28a The nudge** (D-066): to show what to press, the enabled answer pills and Flip pump once and a soft
   shine sweeps across them (green, orange, red, Flip, about 80 ms apart). On the first 3 cards of each cycle this
   plays 0.3 s after every change of the screen (a new card, a flip, hints, Don't know); after that, only when the
-  user waits 4 s without acting. Flip pulses gently until it is first used in the session (remembered across a
-  refresh). Disabled or locked buttons, Back, Stop and Next (which has its own pump) don't take part; nothing
+  user waits 4 s without acting; while the user still waits, a soft shine alone (no pump) repeats every 10 s
+  (D-074). Flip pulses gently until it is first used in the session (remembered across a refresh); after that it
+  joins the nudge and the shine only while the current card shows its front and wasn't flipped yet (D-074). Disabled or locked buttons, Back, Home and Next (which has its own pump) don't take part; nothing
   moves with reduced motion.
 - **FR-L29 Next**: moves to the next card (enabled in the Revealed phase, and on a card answered earlier that was
   reached with Back). The next card enters front side up with a short rise-in (no reverse-flip animation).
@@ -353,10 +354,12 @@ private content repository. It never appears in the public code repo or any publ
   it slides out and the action runs, otherwise it springs back. When the action isn't allowed it moves only a little,
   with resistance. A mostly vertical drag is ignored, a tap does nothing, and with "reduce motion" there is no movement
   (the action just happens). There is no on-screen hint; the buttons stay.
-- **FR-L30 Stop**: the **Stop** button (or Esc) first asks **"Stop the session? This will stop the session. Are you
-  sure?"** with **Yes** / **No**, the same question as Home (FR-L30a; owner request, 2026-11-18). **Yes** ends the
-  loop and returns to `/`; already-made Know marks are kept (and flushed, §6.4). **No** continues where it was.
-- **FR-L30a Home from the loop**: the loop header has a **"← Home"** link like the other pages. Because it leaves the
+- **FR-L30 Stop**: there is no Stop button since D-072 (it did exactly what Home does); **Home** in the header (or
+  Esc) ends the session, after asking **"Back to Home? This will stop the session. Are you sure?"** with **Yes** /
+  **No** (FR-L30a). **Yes** ends the loop and returns to `/`; already-made Know marks are kept (and flushed, §6.4).
+  **No** continues where it was.
+- **FR-L30a Home from the loop**: the loop header has a **"← Home"** button, outlined so it reads as a control (it is
+  the only way out of a session, D-072); it is not pumped or nudged, so it doesn't compete with the answers. Because it leaves the
   loop, it first asks **"Back to Home? This will stop the session. Are you sure?"** with **Yes** / **No**. **Yes** = Stop (FR-L30);
   **No** closes the question and the loop continues where it was. While the question is open, loop shortcuts are
   ignored and Esc means No (owner request, 2026-11-18).
@@ -393,7 +396,7 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L33** The loop state (including the current card's side and whether its hints are shown) is saved in
   `sessionStorage`, so a page refresh resumes the same loop. Stop or finishing clears it.
 - **FR-L34** Desktop keyboard shortcuts (listed in a "Keyboard shortcuts" popover in the loop header): **K** Know, **A** Know · ask again (signed-in learners), **D** Don't know, **H** Hints,
-  **Space/F** Flip, **←** Back, **→** Next, **Enter** Next or Continue, **Esc** Stop (asks first, FR-L30). Shortcuts respect the enabled/disabled state.
+  **Space/F** Flip, **←** Back, **→** Next, **Enter** Next or Continue, **Esc** Home (asks first, FR-L30a). Shortcuts respect the enabled/disabled state.
 
 ### 6.3 What the back of the card shows
 The front always shows the item text. The back depends only on whether the two languages are the **same or
@@ -849,8 +852,8 @@ and a colored glow around. The loop uses two shapes:
   under it ("Don't show again", "Show again in future", "Show again soon"), which may wrap onto two lines on a
   phone. For guests the green pill is locked: a darker green (dimmed, not grey), disabled, with a small yellow padlock
   (no background) on its top-left edge, shown on phones too where the pills hide their icons (D-042).
-- **Round buttons** (Stop, Back, Next; Flip on the card): an icon in a circle (56px mobile, 64px desktop) with an
-  italic muted caption underneath ("Stop", "Back", "Next"). (No Hints button since D-047: hints are on the card.)
+- **Round buttons** (Back, Next; Flip on the card): an icon in a circle (56px mobile, 64px desktop) with an
+  italic muted caption underneath ("Back", "Next"). (No Hints button since D-047: hints are on the card.)
 Disabled buttons lose glow and ledge and look muted. Base mechanics:
 ```css
 .btn3d {
@@ -974,14 +977,15 @@ FRONT, after Hints               BACK, after Flip (EN → HE)
 - **Loop header**: the MyVocab logo mark (two stacked cards) and the progress `Cycle 1 • Card 2/10 • 1 known` on the
   left; on the right, on desktop a "⌨ Keyboard shortcuts" link that opens a small popover listing the shortcuts, and
   "← Home" (asks before stopping the loop, FR-L30a).
-- **Loop buttons**: on desktop, one row under the card, in this order: `Stop · Back · I know it (green) ·
-  I know it (amber) · I don't know · Next` (round, round, pill, pill, pill, round; the green pill locked for
+- **Loop buttons**: on desktop, one row under the card, in this order: `Back · I know it (green) ·
+  I know it (amber) · I don't know · Next` (round, pill, pill, pill, round; no Stop since D-072; the green pill locked for
   guests); after I don't know the row stays the same, the answers disabled and Next pumping (D-031). Flip is
   on the card itself.
 - **Loop (mobile, 360–767px)**: the flip card fills the space above; the buttons form a **sticky bottom bar** in the
   thumb zone, in two rows: the three answer pills on top (**I know it · I know it · I don't know**, three equal pills
   with their captions), and the round
-  `Stop · Back · Next` (with captions) below, so the two main actions stay big. After Don't know, the
+  Back (left) and Next (right) (with captions) below, so the two main actions stay big (no Stop, D-072). Back's
+  circle lines up with the green pill's left end and Next's with the red pill's right end (D-073). After Don't know, the
   layout stays: the answer pills disable and the round Next pumps (FR-L28, FR-L29a, D-031).
 - **Loop (desktop ≥ 768px)**: a centered column of about 1100px; the card is wide (≈ 2.3 : 1) and the pills carry
   their labels.

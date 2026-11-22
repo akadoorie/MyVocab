@@ -1,6 +1,6 @@
 import { canDispatch, type LoopActionType, type LoopState } from '@myvocab/core';
 import type { CSSProperties, MouseEvent, ReactNode, Ref } from 'react';
-import { LockIcon, ChevronBackIcon, ChevronIcon, StopIcon } from '../../components/Icons';
+import { LockIcon, ChevronBackIcon, ChevronIcon } from '../../components/Icons';
 import { strings } from '../../strings';
 
 type Kind = 'round' | 'hint' | 'know' | 'again' | 'dontknow';
@@ -78,8 +78,9 @@ export function LoopButton({
 }
 
 /**
- * Loop buttons (PRD FR-L24, §9.7). Desktop: one row `Stop · Back · three answers · Next`.
- * Phones: the three answer pills on top, `Stop · Back · Next` below. Hints are on the card, under a
+ * Loop buttons (PRD FR-L24, §9.7). Desktop: one row `Back · three answers · Next`.
+ * Phones: the three answer pills on top, Back (left) and Next (right) below. No Stop: Home in the
+ * header (or Esc) ends the session (D-072). Hints are on the card, under a
  * live cover (D-047). After "I don't know"
  * the layout stays: the answers are off and Next pumps (D-031). Flip is on the card.
  * The answers (D-030): green "I know it · Don't show again", orange "I know it · Show again in
@@ -95,7 +96,7 @@ export function ButtonBar({
   onLocked,
   lockedTip = false,
   onSignIn,
-  nudging = false,
+  nudging = null,
   nextCountdown = null,
 }: {
   state: LoopState;
@@ -108,7 +109,7 @@ export function ButtonBar({
   lockedTip?: boolean;
   onSignIn?: () => void;
   /** Pump once and shine, to show what to press (D-066); disabled buttons stay still. */
-  nudging?: boolean;
+  nudging?: 'full' | 'shine' | null;
   /** After "I don't know", Next counts down and then moves on by itself (D-069). */
   nextCountdown?: { left: number; running: boolean; seconds: number } | null;
 }) {
@@ -123,19 +124,13 @@ export function ButtonBar({
   // The three answer pills carry their label only, on every screen (D-058, base.css).
   const trio = 'lbtn--trio';
   // Green, orange, red one after the other (base.css: nudge-1..3).
-  const nudge = (n: number) => (nudging ? `is-nudging nudge-${n}` : '');
+  const nudge = (n: number) =>
+    nudging ? `${nudging === 'full' ? 'is-nudging' : 'is-shining'} nudge-${n}` : '';
   return (
-    <div className="grid grid-cols-12 items-start gap-x-3 gap-y-5 pb-1 [grid-template-areas:'know_know_know_know_again_again_again_again_dk_dk_dk_dk'_'stop_stop_stop_stop_back_back_back_back_next_next_next_next'] md:grid-cols-[auto_auto_1fr_1fr_1.1fr_auto] md:gap-x-6 md:[grid-template-areas:'stop_back_know_again_dk_next']">
+    <div className="grid grid-cols-12 items-start gap-x-3 gap-y-5 pb-1 [grid-template-areas:'know_know_know_know_again_again_again_again_dk_dk_dk_dk'_'back_back_back_back_._._._._next_next_next_next'] md:grid-cols-[auto_1fr_1fr_1.1fr_auto] md:gap-x-6 md:[grid-template-areas:'back_know_again_dk_next']">
       <LoopButton
         kind="round"
-        icon={<StopIcon />}
-        label={strings.loop.stop}
-        className="[grid-area:stop]"
-        {...btn('STOP')}
-      />
-      <LoopButton
-        kind="round"
-        className="[grid-area:back]"
+        className="[grid-area:back] edge-start"
         icon={<ChevronBackIcon />}
         label={strings.loop.back}
         {...btn('BACK')}
@@ -201,7 +196,7 @@ export function ButtonBar({
       <LoopButton
         ref={nextRef}
         kind="round"
-        className={`[grid-area:next] ${revealed ? 'is-urgent' : ''} ${nextCountdown ? `has-countdown ${nextCountdown.running ? '' : 'is-countdown-paused'}` : ''}`}
+        className={`[grid-area:next] edge-end ${revealed ? 'is-urgent' : ''} ${nextCountdown ? `has-countdown ${nextCountdown.running ? '' : 'is-countdown-paused'}` : ''}`}
         {...(nextCountdown
           ? {
               labelExtra: ` · ${nextCountdown.left}`,

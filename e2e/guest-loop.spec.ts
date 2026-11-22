@@ -172,14 +172,17 @@ test('on touch, swipe left is Next and swipe right is Back', async ({ page }) =>
   await expect(card(page)).toHaveAttribute('data-side', 'front');
 });
 
-test('Stop asks first, then ends the session and returns home', async ({ page }) => {
+test('Home asks first, then ends the session and returns home (no Stop, D-072)', async ({
+  page,
+}) => {
   await page.goto('/');
   await page
     .getByRole('region', { name: 'Configure your session' })
     .getByRole('button', { name: 'Start' })
     .click();
   await expect(page).toHaveURL(/\/loop$/);
-  await page.getByRole('button', { name: /Stop/ }).first().click({ force: true });
+  await expect(page.getByRole('button', { name: 'Stop' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Home', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Yes' }).click();
   await expect(page).toHaveURL(/\/$/);
   await page.goto('/loop');

@@ -34,31 +34,41 @@ const LOCKED_TIP_MS = 1500;
 const NUDGE_CARDS = 3;
 const NUDGE_DELAY_MS = 300;
 const NUDGE_IDLE_MS = 4000;
+/** While the user still waits, a soft shine (no pump) repeats this often (D-074). */
+const SHINE_EVERY_MS = 10_000;
 /** Long enough for the staggered pump and shine to finish (base.css). */
 const NUDGE_MS = 1700;
+
+/** A full nudge (pump, then shine) or the shine alone (the repeats, D-074). */
+export type NudgeKind = 'full' | 'shine';
 /** Next's countdown after "I don't know", when the session doesn't say (D-069). */
 const DEFAULT_NEXT_SECONDS = 10;
 
 /**
- * Whether the buttons should nudge now (D-066). `step` changes whenever the screen changes state
+ * How the buttons should nudge now (D-066, D-074). `step` changes whenever the screen changes state
  * (a new card, a flip, hints, Don't know). On the first cards of a cycle every change nudges,
- * shortly after; after that, only a pause of a few seconds does. Off for "reduce motion".
+ * shortly after; after that, only a pause of a few seconds does. While the user still waits, a
+ * soft shine repeats every 10 seconds. Off for "reduce motion".
  */
-function useNudge(step: string, full: boolean, enabled: boolean): boolean {
-  // The step the nudge is playing for: a new step drops the class, so the next one restarts.
-  const [playing, setPlaying] = useState<string | null>(null);
+function useNudge(step: string, full: boolean, enabled: boolean): NudgeKind | null {
+  // What is playing, and for which step: a new step drops the class, so the next one restarts.
+  const [playing, setPlaying] = useState<{ step: string; kind: NudgeKind } | null>(null);
   useEffect(() => {
     if (!enabled) return;
     const timers: number[] = [];
-    const play = () => {
-      setPlaying(step);
+    const play = (kind: NudgeKind) => {
+      setPlaying({ step, kind });
       timers.push(window.setTimeout(() => setPlaying(null), NUDGE_MS));
     };
-    if (full) timers.push(window.setTimeout(play, NUDGE_DELAY_MS));
-    timers.push(window.setTimeout(play, NUDGE_IDLE_MS));
-    return () => timers.forEach((t) => window.clearTimeout(t));
+    if (full) timers.push(window.setTimeout(() => play('full'), NUDGE_DELAY_MS));
+    timers.push(window.setTimeout(() => play('full'), NUDGE_IDLE_MS));
+    const shine = window.setInterval(() => play('shine'), SHINE_EVERY_MS);
+    return () => {
+      timers.forEach((t) => window.clearTimeout(t));
+      window.clearInterval(shine);
+    };
   }, [step, full, enabled]);
-  return playing === step;
+  return playing?.step === step ? playing.kind : null;
 }
 
 export type KnownSink = {
@@ -117,7 +127,8 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   const nextRef = useRef<HTMLButtonElement>(null);
   const [announcement, setAnnouncement] = useState('');
   // Stop and Home both ask before ending the session (PRD FR-L30, FR-L30a).
-  const [confirmLeave, setConfirmLeave] = useState<'stop' | 'home' | null>(null);
+  // Home (or Esc) asks before ending the session (PRD FR-L30a; there is no Stop button, D-072).
+  const [confirmLeave, setConfirmLeave] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const counterRef = useRef<HTMLSpanElement>(null);
   const [crumple, setCrumple] = useState<Crumple | null>(null);
@@ -128,6 +139,8 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   const markCelebrated = useCallback(() => setCelebrated(true), []);
   // Flip pulses until it's first used in the session, also across a refresh (D-066).
   const [flipped, setFlipped] = useState(stored.flipped ?? false);
+  // The card Flip was last used on: it stops nudging there (D-074).
+  const [flippedCard, setFlippedCard] = useState<string | null>(null);
 
   // Persist on every change; Stop and the end of the loop clear it (FR-L33).
   useEffect(() => {
@@ -197,6 +210,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
       }
       if (type === 'FLIP') {
         setFlipped(true);
+        setFlippedCard(`${state.cycle}-${state.index}`);
         setAnnouncement(
           state.side === 'front' ? strings.card.showingAnswer : strings.card.showingFront,
         );
@@ -230,7 +244,8 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
       // "Don't show again" needs signing in (D-042); K says so, like tapping the button (D-043).
       if (action === 'KNOW' && stored.isGuest) return showLocked();
       if (action === 'ENTER') act(state.phase === 'cycleBreak' ? 'CONTINUE' : 'NEXT');
-      else if (action === 'STOP') setConfirmLeave('stop');
+      else if (action === 'STOP')
+        setConfirmLeave(true); // Esc: the same question as Home
       else act(action);
     },
     [act, state.phase, confirmLeave, stored.isGuest, showLocked],
@@ -248,7 +263,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   const nextSeconds = stored.nextSeconds ?? DEFAULT_NEXT_SECONDS;
   const next = useCountdown(nextSeconds, () => act('NEXT'), {
     enabled: state.phase === 'revealed',
-    paused: confirmLeave !== null,
+    paused: confirmLeave,
     resetKey: `${state.cycle}-${state.index}-${state.phase}`,
   });
 
@@ -281,17 +296,15 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
   // "Back to Home?" on the session screen and on the break between rounds (FR-L30a, D-067).
   const leaveDialog = confirmLeave && (
     <ConfirmDialog
-      title={
-        confirmLeave === 'home' ? strings.loop.homeConfirmTitle : strings.loop.stopConfirmTitle
-      }
+      title={strings.loop.homeConfirmTitle}
       body={strings.loop.homeConfirmBody}
       confirmLabel={strings.loop.yes}
       cancelLabel={strings.loop.no}
       onConfirm={() => {
-        setConfirmLeave(null);
+        setConfirmLeave(false);
         act('STOP');
       }}
-      onCancel={() => setConfirmLeave(null)}
+      onCancel={() => setConfirmLeave(false)}
     />
   );
 
@@ -305,8 +318,8 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           total={progress.cycleSize}
           onContinue={() => act('CONTINUE')}
           onBack={() => act('BACK')}
-          onHome={() => setConfirmLeave('home')}
-          paused={confirmLeave !== null}
+          onHome={() => setConfirmLeave(true)}
+          paused={confirmLeave}
           seconds={stored.continueSeconds ?? DEFAULT_CONTINUE_SECONDS}
         />
         {leaveDialog}
@@ -356,8 +369,9 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
           <ShortcutsMenu signedIn={!stored.isGuest} />
           <button
             type="button"
-            onClick={() => setConfirmLeave('home')}
-            className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-[10px] px-2 text-sm text-muted hover:text-text md:text-base"
+            onClick={() => setConfirmLeave(true)}
+            // The only way out of a session now (D-072): a clear bordered button, not a faint link.
+            className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-[10px] border border-border px-3 text-sm font-medium text-text transition-colors hover:border-accent hover:text-accent md:text-base"
           >
             <span aria-hidden="true">←</span> {strings.nav.home}
           </button>
@@ -381,7 +395,11 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
             onToggleHints={() => act('TOGGLE_HINTS')}
             answer={shownAnswer}
             pulse={!flipped && motionAllowed()}
-            nudging={nudging}
+            nudging={
+              state.side === 'front' && flippedCard !== `${state.cycle}-${state.index}`
+                ? nudging
+                : null
+            }
           />
         </div>
       </div>
@@ -396,7 +414,7 @@ function Loop({ stored, knownSink }: { stored: StoredLoop; knownSink: KnownSink 
       <div className="sticky bottom-0 -mx-4 flex flex-col gap-4 bg-gradient-to-t from-bg via-bg to-transparent px-4 pt-4 pb-4 md:relative md:mx-0 md:bg-none md:px-0 md:pt-0 md:pb-8">
         <ButtonBar
           state={state}
-          onAction={(type) => (type === 'STOP' ? setConfirmLeave('stop') : act(type))}
+          onAction={act}
           nextRef={nextRef}
           signedIn={!stored.isGuest}
           onLocked={showLocked}

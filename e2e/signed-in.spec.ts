@@ -72,7 +72,7 @@ test('Know → My known words (ask again is not kept) → hidden only in that di
   const askAgain = ((await page.getByTestId('front-text').textContent()) ?? '').trim();
   await button(page, 'I know it Show again in future').click();
   await expect(page.getByTestId('progress')).toContainText('2 known');
-  await button(page, 'Stop').click();
+  await button(page, 'Home').click();
   await page.getByRole('dialog').getByRole('button', { name: 'Yes' }).click();
   await expect(page).toHaveURL(/\/$/);
 
