@@ -188,7 +188,8 @@ export function Summary({
           {strings.summary.guestNote}
         </button>
       )}
-      <div className="flex gap-3">
+      {/* Home on the left and New practice on the right in every language, Hebrew too (D-088). */}
+      <div className="flex gap-3 rtl:flex-row-reverse">
         <Button3D
           variant="stop"
           onClick={onHome}

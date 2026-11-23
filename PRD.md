@@ -374,7 +374,7 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L31 Round break**: when a round ends and "Don't know" cards remain, an interstitial shows
   "Round 3 · 2 cards left", a recap ("You knew 5 of 8 — 3 to go."), then **Home** and **Continue** side by side as on
   the summary, with "to next round" under Continue (D-067). Home is on the left and Continue on the right in every
-  language, Hebrew too (D-088). **Continue** (or Enter) starts the next round; it counts
+  language, Hebrew too, as are Home and New practice on the summary (D-088). **Continue** (or Enter) starts the next round; it counts
   down from the admin setting `practice.continueSeconds` (default 10; "Continue · 10, 9…", with a light band draining across it) and starts the next round by itself at 0; 0 seconds means no countdown (D-068).
   Any tap, click or key stops the countdown for good; it pauses while the page is hidden; screen readers hear
   "Continuing in N seconds" once; with reduced motion only the numbers count. **Home** (or Esc) asks "Back to
