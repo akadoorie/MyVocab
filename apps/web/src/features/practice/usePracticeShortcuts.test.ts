@@ -13,9 +13,10 @@ describe('actionForKey (PRD FR-L34)', () => {
     expect(actionForKey('x')).toBeNull();
   });
 
-  it('mirrors the arrows on right-to-left pages, like the buttons (D-080)', () => {
-    expect(actionForKey('ArrowLeft', { rtl: true })).toBe('NEXT');
-    expect(actionForKey('ArrowRight', { rtl: true })).toBe('BACK');
+  it('keeps ← for Back and → for Next in every language, like the buttons (D-096)', () => {
+    // The Hebrew UI has the same button order as the English one.
+    expect(actionForKey('ArrowLeft', { code: 'ArrowLeft' })).toBe('BACK');
+    expect(actionForKey('ArrowRight', { code: 'ArrowRight' })).toBe('NEXT');
   });
 
   it('reads the physical key when a Hebrew layout types a Hebrew letter', () => {

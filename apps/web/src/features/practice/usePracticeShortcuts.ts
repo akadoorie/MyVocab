@@ -1,17 +1,16 @@
 import type { PracticeActionType } from '@myvocab/core';
 import { useEffect } from 'react';
-import { strings } from '../../strings';
 
 const FORM_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT']);
 
 /**
  * Maps a key to a practice action (PRD FR-L34). Enter means Next or Continue. `code` (the physical
- * key) stands in for a letter typed in another layout, e.g. Hebrew, where K types "ל". On
- * right-to-left pages the arrows are mirrored like the buttons: → is Back, ← is Next (D-080).
+ * key) stands in for a letter typed in another layout, e.g. Hebrew, where K types "ל". The arrows
+ * follow the buttons, which are in the same order in every language: ← is Back, → is Next (D-096).
  */
 export function actionForKey(
   key: string,
-  { code = '', rtl = false }: { code?: string; rtl?: boolean } = {},
+  { code = '' }: { code?: string } = {},
 ): PracticeActionType | 'ENTER' | null {
   const latin =
     key.length === 1 && key.charCodeAt(0) > 127 && /^Key[A-Z]$/.test(code) ? code.slice(3) : key;
@@ -28,9 +27,9 @@ export function actionForKey(
     case ' ':
       return 'FLIP';
     case 'arrowleft':
-      return rtl ? 'NEXT' : 'BACK';
+      return 'BACK';
     case 'arrowright':
-      return rtl ? 'BACK' : 'NEXT';
+      return 'NEXT';
     case 'enter':
       return 'ENTER';
     case 'escape':
@@ -50,7 +49,7 @@ export function usePracticeShortcuts(handle: (action: PracticeActionType | 'ENTE
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const target = e.target as HTMLElement | null;
       if (target && (FORM_TAGS.has(target.tagName) || target.isContentEditable)) return;
-      const action = actionForKey(e.key, { code: e.code, rtl: strings.locale.dir === 'rtl' });
+      const action = actionForKey(e.key, { code: e.code });
       if (!action) return;
       const onControl = target?.tagName === 'BUTTON' || target?.tagName === 'A';
       if ((e.key === ' ' || e.key === 'Enter') && onControl) return;

@@ -45,8 +45,9 @@ export const CrossIcon = () => (
   </Svg>
 );
 
+/** Next's chevron: points right in every language, as Next sits on the right (D-096). */
 export const ChevronIcon = () => (
-  <Svg strokeWidth={2.8} className="rtl:-scale-x-100">
+  <Svg strokeWidth={2.8}>
     <path d="m9 5 7 7-7 7" />
   </Svg>
 );
@@ -67,9 +68,9 @@ export const BackArrow = () => (
   </span>
 );
 
-/** The left-pointing chevron of Back (PRD FR-L29a); mirrored on right-to-left pages. */
+/** The left-pointing chevron of Back (PRD FR-L29a): Back sits on the left in every language (D-096). */
 export const ChevronBackIcon = () => (
-  <Svg strokeWidth={2.8} className="rtl:-scale-x-100">
+  <Svg strokeWidth={2.8}>
     <path d="m15 5-7 7 7 7" />
   </Svg>
 );

@@ -38,7 +38,7 @@ test('a first visit is in Hebrew, right-to-left, and switches to English', async
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
 });
 
-test('a Hebrew practice: Hebrew buttons, Next on the left, Flip still bottom-right, direction on the left', async ({
+test('a Hebrew practice: Hebrew buttons in the English order, Flip still bottom-right, direction on the left', async ({
   page,
 }, testInfo) => {
   await page.goto('/');
@@ -52,9 +52,13 @@ test('a Hebrew practice: Hebrew buttons, Next on the left, Flip still bottom-rig
 
   const box = async (name: string) =>
     (await page.getByRole('button', { name, exact: true }).last().boundingBox())!;
+  // The same order as in English (D-096): Back on the left, green, orange, red, Next on the right.
   const next = await box('הבא');
   const back = await box('הקודם');
-  expect(next.x).toBeLessThan(back.x);
+  expect(back.x).toBeLessThan(next.x);
+  const green = await box('ידעתי לא להציג שוב (התחברו כדי להפעיל)');
+  const red = await box('לא ידעתי הצג בסבב הבא');
+  expect(green.x).toBeLessThan(red.x);
 
   const card = (await page.getByTestId('flip-card').boundingBox())!;
   const flip = (await page
@@ -67,17 +71,17 @@ test('a Hebrew practice: Hebrew buttons, Next on the left, Flip still bottom-rig
   const chip = (await page.getByTestId('flip-card').getByText('EN → HE').first().boundingBox())!;
   expect(chip.x + chip.width / 2).toBeLessThan(card.x + card.width / 2);
 
-  // Keyboard (desktop): mirrored like the buttons, ← is Next.
+  // Keyboard (desktop): like the buttons, → is Next and ← is Back.
   if (testInfo.project.name === 'desktop') {
     await page.getByRole('button', { name: 'לא ידעתי הצג בסבב הבא' }).click();
-    await page.keyboard.press('ArrowLeft');
-    await expect(page.getByTestId('progress')).toHaveText(/כרטיסיה 2\/5/);
     await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('progress')).toHaveText(/כרטיסיה 2\/5/);
+    await page.keyboard.press('ArrowLeft');
     await expect(page.getByTestId('progress')).toHaveText(/כרטיסיה 1\/5/);
   }
 });
 
-test('on touch in Hebrew, the swipes are mirrored: right is Next, left is Back', async ({
+test('on touch in Hebrew, the swipes match the buttons: left is Next, right is Back', async ({
   page,
 }) => {
   await page.goto('/');
@@ -88,8 +92,8 @@ test('on touch in Hebrew, the swipes are mirrored: right is Next, left is Back',
   const progress = page.getByTestId('progress');
   await expect(progress).toHaveText(/כרטיסיה 1\/5/);
   await page.getByRole('button', { name: 'לא ידעתי הצג בסבב הבא' }).click();
-  await swipe(page, 160);
-  await expect(progress).toHaveText(/כרטיסיה 2\/5/);
   await swipe(page, -160);
+  await expect(progress).toHaveText(/כרטיסיה 2\/5/);
+  await swipe(page, 160);
   await expect(progress).toHaveText(/כרטיסיה 1\/5/);
 });

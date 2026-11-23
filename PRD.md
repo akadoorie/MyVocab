@@ -365,8 +365,8 @@ private content repository. It never appears in the public code repo or any publ
     turn the summary into a round break, or the reverse.
   - Answers are derived from the practice state (`known` for this round, with an "ask again" flag, and `nextRound`), so
     there is no separate store.
-- **FR-L29b Swipe** (phones, touch only): **swipe left = Next**, **swipe right = Back** (mirrored in Hebrew, where
-  Next sits on the left: swipe right = Next, swipe left = Back; D-080), only when that action is allowed. The card follows the finger with a slight tilt; past about 70 px (or a quick flick)
+- **FR-L29b Swipe** (phones, touch only): **swipe left = Next**, **swipe right = Back** (the same in Hebrew, where
+  the buttons keep the English order, D-096), only when that action is allowed. The card follows the finger with a slight tilt; past about 70 px (or a quick flick)
   it slides out and the action runs, otherwise it springs back. When the action isn't allowed it moves only a little,
   with resistance. A mostly vertical drag is ignored, a tap does nothing, and with "reduce motion" there is no movement
   (the action just happens). There is no on-screen hint; the buttons stay.
@@ -415,7 +415,7 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L33** The practice state (including the current card's side and whether its hints are shown) is saved in
   `sessionStorage`, so a page refresh resumes the same practice. Leaving with Home or finishing clears it.
 - **FR-L34** Desktop keyboard shortcuts (listed in a "Keyboard shortcuts" popover in the practice header): **K** Know (signed-in learners; guests see the sign-in tip), **A** Know · ask again, **D** Don't know, **H** Hints,
-  **Space/F** Flip, **←** Back, **→** Next (mirrored in Hebrew: **→** Back, **←** Next; letter keys also work on a
+  **Space/F** Flip, **←** Back, **→** Next (the same in Hebrew, like the buttons, D-096; letter keys also work on a
   Hebrew keyboard layout, D-080), **Enter** Next or Continue, **Esc** Home (asks first, FR-L30a). Shortcuts respect the enabled/disabled state.
 
 ### 6.3 What the back of the card shows
@@ -1013,11 +1013,11 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   and the admin area keep the word.
 - **Practice buttons**: on desktop, one row under the card, in this order: `Back · I know it (green) ·
   I know it (amber) · I don't know · Next` (round, pill, pill, pill, round; the green pill locked for
-  guests; mirrored in Hebrew); after I don't know the row stays the same, the answers disabled and Next pumping (D-031). Flip is
+  guests; the same order in Hebrew, D-096); after I don't know the row stays the same, the answers disabled and Next pumping (D-031). Flip is
   on the card itself.
 - **Practice (mobile, 360–767px)**: the flip card fills the space above; the buttons form a **sticky bottom bar** in the
   thumb zone, in two rows: the three answer pills on top (**I know it · I know it · I don't know**, three equal pills
-  with their captions), and **Back** (left) and **Next** (right) below (mirrored in Hebrew). Back and Next are pills
+  with their captions), and **Back** (left) and **Next** (right) below (the same in Hebrew, D-096). Back and Next are pills
   of the same size as the answer pills, Back exactly under the green one and Next under the red one, with the label
   inside next to the chevron ("‹ Back", "Next · 9 ›"; D-087). The spacing is kept
   tight so the card gets the room: about 26 px from the card to the pills and 14 px between the two rows (D-085). After Don't know, the
@@ -1050,10 +1050,12 @@ the typecheck. Components read the active language's strings through `strings.ts
   which is the same for everyone ("ידעתי" / "לא ידעתי"). Counts spell out one ("כרטיסיה אחת"). The Hebrew slogan is "ללמוד מילים וביטויים לפסיכומטרי ביעילות ובחינם"; the locked green button's tip reads
   "נדרשת התחברות" (the link last). The slogan's last word, "ובחינם", gets the same drop-and-stick animation as "stick"
   (D-037), mirrored: it tilts the other way and the shine sweeps from the right.
-- **Mirroring (RTL):** the layout follows the page direction (logical CSS properties): Back is on the right and
-  Next on the left, their chevrons and the "←" of Home point the other way, the padlocks sit on the buttons' top-right edge, and the summary
-  crown sits on the card's upper-right corner and flies in from the top right. Swipes and arrow keys are mirrored
-  like the buttons: swipe right or ← for Next, swipe left or → for Back.
+- **Mirroring (RTL):** the layout follows the page direction (logical CSS properties): the summary crown sits on the
+  card's upper-right corner and flies in from the top right.
+- **The practice buttons keep the English order** (D-096): from left to right Back, the green "I know it", the
+  orange "I know it", "I don't know", and Next, in Hebrew too, with Back's chevron pointing left and Next's right, and the
+  green pill's padlock on its top-left edge. Swipes and arrow keys follow them: swipe left or → for Next, swipe right or
+  ← for Back.
 - **Not mirrored:** in every language, Flip stays in the card's bottom-right corner (with the hints' notch and
   fade there), and the direction label (e.g. "EN → HE") stays on the left of the card, on both faces, with the
   "Clicked: …" chip on the right (D-091).

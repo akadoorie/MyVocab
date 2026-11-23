@@ -132,7 +132,12 @@ export function ButtonBar({
   const nudge = (n: number) =>
     nudging ? `${nudging === 'full' ? 'is-nudging' : 'is-shining'} nudge-${n}` : '';
   return (
-    <div className="grid grid-cols-12 items-start gap-x-3 gap-y-3.5 pb-1 [grid-template-areas:'know_know_know_know_again_again_again_again_dk_dk_dk_dk'_'back_back_back_back_._._._._next_next_next_next'] md:grid-cols-[auto_1fr_1fr_1.1fr_auto] md:gap-x-6 md:[grid-template-areas:'back_know_again_dk_next']">
+    // The same order in every language, Hebrew too (D-096): Back on the left, then green, orange,
+    // red, and Next on the right, chevrons pointing the same way.
+    <div
+      dir="ltr"
+      className="grid grid-cols-12 items-start gap-x-3 gap-y-3.5 pb-1 [grid-template-areas:'know_know_know_know_again_again_again_again_dk_dk_dk_dk'_'back_back_back_back_._._._._next_next_next_next'] md:grid-cols-[auto_1fr_1fr_1.1fr_auto] md:gap-x-6 md:[grid-template-areas:'back_know_again_dk_next']"
+    >
       <PracticeButton
         kind="round"
         className="[grid-area:back] edge-start"
@@ -168,7 +173,7 @@ export function ButtonBar({
       {/* Over the green pill, in the same grid cell; announced politely. */}
       <div aria-live="polite" className="pointer-events-none z-10 self-start [grid-area:know]">
         {!signedIn && lockedTip && (
-          <p className="locked-tip pointer-events-auto">
+          <p className="locked-tip pointer-events-auto" dir={strings.locale.dir}>
             {/* Text around the link, in either order: "Sign-in required" / "נדרשת התחברות". */}
             {/* The spaces are for screen readers; the flex gap spaces the words on screen. */}
             {strings.practice.lockedTipBefore && <span>{strings.practice.lockedTipBefore} </span>}

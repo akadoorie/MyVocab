@@ -273,9 +273,8 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   const card = id === null ? undefined : cards.get(id);
   // The chip shows on a card that already had an answer when it came up (reached with Back).
   const shownAnswer = id !== null && state.phase === 'deciding' ? answerOf(state, id) : null;
-  // Right-to-left, Next sits on the left, so the swipes are mirrored too (D-080).
-  const [swipeLeft, swipeRight] =
-    strings.locale.dir === 'rtl' ? (['BACK', 'NEXT'] as const) : (['NEXT', 'BACK'] as const);
+  // Next sits on the right in every language (D-096): swipe left for Next, right for Back.
+  const [swipeLeft, swipeRight] = ['NEXT', 'BACK'] as const;
   const swipeRef = useSwipe({
     canLeft: canDispatch(state, swipeLeft),
     canRight: canDispatch(state, swipeRight),
