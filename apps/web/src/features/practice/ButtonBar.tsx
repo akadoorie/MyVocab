@@ -86,7 +86,7 @@ export function PracticeButton({
  * with Back), Next keeps pumping and shines with the answers' nudge: it is the way on (D-084).
  * Flip is on the card.
  * The answers (D-030): green "I know it · Don't show again", orange "I know it · Show again in
- * future" (FR-L27a) and red "I don't know · Show again soon". Guests (`signedIn` false) see the
+ * future" (FR-L27a) and red "I don't know · Show in next round". Guests (`signedIn` false) see the
  * green one locked: nothing is kept for them, so "Don't show again" needs signing in, while the
  * orange one does for them exactly what it says (D-042).
  */

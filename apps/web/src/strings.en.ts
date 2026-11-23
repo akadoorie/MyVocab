@@ -195,11 +195,11 @@ export const en = {
     dontKnow: 'I don’t know',
     knowCaption: 'Don’t show again',
     againCaption: 'Show again in future',
-    dontKnowCaption: 'Show again soon',
+    dontKnowCaption: 'Show in next round',
     /** Their accessible names: exactly the visible label + caption (axe label-content-name-mismatch). */
     knowName: 'I know it Don’t show again',
     againName: 'I know it Show again in future',
-    dontKnowName: 'I don’t know Show again soon',
+    dontKnowName: 'I don’t know Show in next round',
     /** The green button is shown to guests, but locked: only a signed-in Know is kept (D-042). */
     signInToEnable: 'Sign-in to enable',
     knowNameGuest: 'I know it Don’t show again (sign-in to enable)',

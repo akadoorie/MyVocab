@@ -60,7 +60,7 @@ describe('Know marks of a signed-in learner', () => {
     expect(stored()).toEqual([{ i: id, t: 'he', c: 1, f: 0, n: expect.any(Number) as number }]);
     expect(window.localStorage.getItem(queueStorageKey(TEST_USER.id))).not.toMatch(/sample/);
     fireEvent.click(button('Back'));
-    fireEvent.click(button('I don’t know Show again soon'));
+    fireEvent.click(button('I don’t know Show in next round'));
     expect(stored()).toEqual([]);
   });
 

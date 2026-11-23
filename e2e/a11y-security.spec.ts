@@ -47,7 +47,7 @@ test('guest pages: no accessibility violations and no CSP violations', async ({ 
   await expect(page).toHaveURL(/\/practice$/);
   await expectNoViolations(page, 'practice (front)');
   await page
-    .getByRole('button', { name: 'I don’t know Show again soon', exact: true })
+    .getByRole('button', { name: 'I don’t know Show in next round', exact: true })
     .last()
     .click();
   await expectNoViolations(page, 'practice (revealed)');

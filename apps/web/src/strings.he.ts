@@ -182,11 +182,11 @@ export const he: Strings = {
     know: 'ידעתי',
     dontKnow: 'לא ידעתי',
     knowCaption: 'לא להציג שוב',
-    againCaption: 'להציג שוב בעתיד',
-    dontKnowCaption: 'להציג שוב בקרוב',
+    againCaption: 'הצג שוב בעתיד',
+    dontKnowCaption: 'הצג בסבב הבא',
     knowName: 'ידעתי לא להציג שוב',
-    againName: 'ידעתי להציג שוב בעתיד',
-    dontKnowName: 'לא ידעתי להציג שוב בקרוב',
+    againName: 'ידעתי הצג שוב בעתיד',
+    dontKnowName: 'לא ידעתי הצג בסבב הבא',
     signInToEnable: 'התחברו כדי להפעיל',
     knowNameGuest: 'ידעתי לא להציג שוב (התחברו כדי להפעיל)',
     // Short, to fit the pill on phones: "נדרשת התחברות", the link last.
@@ -221,7 +221,7 @@ export const he: Strings = {
     // Mirrored with the buttons: in Hebrew Back is on the right and Next on the left.
     shortcuts: [
       ['K', 'ידעתי'],
-      ['A', 'ידעתי, להציג שוב בעתיד'],
+      ['A', 'ידעתי, הצג שוב בעתיד'],
       ['D', 'לא ידעתי'],
       ['H', 'רמזים'],
       ['F / רווח', 'היפוך'],
@@ -249,10 +249,10 @@ export const he: Strings = {
     hideHints: 'הסתרת הרמזים',
     tapForHints: 'הקישו כדי לראות רמזים',
     answeredKnow: 'בחרתם: ידעתי',
-    answeredKnowAgain: 'בחרתם: ידעתי (להציג שוב בעתיד)',
+    answeredKnowAgain: 'בחרתם: ידעתי (הצג שוב בעתיד)',
     answeredDontKnow: 'בחרתם: לא ידעתי',
     answeredKnowAgainShort: 'בחרתם: ידעתי',
-    answeredKnowAgainExtra: ' (להציג שוב בעתיד)',
+    answeredKnowAgainExtra: ' (הצג שוב בעתיד)',
     backTo: (card: number, size: number, answer: string | null) =>
       `כרטיסיה ${card} מתוך ${size}${answer ? `. ${answer}` : ''}`,
   },

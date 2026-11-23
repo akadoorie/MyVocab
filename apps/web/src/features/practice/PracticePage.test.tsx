@@ -78,7 +78,7 @@ describe('PracticePage', () => {
     expect(btn('Next')).toBeDisabled();
     for (const name of [
       'I know it Show again in future',
-      'I don’t know Show again soon',
+      'I don’t know Show in next round',
       'Tap to see hints', // the live cover over the hints on the card (D-047)
       'Flip',
     ])
@@ -87,10 +87,10 @@ describe('PracticePage', () => {
 
   it('Don’t know flips to the back, keeps the layout, turns the answers off and Next pumps', () => {
     setup();
-    fireEvent.click(btn('I don’t know Show again soon'));
+    fireEvent.click(btn('I don’t know Show in next round'));
     expect(side()).toBe('back');
     // The answers stay in place, disabled; Next is the way on.
-    for (const name of ['I know it Show again in future', 'I don’t know Show again soon'])
+    for (const name of ['I know it Show again in future', 'I don’t know Show in next round'])
       expect(btn(name)).toBeDisabled();
     // The guest's green one stays locked: off, but it can still explain itself (D-043).
     expect(btn('I know it Don’t show again (sign-in to enable)')).toHaveAttribute(
@@ -160,7 +160,7 @@ describe('PracticePage', () => {
     setup();
     expect(btn('Back')).toBeDisabled(); // first card of the round
     fireEvent.click(btn('I know it Show again in future'));
-    fireEvent.click(btn('I don’t know Show again soon'));
+    fireEvent.click(btn('I don’t know Show in next round'));
     expect(side()).toBe('back');
     fireEvent.click(btn('Back'));
     expect(progress()).toBe('Round 1 · Card 1/3 · 1 known');
@@ -190,7 +190,7 @@ describe('PracticePage', () => {
     expect(sink.onKnow).toHaveBeenCalledTimes(1);
     expect(sink.onKnow).toHaveBeenCalledWith(expect.objectContaining({ round: 1 }), 'he');
     fireEvent.click(btn('Back'));
-    fireEvent.click(btn('I don’t know Show again soon'));
+    fireEvent.click(btn('I don’t know Show in next round'));
     expect(sink.onUnknow).toHaveBeenCalledTimes(1);
     expect(progress()).toBe('Round 1 · Card 1/3 · 0 known');
     expect(side()).toBe('back');
@@ -217,7 +217,7 @@ describe('PracticePage', () => {
     // The same captions as for signed-in learners.
     expect(screen.getByText('Don’t show again')).toBeInTheDocument();
     expect(screen.getByText('Show again in future')).toBeInTheDocument();
-    expect(screen.getByText('Show again soon')).toBeInTheDocument();
+    expect(screen.getByText('Show in next round')).toBeInTheDocument();
     fireEvent.keyDown(window, { key: 'k' });
     expect(progress()).toBe('Round 1 · Card 1/3 · 0 known');
     fireEvent.keyDown(window, { key: 'a' });
@@ -254,7 +254,7 @@ describe('PracticePage', () => {
         removeEventListener: () => undefined,
       }));
     const nudging = (name: string) => btn(name).classList.contains('is-nudging');
-    const answers = ['I know it Show again in future', 'I don’t know Show again soon'];
+    const answers = ['I know it Show again in future', 'I don’t know Show in next round'];
     afterEach(() => vi.unstubAllGlobals());
 
     it('on the first cards, the available answers pump shortly after each change; Back and Stop never', () => {
@@ -278,7 +278,7 @@ describe('PracticePage', () => {
       vi.useFakeTimers();
       setup(undefined, { count: 5 });
       for (let i = 0; i < 3; i++) {
-        fireEvent.click(btn('I don’t know Show again soon'));
+        fireEvent.click(btn('I don’t know Show in next round'));
         fireEvent.click(btn('Next'));
       }
       expect(progress()).toBe('Round 1 · Card 4/5 · 0 known');
@@ -293,7 +293,7 @@ describe('PracticePage', () => {
       vi.useFakeTimers();
       setup(undefined, { count: 5 });
       for (let i = 0; i < 3; i++) {
-        fireEvent.click(btn('I don’t know Show again soon'));
+        fireEvent.click(btn('I don’t know Show in next round'));
         fireEvent.click(btn('Next'));
       }
       const shining = () => btn(answers[0]!).classList.contains('is-shining');
@@ -320,7 +320,7 @@ describe('PracticePage', () => {
       expect(btn('Flip').className).not.toMatch(/is-nudging|is-shining/);
       expect(nudging(answers[0]!)).toBe(true);
       // The next card: Flip untouched there, so it joins in.
-      fireEvent.click(btn('I don’t know Show again soon'));
+      fireEvent.click(btn('I don’t know Show in next round'));
       fireEvent.click(btn('Next'));
       act(() => vi.advanceTimersByTime(300));
       expect(btn('Flip')).toHaveClass('is-nudging');
@@ -340,7 +340,7 @@ describe('PracticePage', () => {
       vi.useFakeTimers();
       setup(undefined, { count: 5 });
       expect(btn('Next')).not.toHaveClass('is-pumping'); // unanswered: Next is off
-      fireEvent.click(btn('I don’t know Show again soon'));
+      fireEvent.click(btn('I don’t know Show in next round'));
       expect(btn('Next')).toHaveClass('is-urgent');
       expect(btn('Next')).not.toHaveClass('is-pumping'); // after Don't know: its own pump
       fireEvent.click(btn('Next'));
@@ -385,13 +385,13 @@ describe('PracticePage', () => {
     expect(names).toEqual([
       'I know it Don’t show again',
       'I know it Show again in future',
-      'I don’t know Show again soon',
+      'I don’t know Show in next round',
     ]);
     expect(btn('I know it Show again in future')).toHaveClass('lbtn--again');
     expect(btn('I know it Show again in future')).not.toHaveClass('is-locked');
     expect(screen.getByText('Don’t show again')).toBeInTheDocument();
     expect(screen.getByText('Show again in future')).toBeInTheDocument();
-    expect(screen.getByText('Show again soon')).toBeInTheDocument();
+    expect(screen.getByText('Show in next round')).toBeInTheDocument();
 
     fireEvent.click(btn('I know it Show again in future'));
     expect(progress()).toBe('Round 1 · Card 2/3 · 1 known'); // counts like Know in the practice
@@ -426,7 +426,7 @@ describe('PracticePage', () => {
     fireEvent.click(btn('Back'));
     fireEvent.click(btn('I know it Show again in future'));
     fireEvent.click(btn('Back'));
-    fireEvent.click(btn('I don’t know Show again soon')); // from ask again: nothing was recorded, nothing to undo
+    fireEvent.click(btn('I don’t know Show in next round')); // from ask again: nothing was recorded, nothing to undo
     expect(sink.onUnknow).toHaveBeenCalledTimes(2);
     expect(sink.onKnow).toHaveBeenCalledTimes(2);
   });
@@ -492,7 +492,7 @@ describe('PracticePage', () => {
     expect(play).toHaveBeenCalledTimes(1);
     // Back, change the last card to Don't know, then Back to Know again: no new round, no repeat.
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
-    fireEvent.click(btn('I don’t know Show again soon'));
+    fireEvent.click(btn('I don’t know Show in next round'));
     fireEvent.click(btn('Back')); // to card 2
     fireEvent.click(btn('Next')); // card 3 again, answered Don't know
     fireEvent.click(btn('I know it Show again in future')); // changed back: the practice is completed again
@@ -500,7 +500,7 @@ describe('PracticePage', () => {
     expect(play).toHaveBeenCalledTimes(1);
     // Now a real new round: Back, Don't know, Next → round break → Continue → Know → completed.
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
-    fireEvent.click(btn('I don’t know Show again soon'));
+    fireEvent.click(btn('I don’t know Show in next round'));
     fireEvent.click(btn('Next'));
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
     fireEvent.click(btn('I know it Show again in future'));
@@ -518,7 +518,7 @@ describe('PracticePage', () => {
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
     expect(progress()).toBe('Round 1 · Card 3/3 · 3 known');
     expect(loadPractice()).not.toBeNull(); // the practice is alive again
-    fireEvent.click(btn('I don’t know Show again soon'));
+    fireEvent.click(btn('I don’t know Show in next round'));
     fireEvent.click(btn('Next'));
     expect(screen.getByRole('heading', { name: 'Round 2 · 1 card left' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
@@ -535,7 +535,7 @@ describe('PracticePage', () => {
       vi.useFakeTimers();
       setup();
       expect(nextLabel()).toBe('Next');
-      fireEvent.click(btn('I don’t know Show again soon'));
+      fireEvent.click(btn('I don’t know Show in next round'));
       expect(nextLabel()).toBe('Next · 10');
       expect(btn('Next')).toHaveAccessibleName('Next'); // the digits aren't read out
       tick(4);
@@ -549,7 +549,7 @@ describe('PracticePage', () => {
     it('any key, tap or scroll stops it for good', () => {
       vi.useFakeTimers();
       setup();
-      fireEvent.click(btn('I don’t know Show again soon'));
+      fireEvent.click(btn('I don’t know Show in next round'));
       fireEvent.wheel(window);
       expect(nextLabel()).toBe('Next');
       tick(15);
@@ -559,7 +559,7 @@ describe('PracticePage', () => {
     it('uses the length from the settings; 0 means no countdown', () => {
       vi.useFakeTimers();
       setup(undefined, { nextSeconds: 0 });
-      fireEvent.click(btn('I don’t know Show again soon'));
+      fireEvent.click(btn('I don’t know Show in next round'));
       expect(nextLabel()).toBe('Next');
       tick(15);
       expect(progress()).toBe('Round 1 · Card 1/3 · 0 known');
@@ -581,7 +581,7 @@ describe('PracticePage', () => {
       const router = setup(undefined, continueSeconds === undefined ? {} : { continueSeconds });
       fireEvent.click(btn('I know it Show again in future'));
       fireEvent.click(btn('I know it Show again in future'));
-      fireEvent.click(btn('I don’t know Show again soon'));
+      fireEvent.click(btn('I don’t know Show in next round'));
       fireEvent.click(btn('Next'));
       expect(screen.getByRole('heading', { name: 'Round 2 · 1 card left' })).toBeInTheDocument();
       return router;
@@ -664,7 +664,7 @@ describe('PracticePage', () => {
     setup();
     fireEvent.click(btn('I know it Show again in future'));
     fireEvent.click(btn('I know it Show again in future'));
-    fireEvent.click(btn('I don’t know Show again soon'));
+    fireEvent.click(btn('I don’t know Show in next round'));
     fireEvent.click(btn('Next'));
     expect(screen.getByRole('heading', { name: 'Round 2 · 1 card left' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));

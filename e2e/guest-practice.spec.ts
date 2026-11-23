@@ -100,16 +100,16 @@ test('a guest starts with the defaults and plays a practice to the summary', asy
   await expect(progress(page)).toHaveText('Round 1 · Card 1/5 · 1 known');
   await expect(card(page)).toHaveAttribute('data-side', 'front');
   await expect(page.getByTestId('answer-chip')).toHaveText(/Clicked: I know it/);
-  await button(page, 'I don’t know Show again soon').click();
+  await button(page, 'I don’t know Show in next round').click();
   await expect(progress(page)).toHaveText('Round 1 · Card 1/5 · 0 known');
   await button(page, 'Next').click();
   await expect(progress(page)).toHaveText('Round 1 · Card 2/5 · 0 known');
 
   // Don't know → auto-flip → the answers stay but turn off, and Next pumps.
-  await button(page, 'I don’t know Show again soon').click();
+  await button(page, 'I don’t know Show in next round').click();
   await expect(card(page)).toHaveAttribute('data-side', 'back');
   await expect(button(page, 'I know it Show again in future')).toBeDisabled();
-  await expect(button(page, 'I don’t know Show again soon')).toBeDisabled();
+  await expect(button(page, 'I don’t know Show in next round')).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Next', exact: true })).toHaveClass(/is-urgent/);
   await button(page, 'Next').click();
   await expect(progress(page)).toHaveText('Round 1 · Card 3/5 · 0 known');
@@ -144,7 +144,7 @@ test('on touch, swipe left is Next and swipe right is Back', async ({ page }) =>
   // Not answered yet: swiping left does nothing.
   await swipe(page, -160);
   await expect(progress(page)).toHaveText('Round 1 · Card 1/5 · 0 known');
-  await button(page, 'I don’t know Show again soon').click();
+  await button(page, 'I don’t know Show in next round').click();
   await swipe(page, -160);
   await expect(progress(page)).toHaveText('Round 1 · Card 2/5 · 0 known');
   await expect(card(page)).toHaveAttribute('data-side', 'front');
