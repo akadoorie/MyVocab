@@ -71,8 +71,10 @@ const answerLabels = (lang: string): AnswerLabels => (lang === 'he' ? he.card : 
 function mainLabel(card: CardView, labels: AnswerLabels): string {
   const { main } = card.answer;
   if (main === 'explanation') return labels.explanation;
-  // No parallel: the meaning is simply the word's translation.
-  if (main === 'meaning') return labels.translation;
+  // No parallel: for a plain word the meaning is simply its translation; an expression with a
+  // literal translation (its words don't simply translate) keeps "Meaning" (D-097).
+  if (main === 'meaning')
+    return card.answer.literal.length > 0 ? labels.meaning : labels.translation;
   return card.answer.literalSameAsParallel ? labels.parallelAlsoLiteral : labels.parallel;
 }
 

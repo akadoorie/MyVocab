@@ -251,6 +251,18 @@ describe('the line at the middle: the upper part shrinks to fit (D-095)', () => 
 });
 
 describe('answer labels follow the answer language (D-097)', () => {
+  it('no parallel but a literal translation (an expression): the meaning is labelled "Meaning"', () => {
+    const base = makeCard(14);
+    const card = makeCard(14, {
+      answer: { ...base.answer, main: 'meaning', lines: ['משמעות-14'], literal: ['מילולי-14'] },
+    });
+    render(<FlipCard card={card} side="back" hintsShown={false} onFlip={vi.fn()} />);
+    const labels = [...face('back').querySelectorAll('.flip-card__label')].map(
+      (l) => l.textContent,
+    );
+    expect(labels).toEqual(['משמעות', 'מילולית']);
+  });
+
   it('an English answer gets English labels, also in the Hebrew UI', () => {
     activateLocale('he');
     const base = makeCard(12);

@@ -268,7 +268,8 @@ private content repository. It never appears in the public code repo or any publ
   - **Back**: at the top, the same row as the front, in the same place: the direction label and, on a card reached
     with Back, the "Clicked: …" chip, so neither moves when the card turns (D-091). Then, for a translation, labelled lines (D-024, D-025, D-097): each line starts with its
     label and continues with its entries. The main answer, large, labelled **"Parallel translation"** when the item has a
-    parallel, otherwise **"Translation"** (the meaning is then simply the translation); under a parallel, a
+    parallel; without one, **"Translation"** for a plain word (the meaning is then simply the translation) but
+    **"Meaning"** when the item has a literal translation (an expression whose words don't simply translate); under a parallel, a
     **"Meaning"** line in a medium size; then a **"Literally"** line, small and muted. When the literal is marked as the
     same as the parallel (D-026), the first label reads **"Parallel translation (also literally)"** and there is no
     Literally line. The labels are in the **answer's language**, not the UI's: a Hebrew answer gets "תרגום מקביל",
