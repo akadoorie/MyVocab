@@ -1,6 +1,7 @@
 {
   "name": "myvocab",
   "private": true,
+  "license": "UNLICENSED",
   "type": "module",
   "packageManager": "pnpm@12.21.0",
   "engines": {

@@ -358,3 +358,10 @@ Workers Paid ($5/month) raises the limits; nothing in the code has to change.
   or indexed. CSRF: SameSite cookies, Origin and Content-Type checks on every change.
 - Stored personal data: Google id, email, name and picture link, known words, usage counters. No
   IP addresses, browser details or Google tokens. Users can delete their account at any time.
+
+## Licence
+
+Copyright (c) 2026 Amir Kadoorie. **All rights reserved.** The code is public to read, but it is
+not open source: copying, modifying, distributing or using it requires written permission. See
+[`LICENSE`](./LICENSE). Third-party packages keep their own licences
+([`third-party-licenses.txt`](./apps/web/public/third-party-licenses.txt)).
