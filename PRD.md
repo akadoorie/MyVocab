@@ -322,7 +322,8 @@ private content repository. It never appears in the public code repo or any publ
   stays available (Hints works only while the front shows). The layout does not change: the round **Next turns
   violet and pumps** (a gentle grow-and-shrink with a soft ring) until it is pressed, so the way on is clear; with
   reduced motion it shows a steady ring instead (D-031). It also counts down from the admin setting `practice.nextSeconds`
-  (default 10; "Next · 10, 9…" under the button, with a light pie draining inside it) and moves to the next card by
+  (default 10; "Next · 10, 9…" on the button, with a light pie draining inside the round desktop button and a light
+  band draining across the phone pill, D-087) and moves to the next card by
   itself at 0, like Continue on the break (D-069). Any tap, click, key or mouse-wheel scroll stops the countdown for
   good (the learner may still be reading); it pauses while the page is hidden or "Are you sure?" is open; screen
   readers hear "Next card in 10 seconds" once; 0 seconds means no countdown; not on a card reached with Back.
@@ -1002,11 +1003,12 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   on the card itself.
 - **Practice (mobile, 360–767px)**: the flip card fills the space above; the buttons form a **sticky bottom bar** in the
   thumb zone, in two rows: the three answer pills on top (**I know it · I know it · I don't know**, three equal pills
-  with their captions), and the round
-  Back (left) and Next (right) (with captions) below, so the two main actions stay big (mirrored in Hebrew). Back's
-  circle lines up with the green pill's left end and Next's with the red pill's right end (D-073). The spacing is kept
+  with their captions), and **Back** (left) and **Next** (right) below (mirrored in Hebrew). Back and Next are pills
+  of the same size as the answer pills, Back exactly under the green one and Next under the red one, with the label
+  inside next to the chevron ("‹ Back", "Next · 9 ›"; D-087). The spacing is kept
   tight so the card gets the room: about 26 px from the card to the pills and 14 px between the two rows (D-085). After Don't know, the
-  layout stays: the answer pills disable and the round Next pumps (FR-L28, FR-L29a, D-031).
+  layout stays: the answer pills disable and Next pumps (FR-L28, FR-L29a, D-031); on the wide phone pill the pump is
+  gentler (5% instead of 12%, D-087).
 - **Practice (desktop ≥ 768px)**: a centered column of about 1100px; the card is wide (≈ 2.3 : 1) and the pills carry
   their labels.
 - **Round break / Summary**: a glassy card with large numbers and the 3D buttons.

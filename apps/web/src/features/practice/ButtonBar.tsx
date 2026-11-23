@@ -79,7 +79,8 @@ export function PracticeButton({
 
 /**
  * Practice buttons (PRD FR-L24, §9.7). Desktop: one row `Back · three answers · Next`.
- * Phones: the three answer pills on top, Back (left) and Next (right) below. No Stop: Home in the
+ * Phones: the three answer pills on top, Back (left) and Next (right) below as pills of the same
+ * size with the label inside (D-087, base.css `.edge-start` / `.edge-end`). No Stop: Home in the
  * header (or Esc) ends the practice (D-072). Hints are on the card, under a
  * live cover (D-047). After "I don't know"
  * the layout stays: the answers are off and Next pumps (D-031). On a card answered earlier (reached

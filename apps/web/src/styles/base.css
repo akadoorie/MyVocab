@@ -822,19 +822,78 @@ body {
       font-size: 1.375rem;
     }
   }
-  /* Phones (D-073): Back's circle lines up with the green pill's left end, Next's with the red
-     pill's right end. The button is as wide as its circle, so a longer caption ("Next · 10")
-     spreads both ways under it instead of pushing the circle in. */
+  /* Phones (D-087): Back and Next are pills like the answers above them, exactly as wide and tall
+     as the outer pills (their grid cells span the same columns) and with the label inside:
+     "‹ Back", "Next · 9 ›" (mirrored in Hebrew). Desktop keeps the round buttons. */
   @media (max-width: 767px) {
     .lbtn.edge-start,
     .lbtn.edge-end {
-      width: var(--size);
+      --size: 60px;
+      grid-template-columns: 1fr auto auto 1fr;
+      grid-template-rows: var(--size);
+      column-gap: 6px;
+      justify-self: stretch;
+      padding-bottom: 6px;
     }
-    .lbtn.edge-start {
-      justify-self: start;
+    .lbtn.edge-start .lbtn__shape,
+    .lbtn.edge-end .lbtn__shape {
+      justify-self: stretch;
+      width: auto;
     }
-    .lbtn.edge-end {
-      justify-self: end;
+    .lbtn.edge-start .lbtn__icon,
+    .lbtn.edge-end .lbtn__label {
+      grid-column: 2;
+    }
+    .lbtn.edge-start .lbtn__label,
+    .lbtn.edge-end .lbtn__icon {
+      grid-column: 3;
+    }
+    .lbtn.edge-start .lbtn__label,
+    .lbtn.edge-end .lbtn__label {
+      grid-row: 1;
+      color: var(--text);
+      font-size: clamp(0.95rem, 4.3vw, 1.125rem);
+      font-style: normal;
+      font-weight: 700;
+      pointer-events: none;
+      transition: transform 80ms ease;
+    }
+    .lbtn.edge-start:active:not(:disabled) .lbtn__label,
+    .lbtn.edge-end:active:not(:disabled) .lbtn__label,
+    .lbtn.edge-start:disabled .lbtn__label,
+    .lbtn.edge-end:disabled .lbtn__label {
+      transform: translateY(6px);
+    }
+    /* Next's countdown (D-069): a light band draining across the pill, like Continue's on the round
+       break, instead of the round button's pie. */
+    .lbtn.edge-end.has-countdown .lbtn__shape::before {
+      background: rgba(255, 255, 255, 0.18);
+      transform-origin: left;
+      animation-name: countdown-drain;
+    }
+  }
+  /* A gentler pump on the wide phone pill (D-087): it grows 5%, not 12%; the label pumps with it. */
+  @media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+    .lbtn.edge-end.is-urgent:not(:active) .lbtn__icon,
+    .lbtn.edge-end.is-urgent:not(:active) .lbtn__label,
+    .lbtn.edge-end.is-pumping:not(:disabled, [aria-disabled='true'], :active) .lbtn__icon,
+    .lbtn.edge-end.is-pumping:not(:disabled, [aria-disabled='true'], :active) .lbtn__label,
+    .lbtn.edge-end.is-pumping:not(:disabled, [aria-disabled='true'], :active) .lbtn__shape {
+      animation: lbtn-pump-soft 1.1s ease-in-out infinite;
+    }
+    .lbtn.edge-end.is-urgent:not(:active) .lbtn__shape {
+      animation:
+        lbtn-pump-soft 1.1s ease-in-out infinite,
+        lbtn-ring 1.1s ease-in-out infinite;
+    }
+  }
+  @keyframes lbtn-pump-soft {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
     }
   }
   /* The three answer pills carry their label only, on phones and desktop alike (D-058). */
