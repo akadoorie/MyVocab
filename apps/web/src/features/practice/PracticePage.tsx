@@ -371,10 +371,10 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
         </p>
         <div className="flex items-center gap-2 md:gap-4">
           <ShortcutsMenu signedIn={!stored.isGuest} />
-          {/* The version next to Home (D-093). On phones it is smaller and sits just below the
-              button (above the card), taking no width, so the progress stays on one line. */}
-          <div className="relative flex shrink-0 items-center gap-4">
-            <AppVersion className="absolute top-full left-1/2 mt-1 -translate-x-1/2 text-[10px] leading-none md:static md:mt-0 md:translate-x-0 md:text-xs" />
+          {/* The version, centred just below Home (above the card), on phones and desktop alike
+              (D-093): it takes no width, so the progress stays on one line. */}
+          <div className="relative flex shrink-0 items-center">
+            <AppVersion className="absolute top-full left-1/2 mt-1 -translate-x-1/2 text-[10px] leading-none md:text-xs" />
             <button
               type="button"
               onClick={() => setConfirmLeave(true)}

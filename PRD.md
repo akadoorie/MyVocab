@@ -1002,9 +1002,9 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   of each answer pill with its caption, each with one line on what it does; D-058); Start card; footer (Privacy). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
 - **Practice header**: the MyVocab logo mark (two stacked cards) and the progress `Round 1 • Card 2/10 • 1 known` at the
   start (left; right in Hebrew); at the other end, on desktop a "⌨ Keyboard shortcuts" link that opens a small popover listing the shortcuts,
-  the app version (the same small yellow "v1.N" as on the Home page, D-093; on phones a little smaller, centred just below the
-  Home button (above the card), so the progress keeps its one line), and the Home button with its house icon
-  (asks before stopping the practice, FR-L30a).
+  and the Home button with its house icon (asks before stopping the practice, FR-L30a). The app version is centred just
+  below the Home button, above the card (the same small yellow "v1.N" as on the Home page, a little smaller on phones,
+  D-093); it takes no width, so the progress keeps its one line.
 - **Home as an icon (D-086)**: the way back to the Home page is a house icon, not the word, in three places: the practice
   header, the header of the other regular pages (Privacy, My known words, Account; 44 px, muted), and the Home button on
   the round break and the summary. Each keeps "Home" as its accessible name and tooltip. The account menu's "Home" item
