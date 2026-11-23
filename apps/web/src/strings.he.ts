@@ -17,7 +17,7 @@ export const he: Strings = {
   languageNames: { en: 'אנגלית', he: 'עברית' },
   app: {
     name: 'MyVocab',
-    tagline: 'ללמוד מילים וביטויים לפסיכומטרי ביעילות',
+    tagline: 'ללמוד מילים וביטויים לפסיכומטרי ביעילות ובחינם',
   },
   nav: {
     version: 'גרסה',
@@ -36,7 +36,7 @@ export const he: Strings = {
     maintenance: 'MyVocab בתחזוקה כרגע.',
   },
   landing: {
-    heroTitle: 'ללמוד מילים וביטויים לפסיכומטרי ביעילות',
+    heroTitle: 'ללמוד מילים וביטויים לפסיכומטרי ביעילות ובחינם',
     heroBody:
       'בחרו קבוצת מילים או ביטויים. בכל סבב מוצגים רק אלה שאתם עדיין לא יודעים, עד ששיננתם את הכל.',
     howItWorks: 'איך זה עובד',

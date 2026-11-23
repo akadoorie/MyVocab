@@ -181,7 +181,7 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L1** The landing page (`/`) shows the slogan, with **"Registered users: N"** in small muted text under it (the number in yellow, like the version):
   for guests and learners only once N reaches the admin setting `stats.registeredUsersMin` (default 100), for admins
   always, even at 0 (D-082; fetched once when the page opens; hidden if it fails to load, D-036) (when the page loads or is refreshed on Home, the first words
-  fade in and the last word ("stick"; Hebrew "ביעילות") drops in, bounces off twice and sticks on the third try with a soft squash and a faint shine, about
+  fade in and the last word ("stick"; Hebrew "ובחינם") drops in, bounces off twice and sticks on the third try with a soft squash and a faint shine, about
   3s; not when coming back to Home inside the app; a short fade with reduced motion, D-034, D-037), the app version (a small yellow "v1.N" next to the name, D-032), a short hero, a 3-step "How it works" section with a **"Buttons"** guide
   (a small copy of each answer button as it looks in a practice: the same gradient, glossy edge, glow and ledge, label only, with its caption under it, D-058; and what it does; for guests the green one is dark, with a
   small yellow lock, and its line ends "(Sign-in to enable)", the whole "Sign-in to enable" a link that starts sign-in, D-030, D-042, D-071), and the **Start card**.
@@ -986,7 +986,7 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
 
 ### 9.7 Layouts
 - **Landing**: header (logo "MyVocab", the language switch, sign-in / avatar, an "Admin" link for admins as a full-page navigation); hero
-  ("Learn words until they stick"; Hebrew "ללמוד מילים וביטויים לפסיכומטרי ביעילות"); How it works (1. Pick languages and a topic, or just press Start ·
+  ("Learn words until they stick"; Hebrew "ללמוד מילים וביטויים לפסיכומטרי ביעילות ובחינם"); How it works (1. Pick languages and a topic, or just press Start ·
   2. Use Hints or Flip, then mark what you know · 3. Repeat the words that you didn’t know, till nothing is left), then "Buttons" (a small copy
   of each answer pill with its caption, each with one line on what it does; D-058); Start card; footer (Privacy). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
 - **Practice header**: the MyVocab logo mark (two stacked cards) and the progress `Round 1 • Card 2/10 • 1 known` at the
@@ -1031,8 +1031,8 @@ the typecheck. Components read the active language's strings through `strings.ts
   switch fits (D-083). The choice is remembered in the browser (`localStorage`). Switching re-renders
   the page in place. The admin area is always English and LTR, whatever the choice.
 - **Hebrew copy:** the learner is addressed in the plural ("בחרו", "לחצו"); first-person labels use the past tense,
-  which is the same for everyone ("ידעתי" / "לא ידעתי"). Counts spell out one ("כרטיסיה אחת"). The Hebrew slogan is "ללמוד מילים וביטויים לפסיכומטרי ביעילות"; the locked green button's tip reads
-  "נדרשת התחברות" (the link last). The slogan's last word, "ביעילות", gets the same drop-and-stick animation as "stick"
+  which is the same for everyone ("ידעתי" / "לא ידעתי"). Counts spell out one ("כרטיסיה אחת"). The Hebrew slogan is "ללמוד מילים וביטויים לפסיכומטרי ביעילות ובחינם"; the locked green button's tip reads
+  "נדרשת התחברות" (the link last). The slogan's last word, "ובחינם", gets the same drop-and-stick animation as "stick"
   (D-037), mirrored: it tilts the other way and the shine sweeps from the right.
 - **Mirroring (RTL):** the layout follows the page direction (logical CSS properties): Back is on the right and
   Next on the left, their chevrons and the "←" of Home point the other way, the padlocks sit on the buttons' top-right edge, and the summary
