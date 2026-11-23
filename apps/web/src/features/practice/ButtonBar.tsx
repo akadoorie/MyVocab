@@ -124,19 +124,19 @@ export function ButtonBar({
   // way on (PRD FR-L28, §9.7, D-031).
   const revealed = state.phase === 'revealed';
   // A card answered earlier, reached with Back (FR-L29a): changing the answer is optional, so Next,
-  // the way on, keeps pumping (in its own colours) and shines after the red pill (D-084).
+  // the way on, keeps pumping (in its own colours) and shines last, after the green pill next to it (D-084).
   const onEarlierCard = state.phase === 'deciding' && canDispatch(state, 'NEXT');
   // The three answer pills carry their label only, on every screen (D-058, base.css).
   const trio = 'lbtn--trio';
-  // Green, orange, red one after the other (base.css: nudge-1..3).
+  // Red, orange, green one after the other, left to right (base.css: nudge-1..3).
   const nudge = (n: number) =>
     nudging ? `${nudging === 'full' ? 'is-nudging' : 'is-shining'} nudge-${n}` : '';
   return (
-    // The same order in every language, Hebrew too (D-096): Back on the left, then green, orange,
-    // red, and Next on the right, chevrons pointing the same way.
+    // The same order in every language, Hebrew too (D-096): Back on the left, then red, orange,
+    // green (D-100), and Next on the right, chevrons pointing the same way.
     <div
       dir="ltr"
-      className="grid grid-cols-12 items-start gap-x-3 gap-y-3.5 pb-1 [grid-template-areas:'know_know_know_know_again_again_again_again_dk_dk_dk_dk'_'back_back_back_back_._._._._next_next_next_next'] md:grid-cols-[auto_1fr_1fr_1.1fr_auto] md:gap-x-6 md:[grid-template-areas:'back_know_again_dk_next']"
+      className="grid grid-cols-12 items-start gap-x-3 gap-y-3.5 pb-1 [grid-template-areas:'dk_dk_dk_dk_again_again_again_again_know_know_know_know'_'back_back_back_back_._._._._next_next_next_next'] md:grid-cols-[auto_1.1fr_1fr_1fr_auto] md:gap-x-6 md:[grid-template-areas:'back_dk_again_know_next']"
     >
       <PracticeButton
         kind="round"
@@ -152,7 +152,7 @@ export function ButtonBar({
           label={strings.practice.know}
           caption={strings.practice.knowCaption}
           name={strings.practice.knowName}
-          className={`[grid-area:know] ${trio} ${nudge(1)}`}
+          className={`[grid-area:know] ${trio} ${nudge(3)}`}
           {...btn('KNOW')}
         />
       ) : (
@@ -164,7 +164,7 @@ export function ButtonBar({
           caption={strings.practice.knowCaption}
           name={strings.practice.knowNameGuest}
           title={strings.practice.signInToEnable}
-          className={`[grid-area:know] ${trio} ${nudge(1)}`}
+          className={`[grid-area:know] ${trio} ${nudge(3)}`}
           locked
           aria-disabled
           onClick={onLocked}
@@ -199,7 +199,7 @@ export function ButtonBar({
       />
       <PracticeButton
         kind="dontknow"
-        className={`[grid-area:dk] ${trio} ${nudge(3)}`}
+        className={`[grid-area:dk] ${trio} ${nudge(1)}`}
         icon={null}
         label={strings.practice.dontKnow}
         caption={strings.practice.dontKnowCaption}

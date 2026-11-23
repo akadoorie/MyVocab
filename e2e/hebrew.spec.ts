@@ -52,13 +52,13 @@ test('a Hebrew practice: Hebrew buttons in the English order, Flip still bottom-
 
   const box = async (name: string) =>
     (await page.getByRole('button', { name, exact: true }).last().boundingBox())!;
-  // The same order as in English (D-096): Back on the left, green, orange, red, Next on the right.
+  // The same order as in English (D-096): Back on the left, red, orange, green (D-100), Next on the right.
   const next = await box('הבא');
   const back = await box('הקודם');
   expect(back.x).toBeLessThan(next.x);
   const green = await box('ידעתי לא להציג שוב (התחברו כדי להפעיל)');
   const red = await box('לא ידעתי הצג בסבב הבא');
-  expect(green.x).toBeLessThan(red.x);
+  expect(red.x).toBeLessThan(green.x);
 
   const card = (await page.getByTestId('flip-card').boundingBox())!;
   const flip = (await page

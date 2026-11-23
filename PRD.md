@@ -341,13 +341,13 @@ private content repository. It never appears in the public code repo or any publ
   good (the learner may still be reading); it pauses while the page is hidden or "Are you sure?" is open; screen
   readers hear "Next card in 10 seconds" once; 0 seconds means no countdown; not on a card reached with Back.
 - **FR-L28a The nudge** (D-066): to show what to press, the enabled answer pills and Flip pump once and a soft
-  shine sweeps across them (green, orange, red, Flip, about 80 ms apart). On the first 3 cards of each round this
+  shine sweeps across them (red, orange, green, Flip, about 80 ms apart). On the first 3 cards of each round this
   plays 0.3 s after every change of the screen (a new card, a flip, hints, Don't know); after that, only when the
   user waits 4 s without acting; while the user still waits, a soft shine alone (no pump) repeats every 10 s
   (D-074). Flip pulses gently until it is first used in the practice (remembered across a refresh); after that it
   joins the nudge and the shine only while the current card shows its front and wasn't flipped yet; while it still
   pulses, it shines too, without the pump (D-074). Disabled or locked buttons, Back and Home don't take part. Next takes part only on a card reached with
-  Back (FR-L29a), where it shines after the red pill; otherwise it doesn't (after Don't know it has its own pump). Nothing
+  Back (FR-L29a), where it shines after the green pill, its neighbour; otherwise it doesn't (after Don't know it has its own pump). Nothing
   moves with reduced motion.
 - **FR-L29 Next**: moves to the next card (enabled in the Revealed phase, and on a card answered earlier that was
   reached with Back). The next card enters front side up with a short rise-in (no reverse-flip animation).
@@ -361,7 +361,7 @@ private content repository. It never appears in the public code repo or any publ
     again in future)") or **"Clicked: I don't know"** (red), with no ✓ / ✗ mark, as on the answer buttons; in Hebrew
     the chip starts with "נבחר:" (D-089), and **Next** steps forward without answering again,
     up to the first unanswered card. There, Next is the way on: it **keeps pumping** (a gentle grow-and-shrink, in
-    its own colours, without the violet and the ring of Revealed) and shines with the nudge, after the red pill
+    its own colours, without the violet and the ring of Revealed) and shines with the nudge, after the green pill
     (FR-L28a); the answer pills keep their own nudge. Nothing moves with reduced motion (D-084).
   - **The answer can be changed.** **Know** on a Don't know card takes it out of the next round, records it as known
     and moves on. **Don't know** on a Know card removes the Know, adds the card to the next round (never twice) and
@@ -1022,14 +1022,14 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   header, the header of the other regular pages (Privacy, My known words, Account; 44 px, muted), and the Home button on
   the round break and the summary. Each keeps "Home" as its accessible name and tooltip. The account menu's "Home" item
   and the admin area keep the word.
-- **Practice buttons**: on desktop, one row under the card, in this order: `Back · I know it (green) ·
-  I know it (amber) · I don't know · Next` (round, pill, pill, pill, round; the green pill locked for
+- **Practice buttons**: on desktop, one row under the card, in this order: `Back · I don't know (red) ·
+  I know it (amber) · I know it (green) · Next` (D-100) (round, pill, pill, pill, round; the green pill locked for
   guests; the same order in Hebrew, D-096); after I don't know the row stays the same, the answers disabled and Next pumping (D-031). Flip is
   on the card itself.
 - **Practice (mobile, 360–767px)**: the flip card fills the space above; the buttons form a **sticky bottom bar** in the
-  thumb zone, in two rows: the three answer pills on top (**I know it · I know it · I don't know**, three equal pills
+  thumb zone, in two rows: the three answer pills on top (**I don't know · I know it · I know it**: red on the left, green on the right, D-100; three equal pills
   with their captions), and **Back** (left) and **Next** (right) below (the same in Hebrew, D-096). Back and Next are pills
-  of the same size as the answer pills, Back exactly under the green one and Next under the red one, with the label
+  of the same size as the answer pills, Back exactly under the red one and Next under the green one, with the label
   inside next to the chevron ("‹ Back", "Next · 9 ›"; D-087). The spacing is kept
   tight so the card gets the room: about 26 px from the card to the pills and 14 px between the two rows (D-085). After Don't know, the
   layout stays: the answer pills disable and Next pumps (FR-L28, FR-L29a, D-031); on the wide phone pill the pump is
@@ -1063,8 +1063,8 @@ the typecheck. Components read the active language's strings through `strings.ts
   (D-037), mirrored: it tilts the other way and the shine sweeps from the right.
 - **Mirroring (RTL):** the layout follows the page direction (logical CSS properties): the summary crown sits on the
   card's upper-right corner and flies in from the top right.
-- **The practice buttons keep the English order** (D-096): from left to right Back, the green "I know it", the
-  orange "I know it", "I don't know", and Next, in Hebrew too, with Back's chevron pointing left and Next's right, and the
+- **The practice buttons keep the English order** (D-096): from left to right Back, "I don't know" (red), the
+  orange "I know it", the green "I know it" (D-100), and Next, in Hebrew too, with Back's chevron pointing left and Next's right, and the
   green pill's padlock on its top-left edge. Swipes and arrow keys follow them: swipe left or → for Next, swipe right or
   ← for Back.
 - **Not mirrored:** in every language, Flip stays in the card's bottom-right corner (with the hints' notch and
