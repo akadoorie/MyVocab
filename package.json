@@ -16,6 +16,8 @@
     "test": "pnpm -r test && vitest run --config vitest.scripts.config.ts && pnpm --filter @myvocab/api test:scripts",
     "test:coverage": "pnpm --filter @myvocab/core test:coverage",
     "check:no-vocabulary": "tsx scripts/check-no-vocabulary.ts",
+    "licenses:update": "tsx scripts/third-party-licenses.ts",
+    "licenses:check": "tsx scripts/third-party-licenses.ts --check",
     "db:migrate:local": "pnpm --filter @myvocab/api db:migrate:local",
     "db:seed": "pnpm --filter @myvocab/api db:seed",
     "e2e": "playwright test",

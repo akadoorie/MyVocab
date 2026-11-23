@@ -40,6 +40,9 @@ jobs:
       - name: Guard - no vocabulary in the public repo
         run: pnpm check:no-vocabulary
 
+      - name: Third-party licenses file is up to date
+        run: pnpm licenses:check
+
       - name: Lint
         run: pnpm lint
 
