@@ -379,7 +379,7 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
               title={strings.nav.home}
               // The only way out of a practice now (D-072): a clear bordered button, not a faint link;
               // a house, not the word (D-086).
-              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-[10px] border border-border text-text transition-colors hover:border-accent hover:text-accent"
+              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-[var(--radius-practice)] border border-border text-text transition-colors hover:border-accent hover:text-accent"
             >
               <HomeIcon />
             </button>

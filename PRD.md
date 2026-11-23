@@ -870,12 +870,16 @@ glossy, glowing pressable buttons.
   halo, about 45% opacity).
 - Text/background combinations must meet **WCAG AA** contrast. White on the Know pill is used only as large bold text
   (≥ 20px bold); icons meet 3:1.
-- Radius 28px (flip card), 18px (other cards), pill/circle for practice buttons, 14px for other buttons, 12px (inputs).
+- Radius: the **practice screen is square with softened 4px corners** (D-101): the flip card, the answer pills, Back,
+  Next and Flip, the chips ("EN → HE", "Clicked: …", "◆ Multiple meanings"), the hints cover and its label, the
+  "Sign-in required" tip, the practice header's Home button, and the small button copies in the Home page's "Buttons"
+  guide (`--radius-practice`). Elsewhere: 18px (other cards), 14px for other buttons, 12px (inputs).
   Spacing on a 4px scale.
 
 ### 9.2 Pressable-ledge 3D buttons
 Buttons keep the pressable ledge, now glossy: a top-to-bottom gradient, a thin light top edge, the ledge underneath
-and a colored glow around. The practice uses two shapes:
+and a colored glow around. On the practice screen they are square with softened 4px corners (D-101), not ovals or
+circles. The practice uses two shapes:
 - **Pills** (the three answers, FR-L27a, D-030): the label only inside ("I know it", "I know it", "I don't
   know"), on phones and desktop alike (no ✓ / ✕ icons, D-058). On phones the three pills share the row. Each has a small italic muted caption
   under it ("Don't show again", "Show again in future", "Show in next round"), which may wrap onto two lines on a

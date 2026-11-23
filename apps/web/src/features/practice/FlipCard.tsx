@@ -258,7 +258,7 @@ export function FlipCard({
               {card.front.text}
             </p>
             {card.multipleMeanings && (
-              <span className="rounded-full bg-surface-2 px-3 py-1 text-sm text-accent">
+              <span className="rounded-[var(--radius-practice)] bg-surface-2 px-3 py-1 text-sm text-accent">
                 ◆ {strings.card.multipleMeanings}
               </span>
             )}

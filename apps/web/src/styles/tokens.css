@@ -56,7 +56,9 @@
     0 20px 50px rgba(0, 0, 0, 0.6);
   --card-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(109, 76, 255, 0.18);
 
-  --radius-flip-card: 28px;
+  /* The practice screen is square with softened corners (D-101): the card, its buttons and chips. */
+  --radius-practice: 4px;
+  --radius-flip-card: var(--radius-practice);
   --radius-card: 18px;
   --radius-button: 14px;
   --radius-input: 12px;
