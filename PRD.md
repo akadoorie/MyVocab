@@ -906,8 +906,10 @@ Disabled buttons lose glow and ledge and look muted. Base mechanics:
   it is `clamp(420px, 58vh, 600px)`. Both faces share one grid cell. A face with more content than fits scrolls
   inside the card.
 - **Placement**: the item (front) and the answer (back) sit in the **upper part** of the card (a block of at least
-  46% of its height, content centered in it) and never move; the meaning, the literal translation, hints and synonyms appear below
-  it, in the space kept for them.
+  46% of its height, 10 px less on phones so the extra room goes to the hints; content centered in it) and never move; the meaning, the literal translation, hints and synonyms appear below
+  it, in the space kept for them. The line under the upper part sits in **exactly the same place on both faces**, so it
+  doesn't jump when the card turns: when a longer item or answer, or a wrapped chip row, needs more room on one face,
+  both lines move down together (D-085).
 
 ```
 FRONT, hints revealed            BACK, after Flip (EN → HE)
@@ -997,7 +999,8 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   thumb zone, in two rows: the three answer pills on top (**I know it · I know it · I don't know**, three equal pills
   with their captions), and the round
   Back (left) and Next (right) (with captions) below, so the two main actions stay big (mirrored in Hebrew). Back's
-  circle lines up with the green pill's left end and Next's with the red pill's right end (D-073). After Don't know, the
+  circle lines up with the green pill's left end and Next's with the red pill's right end (D-073). The spacing is kept
+  tight so the card gets the room: about 26 px from the card to the pills and 14 px between the two rows (D-085). After Don't know, the
   layout stays: the answer pills disable and the round Next pumps (FR-L28, FR-L29a, D-031).
 - **Practice (desktop ≥ 768px)**: a centered column of about 1100px; the card is wide (≈ 2.3 : 1) and the pills carry
   their labels.

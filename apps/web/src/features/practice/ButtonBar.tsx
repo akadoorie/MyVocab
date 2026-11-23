@@ -131,7 +131,7 @@ export function ButtonBar({
   const nudge = (n: number) =>
     nudging ? `${nudging === 'full' ? 'is-nudging' : 'is-shining'} nudge-${n}` : '';
   return (
-    <div className="grid grid-cols-12 items-start gap-x-3 gap-y-5 pb-1 [grid-template-areas:'know_know_know_know_again_again_again_again_dk_dk_dk_dk'_'back_back_back_back_._._._._next_next_next_next'] md:grid-cols-[auto_1fr_1fr_1.1fr_auto] md:gap-x-6 md:[grid-template-areas:'back_know_again_dk_next']">
+    <div className="grid grid-cols-12 items-start gap-x-3 gap-y-3.5 pb-1 [grid-template-areas:'know_know_know_know_again_again_again_again_dk_dk_dk_dk'_'back_back_back_back_._._._._next_next_next_next'] md:grid-cols-[auto_1fr_1fr_1.1fr_auto] md:gap-x-6 md:[grid-template-areas:'back_know_again_dk_next']">
       <PracticeButton
         kind="round"
         className="[grid-area:back] edge-start"

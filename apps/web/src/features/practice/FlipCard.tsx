@@ -1,4 +1,5 @@
 import type { CardAnswer, CardSide, CardView } from '@myvocab/core';
+import { useLayoutEffect, useRef, type RefObject } from 'react';
 import { FlipIcon } from '../../components/Icons';
 import { PracticeButton } from './ButtonBar';
 import { strings } from '../../strings';
@@ -23,6 +24,38 @@ const chips = (): Record<
   },
   dontKnow: { color: 'text-dontknow', text: strings.card.answeredDontKnow, mark: '✗' },
 });
+
+/**
+ * Keeps the line under the item (front) and under the answer (back) in the same place, so it
+ * doesn't jump when the card turns (D-085). Each upper part is at least 46% of the card
+ * (.flip-card__top, base.css); a longer item or answer, or a wrapped chip row, would push its own
+ * line lower. Both lines go to the lower of the two (`--top-min`).
+ */
+function useSameLine(
+  frontTop: RefObject<HTMLDivElement | null>,
+  backTop: RefObject<HTMLDivElement | null>,
+) {
+  useLayoutEffect(() => {
+    const els = [frontTop.current, backTop.current];
+    if (els.some((el) => !el)) return;
+    const parts = els as HTMLDivElement[];
+    const sync = () => {
+      for (const el of parts) el.style.setProperty('--top-min', '0px');
+      const line = Math.max(...parts.map((el) => el.offsetTop + el.offsetHeight));
+      for (const el of parts) el.style.setProperty('--top-min', `${line - el.offsetTop}px`);
+    };
+    sync();
+    if (typeof ResizeObserver === 'undefined') return;
+    // The faces (the card's size), the chip rows above, and the parts themselves (their text).
+    const observer = new ResizeObserver(sync);
+    for (const el of parts) {
+      observer.observe(el);
+      if (el.parentElement) observer.observe(el.parentElement);
+      if (el.previousElementSibling) observer.observe(el.previousElementSibling);
+    }
+    return () => observer.disconnect();
+  }, [frontTop, backTop]);
+}
 
 /** The chip above the answer: what the main answer lines are (PRD §9.3, D-024). */
 function mainHeadline(card: CardView): string {
@@ -134,6 +167,9 @@ export function FlipCard({
   nudging?: 'full' | 'shine' | null;
 }) {
   const tid = (id: string) => (decorative ? undefined : id);
+  const frontTop = useRef<HTMLDivElement>(null);
+  const backTop = useRef<HTMLDivElement>(null);
+  useSameLine(frontTop, backTop);
   const label = `${card.direction.source.toUpperCase()} → ${card.direction.target.toUpperCase()}`;
   const front = side === 'front';
   const Answer = card.answer.numbered ? 'ol' : 'ul';
@@ -186,8 +222,13 @@ export function FlipCard({
             {answerChip('front')}
           </div>
           {/* The item sits in the upper part of the card and never moves; hints and synonyms
-              appear below it in the space kept for them (PRD §9.3). */}
-          <div className="flex min-h-[46%] shrink-0 flex-col items-center justify-center gap-4 py-4 text-center">
+              appear below it in the space kept for them (PRD §9.3). Its height comes from
+              .flip-card__top (base.css), the same on the back, so the line stays in place when
+              flipping (D-085). */}
+          <div
+            ref={frontTop}
+            className="flip-card__top flex shrink-0 flex-col items-center justify-center gap-4 py-4 text-center"
+          >
             <p
               lang={card.front.lang}
               dir={card.front.dir}
@@ -241,7 +282,10 @@ export function FlipCard({
             )}
             {answerChip('back')}
           </div>
-          <div className="flex min-h-[46%] shrink-0 flex-col items-center justify-center py-4 text-center">
+          <div
+            ref={backTop}
+            className="flip-card__top flex shrink-0 flex-col items-center justify-center py-4 text-center"
+          >
             {card.answer.kind === 'translation' ? (
               <Section
                 label={mainHeadline(card)}

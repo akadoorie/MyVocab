@@ -414,7 +414,7 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
         {next.counting ? strings.practice.nextIn(nextSeconds) : ''}
       </p>
 
-      <div className="sticky bottom-0 -mx-4 flex flex-col gap-4 bg-gradient-to-t from-bg via-bg to-transparent px-4 pt-4 pb-4 md:relative md:mx-0 md:bg-none md:px-0 md:pt-0 md:pb-8">
+      <div className="sticky bottom-0 -mx-4 flex flex-col gap-4 bg-gradient-to-t from-bg via-bg to-transparent px-4 pt-0 pb-4 md:relative md:mx-0 md:bg-none md:px-0 md:pb-8">
         <ButtonBar
           state={state}
           onAction={act}

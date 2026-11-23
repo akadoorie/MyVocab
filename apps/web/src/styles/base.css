@@ -1251,6 +1251,18 @@ body {
 .flip-card__front {
   padding-bottom: 20px;
 }
+/* The upper part (the item on the front, the answer on the back) is at least 46% of the card, so
+   the line under it sits in the same place on both faces (D-085). Percentages count from the
+   face's content box, and the back keeps more padding at the bottom for Flip: --pad-extra adds
+   that back, so both faces count from the same height. On phones it is 10px short of 46%, so the
+   room the tighter buttons give goes to the hints. --top-min (FlipCard's useSameLine) lifts both
+   to the lower line when a long item or answer needs more. */
+.flip-card__top {
+  min-height: max(calc((100% + var(--pad-extra, 0px)) * 0.46 - 10px), var(--top-min, 0px));
+}
+.flip-card__back {
+  --pad-extra: 52px; /* 72px - 20px */
+}
 .flip-card__flip {
   /* A little smaller on phones, leaving more room for the hints (D-051). */
   --size: 48px;
@@ -1271,6 +1283,12 @@ body {
   }
   .flip-card__front {
     padding-bottom: 36px;
+  }
+  .flip-card__top {
+    min-height: max(calc((100% + var(--pad-extra, 0px)) * 0.46), var(--top-min, 0px));
+  }
+  .flip-card__back {
+    --pad-extra: 64px; /* 100px - 36px */
   }
   .flip-card__flip {
     --size: 64px;
