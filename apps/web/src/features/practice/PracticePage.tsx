@@ -274,8 +274,12 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   const progress = practiceProgress(state);
   const id = currentCardId(state);
   const card = id === null ? undefined : cards.get(id);
-  // The chip shows on a card that already had an answer when it came up (reached with Back).
-  const shownAnswer = id !== null && state.phase === 'deciding' ? answerOf(state, id) : null;
+  // The chip shows the answer given to this card: right after "I don't know" (both faces, D-104),
+  // and on a card that already had an answer when it came up (reached with Back).
+  const shownAnswer =
+    id !== null && (state.phase === 'deciding' || state.phase === 'revealed')
+      ? answerOf(state, id)
+      : null;
   // Next sits on the right in every language (D-096): swipe left for Next, right for Back.
   const [swipeLeft, swipeRight] = ['NEXT', 'BACK'] as const;
   const swipeRef = useSwipe({
