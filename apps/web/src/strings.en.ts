@@ -249,11 +249,17 @@ export const en = {
     ] as const,
   },
   card: {
+    /*
+     * The labels of a card's answer are in the ANSWER's language, not the UI's (D-097):
+     * FlipCard takes them from the English or the Hebrew strings by the answer's language.
+     */
+    /** The main answer when there is no parallel: the meaning, simply the translation (D-097). */
     translation: 'Translation',
     /** The main answer of an expression card is its parallel (PRD §9.3, D-024). */
-    parallel: 'Parallel',
+    parallel: 'Parallel translation',
     /** The parallel is also the word-for-word translation (D-026). */
-    parallelAlsoLiteral: 'Parallel (also literally)',
+    parallelAlsoLiteral: 'Parallel translation (also literally)',
+    /** The meaning, under a parallel. */
     meaning: 'Meaning',
     explanation: 'Explanation',
     literal: 'Literally',

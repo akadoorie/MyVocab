@@ -266,12 +266,15 @@ private content repository. It never appears in the public code repo or any publ
     under a **live cover** until tapped (D-047). If the item has no hints and no synonyms, the section shows "Hint is
     not available", with no cover.
   - **Back**: at the top, the same row as the front, in the same place: the direction label and, on a card reached
-    with Back, the "Clicked: …" chip, so neither moves when the card turns (D-091). Then, for a translation, labelled sections (D-024, D-025): the main answer in large text under a small
-    headline ("Parallel" when the item has one, otherwise "Meaning"); under a parallel, a **"Meaning"** section in a
-    medium size; then a **"Literally"** section, small and muted. When the literal is marked as the same as the
-    parallel (D-026), the headline reads **"Parallel (also literally)"** and there is no Literally section. Each section is in the answer language's `dir`; two
-    or more entries in a section are numbered; a kind with no entries isn't shown. For the same language: the
-    explanation lines under a small "Explanation" headline (like "Meaning", D-091); a thin divider; then the Hints section and the Synonyms line, **always** (whether or not
+    with Back, the "Clicked: …" chip, so neither moves when the card turns (D-091). Then, for a translation, labelled lines (D-024, D-025, D-097): each line starts with its
+    label and continues with its entries. The main answer, large, labelled **"Parallel translation"** when the item has a
+    parallel, otherwise **"Translation"** (the meaning is then simply the translation); under a parallel, a
+    **"Meaning"** line in a medium size; then a **"Literally"** line, small and muted. When the literal is marked as the
+    same as the parallel (D-026), the first label reads **"Parallel translation (also literally)"** and there is no
+    Literally line. The labels are in the **answer's language**, not the UI's: a Hebrew answer gets "תרגום מקביל",
+    "תרגום", "משמעות מקבילה", "מילולית" (and "תרגום מקביל (גם מילולית)"). Each line is in the answer language's `dir`; two
+    or more entries are numbered; a kind with no entries isn't shown. For the same language: the explanation lines
+    labelled "Explanation" ("הסבר" for a Hebrew answer, D-091, D-097); a thin divider; then the Hints section and the Synonyms line, **always** (whether or not
     Hints was pressed), or "Hint is not available".
   - Every card starts **front side up, with hints hidden**.
 - **FR-L23** Header progress: `Round 2 · Card 1/3 · 2 known` (known = total known in this practice).
@@ -903,12 +906,14 @@ Disabled buttons lose glow and ledge and look muted. Base mechanics:
   under it, when applicable, a small pill badge "◆ Multiple meanings" (`--surface-2` background, `--accent` text).
   Then a thin divider and the hints area: the hints cover, or (revealed) a "Synonyms: …" line and the hints as a
   muted list (or "Hint is not available").
-- **Back**: for a translation, centered sections, each under a small uppercase headline (D-024, D-025): the main
-  answer, large and bold ("Parallel", or "Meaning" when there is no parallel); under a parallel, **"Meaning"** in
-  `--text`, semibold, a size below the answer; then **"Literally"** in `--text-muted` at the hints' size, the least
-  emphasized. When the literal is the parallel (D-026), the main headline reads "Parallel (also literally)" and the
-  Literally section is left out. Two or more entries in a section are numbered ("1.", "2."). For the same language: the explanation
-  lines under a small uppercase "Explanation" headline, like the translation sections (numbered when there are two or more, smaller when long). Then a thin divider;
+- **Back** (D-097): the answer is a two-column grid, one line per kind: the **label at the start of the line** (right
+  for a Hebrew answer, left for an English one; small, semibold, violet, in the answer's language; a long label wraps
+  onto two lines, never taking more than about a third of the width) and the **entries after it on the same line**.
+  The main answer, large and bold ("Parallel translation", or "Translation" when there is no parallel); under a
+  parallel, "Meaning" in `--text`, semibold, a size below the answer; then "Literally" in `--text-muted` at the hints'
+  size, the least emphasized. When the literal is the parallel (D-026), the first label reads "Parallel translation
+  (also literally)" and the Literally line is left out. Two or more entries are numbered ("1.", "2."). For the same
+  language: the explanation lines labelled "Explanation" (numbered when there are two or more, smaller when long). Then a thin divider;
   then
   **Hints** as a muted list and a "Synonyms: …" line (or "Hint is not available").
 - A round **Flip** button (↻) sits in the bottom-right corner of **both** faces, in every language, so the card can be
@@ -921,10 +926,10 @@ Disabled buttons lose glow and ledge and look muted. Base mechanics:
   for every word, so it never moves when the card turns. Above it, under the top row (direction label and "Clicked"
   chip), the item (front, centred) or the answer (back) sits in the upper half, vertically centred; the hints and
   synonyms appear below the line. The answer starts on the side its language reads from (right for Hebrew, left for
-  English), and its headlines ("Parallel", "Meaning", …) sit on that side. When the content doesn't fit above the line
-  (many meanings, a Meaning and a Literally section, a long word), its text **shrinks until it fits**: the main answer,
-  Meaning and Literally together, keeping their proportions, never below 12 px for the main text; the headlines keep
-  their size.
+  English), each line with its label first (D-097). When the content doesn't fit above the line (many meanings, a
+  Meaning and a Literally line, a long word), its text **shrinks until it fits**: the main answer, Meaning and
+  Literally together, keeping their proportions, never below 12 px for the main text; the gaps between the lines shrink
+  with them, and the labels shrink a little (to 80% at most).
 
 ```
 FRONT, hints revealed            BACK, after Flip (EN → HE)

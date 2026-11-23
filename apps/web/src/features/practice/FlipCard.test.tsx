@@ -71,31 +71,32 @@ describe('FlipCard', () => {
     expect(screen.getByText('sample-3')).toHaveAttribute('dir', 'ltr');
   });
 
-  it('shows the literal translation under the answer, labelled "Literally", in the answer language', () => {
+  it('shows the literal translation under the answer, labelled in the answer language (D-097)', () => {
     const base = makeCard(6);
     const card = makeCard(6, { answer: { ...base.answer, literal: ['מילולי-6'] } });
     render(<FlipCard card={card} side="back" hintsShown={false} onFlip={vi.fn()} />);
-    expect(screen.getByTestId('literal')).toHaveTextContent('Literallyמילולי-6');
+    // A Hebrew answer: "מילולית" (Literally), even in the English UI.
+    expect(screen.getByTestId('literal')).toHaveTextContent('מילוליתמילולי-6');
     expect(screen.getByText('מילולי-6').closest('ol')).toHaveAttribute('dir', 'rtl');
   });
 
-  it('with a parallel: Parallel (big), then Meaning, then Literally (muted) (D-024)', () => {
+  it('with a parallel: the parallel (big), then the meaning, then the literal (muted) (D-024, D-097)', () => {
     const base = makeCard(8);
     const card = makeCard(8, {
       answer: { ...base.answer, main: 'parallel', meaning: ['משמעות-8'], literal: ['מילולי-8'] },
     });
     render(<FlipCard card={card} side="back" hintsShown={false} onFlip={vi.fn()} />);
-    expect(screen.getAllByText('Parallel')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('תרגום מקביל')[0]).toBeInTheDocument();
     const meaning = screen.getByTestId('meaning');
     const literal = screen.getByTestId('literal');
-    expect(meaning).toHaveTextContent('Meaningמשמעות-8');
+    expect(meaning).toHaveTextContent('משמעות מקבילהמשמעות-8');
     expect(
       meaning.compareDocumentPosition(literal) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(literal).toHaveClass('text-muted');
   });
 
-  it('when the literal is the parallel: "Parallel (also literally)" and no Literally section (D-026)', () => {
+  it('when the literal is the parallel: one label says so, and no literal line (D-026, D-097)', () => {
     const base = makeCard(11);
     const card = makeCard(11, {
       answer: {
@@ -107,15 +108,15 @@ describe('FlipCard', () => {
       },
     });
     render(<FlipCard card={card} side="back" hintsShown={false} onFlip={vi.fn()} />);
-    expect(screen.getByText('Parallel (also literally)')).toBeInTheDocument();
+    expect(screen.getByText('תרגום מקביל (גם מילולית)')).toBeInTheDocument();
     expect(screen.queryByTestId('literal')).not.toBeInTheDocument();
-    expect(screen.getByTestId('meaning')).toHaveTextContent('Meaningמשמעות-11');
+    expect(screen.getByTestId('meaning')).toHaveTextContent('משמעות מקבילהמשמעות-11');
   });
 
-  it('without a parallel (e.g. a plain word): the meaning is the main answer, headed "Meaning" (D-025)', () => {
+  it('without a parallel (e.g. a plain word): the meaning is the main answer, labelled "Translation" (D-025, D-097)', () => {
     render(<FlipCard card={makeCard(9)} side="back" hintsShown={false} onFlip={vi.fn()} />);
-    expect(screen.getAllByText('Meaning')[0]).toBeInTheDocument();
-    expect(screen.queryByText('Parallel')).not.toBeInTheDocument();
+    expect(screen.getAllByText('תרגום')[0]).toBeInTheDocument();
+    expect(screen.queryByText('תרגום מקביל')).not.toBeInTheDocument();
     expect(screen.queryByTestId('meaning')).not.toBeInTheDocument();
   });
 
@@ -246,5 +247,35 @@ describe('the line at the middle: the upper part shrinks to fit (D-095)', () => 
     const top = face('back').querySelector('.flip-card__top') as HTMLElement;
     expect(top).toHaveAttribute('dir', makeCard(1).answer.dir);
     expect(top).toHaveClass('text-start');
+  });
+});
+
+describe('answer labels follow the answer language (D-097)', () => {
+  it('an English answer gets English labels, also in the Hebrew UI', () => {
+    activateLocale('he');
+    const base = makeCard(12);
+    const card = makeCard(12, {
+      answer: {
+        ...base.answer,
+        lang: 'en',
+        dir: 'ltr',
+        main: 'parallel',
+        lines: ['a parallel'],
+        meaning: ['a meaning'],
+        literal: ['word for word'],
+      },
+    });
+    render(<FlipCard card={card} side="back" hintsShown={false} onFlip={vi.fn()} />);
+    expect(screen.getAllByText('Parallel translation')[0]).toBeInTheDocument();
+    expect(screen.getByTestId('meaning')).toHaveTextContent('Meaninga meaning');
+    expect(screen.getByTestId('literal')).toHaveTextContent('Literallyword for word');
+    activateLocale('en');
+  });
+
+  it('puts each label at the start of its line, then the entries (one grid row)', () => {
+    render(<FlipCard card={makeCard(13)} side="back" hintsShown={false} onFlip={vi.fn()} />);
+    const grid = face('back').querySelector('.flip-card__answer') as HTMLElement;
+    const label = grid.querySelector('.flip-card__label') as HTMLElement;
+    expect(label.nextElementSibling?.tagName).toBe('OL');
   });
 });

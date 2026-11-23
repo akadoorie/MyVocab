@@ -1327,6 +1327,21 @@ body {
   height: calc(50% - 2.125rem);
   overflow: hidden;
 }
+/* The answer (D-097): two columns, each line's label at its start (right for Hebrew) and its
+   entries after it. A long label wraps instead of taking the width. The gaps and the labels shrink
+   with the text (--fit), the labels only down to 80%. */
+.flip-card__answer {
+  display: grid;
+  grid-template-columns: fit-content(36%) minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 0.7rem;
+  row-gap: calc(var(--fit, 1) * 0.75rem);
+}
+.flip-card__label {
+  font-size: calc(max(var(--fit, 1), 0.8) * 0.8125rem);
+  font-weight: 600;
+  line-height: 1.25;
+}
 .flip-card__flip {
   /* A little smaller on phones, leaving more room for the hints (D-051). */
   --size: 48px;
@@ -1344,6 +1359,9 @@ body {
   .flip-card__face {
     min-height: 420px;
     padding: 36px 40px;
+  }
+  .flip-card__label {
+    font-size: calc(max(var(--fit, 1), 0.8) * 0.9375rem);
   }
   .flip-card__flip {
     --size: 64px;

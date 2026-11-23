@@ -3,6 +3,8 @@ import { useLayoutEffect, useRef, type RefObject } from 'react';
 import { FlipIcon } from '../../components/Icons';
 import { PracticeButton } from './ButtonBar';
 import { strings } from '../../strings';
+import { en, type Strings } from '../../strings.en';
+import { he } from '../../strings.he';
 import { HintsArea } from './HintsArea';
 import { HintsCover } from './HintsCover';
 
@@ -61,17 +63,24 @@ function useFitText(part: RefObject<HTMLDivElement | null>) {
   }, [part]);
 }
 
-/** The chip above the answer: what the main answer lines are (PRD §9.3, D-024). */
-function mainHeadline(card: CardView): string {
+/** The answer's labels, in the answer's language (D-097): Hebrew for a Hebrew answer, else English. */
+type AnswerLabels = Strings['card'];
+const answerLabels = (lang: string): AnswerLabels => (lang === 'he' ? he.card : en.card);
+
+/** The label of the main answer lines (PRD §9.3, D-024, D-097). */
+function mainLabel(card: CardView, labels: AnswerLabels): string {
   const { main } = card.answer;
-  if (main === 'explanation') return strings.card.explanation;
-  if (main === 'meaning') return strings.card.meaning;
-  return card.answer.literalSameAsParallel
-    ? strings.card.parallelAlsoLiteral
-    : strings.card.parallel;
+  if (main === 'explanation') return labels.explanation;
+  // No parallel: the meaning is simply the word's translation.
+  if (main === 'meaning') return labels.translation;
+  return card.answer.literalSameAsParallel ? labels.parallelAlsoLiteral : labels.parallel;
 }
 
-/** A labelled group of answer entries; two or more are numbered (D-024). */
+/**
+ * One line of the answer (D-097): the label at the start of the line (right for Hebrew), and the
+ * entries after it on the same line; two or more are numbered (D-024). Both cells sit in the
+ * answer's two-column grid; this wrapper only carries the size, colour and test id.
+ */
 function Section(props: {
   label: string;
   entries: string[];
@@ -85,12 +94,8 @@ function Section(props: {
   const { label, entries, card, className, muted, testId, main } = props;
   const many = entries.length > 1;
   return (
-    <div className={className} data-testid={testId} data-fit-main={main || undefined}>
-      <p
-        className={`mb-1 text-xs font-semibold tracking-wide uppercase md:text-sm ${muted ? 'opacity-80' : 'text-accent'}`}
-      >
-        {label}
-      </p>
+    <div className={`contents ${className}`} data-testid={testId} data-fit-main={main || undefined}>
+      <p className={`flip-card__label ${muted ? 'text-muted' : 'text-accent'}`}>{label}</p>
       {/* Spacing in em, so it shrinks with the text (D-095). */}
       <ol lang={card.answer.lang} dir={card.answer.dir} className="space-y-[0.15em] leading-snug">
         {entries.map((e, i) => (
@@ -179,6 +184,7 @@ export function FlipCard({
   useFitText(frontTop);
   useFitText(backTop);
   const label = `${card.direction.source.toUpperCase()} → ${card.direction.target.toUpperCase()}`;
+  const labels = answerLabels(card.answer.lang);
   const front = side === 'front';
   const Answer = card.answer.numbered ? 'ol' : 'ul';
   // On both faces; the test id goes on the front one only.
@@ -287,68 +293,68 @@ export function FlipCard({
 
         <div className="flip-card__face flip-card__back" inert={front} aria-hidden={front}>
           {topRow('back')}
-          {/* The answer starts on the side its language reads from (right for Hebrew), with its
-              headlines on that side too, and shrinks to fit above the line (D-095). */}
+          {/* The answer starts on the side its language reads from (right for Hebrew) and shrinks
+              to fit above the line (D-095). Each line has its label first, in the answer's
+              language, then its entries (D-097). */}
           <div
             ref={backTop}
             dir={card.answer.dir}
+            lang={card.answer.lang}
             className="flip-card__top flex flex-col py-2 text-start [justify-content:safe_center]"
           >
-            {card.answer.kind === 'translation' ? (
-              <Section
-                label={mainHeadline(card)}
-                entries={card.answer.lines}
-                card={card}
-                main
-                className="text-[calc(var(--fit,1)*clamp(1.75rem,5.5vw,3.25rem))] font-bold"
-              />
-            ) : (
-              <>
-                {/* "Explanation" heads the answer like "Meaning" does, so the top row stays the
-                    same as the front's (D-091). */}
-                {card.answer.kind === 'explanation' && (
-                  <p className="mb-1 text-xs font-semibold tracking-wide text-accent uppercase md:text-sm">
-                    {mainHeadline(card)}
+            <div className="flip-card__answer">
+              {card.answer.kind === 'translation' ? (
+                <Section
+                  label={mainLabel(card, labels)}
+                  entries={card.answer.lines}
+                  card={card}
+                  main
+                  className="text-[calc(var(--fit,1)*clamp(1.75rem,5.5vw,3.25rem))] font-bold"
+                />
+              ) : (
+                <div className="contents">
+                  <p className="flip-card__label text-accent">
+                    {card.answer.kind === 'explanation' ? mainLabel(card, labels) : ''}
                   </p>
-                )}
-                <Answer
-                  lang={card.answer.lang}
-                  dir={card.answer.dir}
-                  data-fit-main
-                  className={[
-                    'space-y-[0.3em] leading-snug font-semibold',
-                    card.answer.kind === 'explanation' &&
-                    card.answer.lines.some((l) => l.length > 60)
-                      ? 'text-[calc(var(--fit,1)*1.125rem)] md:text-[calc(var(--fit,1)*1.25rem)]'
-                      : 'text-[calc(var(--fit,1)*clamp(1.75rem,5.5vw,3.25rem))] font-bold',
-                    card.answer.numbered ? 'list-inside list-decimal text-start' : '',
-                  ].join(' ')}
-                >
-                  {card.answer.lines.map((line) => (
-                    <li key={line}>{line}</li>
-                  ))}
-                </Answer>
-              </>
-            )}
-            {card.answer.kind === 'translation' && card.answer.meaning.length > 0 && (
-              <Section
-                testId={tid('meaning')}
-                label={strings.card.meaning}
-                entries={card.answer.meaning}
-                card={card}
-                className="mt-5 text-[calc(var(--fit,1)*1.25rem)] font-semibold text-text md:text-[calc(var(--fit,1)*1.5rem)]"
-              />
-            )}
-            {card.answer.literal.length > 0 && (
-              <Section
-                testId={tid('literal')}
-                label={strings.card.literal}
-                entries={card.answer.literal}
-                card={card}
-                muted
-                className="mt-4 text-[calc(var(--fit,1)*1rem)] text-muted md:text-[calc(var(--fit,1)*1.125rem)]"
-              />
-            )}
+                  <Answer
+                    lang={card.answer.lang}
+                    dir={card.answer.dir}
+                    data-fit-main
+                    className={[
+                      'space-y-[0.3em] leading-snug font-semibold',
+                      card.answer.kind === 'explanation' &&
+                      card.answer.lines.some((l) => l.length > 60)
+                        ? 'text-[calc(var(--fit,1)*1.125rem)] md:text-[calc(var(--fit,1)*1.25rem)]'
+                        : 'text-[calc(var(--fit,1)*clamp(1.75rem,5.5vw,3.25rem))] font-bold',
+                      card.answer.numbered ? 'list-inside list-decimal text-start' : '',
+                    ].join(' ')}
+                  >
+                    {card.answer.lines.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </Answer>
+                </div>
+              )}
+              {card.answer.kind === 'translation' && card.answer.meaning.length > 0 && (
+                <Section
+                  testId={tid('meaning')}
+                  label={labels.meaning}
+                  entries={card.answer.meaning}
+                  card={card}
+                  className="text-[calc(var(--fit,1)*1.25rem)] font-semibold text-text md:text-[calc(var(--fit,1)*1.5rem)]"
+                />
+              )}
+              {card.answer.literal.length > 0 && (
+                <Section
+                  testId={tid('literal')}
+                  label={labels.literal}
+                  entries={card.answer.literal}
+                  card={card}
+                  muted
+                  className="text-[calc(var(--fit,1)*1rem)] text-muted md:text-[calc(var(--fit,1)*1.125rem)]"
+                />
+              )}
+            </div>
           </div>
           <div
             className="flex min-h-0 flex-1 flex-col border-t border-border pt-4"
