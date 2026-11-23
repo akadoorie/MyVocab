@@ -18,7 +18,7 @@ import { startGoogleSignIn, useSession } from '../../lib/session';
 import { strings } from '../../strings';
 import { useKnownQueue } from '../known/KnownQueueProvider';
 import { useStartPractice, type PracticeStartNotice } from '../setup/useStartPractice';
-import { BackArrow, LogoMark } from '../../components/Icons';
+import { HomeIcon, LogoMark } from '../../components/Icons';
 import { ButtonBar } from './ButtonBar';
 import { FlipCard } from './FlipCard';
 import { clearPractice, loadPractice, savePractice, type StoredPractice } from './practice-storage';
@@ -373,10 +373,13 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
           <button
             type="button"
             onClick={() => setConfirmLeave(true)}
-            // The only way out of a practice now (D-072): a clear bordered button, not a faint link.
-            className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-[10px] border border-border px-3 text-sm font-medium text-text transition-colors hover:border-accent hover:text-accent md:text-base"
+            aria-label={strings.nav.home}
+            title={strings.nav.home}
+            // The only way out of a practice now (D-072): a clear bordered button, not a faint link;
+            // a house, not the word (D-086).
+            className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-[10px] border border-border text-text transition-colors hover:border-accent hover:text-accent"
           >
-            <BackArrow /> {strings.nav.home}
+            <HomeIcon />
           </button>
         </div>
         {leaveDialog}

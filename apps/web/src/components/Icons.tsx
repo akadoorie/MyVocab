@@ -51,6 +51,15 @@ export const ChevronIcon = () => (
   </Svg>
 );
 
+/** A house: the way back to the Home page, in place of the word "Home" (D-086). */
+export const HomeIcon = ({ className = 'h-[22px] w-[22px]' }: { className?: string }) => (
+  <Svg strokeWidth={2.2} className={className}>
+    <path d="M3 11.5 12 4l9 7.5" />
+    <path d="M5.5 9.5V20h13V9.5" />
+    <path d="M10 20v-5.5h4V20" />
+  </Svg>
+);
+
 /** "←" pointing the way back: mirrored on right-to-left pages (D-080). */
 export const BackArrow = () => (
   <span aria-hidden="true" className="inline-block rtl:-scale-x-100">

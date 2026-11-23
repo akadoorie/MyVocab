@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
-import { BackArrow, LogoMark } from '../components/Icons';
+import { HomeIcon, LogoMark } from '../components/Icons';
 import { UserMenu } from '../components/UserMenu';
 import { api } from '../lib/api';
 import { useLocale } from '../lib/locale';
@@ -52,12 +52,14 @@ export function Layout() {
         </div>
         <nav className={`flex items-center text-sm ${onHome ? 'gap-2 sm:gap-3' : 'gap-3'}`}>
           {!onHome && (
-            // Every page other than the start page offers a way back to it.
+            // Every page other than the start page offers a way back to it: a house (D-086).
             <Link
               to="/"
-              className="flex min-h-11 items-center gap-1.5 rounded-[10px] px-3 text-muted hover:text-text"
+              aria-label={strings.nav.home}
+              title={strings.nav.home}
+              className="flex min-h-11 min-w-11 items-center justify-center rounded-[10px] text-muted hover:text-text"
             >
-              <BackArrow /> {strings.nav.home}
+              <HomeIcon />
             </Link>
           )}
           {onHome && <LanguageSwitch />}

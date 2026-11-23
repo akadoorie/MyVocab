@@ -364,7 +364,8 @@ private content repository. It never appears in the public code repo or any publ
   button, D-072), after asking **"Back to Home? This will stop the practice. Are you sure?"** with **Yes** /
   **No** (FR-L30a). **Yes** ends the practice and returns to `/`; already-made Know marks are kept (and flushed, §6.4).
   **No** continues where it was.
-- **FR-L30a Home from the practice**: the practice header has a **"← Home"** button, outlined so it reads as a control (it is
+- **FR-L30a Home from the practice**: the practice header has a **Home** button showing a house icon (no word; its accessible
+  name and tooltip are "Home", D-086), outlined so it reads as a control (it is
   the only way out of a practice, D-072); it is not pumped or nudged, so it doesn't compete with the answers. Because it leaves the
   practice, it first asks **"Back to Home? This will stop the practice. Are you sure?"** with **Yes** / **No**. **Yes** ends the practice (FR-L30);
   **No** closes the question and the practice continues where it was. While the question is open, practice shortcuts are
@@ -990,7 +991,11 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   of each answer pill with its caption, each with one line on what it does; D-058); Start card; footer (Privacy). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
 - **Practice header**: the MyVocab logo mark (two stacked cards) and the progress `Round 1 • Card 2/10 • 1 known` at the
   start (left; right in Hebrew); at the other end, on desktop a "⌨ Keyboard shortcuts" link that opens a small popover listing the shortcuts, and
-  "← Home" (asks before stopping the practice, FR-L30a).
+  the Home button with its house icon (asks before stopping the practice, FR-L30a).
+- **Home as an icon (D-086)**: the way back to the Home page is a house icon, not the word, in three places: the practice
+  header, the header of the other regular pages (Privacy, My known words, Account; 44 px, muted), and the Home button on
+  the round break and the summary. Each keeps "Home" as its accessible name and tooltip. The account menu's "Home" item
+  and the admin area keep the word.
 - **Practice buttons**: on desktop, one row under the card, in this order: `Back · I know it (green) ·
   I know it (amber) · I don't know · Next` (round, pill, pill, pill, round; the green pill locked for
   guests; mirrored in Hebrew); after I don't know the row stays the same, the answers disabled and Next pumping (D-031). Flip is

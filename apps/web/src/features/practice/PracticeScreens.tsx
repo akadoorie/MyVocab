@@ -1,7 +1,7 @@
 import type { practiceSummary } from '@myvocab/core';
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type Ref } from 'react';
 import { Button3D } from '../../components/Button3D';
-import { BackArrow, KeyboardIcon } from '../../components/Icons';
+import { BackArrow, HomeIcon, KeyboardIcon } from '../../components/Icons';
 import { startGoogleSignIn } from '../../lib/session';
 import { strings } from '../../strings';
 import {
@@ -69,8 +69,14 @@ export function RoundBreak({
         <p className="text-muted">{strings.practice.roundRecap(knew, total, remaining)}</p>
       </div>
       <div className="flex items-start gap-3">
-        <Button3D variant="stop" onClick={onHome}>
-          {strings.summary.home}
+        <Button3D
+          variant="stop"
+          onClick={onHome}
+          aria-label={strings.summary.home}
+          title={strings.summary.home}
+        >
+          {/* A house, not the word (D-086). */}
+          <HomeIcon className="h-6 w-6" />
         </Button3D>
         <div className="flex flex-col items-center gap-2">
           <Button3D
@@ -182,8 +188,14 @@ export function Summary({
         </button>
       )}
       <div className="flex gap-3">
-        <Button3D variant="stop" onClick={onHome}>
-          {strings.summary.home}
+        <Button3D
+          variant="stop"
+          onClick={onHome}
+          aria-label={strings.summary.home}
+          title={strings.summary.home}
+        >
+          {/* A house, not the word (D-086). */}
+          <HomeIcon className="h-6 w-6" />
         </Button3D>
         <Button3D ref={focusRef} onClick={onNewPractice} disabled={starting || newPracticeDisabled}>
           {starting && startingLabel ? startingLabel : strings.summary.newPractice}
