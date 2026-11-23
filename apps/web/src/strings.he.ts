@@ -236,7 +236,7 @@ export const he: Strings = {
     translation: 'תרגום',
     parallel: 'תרגום מקביל',
     parallelAlsoLiteral: 'תרגום מקביל (גם מילולית)',
-    meaning: 'משמעות מקבילה',
+    meaning: 'משמעות',
     explanation: 'הסבר',
     literal: 'מילולית',
     hints: 'רמזים',

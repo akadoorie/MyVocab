@@ -272,7 +272,7 @@ private content repository. It never appears in the public code repo or any publ
     **"Meaning"** line in a medium size; then a **"Literally"** line, small and muted. When the literal is marked as the
     same as the parallel (D-026), the first label reads **"Parallel translation (also literally)"** and there is no
     Literally line. The labels are in the **answer's language**, not the UI's: a Hebrew answer gets "תרגום מקביל",
-    "תרגום", "משמעות מקבילה", "מילולית" (and "תרגום מקביל (גם מילולית)"). Each line is in the answer language's `dir`; two
+    "תרגום", "משמעות", "מילולית" (and "תרגום מקביל (גם מילולית)"). Each line is in the answer language's `dir`; two
     or more entries are numbered; a kind with no entries isn't shown. For the same language: the explanation lines
     labelled "Explanation" ("הסבר" for a Hebrew answer, D-091, D-097); a thin divider; then the Hints section and the Synonyms line, **always** (whether or not
     Hints was pressed), or "Hint is not available".

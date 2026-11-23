@@ -89,7 +89,7 @@ describe('FlipCard', () => {
     expect(screen.getAllByText('תרגום מקביל')[0]).toBeInTheDocument();
     const meaning = screen.getByTestId('meaning');
     const literal = screen.getByTestId('literal');
-    expect(meaning).toHaveTextContent('משמעות מקבילהמשמעות-8');
+    expect(meaning).toHaveTextContent('משמעותמשמעות-8');
     expect(
       meaning.compareDocumentPosition(literal) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
@@ -110,7 +110,7 @@ describe('FlipCard', () => {
     render(<FlipCard card={card} side="back" hintsShown={false} onFlip={vi.fn()} />);
     expect(screen.getByText('תרגום מקביל (גם מילולית)')).toBeInTheDocument();
     expect(screen.queryByTestId('literal')).not.toBeInTheDocument();
-    expect(screen.getByTestId('meaning')).toHaveTextContent('משמעות מקבילהמשמעות-11');
+    expect(screen.getByTestId('meaning')).toHaveTextContent('משמעותמשמעות-11');
   });
 
   it('without a parallel (e.g. a plain word): the meaning is the main answer, labelled "Translation" (D-025, D-097)', () => {
