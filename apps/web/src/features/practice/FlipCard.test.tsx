@@ -10,7 +10,8 @@ const face = (side: 'front' | 'back') =>
 describe('FlipCard', () => {
   it('shows the item on the front with its direction label, and hides hints until Hints', () => {
     render(<FlipCard card={makeCard(1)} side="front" hintsShown={false} onFlip={vi.fn()} />);
-    expect(screen.getByText('EN → HE')).toBeInTheDocument(); // just the direction (D-046)
+    // Just the direction (D-046), on both faces in the same row (D-091).
+    expect(screen.getAllByText('EN → HE')).toHaveLength(2);
     expect(screen.queryByTestId('front-hints')).not.toBeInTheDocument();
     expect(face('front')).toHaveAttribute('aria-hidden', 'false');
     expect(face('back')).toHaveAttribute('aria-hidden', 'true');

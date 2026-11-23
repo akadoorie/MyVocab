@@ -193,6 +193,15 @@ export function FlipCard({
         {CHIP[answer].extra && <span className="sr-only">{CHIP[answer].extra}</span>}
       </p>
     );
+  // The same row on both faces, so the direction and the chip stay put when the card turns
+  // (D-049, D-091). The direction stays on the left in every language (D-080): reversed on
+  // right-to-left pages, so the answer chip goes right.
+  const topRow = (face: 'front' | 'back') => (
+    <div className="flex items-center justify-between gap-2 rtl:flex-row-reverse">
+      <p className="chip shrink-0">{label}</p>
+      {answerChip(face)}
+    </div>
+  );
   // The only way to turn the card (with F / Space): a stray tap must not flip it (D-047).
   const flipButton = (
     <PracticeButton
@@ -222,12 +231,7 @@ export function FlipCard({
     <div className={`flip-card ${front ? '' : 'is-flipped'}`}>
       <div className="flip-card__inner" data-testid={tid('flip-card')} data-side={side}>
         <div className="flip-card__face flip-card__front" inert={!front} aria-hidden={!front}>
-          {/* One line with the direction, on phones too (D-049). The direction stays on the left in
-              every language (D-080): reversed on right-to-left pages, so the answer chip goes right. */}
-          <div className="flex items-center justify-between gap-2 rtl:flex-row-reverse">
-            <p className="chip shrink-0">{label}</p>
-            {answerChip('front')}
-          </div>
+          {topRow('front')}
           {/* The item sits in the upper part of the card and never moves; hints and synonyms
               appear below it in the space kept for them (PRD §9.3). Its height comes from
               .flip-card__top (base.css), the same on the back, so the line stays in place when
@@ -281,14 +285,7 @@ export function FlipCard({
         </div>
 
         <div className="flip-card__face flip-card__back" inert={front} aria-hidden={front}>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            {card.answer.kind === 'explanation' ? (
-              <p className="chip">{mainHeadline(card)}</p>
-            ) : (
-              <span />
-            )}
-            {answerChip('back')}
-          </div>
+          {topRow('back')}
           <div
             ref={backTop}
             className="flip-card__top flex shrink-0 flex-col items-center justify-center py-4 text-center"
@@ -301,21 +298,31 @@ export function FlipCard({
                 className="text-[clamp(1.75rem,5.5vw,3.25rem)] font-bold"
               />
             ) : (
-              <Answer
-                lang={card.answer.lang}
-                dir={card.answer.dir}
-                className={[
-                  'space-y-2 font-semibold',
-                  card.answer.kind === 'explanation' && card.answer.lines.some((l) => l.length > 60)
-                    ? 'text-[1.125rem] md:text-[1.25rem]'
-                    : 'text-[clamp(1.75rem,5.5vw,3.25rem)] font-bold',
-                  card.answer.numbered ? 'list-inside list-decimal text-start' : '',
-                ].join(' ')}
-              >
-                {card.answer.lines.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </Answer>
+              <>
+                {/* "Explanation" heads the answer like "Meaning" does, so the top row stays the
+                    same as the front's (D-091). */}
+                {card.answer.kind === 'explanation' && (
+                  <p className="mb-1 text-xs font-semibold tracking-wide text-accent uppercase md:text-sm">
+                    {mainHeadline(card)}
+                  </p>
+                )}
+                <Answer
+                  lang={card.answer.lang}
+                  dir={card.answer.dir}
+                  className={[
+                    'space-y-2 font-semibold',
+                    card.answer.kind === 'explanation' &&
+                    card.answer.lines.some((l) => l.length > 60)
+                      ? 'text-[1.125rem] md:text-[1.25rem]'
+                      : 'text-[clamp(1.75rem,5.5vw,3.25rem)] font-bold',
+                    card.answer.numbered ? 'list-inside list-decimal text-start' : '',
+                  ].join(' ')}
+                >
+                  {card.answer.lines.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </Answer>
+              </>
             )}
             {card.answer.kind === 'translation' && card.answer.meaning.length > 0 && (
               <Section

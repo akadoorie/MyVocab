@@ -259,12 +259,13 @@ private content repository. It never appears in the public code repo or any publ
     **Synonyms:** line (if there are synonyms), in smaller muted text with the item language's `dir`, always there but
     under a **live cover** until tapped (D-047). If the item has no hints and no synonyms, the section shows "Hint is
     not available", with no cover.
-  - **Back**: for a translation, labelled sections (D-024, D-025): the main answer in large text under a small
+  - **Back**: at the top, the same row as the front, in the same place: the direction label and, on a card reached
+    with Back, the "Clicked: …" chip, so neither moves when the card turns (D-091). Then, for a translation, labelled sections (D-024, D-025): the main answer in large text under a small
     headline ("Parallel" when the item has one, otherwise "Meaning"); under a parallel, a **"Meaning"** section in a
     medium size; then a **"Literally"** section, small and muted. When the literal is marked as the same as the
     parallel (D-026), the headline reads **"Parallel (also literally)"** and there is no Literally section. Each section is in the answer language's `dir`; two
     or more entries in a section are numbered; a kind with no entries isn't shown. For the same language: the
-    "Explanation" chip and the explanation lines; a thin divider; then the Hints section and the Synonyms line, **always** (whether or not
+    explanation lines under a small "Explanation" headline (like "Meaning", D-091); a thin divider; then the Hints section and the Synonyms line, **always** (whether or not
     Hints was pressed), or "Hint is not available".
   - Every card starts **front side up, with hints hidden**.
 - **FR-L23** Header progress: `Round 2 · Card 1/3 · 2 known` (known = total known in this practice).
@@ -900,8 +901,8 @@ Disabled buttons lose glow and ledge and look muted. Base mechanics:
   answer, large and bold ("Parallel", or "Meaning" when there is no parallel); under a parallel, **"Meaning"** in
   `--text`, semibold, a size below the answer; then **"Literally"** in `--text-muted` at the hints' size, the least
   emphasized. When the literal is the parallel (D-026), the main headline reads "Parallel (also literally)" and the
-  Literally section is left out. Two or more entries in a section are numbered ("1.", "2."). For the same language: the "Explanation"
-  chip and the explanation lines (numbered when there are two or more, smaller when long). Then a thin divider;
+  Literally section is left out. Two or more entries in a section are numbered ("1.", "2."). For the same language: the explanation
+  lines under a small uppercase "Explanation" headline, like the translation sections (numbered when there are two or more, smaller when long). Then a thin divider;
   then
   **Hints** as a muted list and a "Synonyms: …" line (or "Hint is not available").
 - A round **Flip** button (↻) sits in the bottom-right corner of **both** faces, in every language, so the card can be
@@ -1044,7 +1045,8 @@ the typecheck. Components read the active language's strings through `strings.ts
   crown sits on the card's upper-right corner and flies in from the top right. Swipes and arrow keys are mirrored
   like the buttons: swipe right or ← for Next, swipe left or → for Back.
 - **Not mirrored:** in every language, Flip stays in the card's bottom-right corner (with the hints' notch and
-  fade there), and the direction label (e.g. "EN → HE") stays on the left of the card front.
+  fade there), and the direction label (e.g. "EN → HE") stays on the left of the card, on both faces, with the
+  "Clicked: …" chip on the right (D-091).
 - **Names:** language names come from the UI strings ("אנגלית", "עברית"); topics have an optional Hebrew name
   (`name_he`, FR-A30), shown in the Hebrew UI when set, otherwise the English name.
 - **Server messages:** errors that reach learners (the daily card limit, guest practice limits, sign-in needed,
