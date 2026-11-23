@@ -82,7 +82,9 @@ export function PracticeButton({
  * Phones: the three answer pills on top, Back (left) and Next (right) below. No Stop: Home in the
  * header (or Esc) ends the practice (D-072). Hints are on the card, under a
  * live cover (D-047). After "I don't know"
- * the layout stays: the answers are off and Next pumps (D-031). Flip is on the card.
+ * the layout stays: the answers are off and Next pumps (D-031). On a card answered earlier (reached
+ * with Back), Next keeps pumping and shines with the answers' nudge: it is the way on (D-084).
+ * Flip is on the card.
  * The answers (D-030): green "I know it · Don't show again", orange "I know it · Show again in
  * future" (FR-L27a) and red "I don't know · Show again soon". Guests (`signedIn` false) see the
  * green one locked: nothing is kept for them, so "Don't show again" needs signing in, while the
@@ -119,8 +121,10 @@ export function ButtonBar({
   });
   // Revealed (after Don't know): the layout stays; the answers are off and Next pumps, the only
   // way on (PRD FR-L28, §9.7, D-031).
-  // (On an earlier card reached with Back, Next is allowed too, but without the pumping.)
   const revealed = state.phase === 'revealed';
+  // A card answered earlier, reached with Back (FR-L29a): changing the answer is optional, so Next,
+  // the way on, keeps pumping (in its own colours) and shines after the red pill (D-084).
+  const onEarlierCard = state.phase === 'deciding' && canDispatch(state, 'NEXT');
   // The three answer pills carry their label only, on every screen (D-058, base.css).
   const trio = 'lbtn--trio';
   // Green, orange, red one after the other (base.css: nudge-1..3).
@@ -199,7 +203,7 @@ export function ButtonBar({
       <PracticeButton
         ref={nextRef}
         kind="round"
-        className={`[grid-area:next] edge-end ${revealed ? 'is-urgent' : ''} ${nextCountdown ? `has-countdown ${nextCountdown.running ? '' : 'is-countdown-paused'}` : ''}`}
+        className={`[grid-area:next] edge-end ${revealed ? 'is-urgent' : ''} ${onEarlierCard ? `is-pumping ${nudge(4)}` : ''} ${nextCountdown ? `has-countdown ${nextCountdown.running ? '' : 'is-countdown-paused'}` : ''}`}
         {...(nextCountdown
           ? {
               labelExtra: ` · ${nextCountdown.left}`,

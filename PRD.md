@@ -332,7 +332,8 @@ private content repository. It never appears in the public code repo or any publ
   user waits 4 s without acting; while the user still waits, a soft shine alone (no pump) repeats every 10 s
   (D-074). Flip pulses gently until it is first used in the practice (remembered across a refresh); after that it
   joins the nudge and the shine only while the current card shows its front and wasn't flipped yet; while it still
-  pulses, it shines too, without the pump (D-074). Disabled or locked buttons, Back, Home and Next (which has its own pump) don't take part; nothing
+  pulses, it shines too, without the pump (D-074). Disabled or locked buttons, Back and Home don't take part. Next takes part only on a card reached with
+  Back (FR-L29a), where it shines after the red pill; otherwise it doesn't (after Don't know it has its own pump). Nothing
   moves with reduced motion.
 - **FR-L29 Next**: moves to the next card (enabled in the Revealed phase, and on a card answered earlier that was
   reached with Back). The next card enters front side up with a short rise-in (no reverse-flip animation).
@@ -344,7 +345,9 @@ private content repository. It never appears in the public code repo or any publ
   - A card that already has an answer shows a short chip on the same line as the direction label, on phones too
     (D-049): **"Clicked: I know it ✓"** (green), **"Clicked: I know it ✓"** (amber; screen readers also hear "(show
     again in future)") or **"Clicked: I don't know ✗"** (red), and **Next** steps forward without answering again,
-    up to the first unanswered card.
+    up to the first unanswered card. There, Next is the way on: it **keeps pumping** (a gentle grow-and-shrink, in
+    its own colours, without the violet and the ring of Revealed) and shines with the nudge, after the red pill
+    (FR-L28a); the answer pills keep their own nudge. Nothing moves with reduced motion (D-084).
   - **The answer can be changed.** **Know** on a Don't know card takes it out of the next round, records it as known
     and moves on. **Don't know** on a Know card removes the Know, adds the card to the next round (never twice) and
     reveals the answer as in FR-L28. Switching between the two Knows only changes whether the word is recorded

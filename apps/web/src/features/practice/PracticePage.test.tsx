@@ -335,6 +335,26 @@ describe('PracticePage', () => {
       expect(btn('Flip')).not.toHaveClass('is-nudging'); // no pump on top of the pulse
     });
 
+    it('on a card reached with Back, Next keeps pumping and shines after the answers (D-084)', () => {
+      motion();
+      vi.useFakeTimers();
+      setup(undefined, { count: 5 });
+      expect(btn('Next')).not.toHaveClass('is-pumping'); // unanswered: Next is off
+      fireEvent.click(btn('I don’t know Show again soon'));
+      expect(btn('Next')).toHaveClass('is-urgent');
+      expect(btn('Next')).not.toHaveClass('is-pumping'); // after Don't know: its own pump
+      fireEvent.click(btn('Next'));
+      fireEvent.click(btn('Back'));
+      expect(btn('Next')).toHaveClass('is-pumping');
+      expect(btn('Next')).not.toHaveClass('is-urgent');
+      act(() => vi.advanceTimersByTime(300));
+      expect(btn('Next')).toHaveClass('is-nudging', 'nudge-4');
+      for (const name of answers) expect(nudging(name)).toBe(true); // the answers keep theirs
+      // Next again, to the unanswered card: Next is off and still.
+      fireEvent.click(btn('Next'));
+      expect(btn('Next')).not.toHaveClass('is-pumping');
+    });
+
     it('Flip pulses until it is first used, and stays still after a refresh', () => {
       motion();
       setup();
