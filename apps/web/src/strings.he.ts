@@ -186,6 +186,7 @@ export const he: Strings = {
     knowCaption: 'לא להציג שוב',
     againCaption: 'הצג שוב בעתיד',
     dontKnowCaption: 'הצג בסבב הבא',
+    stampAgain: 'שוב',
     knowName: 'ידעתי לא להציג שוב',
     againName: 'ידעתי הצג שוב בעתיד',
     dontKnowName: 'לא ידעתי הצג בסבב הבא',

@@ -985,6 +985,10 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   - **Orange "I know it" (ask again): the paper roll** (D-094). The card **rolls up like a sheet of paper**, from its
     bottom edge to its top, into a tight scroll (the light back of the paper showing), and the scroll is **sucked along
     a curve into the counter**, which pops amber as it lands. The roll takes about 0.55s and the flight about 0.4s.
+  - **Red "I don't know": a stamp** (D-105). After the card turns to its answer, a red **"AGAIN"** stamp ("שוב" in
+    Hebrew) thumps onto the back at a slight angle with a little bounce, holds, then fades to a faint mark that stays
+    until the card leaves; decorative (the "Clicked" chip says it in words). With reduced motion the faint mark shows
+    at once, without the thump.
   - Back has no reverse animation: the earlier card simply rises in,
   front side up. Don't know keeps the flip. A swipe slides the card out sideways (FR-L29b).
 

@@ -143,6 +143,8 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   const [flipped, setFlipped] = useState(stored.flipped ?? false);
   // The card Flip was last used on: it stops nudging there (D-074).
   const [flippedCard, setFlippedCard] = useState<string | null>(null);
+  // The card the "AGAIN" stamp is on, right after "I don't know" (D-105).
+  const [stampedCard, setStampedCard] = useState<string | null>(null);
 
   // Persist on every change; Stop and the end of the practice clear it (FR-L33).
   useEffect(() => {
@@ -212,6 +214,9 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
           ),
         );
       }
+      // "I don't know" stamps the card (D-105); moving to another card drops the stamp.
+      if (type === 'DONT_KNOW') setStampedCard(`${state.round}-${state.index}`);
+      if (type === 'NEXT' || type === 'BACK' || type === 'CONTINUE') setStampedCard(null);
       if (type === 'FLIP') {
         setFlipped(true);
         setFlippedCard(`${state.round}-${state.index}`);
@@ -415,6 +420,7 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
             onToggleHints={() => act('TOGGLE_HINTS')}
             answer={shownAnswer}
             pulse={!flipped && motionAllowed()}
+            stamp={stampedCard === `${state.round}-${state.index}`}
             nudging={
               state.side === 'front' && flippedCard !== `${state.round}-${state.index}`
                 ? nudging
