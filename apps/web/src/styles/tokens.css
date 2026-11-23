@@ -60,7 +60,8 @@
   --radius-practice: 4px;
   --radius-flip-card: var(--radius-practice);
   --radius-card: 18px;
-  --radius-button: 14px;
+  /* The 3D buttons everywhere (Start, Continue, New practice, dialogs…) match the practice screen (D-102). */
+  --radius-button: var(--radius-practice);
   --radius-input: 12px;
 
   --font-sans: 'Rubik', system-ui, -apple-system, 'Segoe UI', sans-serif;

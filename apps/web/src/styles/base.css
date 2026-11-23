@@ -124,7 +124,7 @@ body {
   .btn3d--sm {
     min-height: 40px;
     padding: 0.4rem 1rem;
-    border-radius: 999px;
+    border-radius: var(--radius-button);
     font-size: 0.9rem;
     font-weight: 700;
     box-shadow:

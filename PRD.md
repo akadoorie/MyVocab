@@ -873,7 +873,9 @@ glossy, glowing pressable buttons.
 - Radius: the **practice screen is square with softened 4px corners** (D-101): the flip card, the answer pills, Back,
   Next and Flip, the chips ("EN → HE", "Clicked: …", "◆ Multiple meanings"), the hints cover and its label, the
   "Sign-in required" tip, the practice header's Home button, and the small button copies in the Home page's "Buttons"
-  guide (`--radius-practice`). Elsewhere: 18px (other cards), 14px for other buttons, 12px (inputs).
+  guide (`--radius-practice`). The 3D buttons everywhere else (Start, Continue, New practice, Home on the summary,
+  dialogs, the Account, Known words and admin pages) share the same 4px corners (D-102). Elsewhere: 18px (other
+  cards), 12px (inputs).
   Spacing on a 4px scale.
 
 ### 9.2 Pressable-ledge 3D buttons
