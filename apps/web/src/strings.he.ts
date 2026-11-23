@@ -235,7 +235,7 @@ export const he: Strings = {
   card: {
     translation: 'תרגום',
     parallel: 'תרגום מקביל',
-    parallelAlsoLiteral: 'תרגום מקביל (גם מילולית)',
+    parallelAlsoLiteral: 'תרגום מקביל\n(גם מילולית)',
     meaning: 'משמעות',
     explanation: 'הסבר',
     literal: 'מילולית',

@@ -271,7 +271,8 @@ private content repository. It never appears in the public code repo or any publ
     parallel; without one, **"Translation"** for a plain word (the meaning is then simply the translation) but
     **"Meaning"** when the item has a literal translation (an expression whose words don't simply translate); under a parallel, a
     **"Meaning"** line in a medium size; then a **"Literally"** line, small and muted. When the literal is marked as the
-    same as the parallel (D-026), the first label reads **"Parallel translation (also literally)"** and there is no
+    same as the parallel (D-026), the first label reads **"Parallel translation (also literally)"**, on two lines (it breaks before the
+    brackets, so the label column stays narrow and the answer gets the width), and there is no
     Literally line. The labels are in the **answer's language**, not the UI's: a Hebrew answer gets "תרגום מקביל",
     "תרגום", "משמעות", "מילולית" (and "תרגום מקביל (גם מילולית)"). Each line is in the answer language's `dir`; two
     or more entries are numbered; a kind with no entries isn't shown. For the same language: the explanation lines

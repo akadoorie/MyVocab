@@ -108,7 +108,10 @@ describe('FlipCard', () => {
       },
     });
     render(<FlipCard card={card} side="back" hintsShown={false} onFlip={vi.fn()} />);
-    expect(screen.getByText('תרגום מקביל (גם מילולית)')).toBeInTheDocument();
+    // The label breaks before the brackets, so the label column stays narrow.
+    expect(face('back').querySelector('.flip-card__label')?.textContent).toBe(
+      'תרגום מקביל\n(גם מילולית)',
+    );
     expect(screen.queryByTestId('literal')).not.toBeInTheDocument();
     expect(screen.getByTestId('meaning')).toHaveTextContent('משמעותמשמעות-11');
   });

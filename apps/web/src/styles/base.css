@@ -1341,6 +1341,9 @@ body {
   font-size: calc(max(var(--fit, 1), 0.8) * 0.8125rem);
   font-weight: 600;
   line-height: 1.25;
+  /* "(also literally)" goes on its own line (a newline in the label), so the label column stays
+     as narrow as its longest line and the answer gets the width. */
+  white-space: pre-line;
 }
 .flip-card__flip {
   /* A little smaller on phones, leaving more room for the hints (D-051). */
