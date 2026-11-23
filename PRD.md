@@ -975,11 +975,15 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
 - After **Don't know** on the front, the same flip animation plays automatically.
 - **Next** / **Know**: the next card enters front side up, rising in (≈ 260ms: from slightly lower, smaller and
   transparent to full size; a plain 150ms fade with reduced motion).
-- **Know animation** (D-094): a decorative copy of the card **rolls up like a sheet of paper**, from its bottom edge to
-  its top, into a tight scroll (the light back of the paper showing), and the scroll is **sucked along a curve into the
-  "N known" counter** in the header, which pops (bigger, green) as it lands. The roll takes about 0.55s and the flight
-  about 0.4s; the next card rises in underneath at the same time, so Know never feels slow. Reduced motion: no roll.
-  Know · ask again plays the same animation, and the counter pops amber. Back has no reverse roll: the earlier card simply rises in,
+- **Know animations:** the next card rises in underneath at the same time, so Know never feels slow; reduced motion
+  skips them.
+  - **Green "I know it" (forever): a firework** (D-103). A decorative copy of the card shrinks into a bright green spark
+    (0.3s), which shoots up to the "N known" counter in the header (about 0.5s) and bursts there like a firework, its
+    sparks falling in short trails (about 1.1s); the counter pops green as it bursts.
+  - **Orange "I know it" (ask again): the paper roll** (D-094). The card **rolls up like a sheet of paper**, from its
+    bottom edge to its top, into a tight scroll (the light back of the paper showing), and the scroll is **sucked along
+    a curve into the counter**, which pops amber as it lands. The roll takes about 0.55s and the flight about 0.4s.
+  - Back has no reverse animation: the earlier card simply rises in,
   front side up. Don't know keeps the flip. A swipe slides the card out sideways (FR-L29b).
 
 ### 9.5 Start card (look)

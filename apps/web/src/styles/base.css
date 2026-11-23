@@ -1514,6 +1514,44 @@ body {
   }
 }
 
+/* The green Know (D-103): the card copy shrinks into a bright spark (300ms); FireworkGhost then draws
+   the spark rising to the counter and its burst on the canvas over the screen. */
+.firework-ghost {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+.firework-ghost__card {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  animation: firework-shrink 300ms cubic-bezier(0.6, 0, 0.9, 0.4) forwards;
+}
+@keyframes firework-shrink {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: brightness(1);
+  }
+  85% {
+    transform: scale(0.08);
+    opacity: 0.9;
+    filter: brightness(2.2);
+  }
+  100% {
+    transform: scale(0.02);
+    opacity: 0;
+    filter: brightness(2.2);
+  }
+}
+.firework-ghost__sky {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
 /* The crown on the "Practice completed" card (PRD FR-L32a): it sits tilted on the upper-left corner;
    after the celebration it flies in along a curve from the top-left of the screen and lands with
    a small bounce. --crown-dx / --crown-dy are the start offset, measured by the component.
@@ -1624,6 +1662,10 @@ body {
   --pop-glow: var(--know-glow);
   animation: count-pop 380ms ease-out 900ms;
 }
+/* The firework bursts at the counter sooner than the roll lands (D-103). */
+.count-pop--firework {
+  animation-delay: 800ms;
+}
 .count-pop--again {
   --pop-color: var(--again-top);
   --pop-glow: var(--again-glow);
@@ -1638,7 +1680,8 @@ body {
   .card-enter {
     animation: card-fade 150ms ease-out;
   }
-  .roll-ghost {
+  .roll-ghost,
+  .firework-ghost {
     display: none;
   }
   .count-pop {

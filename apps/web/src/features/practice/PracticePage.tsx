@@ -24,6 +24,7 @@ import { ButtonBar } from './ButtonBar';
 import { FlipCard } from './FlipCard';
 import { clearPractice, loadPractice, savePractice, type StoredPractice } from './practice-storage';
 import { RoundBreak, DEFAULT_CONTINUE_SECONDS, ShortcutsMenu, Summary } from './PracticeScreens';
+import { FireworkGhost } from './FireworkGhost';
 import { RollGhost, type KnowRoll } from './RollGhost';
 import { useCountdown } from './useCountdown';
 import { usePracticeShortcuts } from './usePracticeShortcuts';
@@ -174,7 +175,8 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
         const mark = { id, round: state.round };
         if (type === 'KNOW' && before !== 'know')
           knownSink.onKnow(mark, cards.get(id)?.direction.target ?? '');
-        // The known card rolls up like paper and flies into the "known" counter (PRD §9.4, D-094).
+        // The green Know bursts like a firework at the "known" counter (D-103); the orange one
+        // rolls up like paper and flies into it (PRD §9.4, D-094).
         const known = cards.get(id);
         const from = cardRef.current?.getBoundingClientRect();
         const to = counterRef.current?.getBoundingClientRect();
@@ -185,6 +187,7 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
             side: state.side,
             hintsShown: state.hintsShown,
             again: type === 'KNOW_AGAIN',
+            kind: type === 'KNOW' ? 'firework' : 'roll',
             rect: { top: from.top, left: from.left, width: from.width, height: from.height },
             dx: to.left + to.width / 2 - (from.left + from.width / 2),
             dy: to.top + to.height / 2 - (from.top + from.height / 2),
@@ -284,7 +287,11 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
     animate: motionAllowed(),
   });
 
-  const ghost = roll ? <RollGhost key={roll.key} roll={roll} onDone={clearRoll} /> : null;
+  const ghost = !roll ? null : roll.kind === 'firework' ? (
+    <FireworkGhost key={roll.key} roll={roll} onDone={clearRoll} />
+  ) : (
+    <RollGhost key={roll.key} roll={roll} onDone={clearRoll} />
+  );
   const [progressHead, progressKnown] = splitKnown(
     strings.practice.progress(
       progress.round,
@@ -360,7 +367,7 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
             <span
               ref={counterRef}
               key={progress.knownCount}
-              className={`inline-block ${roll ? `count-pop ${roll.again ? 'count-pop--again' : ''}` : ''}`}
+              className={`inline-block ${roll ? `count-pop ${roll.again ? 'count-pop--again' : ''} ${roll.kind === 'firework' ? 'count-pop--firework' : ''}` : ''}`}
             >
               {progressKnown}
             </span>

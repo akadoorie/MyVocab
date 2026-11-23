@@ -11,6 +11,8 @@ export type KnowRoll = {
   rect: { top: number; left: number; width: number; height: number };
   /** Know · ask again: the counter pops amber instead of green (FR-L27a). */
   again?: boolean;
+  /** The green Know bursts like a firework (D-103); the orange one rolls up like paper. */
+  kind?: 'roll' | 'firework';
   /** From the card's center to the "known" counter's center. */
   dx: number;
   dy: number;
