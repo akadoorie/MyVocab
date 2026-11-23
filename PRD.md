@@ -959,12 +959,11 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
 - After **Don't know** on the front, the same flip animation plays automatically.
 - **Next** / **Know**: the next card enters front side up, rising in (≈ 260ms: from slightly lower, smaller and
   transparent to full size; a plain 150ms fade with reduced motion).
-- **Know animation**: a decorative copy of the card **crumples like paper** and is **sucked
-  along a curve into the "N known" counter** in the header, which pops (bigger, green) as it lands. After a quick
-  green ✓ glow the card folds into ~10 triangular facets, each tilting its own way in 3D with its own light or shadow,
-  like real crumpled paper; the wad shrinks and turns as it flies. About 0.8s in total, and the next card rises in at
-  the same time, so Know never feels slow. Reduced motion: no crumple. Know · ask again plays the same animation, with an amber
-  glow. Back has no reverse crumple: the earlier card simply rises in,
+- **Know animation** (D-094): a decorative copy of the card **rolls up like a sheet of paper**, from its bottom edge to
+  its top, into a tight scroll (the light back of the paper showing), and the scroll is **sucked along a curve into the
+  "N known" counter** in the header, which pops (bigger, green) as it lands. The roll takes about 0.55s and the flight
+  about 0.4s; the next card rises in underneath at the same time, so Know never feels slow. Reduced motion: no roll.
+  Know · ask again plays the same animation, and the counter pops amber. Back has no reverse roll: the earlier card simply rises in,
   front side up. Don't know keeps the flip. A swipe slides the card out sideways (FR-L29b).
 
 ### 9.5 Start card (look)

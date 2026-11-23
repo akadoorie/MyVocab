@@ -24,7 +24,7 @@ import { ButtonBar } from './ButtonBar';
 import { FlipCard } from './FlipCard';
 import { clearPractice, loadPractice, savePractice, type StoredPractice } from './practice-storage';
 import { RoundBreak, DEFAULT_CONTINUE_SECONDS, ShortcutsMenu, Summary } from './PracticeScreens';
-import { CrumpleGhost, type Crumple } from './CrumpleGhost';
+import { RollGhost, type KnowRoll } from './RollGhost';
 import { useCountdown } from './useCountdown';
 import { usePracticeShortcuts } from './usePracticeShortcuts';
 import { useSwipe } from './useSwipe';
@@ -132,8 +132,8 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   const [confirmLeave, setConfirmLeave] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const counterRef = useRef<HTMLSpanElement>(null);
-  const [crumple, setCrumple] = useState<Crumple | null>(null);
-  const clearCrumple = useCallback(() => setCrumple(null), []);
+  const [roll, setRoll] = useState<KnowRoll | null>(null);
+  const clearRoll = useCallback(() => setRoll(null), []);
 
   // The summary celebrates once per practice (FR-L32a), also across Back and a refresh.
   const [celebrated, setCelebrated] = useState(stored.celebrated ?? false);
@@ -174,12 +174,12 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
         const mark = { id, round: state.round };
         if (type === 'KNOW' && before !== 'know')
           knownSink.onKnow(mark, cards.get(id)?.direction.target ?? '');
-        // The known card crumples and flies into the "known" counter (PRD §9.4).
+        // The known card rolls up like paper and flies into the "known" counter (PRD §9.4, D-094).
         const known = cards.get(id);
         const from = cardRef.current?.getBoundingClientRect();
         const to = counterRef.current?.getBoundingClientRect();
         if (known && from && to && motionAllowed()) {
-          setCrumple({
+          setRoll({
             key: Date.now(),
             card: known,
             side: state.side,
@@ -285,9 +285,7 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
     animate: motionAllowed(),
   });
 
-  const ghost = crumple ? (
-    <CrumpleGhost key={crumple.key} crumple={crumple} onDone={clearCrumple} />
-  ) : null;
+  const ghost = roll ? <RollGhost key={roll.key} roll={roll} onDone={clearRoll} /> : null;
   const [progressHead, progressKnown] = splitKnown(
     strings.practice.progress(
       progress.round,
@@ -363,7 +361,7 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
             <span
               ref={counterRef}
               key={progress.knownCount}
-              className={`inline-block ${crumple ? `count-pop ${crumple.again ? 'count-pop--again' : ''}` : ''}`}
+              className={`inline-block ${roll ? `count-pop ${roll.again ? 'count-pop--again' : ''}` : ''}`}
             >
               {progressKnown}
             </span>
@@ -449,7 +447,7 @@ function splitKnown(text: string): [string, string] {
   return [text.slice(0, at), text.slice(at)];
 }
 
-/** The crumple is skipped for "reduce motion" (and where it can't be detected, e.g. tests). */
+/** The roll is skipped for "reduce motion" (and where it can't be detected, e.g. tests). */
 function motionAllowed(): boolean {
   return window.matchMedia?.('(prefers-reduced-motion: no-preference)').matches ?? false;
 }
