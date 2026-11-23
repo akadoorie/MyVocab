@@ -18,6 +18,7 @@ import { startGoogleSignIn, useSession } from '../../lib/session';
 import { strings } from '../../strings';
 import { useKnownQueue } from '../known/KnownQueueProvider';
 import { useStartPractice, type PracticeStartNotice } from '../setup/useStartPractice';
+import { AppVersion } from '../../components/AppVersion';
 import { HomeIcon, LogoMark } from '../../components/Icons';
 import { ButtonBar } from './ButtonBar';
 import { FlipCard } from './FlipCard';
@@ -370,17 +371,22 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
         </p>
         <div className="flex items-center gap-2 md:gap-4">
           <ShortcutsMenu signedIn={!stored.isGuest} />
-          <button
-            type="button"
-            onClick={() => setConfirmLeave(true)}
-            aria-label={strings.nav.home}
-            title={strings.nav.home}
-            // The only way out of a practice now (D-072): a clear bordered button, not a faint link;
-            // a house, not the word (D-086).
-            className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-[10px] border border-border text-text transition-colors hover:border-accent hover:text-accent"
-          >
-            <HomeIcon />
-          </button>
+          {/* The version next to Home (D-093). On phones it is smaller and sits just below the
+              button (above the card), taking no width, so the progress stays on one line. */}
+          <div className="relative flex shrink-0 items-center gap-4">
+            <AppVersion className="absolute top-full left-1/2 mt-1 -translate-x-1/2 text-[10px] leading-none md:static md:mt-0 md:translate-x-0 md:text-xs" />
+            <button
+              type="button"
+              onClick={() => setConfirmLeave(true)}
+              aria-label={strings.nav.home}
+              title={strings.nav.home}
+              // The only way out of a practice now (D-072): a clear bordered button, not a faint link;
+              // a house, not the word (D-086).
+              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-[10px] border border-border text-text transition-colors hover:border-accent hover:text-accent"
+            >
+              <HomeIcon />
+            </button>
+          </div>
         </div>
         {leaveDialog}
       </header>

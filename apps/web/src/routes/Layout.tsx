@@ -1,13 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
+import { AppVersion } from '../components/AppVersion';
 import { HomeIcon, LogoMark } from '../components/Icons';
 import { UserMenu } from '../components/UserMenu';
 import { api } from '../lib/api';
 import { useLocale } from '../lib/locale';
 import { startGoogleSignIn, useSession } from '../lib/session';
 import { strings, type Locale } from '../strings';
-
-const version = import.meta.env.VITE_APP_VERSION;
 
 /** Header, maintenance banner and footer around the regular pages (PRD §9.7). */
 export function Layout() {
@@ -41,14 +40,7 @@ export function Layout() {
               My<span className="text-accent">Vocab</span>
             </span>
           </Link>
-          {onHome && version && (
-            // The version, so a refresh shows at a glance whether a new one is live (D-032).
-            <span className="text-xs text-hint" data-testid="app-version">
-              <span className="sr-only">{strings.nav.version} </span>
-              <span aria-hidden="true">v</span>
-              {version}
-            </span>
-          )}
+          {onHome && <AppVersion />}
         </div>
         <nav className={`flex items-center text-sm ${onHome ? 'gap-2 sm:gap-3' : 'gap-3'}`}>
           {!onHome && (

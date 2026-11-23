@@ -182,7 +182,7 @@ private content repository. It never appears in the public code repo or any publ
   for guests and learners only once N reaches the admin setting `stats.registeredUsersMin` (default 100), for admins
   always, even at 0 (D-082; fetched once when the page opens; hidden if it fails to load, D-036) (when the page loads or is refreshed on Home, the first words
   fade in and the last word ("stick"; Hebrew "ובחינם") drops in, bounces off twice and sticks on the third try with a soft squash and a faint shine, about
-  3s; not when coming back to Home inside the app; a short fade with reduced motion, D-034, D-037), the app version (a small yellow "v1.N" next to the name, D-032), a short hero, a 3-step "How it works" section with a **"Buttons"** guide
+  3s; not when coming back to Home inside the app; a short fade with reduced motion, D-034, D-037), the app version (a small yellow "v1.N" next to the name, D-032; also in the practice header, D-093), a short hero, a 3-step "How it works" section with a **"Buttons"** guide
   (a small copy of each answer button as it looks in a practice: the same gradient, glossy edge, glow and ledge, label only, with its caption under it, D-058; and what it does; for guests the green one is dark, with a
   small yellow lock, and its line ends "(Sign-in to enable)", the whole "Sign-in to enable" a link that starts sign-in, D-030, D-042, D-071), and the **Start card**.
   Desktop: hero and start card side by side. Mobile: stacked, with the **Start** button right under the hero text
@@ -1001,8 +1001,10 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   2. Use Hints or Flip, then mark what you know · 3. Repeat the words that you didn’t know, till nothing is left), then "Buttons" (a small copy
   of each answer pill with its caption, each with one line on what it does; D-058); Start card; footer (Privacy). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
 - **Practice header**: the MyVocab logo mark (two stacked cards) and the progress `Round 1 • Card 2/10 • 1 known` at the
-  start (left; right in Hebrew); at the other end, on desktop a "⌨ Keyboard shortcuts" link that opens a small popover listing the shortcuts, and
-  the Home button with its house icon (asks before stopping the practice, FR-L30a).
+  start (left; right in Hebrew); at the other end, on desktop a "⌨ Keyboard shortcuts" link that opens a small popover listing the shortcuts,
+  the app version (the same small yellow "v1.N" as on the Home page, D-093; on phones a little smaller, centred just below the
+  Home button (above the card), so the progress keeps its one line), and the Home button with its house icon
+  (asks before stopping the practice, FR-L30a).
 - **Home as an icon (D-086)**: the way back to the Home page is a house icon, not the word, in three places: the practice
   header, the header of the other regular pages (Privacy, My known words, Account; 44 px, muted), and the Home button on
   the round break and the summary. Each keeps "Home" as its accessible name and tooltip. The account menu's "Home" item
