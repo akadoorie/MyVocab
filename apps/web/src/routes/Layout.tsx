@@ -103,6 +103,15 @@ export function Layout() {
         <Link to="/privacy" className="hover:text-text">
           {strings.nav.privacy}
         </Link>
+        {/* A plain file served with the site, not an app page, so a full link in a new tab (D-099). */}
+        <a
+          href="/third-party-licenses.txt"
+          target="_blank"
+          rel="noopener"
+          className="hover:text-text"
+        >
+          {strings.nav.licenses}
+        </a>
       </footer>
     </div>
   );

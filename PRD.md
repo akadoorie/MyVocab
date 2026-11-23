@@ -1012,7 +1012,7 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
 - **Landing**: header (logo "MyVocab", the language switch, sign-in / avatar, an "Admin" link for admins as a full-page navigation); hero
   ("Learn words until they stick"; Hebrew "ללמוד מילים וביטויים לפסיכומטרי ביעילות ובחינם"); How it works (1. Pick languages and a topic, or just press Start ·
   2. Use Hints or Flip, then mark what you know · 3. Repeat the words that you didn’t know, till nothing is left), then "Buttons" (a small copy
-  of each answer pill with its caption, each with one line on what it does; D-058); Start card; footer (Privacy). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
+  of each answer pill with its caption, each with one line on what it does; D-058); Start card; footer (Privacy, Licenses). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
 - **Practice header**: the MyVocab logo mark (two stacked cards) and the progress `Round 1 • Card 2/10 • 1 known` at the
   start (left; right in Hebrew); at the other end, on desktop a "⌨ Keyboard shortcuts" link that opens a small popover listing the shortcuts,
   and the Home button with its house icon (asks before stopping the practice, FR-L30a). The app version is centred just
@@ -1560,7 +1560,7 @@ In test, Turnstile uses Cloudflare's documented **test keys** (always-pass / alw
 | Where it could leak | Control |
 |---|---|
 | Public GitHub code repo | No vocabulary files at all. Real content lives only in the private `MyVocab-Content` repo and in D1. `seed/sample.csv` contains only synthetic rows. `.gitignore` rules + the `check:no-vocabulary` CI guard (§8.5). The landing page, tests and screenshots use made-up examples only. Docs (including this PRD) may use a handful of common dictionary words as illustrations, never content copied from the real set |
-| Third-party licences | The site serves `/third-party-licenses.txt`: every package the app ships with (production dependencies of the web app and the API), with its version, licence and licence text (D-099). `pnpm licenses:update` regenerates it after a dependency change; CI (`pnpm licenses:check`) fails when it is out of date. The libraries are MIT, Apache-2.0 (drizzle-orm) and OFL-1.1 (the Rubik font); none is copyleft |
+| Third-party licences | The site serves `/third-party-licenses.txt`, linked as **Licenses** (Hebrew "רישיונות") in the footer next to Privacy, opening in a new tab: every package the app ships with (production dependencies of the web app and the API), with its version, licence and licence text (D-099). `pnpm licenses:update` regenerates it after a dependency change; CI (`pnpm licenses:check`) fails when it is out of date. The libraries are MIT, Apache-2.0 (drizzle-orm) and OFL-1.1 (the Rubik font); none is copyleft |
 | GitHub Actions logs/artifacts (visible in public repos) | Actions never connect to production D1 except for migrations and deploys. They never run seed or export, and never print query results. E2E runs against a local D1 with synthetic data |
 | Exports | `pnpm db:export` runs only on the owner's machine; output goes to a gitignored `exports/` folder (full) or the private repo (`--content-only`). No HTTP export endpoint |
 | Search engines | `robots.txt` disallows `/api/`, `/admin`, `/known`, `/account`. `X-Robots-Tag: noindex, nofollow` on all `/api/*`. Cards load only via `POST /practices` after a user action, so crawlers never see them. The landing/privacy pages contain no vocabulary |

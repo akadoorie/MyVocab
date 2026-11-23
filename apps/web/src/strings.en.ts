@@ -33,6 +33,8 @@ export const en = {
     account: 'Account',
     admin: 'Admin',
     privacy: 'Privacy',
+    /** The footer link to the third-party licenses file (D-099). */
+    licenses: 'Licenses',
     github: 'GitHub',
     skipToContent: 'Skip to content',
     maintenance: 'MyVocab is under maintenance.',

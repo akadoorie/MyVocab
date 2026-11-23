@@ -31,6 +31,7 @@ export const he: Strings = {
     account: 'חשבון',
     admin: 'ניהול',
     privacy: 'פרטיות',
+    licenses: 'רישיונות',
     github: 'GitHub',
     skipToContent: 'דילוג לתוכן',
     maintenance: 'MyVocab בתחזוקה כרגע.',
