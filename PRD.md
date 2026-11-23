@@ -194,7 +194,7 @@ private content repository. It never appears in the public code repo or any publ
 | Source language | Active languages | **English** |
 | Target language | Active languages | **Hebrew** |
 | Topic | "All topics" (admins and guests: "Sample set" first), a separator line, then the active topics (by `sort_order`), all aligned left (D-062). In the open list on desktop the special choices above the line sit on a lighter band in bold accent text (a guest's locked "All topics" in grey; D-063) | **All topics** |
-| Amount (signed-in) | **10 / 20 / 30 / 40 / 50** (segmented control) | **10** |
+| Amount (signed-in) | **10 / 20 / 30 / 40 / 50** (a sliding pill, D-098) | **10** |
 | Amount (guest) | **5**, fixed and locked | **5** |
 
 - **FR-L3 Default styling**: a default value must still read as **chosen**: same background and bright `--text`
@@ -979,7 +979,11 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
 ### 9.5 Start card (look)
 - Under the heading, first: the "N cards available" line, with "Reset to defaults" on its right when shown
   (D-060).
-- Each field has a label and either a select (languages, topic) or a segmented control (amount). Phones and
+- Each field has a label and either a select (languages, topic) or, for the amount, a **sliding pill** (D-098): the
+  five amounts in one track and a violet pill on the chosen one, which slides to a new amount when it is tapped, when
+  the pill (or the track) is dragged sideways with a finger or the mouse, or with the arrow keys; a mostly vertical
+  swipe still scrolls the page, amounts not allowed right now stay greyed out and the pill never lands on them, and it
+  runs right to left in Hebrew. For screen readers it stays a radio group. Phones and
   desktop share one layout (D-055): From and To on one line with a small round **switch button** (⇄) between
   them that swaps the two languages (disabled when they are the same), then Topic and Cards per practice on the
   next line (D-046). Both lines share one grid: Topic sits exactly under From
