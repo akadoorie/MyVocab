@@ -68,7 +68,8 @@ export function RoundBreak({
         </h1>
         <p className="text-muted">{strings.practice.roundRecap(knew, total, remaining)}</p>
       </div>
-      <div className="flex items-start gap-3">
+      {/* Home on the left and Continue on the right in every language, Hebrew too (D-088). */}
+      <div className="flex items-start gap-3 rtl:flex-row-reverse">
         <Button3D
           variant="stop"
           onClick={onHome}
