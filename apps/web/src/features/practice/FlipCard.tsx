@@ -35,10 +35,21 @@ function useSameLine(
     const els = [frontTop.current, backTop.current];
     if (els.some((el) => !el)) return;
     const parts = els as HTMLDivElement[];
+    // Exact (fractional) positions from the face's top, so the two lines don't differ by a
+    // rounded pixel. Turning the back face around its vertical axis keeps its heights; the card's
+    // rise-in scales it a little (96%), so on-screen sizes are divided by that scale.
+    const measure = (el: HTMLElement) => {
+      const face = el.parentElement!;
+      const box = face.getBoundingClientRect();
+      const scale = face.offsetHeight > 0 && box.height > 0 ? box.height / face.offsetHeight : 1;
+      const r = el.getBoundingClientRect();
+      return { top: (r.top - box.top) / scale, height: r.height / scale };
+    };
     const sync = () => {
       for (const el of parts) el.style.setProperty('--top-min', '0px');
-      const line = Math.max(...parts.map((el) => el.offsetTop + el.offsetHeight));
-      for (const el of parts) el.style.setProperty('--top-min', `${line - el.offsetTop}px`);
+      const sizes = parts.map(measure);
+      const line = Math.max(...sizes.map((m) => m.top + m.height));
+      parts.forEach((el, i) => el.style.setProperty('--top-min', `${line - sizes[i]!.top}px`));
     };
     sync();
     if (typeof ResizeObserver === 'undefined') return;

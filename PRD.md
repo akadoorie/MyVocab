@@ -291,7 +291,8 @@ private content repository. It never appears in the public code repo or any publ
   never move). On the front the hints reach down to the card's bottom (D-078, D-079): covered, the dots fill it with
   a notch around the Flip button; revealed, the text runs down too, fading softly where it passes Flip, with room
   after the last line so at the end of the scroll it rests above the Flip button. The back
-  works the same way under the answer. **Synonyms come first**, then one empty line (a tighter 1rem gap on phones, D-051), then the hint sentences. On phones the Flip button is 48px (64px on desktop), leaving more room for the hints (D-051). The cover is a real button ("Tap to see hints" / "Hide hints", `aria-expanded`); the hidden text is not
+  works exactly the same way under the answer: its hints also reach down beside Flip, so with the line in the same
+  place both faces have the same room for the hints and fade at the same point (D-090). **Synonyms come first**, then one empty line (a tighter 1rem gap on phones, D-051), then the hint sentences. On phones the Flip button is 48px (64px on desktop), leaving more room for the hints (D-051). The cover is a real button ("Tap to see hints" / "Hide hints", `aria-expanded`); the hidden text is not
   read out until revealed; it is at least 4.5rem tall, so a one-line hint is still easy to tap; with reduced motion
   the dots stand still. There is **no Hints button**. The state survives flipping back and forth and is remembered per card
   within the round: a new card starts covered, a card reached again with Back or Next shows it as it was left, and

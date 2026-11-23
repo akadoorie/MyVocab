@@ -335,10 +335,12 @@ body {
     width: 100%;
     height: 100%;
   }
-  /* On the card front the hints reach the card's bottom (D-078, D-079): covered, the dots fill
-     it around a notch for the Flip button; revealed, the text runs down too, fading softly where
-     it passes Flip, with room after the last line so it always scrolls clear of the button. */
-  .flip-card__front {
+  /* On both faces the hints reach the card's bottom (D-078, D-079, D-090): covered (front),
+     the dots fill it around a notch for the Flip button; revealed, the text runs down too, fading
+     softly where it passes Flip, with room after the last line so it always scrolls clear of the
+     button. The back's hints are always revealed and behave the same. */
+  .flip-card__front,
+  .flip-card__back {
     --flip-row: 52px;
     --flip-notch: 54px;
     /* Flip's centre, measured from the hints area's bottom-right corner, and its fade. */
@@ -347,10 +349,12 @@ body {
     --flip-r0: 30px;
     --flip-r1: 54px;
   }
-  .flip-card__front .hints-cover.is-open .hints-area__scroll > div {
+  .flip-card__front .hints-cover.is-open .hints-area__scroll > div,
+  .flip-card__back .hints-area__scroll > div {
     padding-bottom: var(--flip-row);
   }
-  .flip-card__front .hints-cover.is-open .hints-area__scroll {
+  .flip-card__front .hints-cover.is-open .hints-area__scroll,
+  .flip-card__back .hints-area__scroll {
     --flip-fade: radial-gradient(
       circle at calc(100% - var(--flip-cx)) calc(100% - var(--flip-cy)),
       transparent var(--flip-r0),
@@ -360,7 +364,8 @@ body {
     mask-image: var(--flip-fade);
   }
   /* With more below, the bottom fade and the Flip fade together. */
-  .flip-card__front .hints-cover.is-open .hints-area.has-more .hints-area__scroll {
+  .flip-card__front .hints-cover.is-open .hints-area.has-more .hints-area__scroll,
+  .flip-card__back .hints-area.has-more .hints-area__scroll {
     -webkit-mask-image:
       var(--flip-fade), linear-gradient(180deg, #000 calc(100% - 2.25rem), transparent);
     mask-image: var(--flip-fade), linear-gradient(180deg, #000 calc(100% - 2.25rem), transparent);
@@ -378,7 +383,8 @@ body {
     );
   }
   @media (min-width: 768px) {
-    .flip-card__front {
+    .flip-card__front,
+    .flip-card__back {
       --flip-row: 64px;
       --flip-notch: 62px;
       --flip-cx: 16px;
@@ -1290,8 +1296,8 @@ body {
   flex-direction: column;
   min-height: 260px;
   overflow-y: auto;
-  /* Room at the bottom for the Flip button (48px on phones, D-051). */
-  padding: 20px 20px 72px;
+  /* No strip kept for the Flip button: on both faces the hints reach down beside it (D-078, D-090). */
+  padding: 20px;
   background:
     radial-gradient(120% 90% at 50% 0%, rgba(139, 108, 255, 0.16), transparent 60%),
     linear-gradient(180deg, #1d1638, #15102a);
@@ -1306,21 +1312,13 @@ body {
 .flip-card__back {
   transform: rotateY(180deg);
 }
-/* The front's hints reach down beside the Flip button (D-078). */
-.flip-card__front {
-  padding-bottom: 20px;
-}
 /* The upper part (the item on the front, the answer on the back) is at least 46% of the card, so
-   the line under it sits in the same place on both faces (D-085). Percentages count from the
-   face's content box, and the back keeps more padding at the bottom for Flip: --pad-extra adds
-   that back, so both faces count from the same height. On phones it is 10px short of 46%, so the
-   room the tighter buttons give goes to the hints. --top-min (FlipCard's useSameLine) lifts both
-   to the lower line when a long item or answer needs more. */
+   the line under it sits in the same place on both faces (D-085); both faces have the same padding
+   (D-090), so the percentage counts from the same height. On phones it is 10px short of 46%, so
+   the room the tighter buttons give goes to the hints. --top-min (FlipCard's useSameLine) lifts
+   both to the lower line when a long item or answer needs more. */
 .flip-card__top {
-  min-height: max(calc((100% + var(--pad-extra, 0px)) * 0.46 - 10px), var(--top-min, 0px));
-}
-.flip-card__back {
-  --pad-extra: 52px; /* 72px - 20px */
+  min-height: max(calc(46% - 10px), var(--top-min, 0px));
 }
 .flip-card__flip {
   /* A little smaller on phones, leaving more room for the hints (D-051). */
@@ -1338,16 +1336,10 @@ body {
 @media (min-width: 768px) {
   .flip-card__face {
     min-height: 420px;
-    padding: 36px 40px 100px;
-  }
-  .flip-card__front {
-    padding-bottom: 36px;
+    padding: 36px 40px;
   }
   .flip-card__top {
-    min-height: max(calc((100% + var(--pad-extra, 0px)) * 0.46), var(--top-min, 0px));
-  }
-  .flip-card__back {
-    --pad-extra: 64px; /* 100px - 36px */
+    min-height: max(46%, var(--top-min, 0px));
   }
   .flip-card__flip {
     --size: 64px;
