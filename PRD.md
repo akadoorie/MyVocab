@@ -511,8 +511,8 @@ so learners never download it. All admin pages work on mobile (tables collapse i
   D-038).
 
 ### 7.2 Items (`/admin/items`, `/admin/items/new`, `/admin/items/:id`)
-- **FR-A10** List: search (text and translations), filters (language, topic, status, Sample set (in / not
-  in), multiple meanings,
+- **FR-A10** List: search (text and translations), filters (language, topic, status, Sample set ("Included" /
+  "Not included"), multiple meanings,
   "missing translation into X", "missing explanation", "no hints", "not playable"), sort, pagination (50 per page).
   Columns: text, language, ◆, a "Sample" badge, topics, translation badges per language, explanation ✓, hint
   count, status, updated.
