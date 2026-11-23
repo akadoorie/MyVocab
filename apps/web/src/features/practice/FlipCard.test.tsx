@@ -183,3 +183,68 @@ describe('FlipCard', () => {
     expect(onFlip).toHaveBeenCalledTimes(2); // the tap on the card did nothing
   });
 });
+
+describe('the line at the middle: the upper part shrinks to fit (D-095)', () => {
+  /** jsdom has no layout: the upper part is 100px tall and its content `need`px at full size. */
+  function fakeLayout(need: number, mainPx = 0) {
+    const fit = (el: HTMLElement) => Number(el.style.getPropertyValue('--fit') || 1);
+    const isTop = (el: HTMLElement) => el.classList.contains('flip-card__top');
+    const spies: { mockRestore: () => void }[] = [
+      vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockImplementation(function (
+        this: HTMLElement,
+      ) {
+        return isTop(this) ? 100 : 0;
+      }),
+      vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockImplementation(function (
+        this: HTMLElement,
+      ) {
+        return isTop(this) ? need * fit(this) : 0;
+      }),
+    ];
+    const real = window.getComputedStyle;
+    spies.push(
+      vi.spyOn(window, 'getComputedStyle').mockImplementation((el, pseudo) => {
+        const style = real(el, pseudo);
+        if ((el as HTMLElement).hasAttribute('data-fit-main') && mainPx)
+          return { ...style, fontSize: `${mainPx}px` } as CSSStyleDeclaration;
+        return style;
+      }),
+    );
+    return () => spies.forEach((s) => s.mockRestore());
+  }
+  const fitOf = (side: 'front' | 'back') =>
+    Number(
+      (face(side).querySelector('.flip-card__top') as HTMLElement).style.getPropertyValue('--fit'),
+    );
+
+  it('keeps full size when the content fits', () => {
+    const restore = fakeLayout(80);
+    render(<FlipCard card={makeCard(1)} side="back" hintsShown={false} onFlip={vi.fn()} />);
+    expect(fitOf('back')).toBe(1);
+    expect(fitOf('front')).toBe(1);
+    restore();
+  });
+
+  it('shrinks to the largest size that fits', () => {
+    const restore = fakeLayout(200, 28);
+    render(<FlipCard card={makeCard(1)} side="back" hintsShown={false} onFlip={vi.fn()} />);
+    const fit = fitOf('back');
+    expect(fit).toBeLessThanOrEqual(0.505); // 200px × fit must fit in 100px
+    expect(fit).toBeGreaterThan(0.48);
+    restore();
+  });
+
+  it('never makes the main text smaller than 12px', () => {
+    const restore = fakeLayout(1000, 28);
+    render(<FlipCard card={makeCard(1)} side="back" hintsShown={false} onFlip={vi.fn()} />);
+    expect(fitOf('back')).toBeCloseTo(12 / 28, 3);
+    restore();
+  });
+
+  it('starts the answer on the side its language reads from', () => {
+    render(<FlipCard card={makeCard(1)} side="back" hintsShown={false} onFlip={vi.fn()} />);
+    const top = face('back').querySelector('.flip-card__top') as HTMLElement;
+    expect(top).toHaveAttribute('dir', makeCard(1).answer.dir);
+    expect(top).toHaveClass('text-start');
+  });
+});

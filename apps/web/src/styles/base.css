@@ -1312,13 +1312,20 @@ body {
 .flip-card__back {
   transform: rotateY(180deg);
 }
-/* The upper part (the item on the front, the answer on the back) is at least 46% of the card, so
-   the line under it sits in the same place on both faces (D-085); both faces have the same padding
-   (D-090), so the percentage counts from the same height. On phones it is 10px short of 46%, so
-   the room the tighter buttons give goes to the hints. --top-min (FlipCard's useSameLine) lifts
-   both to the lower line when a long item or answer needs more. */
+/* The line under the upper part (the item on the front, the answer on the back) sits at exactly
+   the middle of the card, on both faces, whatever the content (D-095). Both faces have the same
+   padding at the top and bottom (D-090) and the same fixed top row, so the upper part's height is
+   half the content box less the row. Its text shrinks to fit (FlipCard's useFitText sets --fit,
+   which every size in it is multiplied by); what still can't fit at the smallest size is cut at the
+   end, never the start ("safe" centring keeps the headline in view). */
+.flip-card__row {
+  flex: none;
+  height: 2.125rem;
+}
 .flip-card__top {
-  min-height: max(calc(46% - 10px), var(--top-min, 0px));
+  flex: none;
+  height: calc(50% - 2.125rem);
+  overflow: hidden;
 }
 .flip-card__flip {
   /* A little smaller on phones, leaving more room for the hints (D-051). */
@@ -1337,9 +1344,6 @@ body {
   .flip-card__face {
     min-height: 420px;
     padding: 36px 40px;
-  }
-  .flip-card__top {
-    min-height: max(46%, var(--top-min, 0px));
   }
   .flip-card__flip {
     --size: 64px;

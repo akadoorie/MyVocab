@@ -21,47 +21,44 @@ const chips = (): Record<CardAnswer, { color: string; text: string; extra?: stri
   dontKnow: { color: 'text-dontknow', text: strings.card.answeredDontKnow },
 });
 
+/** The smallest size the main text may shrink to (D-095). */
+const MIN_FIT_PX = 12;
+
 /**
- * Keeps the line under the item (front) and under the answer (back) in the same place, so it
- * doesn't jump when the card turns (D-085). Each upper part is at least 46% of the card
- * (.flip-card__top, base.css); a longer item or answer, or a wrapped chip row, would push its own
- * line lower. Both lines go to the lower of the two (`--top-min`).
+ * Shrinks the text of a card's upper part until it fits above the line, which sits at the card's
+ * middle (D-095): sets `--fit` (1 = full size) on the part, which every size in it is multiplied
+ * by. The element marked `data-fit-main` must not go below MIN_FIT_PX. Runs again when the card
+ * changes size or the fonts arrive.
  */
-function useSameLine(
-  frontTop: RefObject<HTMLDivElement | null>,
-  backTop: RefObject<HTMLDivElement | null>,
-) {
+function useFitText(part: RefObject<HTMLDivElement | null>) {
   useLayoutEffect(() => {
-    const els = [frontTop.current, backTop.current];
-    if (els.some((el) => !el)) return;
-    const parts = els as HTMLDivElement[];
-    // Exact (fractional) positions from the face's top, so the two lines don't differ by a
-    // rounded pixel. Turning the back face around its vertical axis keeps its heights; the card's
-    // rise-in scales it a little (96%), so on-screen sizes are divided by that scale.
-    const measure = (el: HTMLElement) => {
-      const face = el.parentElement!;
-      const box = face.getBoundingClientRect();
-      const scale = face.offsetHeight > 0 && box.height > 0 ? box.height / face.offsetHeight : 1;
-      const r = el.getBoundingClientRect();
-      return { top: (r.top - box.top) / scale, height: r.height / scale };
+    const el = part.current;
+    if (!el) return;
+    const fits = () =>
+      el.scrollHeight <= el.clientHeight + 1 && el.scrollWidth <= el.clientWidth + 1;
+    const fit = () => {
+      el.style.setProperty('--fit', '1');
+      if (el.clientHeight === 0 || fits()) return;
+      const main = el.querySelector<HTMLElement>('[data-fit-main]');
+      const full = main ? parseFloat(getComputedStyle(main).fontSize) : 0;
+      let lo = full > 0 ? Math.min(1, MIN_FIT_PX / full) : 0.3;
+      let hi = 1;
+      // Halve the range a few times: the largest size that fits, to within about 1%.
+      for (let i = 0; i < 7; i++) {
+        const mid = (lo + hi) / 2;
+        el.style.setProperty('--fit', String(mid));
+        if (fits()) lo = mid;
+        else hi = mid;
+      }
+      el.style.setProperty('--fit', String(lo));
     };
-    const sync = () => {
-      for (const el of parts) el.style.setProperty('--top-min', '0px');
-      const sizes = parts.map(measure);
-      const line = Math.max(...sizes.map((m) => m.top + m.height));
-      parts.forEach((el, i) => el.style.setProperty('--top-min', `${line - sizes[i]!.top}px`));
-    };
-    sync();
+    fit();
+    void document.fonts?.ready.then(fit);
     if (typeof ResizeObserver === 'undefined') return;
-    // The faces (the card's size), the chip rows above, and the parts themselves (their text).
-    const observer = new ResizeObserver(sync);
-    for (const el of parts) {
-      observer.observe(el);
-      if (el.parentElement) observer.observe(el.parentElement);
-      if (el.previousElementSibling) observer.observe(el.previousElementSibling);
-    }
+    const observer = new ResizeObserver(fit);
+    observer.observe(el);
     return () => observer.disconnect();
-  }, [frontTop, backTop]);
+  }, [part]);
 }
 
 /** The chip above the answer: what the main answer lines are (PRD §9.3, D-024). */
@@ -82,17 +79,20 @@ function Section(props: {
   className: string;
   muted?: boolean;
   testId?: string;
+  /** The main answer: shrinking to fit stops when its text reaches the smallest size (D-095). */
+  main?: boolean;
 }) {
-  const { label, entries, card, className, muted, testId } = props;
+  const { label, entries, card, className, muted, testId, main } = props;
   const many = entries.length > 1;
   return (
-    <div className={className} data-testid={testId}>
+    <div className={className} data-testid={testId} data-fit-main={main || undefined}>
       <p
         className={`mb-1 text-xs font-semibold tracking-wide uppercase md:text-sm ${muted ? 'opacity-80' : 'text-accent'}`}
       >
         {label}
       </p>
-      <ol lang={card.answer.lang} dir={card.answer.dir} className="space-y-1">
+      {/* Spacing in em, so it shrinks with the text (D-095). */}
+      <ol lang={card.answer.lang} dir={card.answer.dir} className="space-y-[0.15em] leading-snug">
         {entries.map((e, i) => (
           <li key={e}>
             {many && <span className="me-2 opacity-60">{i + 1}.</span>}
@@ -176,7 +176,8 @@ export function FlipCard({
   const tid = (id: string) => (decorative ? undefined : id);
   const frontTop = useRef<HTMLDivElement>(null);
   const backTop = useRef<HTMLDivElement>(null);
-  useSameLine(frontTop, backTop);
+  useFitText(frontTop);
+  useFitText(backTop);
   const label = `${card.direction.source.toUpperCase()} → ${card.direction.target.toUpperCase()}`;
   const front = side === 'front';
   const Answer = card.answer.numbered ? 'ol' : 'ul';
@@ -197,7 +198,7 @@ export function FlipCard({
   // (D-049, D-091). The direction stays on the left in every language (D-080): reversed on
   // right-to-left pages, so the answer chip goes right.
   const topRow = (face: 'front' | 'back') => (
-    <div className="flex items-center justify-between gap-2 rtl:flex-row-reverse">
+    <div className="flip-card__row flex items-center justify-between gap-2 rtl:flex-row-reverse">
       <p className="chip shrink-0">{label}</p>
       {answerChip(face)}
     </div>
@@ -232,19 +233,19 @@ export function FlipCard({
       <div className="flip-card__inner" data-testid={tid('flip-card')} data-side={side}>
         <div className="flip-card__face flip-card__front" inert={!front} aria-hidden={!front}>
           {topRow('front')}
-          {/* The item sits in the upper part of the card and never moves; hints and synonyms
-              appear below it in the space kept for them (PRD §9.3). Its height comes from
-              .flip-card__top (base.css), the same on the back, so the line stays in place when
-              flipping (D-085). */}
+          {/* The item sits in the upper half of the card and never moves; hints and synonyms
+              appear below the line, which is at the card's middle on both faces (PRD §9.3, D-095).
+              A long item shrinks to fit (useFitText). */}
           <div
             ref={frontTop}
-            className="flip-card__top flex shrink-0 flex-col items-center justify-center gap-4 py-4 text-center"
+            className="flip-card__top flex flex-col items-center gap-4 py-4 text-center [justify-content:safe_center]"
           >
             <p
               lang={card.front.lang}
               dir={card.front.dir}
               data-testid={tid('front-text')}
-              className="text-[clamp(2.5rem,8vw,5.5rem)] leading-tight font-bold tracking-tight break-words"
+              data-fit-main
+              className="text-[calc(var(--fit,1)*clamp(2.5rem,8vw,5.5rem))] leading-tight font-bold tracking-tight break-words"
             >
               {card.front.text}
             </p>
@@ -286,16 +287,20 @@ export function FlipCard({
 
         <div className="flip-card__face flip-card__back" inert={front} aria-hidden={front}>
           {topRow('back')}
+          {/* The answer starts on the side its language reads from (right for Hebrew), with its
+              headlines on that side too, and shrinks to fit above the line (D-095). */}
           <div
             ref={backTop}
-            className="flip-card__top flex shrink-0 flex-col items-center justify-center py-4 text-center"
+            dir={card.answer.dir}
+            className="flip-card__top flex flex-col py-2 text-start [justify-content:safe_center]"
           >
             {card.answer.kind === 'translation' ? (
               <Section
                 label={mainHeadline(card)}
                 entries={card.answer.lines}
                 card={card}
-                className="text-[clamp(1.75rem,5.5vw,3.25rem)] font-bold"
+                main
+                className="text-[calc(var(--fit,1)*clamp(1.75rem,5.5vw,3.25rem))] font-bold"
               />
             ) : (
               <>
@@ -309,12 +314,13 @@ export function FlipCard({
                 <Answer
                   lang={card.answer.lang}
                   dir={card.answer.dir}
+                  data-fit-main
                   className={[
-                    'space-y-2 font-semibold',
+                    'space-y-[0.3em] leading-snug font-semibold',
                     card.answer.kind === 'explanation' &&
                     card.answer.lines.some((l) => l.length > 60)
-                      ? 'text-[1.125rem] md:text-[1.25rem]'
-                      : 'text-[clamp(1.75rem,5.5vw,3.25rem)] font-bold',
+                      ? 'text-[calc(var(--fit,1)*1.125rem)] md:text-[calc(var(--fit,1)*1.25rem)]'
+                      : 'text-[calc(var(--fit,1)*clamp(1.75rem,5.5vw,3.25rem))] font-bold',
                     card.answer.numbered ? 'list-inside list-decimal text-start' : '',
                   ].join(' ')}
                 >
@@ -330,7 +336,7 @@ export function FlipCard({
                 label={strings.card.meaning}
                 entries={card.answer.meaning}
                 card={card}
-                className="mt-5 text-xl font-semibold text-text md:text-2xl"
+                className="mt-5 text-[calc(var(--fit,1)*1.25rem)] font-semibold text-text md:text-[calc(var(--fit,1)*1.5rem)]"
               />
             )}
             {card.answer.literal.length > 0 && (
@@ -340,7 +346,7 @@ export function FlipCard({
                 entries={card.answer.literal}
                 card={card}
                 muted
-                className="mt-4 text-base text-muted md:text-lg"
+                className="mt-4 text-[calc(var(--fit,1)*1rem)] text-muted md:text-[calc(var(--fit,1)*1.125rem)]"
               />
             )}
           </div>

@@ -917,11 +917,14 @@ Disabled buttons lose glow and ledge and look muted. Base mechanics:
   shows hints, or moves to the next card: on phones it fills the space between the header and the buttons; on desktop
   it is `clamp(420px, 58vh, 600px)`. Both faces share one grid cell. A face with more content than fits scrolls
   inside the card.
-- **Placement**: the item (front) and the answer (back) sit in the **upper part** of the card (a block of at least
-  46% of its height, 10 px less on phones so the extra room goes to the hints; content centered in it) and never move; the meaning, the literal translation, hints and synonyms appear below
-  it, in the space kept for them. The line under the upper part sits in **exactly the same place on both faces**, so it
-  doesn't jump when the card turns: when a longer item or answer, or a wrapped chip row, needs more room on one face,
-  both lines move down together (D-085).
+- **Placement** (D-095): the line under the upper part sits at **exactly the middle of the card**, on both faces and
+  for every word, so it never moves when the card turns. Above it, under the top row (direction label and "Clicked"
+  chip), the item (front, centred) or the answer (back) sits in the upper half, vertically centred; the hints and
+  synonyms appear below the line. The answer starts on the side its language reads from (right for Hebrew, left for
+  English), and its headlines ("Parallel", "Meaning", …) sit on that side. When the content doesn't fit above the line
+  (many meanings, a Meaning and a Literally section, a long word), its text **shrinks until it fits**: the main answer,
+  Meaning and Literally together, keeping their proportions, never below 12 px for the main text; the headlines keep
+  their size.
 
 ```
 FRONT, hints revealed            BACK, after Flip (EN → HE)
