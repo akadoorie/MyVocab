@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { api, ApiError } from '../../lib/api';
+import { RETRY_DELAYS_MS, retryState } from '../../lib/auto-reload';
 import { ME_QUERY_KEY } from '../../lib/session';
 import { strings, topicName } from '../../strings';
 import { savePractice } from '../practice/practice-storage';
@@ -53,6 +54,33 @@ export function useStartPractice({
     setStarting(true);
     setError(null);
     try {
+      return await attempt(meta, choices, options, 0);
+    } finally {
+      setStarting(false);
+    }
+  }
+
+  /**
+   * One try. An unexpected failure ("Something went wrong") is retried on the D-092 timing: after
+   * 1 second quietly, then twice 2 seconds apart with "Refreshing in 2 seconds", then the error.
+   */
+  async function attempt(
+    meta: MetaResponse,
+    choices: StartChoices,
+    options: { replace?: boolean },
+    tries: number,
+  ): Promise<StartResult> {
+    const retry = async (): Promise<StartResult> => {
+      const state = retryState(tries);
+      if (state === 'failed') {
+        setError(strings.setup.genericError);
+        return 'failed';
+      }
+      setError(state === 'retrying' ? strings.setup.genericRetrying : null);
+      await new Promise((resolve) => window.setTimeout(resolve, RETRY_DELAYS_MS[tries]));
+      return attempt(meta, choices, options, tries + 1);
+    };
+    try {
       const turnstileToken = isGuest ? await getToken() : undefined;
       const res = await api.startPractice({
         source: choices.sourceLang,
@@ -88,6 +116,7 @@ export function useStartPractice({
         res.returned < res.requested
           ? { insufficient: strings.practice.insufficient(res.returned, topicLabel) }
           : {};
+      setError(null);
       navigate('/practice', { state: notice, replace: options.replace ?? false });
       return 'started';
     } catch (e) {
@@ -105,13 +134,10 @@ export function useStartPractice({
       // Maintenance: the admin's own message (written in any language), or ours.
       else if (e instanceof ApiError && e.code === 'FORBIDDEN')
         setError(meta.maintenance.message || strings.nav.maintenance);
-      else if (e instanceof ApiError) setError(strings.setup.genericError);
       else if (e instanceof Error && e.message.startsWith('Turnstile'))
         setError(strings.setup.botCheckFailed);
-      else setError(strings.setup.genericError);
+      else return retry();
       return 'failed';
-    } finally {
-      setStarting(false);
     }
   }
 

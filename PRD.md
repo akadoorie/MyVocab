@@ -242,6 +242,12 @@ private content repository. It never appears in the public code repo or any publ
   (about 7s a lap), then the frame keeps a steady faint glow; with reduced motion, only the glow (D-033).
 - **FR-L10** Guests pass an **invisible Cloudflare Turnstile** check when they press Start (§14.3). In the rare case
   Turnstile shows an interactive challenge, it appears inline in the start card.
+- **FR-L10a Something went wrong** (D-092): an unexpected failure is retried before the error shows: after 1 s
+  quietly, then twice, 2 s apart, with "Something went wrong. Refreshing in 2 seconds." ("משהו השתבש. מרענן בעוד 2
+  שניות."); if those fail too, "Something went wrong. Please refresh the page." stays and nothing more is tried. When
+  the Home page can't load its settings, each retry reloads the page (the count is kept in the tab's sessionStorage
+  and ends after a successful load or a minute); when starting a practice fails, each retry starts it again. Known
+  errors (daily limit, guest limits, the bot check, sign-in needed, maintenance) are shown at once, as before.
 - **FR-L11** When `guests.enabled` = false, guests see "Sign-in to start" instead of the Start button.
 - **FR-L12** When `maintenance.enabled` = true, every page shows `maintenance.message`, and starting practices is disabled
   for non-admins.

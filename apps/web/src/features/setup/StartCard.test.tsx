@@ -261,6 +261,54 @@ describe('StartCard', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Too many practices for now.');
   });
 
+  it('retries an unexpected failure: 1 s quietly, then twice "Refreshing in 2 seconds" (D-092)', async () => {
+    let posts = 0;
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url.startsWith('/api/practices/available-by-topic')) return Response.json(countsOf(6));
+      if (url === '/api/practices' && init?.method === 'POST') {
+        posts += 1;
+        if (posts < 3) return Response.json({ error: { code: 'INTERNAL' } }, { status: 500 });
+        return Response.json({ requested: 5, returned: 2, cards: [makeCard(1), makeCard(2)] });
+      }
+      return Response.json({ error: { code: 'NOT_FOUND', message: 'x' } }, { status: 404 });
+    });
+    const router = setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+    await waitFor(() => expect(posts).toBe(1));
+    expect(screen.queryByRole('alert')).toBeNull(); // the first retry is quiet
+    await waitFor(() => expect(posts).toBe(2), { timeout: 2000 });
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Something went wrong. Refreshing in 2 seconds.',
+    );
+    await waitFor(() => expect(router.state.location.pathname).toBe('/practice'), {
+      timeout: 3000,
+    });
+    expect(posts).toBe(3);
+  });
+
+  it('after three retries, shows the error and stops (D-092)', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    let posts = 0;
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url.startsWith('/api/practices/available-by-topic')) return Response.json(countsOf(6));
+      if (url === '/api/practices' && init?.method === 'POST') posts += 1;
+      return Response.json({ error: { code: 'INTERNAL' } }, { status: 500 });
+    });
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+    await waitFor(() => expect(posts).toBe(1));
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(posts).toBe(4);
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Something went wrong. Please refresh the page.',
+    );
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(posts).toBe(4); // no more tries
+    vi.useRealTimers();
+  });
+
   describe('the sample set (D-038)', () => {
     const topic = () => screen.getByLabelText('Topic', { exact: true }) as HTMLSelectElement;
     const option = (name: string) =>

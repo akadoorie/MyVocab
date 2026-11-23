@@ -85,6 +85,7 @@ export const he: Strings = {
     botCheck: 'בודקים שאתם לא רובוט…',
     botCheckFailed: 'בדיקת האבטחה לא עברה. נסו שוב.',
     genericError: 'משהו השתבש. רעננו את הדף.',
+    genericRetrying: 'משהו השתבש. מרענן בעוד 2 שניות.',
     dailyCap: (remaining: number) =>
       remaining > 0
         ? `הגעתם למגבלת הכרטיסיות היומית. היום אפשר לקבל עוד ${remaining === 1 ? 'כרטיסיה אחת' : `${remaining} כרטיסיות`}: בחרו כמות קטנה יותר.`

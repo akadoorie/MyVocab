@@ -96,6 +96,7 @@ export const en = {
     botCheck: 'Checking that you’re human…',
     botCheckFailed: 'The security check didn’t pass. Please try again.',
     genericError: 'Something went wrong. Please refresh the page.',
+    genericRetrying: 'Something went wrong. Refreshing in 2 seconds.',
     dailyCap: (remaining: number) =>
       remaining > 0
         ? `You’ve reached today’s card limit. You can still get ${remaining} ${remaining === 1 ? 'card' : 'cards'} today: choose a smaller amount.`

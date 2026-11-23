@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router';
 import { StartCard } from '../features/setup/StartCard';
 import { api } from '../lib/api';
+import { useAutoReload } from '../lib/auto-reload';
 import { startGoogleSignIn, useSession } from '../lib/session';
 import { strings } from '../strings';
 import { ButtonGuide } from './ButtonGuide';
@@ -17,6 +18,7 @@ export function Landing() {
   const session = useSession();
   const location = useLocation();
   const meta = useQuery({ queryKey: ['meta'], queryFn: api.meta, staleTime: 60_000 });
+  const retry = useAutoReload(meta.isError ? 'failed' : meta.data ? 'ok' : 'loading');
   const initialSelection = (location.state as { selection?: StartChoices } | null)?.selection;
   const [params, setParams] = useSearchParams();
 
@@ -107,9 +109,10 @@ export function Landing() {
             initialSelection={initialSelection}
             quiet={backFromSignIn}
           />
-        ) : meta.isError ? (
+        ) : meta.isError && retry !== 'waiting' ? (
+          // The settings didn't load: the page reloads itself a few times first (D-092).
           <p role="alert" className="text-dontknow">
-            {strings.setup.genericError}
+            {retry === 'retrying' ? strings.setup.genericRetrying : strings.setup.genericError}
           </p>
         ) : (
           <div className="glass h-96 animate-pulse" aria-busy="true" />
