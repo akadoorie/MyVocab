@@ -47,7 +47,7 @@ test('Know → My known words (ask again is not kept) → hidden only in that di
   await expect(page.getByText('Sign-in with Google to remember')).toHaveCount(0);
 
   // Amounts above the available count are greyed out (D-057); the default 10 always stays.
-  const startCard = page.getByRole('region', { name: 'Configure your practice' });
+  const startCard = page.getByRole('region', { name: 'Configure a Practice loop' });
   await expect(startCard.getByText(`${enHe} cards available`)).toBeVisible();
   if (enHe < 20) await expect(startCard.getByRole('radio', { name: '20' })).toBeDisabled();
   await expect(startCard.getByRole('radio', { name: '10' })).toHaveAttribute(

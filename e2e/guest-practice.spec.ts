@@ -11,7 +11,7 @@ test('a guest starts with the defaults and plays a practice to the summary', asy
   await page.goto('/');
 
   // Defaults: EN → HE, the Sample set (D-038), amount locked at 5, all "default".
-  const startCard = page.getByRole('region', { name: 'Configure your practice' });
+  const startCard = page.getByRole('region', { name: 'Configure a Practice loop' });
   await expect(startCard.getByLabel('From', { exact: true })).toHaveValue('en');
   await expect(startCard.getByLabel('To', { exact: true })).toHaveValue('he');
   await expect(startCard.getByLabel('Topic', { exact: true })).toHaveValue('sample');
@@ -137,7 +137,7 @@ test('a guest starts with the defaults and plays a practice to the summary', asy
 test('on touch, swipe left is Next and swipe right is Back', async ({ page }) => {
   await page.goto('/');
   await page
-    .getByRole('region', { name: 'Configure your practice' })
+    .getByRole('region', { name: 'Configure a Practice loop' })
     .getByRole('button', { name: 'Start' })
     .click();
   await expect(progress(page)).toHaveText('Round 1 · Card 1/5 · 0 known');
@@ -161,7 +161,7 @@ test('Home asks first, then ends the practice and returns home (no Stop, D-072)'
 }) => {
   await page.goto('/');
   await page
-    .getByRole('region', { name: 'Configure your practice' })
+    .getByRole('region', { name: 'Configure a Practice loop' })
     .getByRole('button', { name: 'Start' })
     .click();
   await expect(page).toHaveURL(/\/practice$/);

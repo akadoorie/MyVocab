@@ -114,7 +114,7 @@ describe('StartCard', () => {
         screen
           .getByRole('button', { name: 'Start' })
           .compareDocumentPosition(
-            screen.getByRole('heading', { name: 'Configure your practice' }),
+            screen.getByRole('heading', { name: 'Configure a Practice loop' }),
           ) & Node.DOCUMENT_POSITION_FOLLOWING,
       );
     setup(learner); // no matchMedia in jsdom: the desktop layout

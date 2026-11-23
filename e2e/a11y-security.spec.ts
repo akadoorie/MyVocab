@@ -41,7 +41,7 @@ test('guest pages: no accessibility violations and no CSP violations', async ({ 
   await expectNoViolations(page, 'landing');
 
   await page
-    .getByRole('region', { name: 'Configure your practice' })
+    .getByRole('region', { name: 'Configure a Practice loop' })
     .getByRole('button', { name: 'Start' })
     .click();
   await expect(page).toHaveURL(/\/practice$/);
@@ -84,7 +84,7 @@ test('signed-in and admin pages: no accessibility violations', async ({
 test('the practice works with the keyboard only', async ({ page }) => {
   await page.goto('/');
   const start = page
-    .getByRole('region', { name: 'Configure your practice' })
+    .getByRole('region', { name: 'Configure a Practice loop' })
     .getByRole('button', { name: 'Start' });
   await start.focus();
   await page.keyboard.press('Enter');

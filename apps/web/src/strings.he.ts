@@ -60,7 +60,7 @@ export const he: Strings = {
     },
   },
   setup: {
-    title: 'הגדרת התרגול',
+    title: 'הגדרת לולאת תרגול',
     source: 'משפה',
     target: 'לשפה',
     topic: 'נושא',

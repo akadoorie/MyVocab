@@ -68,7 +68,7 @@ export const en = {
     },
   },
   setup: {
-    title: 'Configure your practice',
+    title: 'Configure a Practice loop',
     source: 'From',
     target: 'To',
     topic: 'Topic',

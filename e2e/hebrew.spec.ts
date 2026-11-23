@@ -12,7 +12,7 @@ test('a first visit is in Hebrew, right-to-left, and switches to English', async
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('lang', 'he');
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-  const startCard = page.getByRole('region', { name: 'הגדרת התרגול' });
+  const startCard = page.getByRole('region', { name: 'הגדרת לולאת תרגול' });
   await expect(startCard.getByText(/זמינ/)).toBeVisible();
   await expect(startCard.getByLabel('משפה', { exact: true })).toHaveValue('en');
   await expect(startCard.getByLabel('משפה', { exact: true }).locator('option:checked')).toHaveText(
@@ -31,9 +31,9 @@ test('a first visit is in Hebrew, right-to-left, and switches to English', async
   ).toHaveText('En');
   await page.getByRole('button', { name: 'English' }).click();
   await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
-  await expect(page.getByRole('region', { name: 'Configure your practice' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Configure a Practice loop' })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('region', { name: 'Configure your practice' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Configure a Practice loop' })).toBeVisible();
   await page.getByRole('button', { name: 'עברית' }).click();
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
 });
@@ -43,7 +43,7 @@ test('a Hebrew practice: Hebrew buttons in the English order, Flip still bottom-
 }, testInfo) => {
   await page.goto('/');
   await page
-    .getByRole('region', { name: 'הגדרת התרגול' })
+    .getByRole('region', { name: 'הגדרת לולאת תרגול' })
     .getByRole('button', { name: 'התחלה' })
     .click();
   await expect(page).toHaveURL(/\/practice$/);
@@ -86,7 +86,7 @@ test('on touch in Hebrew, the swipes match the buttons: left is Next, right is B
 }) => {
   await page.goto('/');
   await page
-    .getByRole('region', { name: 'הגדרת התרגול' })
+    .getByRole('region', { name: 'הגדרת לולאת תרגול' })
     .getByRole('button', { name: 'התחלה' })
     .click();
   const progress = page.getByTestId('progress');

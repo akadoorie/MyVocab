@@ -118,7 +118,7 @@ private content repository. It never appears in the public code repo or any publ
 | **Hints cover** | The shimmering cover over the hints and synonyms on the front of the card: a tap reveals them, a tap on them covers them again (FR-L25). |
 | **Flip** | Turning the on-screen card over (front ↔ back). It can be done any number of times and **has no effect on grading**. |
 | **Amount** | The number of cards in a practice (learners: 10/20/30/40/50; guests: always 5). |
-| **Practice** | One run over a group of cards, called a **"Practice"** in the UI too ("Configure your practice", "Practice completed", "New practice"; Hebrew "תרגול"). The code, the API (`/api/practices`), the settings keys (`practice.*`) and the database use the same word (D-081). |
+| **Practice** | One run over a group of cards, called a **"Practice"** in the UI too ("Configure a Practice loop", "Practice completed", "New practice"; Hebrew "תרגול"). The code, the API (`/api/practices`), the settings keys (`practice.*`) and the database use the same word (D-081). |
 | **Round** | One pass over the practice's remaining cards, a **"Round"** in the UI ("Round 2 · Card 1/3", "Round 3 · 2 cards left", "Rounds" on the summary; Hebrew "סבב"), in the code and in the database (`known_in_round`; D-067, D-081). |
 | **Known item** | An item a signed-in learner marked "Know" in one direction (e.g. EN → HE). It is excluded from their future practices **in that direction only** until returned (D-028); the explanation direction (EN → EN) is a direction of its own. |
 | **Topic** | A topic (Home, Nature, …). An item can have many, or none. **All topics** is virtual: every item, including items without a topic (D-039). |
@@ -994,7 +994,7 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   `--accent` outline and no tag.
 - **Guest amount**: a single "5" with a lock icon; tapping it shows the "Sign-in to change" message over the field (FR-L6).
 - The "Same language: the back shows an explanation" note (FR-L5) appears under the language fields when they match.
-- The card's heading is **"Configure your practice"**.
+- The card's heading is **"Configure a Practice loop"**.
 - The large **Start** button (accent color, pressable ledge): on desktop it sits under the fields, with the "N new
   cards available" line just above it; on mobile it sits above the card, right under the hero text (FR-L1). The
   security check (if any) and error messages appear next to it.
