@@ -19,7 +19,14 @@ const AdminPage = () => <p>admin: {strings.notFound.title}</p>;
 function renderApp(path = '/') {
   const router = createMemoryRouter(
     [
-      { path: '/', Component: Layout, children: [{ index: true, Component: Page }] },
+      {
+        path: '/',
+        Component: Layout,
+        children: [
+          { index: true, Component: Page },
+          { path: 'privacy', Component: Page },
+        ],
+      },
       { path: '/admin', Component: AdminPage },
     ],
     { initialEntries: [path] },
@@ -48,17 +55,31 @@ describe('UI language (D-080)', () => {
     expect(screen.getByRole('link', { name: he.nav.privacy })).toBeInTheDocument();
   });
 
-  it('switches to English from the footer and remembers it', async () => {
+  it('switches to English from the Home header and remembers it', async () => {
     mockFetch({}, null);
     renderApp();
-    fireEvent.click(await screen.findByRole('button', { name: 'English' }));
+    // The switch shows the other language's short code; its name is the full name (D-083).
+    const toEnglish = await screen.findByRole('button', { name: 'English' });
+    expect(toEnglish).toHaveTextContent('En');
+    expect(toEnglish).toHaveAttribute('lang', 'en');
+    expect(toEnglish.closest('header')).not.toBeNull();
+    fireEvent.click(toEnglish);
     expect(await screen.findByText(en.notFound.title)).toBeInTheDocument();
     expect(document.documentElement).toHaveAttribute('dir', 'ltr');
     expect(window.localStorage.getItem('myvocab.locale')).toBe('en');
     expect(readSavedLocale()).toBe('en');
     // And back: the switch names Hebrew in Hebrew.
-    fireEvent.click(screen.getByRole('button', { name: 'עברית' }));
+    const toHebrew = screen.getByRole('button', { name: 'עברית' });
+    expect(toHebrew).toHaveTextContent('עב');
+    fireEvent.click(toHebrew);
     expect(await screen.findByText(he.notFound.title)).toBeInTheDocument();
+  });
+
+  it('shows the switch on the Home page only', async () => {
+    mockFetch({}, null);
+    renderApp('/privacy');
+    expect(await screen.findByText(he.notFound.title)).toBeInTheDocument();
+    expect(screen.queryByTestId('language-switch')).toBeNull();
   });
 
   it('keeps the admin area in English, and goes back to Hebrew when leaving it', async () => {

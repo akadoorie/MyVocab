@@ -9,7 +9,8 @@ export const he: Strings = {
   locale: {
     lang: 'he',
     dir: 'rtl',
-    switchLabel: 'English',
+    switchLabel: 'En',
+    switchName: 'English',
     switchLang: 'en',
     metaDescription: 'ללמוד מילים וביטויים בתרגולים קצרים, שמתקצרים ככל שלומדים.',
   },
@@ -22,6 +23,7 @@ export const he: Strings = {
     version: 'גרסה',
     home: 'דף הבית',
     signIn: 'התחברות עם Google',
+    signInShort: 'התחברות',
     signInLink: 'התחברו',
     signOut: 'התנתקות',
     accountMenu: 'תפריט החשבון',

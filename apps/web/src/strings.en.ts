@@ -3,12 +3,13 @@
  * app reads the active ones through `strings.ts`.
  */
 export const en = {
-  /** The document's language and direction, and the language switch in the footer (D-080). */
+  /** The document's language and direction, and the language switch on the Home page (D-080, D-083). */
   locale: {
     lang: 'en',
     dir: 'ltr',
-    /** The switch shows the other language, in that language. */
-    switchLabel: 'עברית',
+    /** The switch shows the other language's short code, in that language; its name is the full name. */
+    switchLabel: 'עב',
+    switchName: 'עברית',
     switchLang: 'he',
     metaDescription: 'Learn words and expressions in short practices that shrink as you learn.',
   },
@@ -22,6 +23,8 @@ export const en = {
     version: 'Version',
     home: 'Home',
     signIn: 'Sign-in with Google',
+    /** The Home page's sign-in button on phones, to leave room for the language switch (D-083). */
+    signInShort: 'Sign-in',
     /** The link that starts a sentence in a toast (D-043). */
     signInLink: 'Sign-in',
     signOut: 'Sign out',

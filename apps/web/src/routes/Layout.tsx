@@ -33,9 +33,10 @@ export function Layout() {
         <div className="flex items-baseline gap-2">
           <Link
             to="/"
-            className="flex items-center gap-2.5 self-center text-xl font-bold tracking-tight"
+            // On Home, a little smaller on the smallest phones, to fit the language switch (D-083).
+            className={`flex items-center gap-2.5 self-center font-bold tracking-tight ${onHome ? 'text-lg min-[360px]:text-xl' : 'text-xl'}`}
           >
-            <LogoMark className="h-8 w-8" />
+            <LogoMark className={onHome ? 'h-7 w-7 min-[360px]:h-8 min-[360px]:w-8' : 'h-8 w-8'} />
             <span>
               My<span className="text-accent">Vocab</span>
             </span>
@@ -49,7 +50,7 @@ export function Layout() {
             </span>
           )}
         </div>
-        <nav className="flex items-center gap-3 text-sm">
+        <nav className={`flex items-center text-sm ${onHome ? 'gap-2 sm:gap-3' : 'gap-3'}`}>
           {!onHome && (
             // Every page other than the start page offers a way back to it.
             <Link
@@ -59,6 +60,7 @@ export function Layout() {
               <BackArrow /> {strings.nav.home}
             </Link>
           )}
+          {onHome && <LanguageSwitch />}
           {session.user ? (
             <>
               {session.user.role === 'admin' && (
@@ -85,9 +87,18 @@ export function Layout() {
               <button
                 type="button"
                 onClick={startGoogleSignIn}
+                aria-label={strings.nav.signIn}
                 className="min-h-11 rounded-[10px] border border-border px-3 py-2 hover:border-accent"
               >
-                {strings.nav.signIn}
+                {onHome ? (
+                  // Shorter on phones, to leave room for the language switch (D-083).
+                  <>
+                    <span className="sm:hidden">{strings.nav.signInShort}</span>
+                    <span className="hidden sm:inline">{strings.nav.signIn}</span>
+                  </>
+                ) : (
+                  strings.nav.signIn
+                )}
               </button>
             )
           )}
@@ -98,15 +109,14 @@ export function Layout() {
         <Link to="/privacy" className="hover:text-text">
           {strings.nav.privacy}
         </Link>
-        <LanguageSwitch />
       </footer>
     </div>
   );
 }
 
 /**
- * Switches the UI between Hebrew and English (D-080). It names the other language in that
- * language ("English" / "עברית"), so it can be read by those who need it.
+ * Switches the UI between Hebrew and English (D-080), in the Home page header (D-083). It shows the
+ * other language's short code in that language ("En" / "עב"); its accessible name is the full name.
  */
 function LanguageSwitch() {
   const { setLocale } = useLocale();
@@ -116,10 +126,11 @@ function LanguageSwitch() {
       type="button"
       lang={next}
       onClick={() => setLocale(next)}
-      className="ms-auto hover:text-text"
+      className="min-h-11 min-w-11 rounded-[10px] border border-border px-2 font-semibold text-muted hover:border-accent hover:text-text"
       data-testid="language-switch"
     >
-      {strings.locale.switchLabel}
+      <span aria-hidden="true">{strings.locale.switchLabel}</span>
+      <span className="sr-only">{strings.locale.switchName}</span>
     </button>
   );
 }

@@ -169,7 +169,7 @@ private content repository. It never appears in the public code repo or any publ
 | Know tap | Advances immediately; Back (or a swipe toward Back) returns to the card, and its answer can be changed (FR-L29a) |
 | Topics | Many-to-many. "All topics" = all items |
 | Content sources | Agent-written starter set (in the private content repo) → then admins add manually or by CSV bulk upload |
-| UI language | **Hebrew by default**, English on request: a switch in the footer, remembered in the browser (D-080). Hebrew pages are right-to-left. The admin area stays English. Content renders in its own direction |
+| UI language | **Hebrew by default**, English on request: a switch in the Home page header, remembered in the browser (D-080, D-083). Hebrew pages are right-to-left. The admin area stays English. Content renders in its own direction |
 | Look | Dark only. Near-black + violet palette. "Pressable ledge" 3D buttons |
 | DB tuning | Built for the D1 free tier: one row per item, only the indexes queries need, no writes from blocked requests, no per-request writes (§11.2) |
 
@@ -979,11 +979,10 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   language (D-080): Hebrew pages are RTL, English pages LTR; the admin area is always LTR English.
 
 ### 9.7 Layouts
-- **Landing**: header (logo "MyVocab", sign-in / avatar, an "Admin" link for admins as a full-page navigation); hero
+- **Landing**: header (logo "MyVocab", the language switch, sign-in / avatar, an "Admin" link for admins as a full-page navigation); hero
   ("Learn words until they stick"; Hebrew "ללמוד מילים וביטויים לפסיכומטרי ביעילות"); How it works (1. Pick languages and a topic, or just press Start ·
   2. Use Hints or Flip, then mark what you know · 3. Repeat the words that you didn’t know, till nothing is left), then "Buttons" (a small copy
-  of each answer pill with its caption, each with one line on what it does; D-058); Start card; footer (Privacy, and the
-  language switch, D-080). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
+  of each answer pill with its caption, each with one line on what it does; D-058); Start card; footer (Privacy). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
 - **Practice header**: the MyVocab logo mark (two stacked cards) and the progress `Round 1 • Card 2/10 • 1 known` at the
   start (left; right in Hebrew); at the other end, on desktop a "⌨ Keyboard shortcuts" link that opens a small popover listing the shortcuts, and
   "← Home" (asks before stopping the practice, FR-L30a).
@@ -1014,8 +1013,11 @@ the typecheck. Components read the active language's strings through `strings.ts
 (`strings-admin.ts`) are English only.
 
 **UI language (D-080).**
-- **Default and switch:** a first visit is in Hebrew. The footer has a switch naming the other language in that
-  language ("English" / "עברית"); the choice is remembered in the browser (`localStorage`). Switching re-renders
+- **Default and switch:** a first visit is in Hebrew. The Home page header, and no other page, has a switch
+  showing the other language's short code in that language: "En" on Hebrew pages, "עב" on English pages. It sits
+  just before Sign-in / the avatar, and its accessible name is the full name ("English" / "עברית"). On phones, the
+  Home page's Sign-in button reads "Sign-in" / "התחברות" (its accessible name stays "Sign-in with Google") so the
+  switch fits (D-083). The choice is remembered in the browser (`localStorage`). Switching re-renders
   the page in place. The admin area is always English and LTR, whatever the choice.
 - **Hebrew copy:** the learner is addressed in the plural ("בחרו", "לחצו"); first-person labels use the past tense,
   which is the same for everyone ("ידעתי" / "לא ידעתי"). Counts spell out one ("כרטיסיה אחת"). The Hebrew slogan is "ללמוד מילים וביטויים לפסיכומטרי ביעילות"; the locked green button's tip reads

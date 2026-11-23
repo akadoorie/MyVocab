@@ -24,7 +24,11 @@ test('a first visit is in Hebrew, right-to-left, and switches to English', async
     .analyze();
   expect(results.violations.map((v) => v.id)).toEqual([]);
 
-  // The footer switch names the other language in that language; the choice is remembered.
+  // The Home header switch shows the other language's short code ("En" / "עב") and is named in
+  // that language; the choice is remembered.
+  await expect(
+    page.getByRole('banner').getByRole('button', { name: 'English' }).locator('[aria-hidden]'),
+  ).toHaveText('En');
   await page.getByRole('button', { name: 'English' }).click();
   await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
   await expect(page.getByRole('region', { name: 'Configure your practice' })).toBeVisible();
