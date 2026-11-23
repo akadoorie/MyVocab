@@ -28,7 +28,7 @@ describe('FlipCard', () => {
         answer="dontKnow"
       />,
     );
-    expect(screen.getByTestId('answer-chip')).toHaveTextContent('בחרתם: לא ידעתי');
+    expect(screen.getByTestId('answer-chip')).toHaveTextContent('נבחר: לא ידעתי');
   });
 
   it('shows hints and synonyms on the front after Hints', () => {

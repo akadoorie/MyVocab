@@ -344,8 +344,9 @@ private content repository. It never appears in the public code repo or any publ
   reached with Back (or Next) **always shows its front**, even if it was showing its back when left, with its hints
   cover **as it was left**: open if the learner had revealed the hints and not covered them again (D-048).
   - A card that already has an answer shows a short chip on the same line as the direction label, on phones too
-    (D-049): **"Clicked: I know it ✓"** (green), **"Clicked: I know it ✓"** (amber; screen readers also hear "(show
-    again in future)") or **"Clicked: I don't know ✗"** (red), and **Next** steps forward without answering again,
+    (D-049): **"Clicked: I know it"** (green), **"Clicked: I know it"** (amber; screen readers also hear "(show
+    again in future)") or **"Clicked: I don't know"** (red), with no ✓ / ✗ mark, as on the answer buttons; in Hebrew
+    the chip starts with "נבחר:" (D-089), and **Next** steps forward without answering again,
     up to the first unanswered card. There, Next is the way on: it **keeps pumping** (a gentle grow-and-shrink, in
     its own colours, without the violet and the ring of Revealed) and shines with the nudge, after the red pill
     (FR-L28a); the answer pills keep their own nudge. Nothing moves with reduced motion (D-084).

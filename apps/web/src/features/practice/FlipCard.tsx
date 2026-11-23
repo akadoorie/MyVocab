@@ -11,18 +11,14 @@ import { HintsCover } from './HintsCover';
  * two Knows apart; the orange one's caption is there for screen readers only.
  */
 // A function, not a constant: it must read the strings of the language active now (D-080).
-const chips = (): Record<
-  CardAnswer,
-  { color: string; text: string; extra?: string; mark: string }
-> => ({
-  know: { color: 'text-know', text: strings.card.answeredKnow, mark: '✓' },
+const chips = (): Record<CardAnswer, { color: string; text: string; extra?: string }> => ({
+  know: { color: 'text-know', text: strings.card.answeredKnow },
   knowAgain: {
     color: 'text-again',
     text: strings.card.answeredKnowAgainShort,
     extra: strings.card.answeredKnowAgainExtra,
-    mark: '✓',
   },
-  dontKnow: { color: 'text-dontknow', text: strings.card.answeredDontKnow, mark: '✗' },
+  dontKnow: { color: 'text-dontknow', text: strings.card.answeredDontKnow },
 });
 
 /**
@@ -182,8 +178,8 @@ export function FlipCard({
         data-testid={face === 'front' ? tid('answer-chip') : undefined}
       >
         {CHIP[answer].text}
-        {CHIP[answer].extra && <span className="sr-only">{CHIP[answer].extra}</span>}{' '}
-        <span aria-hidden="true">{CHIP[answer].mark}</span>
+        {/* No ✓ / ✗: the answer buttons have none either (D-089). */}
+        {CHIP[answer].extra && <span className="sr-only">{CHIP[answer].extra}</span>}
       </p>
     );
   // The only way to turn the card (with F / Space): a stray tap must not flip it (D-047).
