@@ -9,7 +9,7 @@ const TAP_AFTER_SCROLL_MS = 350;
 /** Dots per square pixel of cover (about one dot per 38 px²). */
 const DENSITY = 1 / 38;
 /** While the cover is untouched, it shows it can be tapped this often (D-121). */
-export const COVER_HINT_MS = 7000;
+export const COVER_HINT_MS = 5000;
 /** The peek: the dots part in a spot at the top, on the side the hints start, then close. */
 const PEEK_MS = 1800;
 const PEEK_RADIUS = 46;
@@ -93,7 +93,7 @@ export function HintsCover({
     wake.current();
   }, [open]);
 
-  // Every 7 seconds while covered and untouched: a peek at the top and a tap of the finger (D-121).
+  // Every 5 seconds while covered and untouched: a peek at the top and a tap of the finger (D-121).
   const hinting = active && !open && !learned && motionOK();
   useEffect(() => {
     if (!hinting) return;

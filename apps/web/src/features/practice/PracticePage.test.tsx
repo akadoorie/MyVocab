@@ -419,7 +419,7 @@ describe('PracticePage', () => {
       expect(document.querySelector('.slide-ghost')).toBeNull();
     });
 
-    it('the hints cover peeks and its finger taps every 7s until opened and closed once (D-121)', () => {
+    it('the hints cover peeks and its finger taps every 5s until opened and closed once (D-121)', () => {
       motion();
       vi.useFakeTimers();
       setup();

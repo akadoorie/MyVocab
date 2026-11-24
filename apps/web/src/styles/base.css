@@ -441,7 +441,7 @@ body {
     transition: opacity 0.3s;
   }
 
-  /* "You can tap me" (D-121): every 7s while covered, the finger in the label taps twice with a
+  /* "You can tap me" (D-121): every 5s while covered, the finger in the label taps twice with a
      ring from its tip, and the dots part at the top (HintsCover draws that); the sharp copy of the
      hints shows only through the same spot. */
   .hints-cover__peek {
