@@ -119,9 +119,10 @@ export function canDispatch(state: PracticeState, type: PracticeActionType): boo
     case 'KNOW':
     case 'KNOW_AGAIN':
     case 'DONT_KNOW': {
-      if (state.phase !== 'deciding') return false;
-      // On a card reached with Back, the answer it already has is off: only a change is offered
-      // (Next moves on without one, D-107).
+      if (!onCard) return false;
+      // The answer the card already has is off: only a change is offered. On a card reached with
+      // Back (D-107), and right after "I don't know", where both Knows stay on to change one's
+      // mind (D-109). Next moves on without a change.
       const given = answerOf(state, currentId(state));
       const same = type === 'KNOW' ? 'know' : type === 'KNOW_AGAIN' ? 'knowAgain' : 'dontKnow';
       return given !== same;

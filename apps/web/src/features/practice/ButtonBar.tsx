@@ -120,8 +120,8 @@ export function ButtonBar({
     disabled: !canDispatch(state, type),
     onClick: () => onAction(type),
   });
-  // Revealed (after Don't know): the layout stays; the answers are off and Next pumps, the only
-  // way on (PRD FR-L28, §9.7, D-031).
+  // Revealed (after Don't know): the layout stays; red is off, the two Knows stay on to change
+  // one's mind (D-109), and Next pumps (PRD FR-L28, §9.7, D-031).
   const revealed = state.phase === 'revealed';
   // A card answered earlier, reached with Back (FR-L29a): changing the answer is optional, so Next,
   // the way on, keeps pumping (in its own colours) and shines last, after the green pill next to it (D-084).

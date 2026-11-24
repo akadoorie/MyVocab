@@ -85,13 +85,13 @@ describe('PracticePage', () => {
       expect(btn(name)).toBeEnabled();
   });
 
-  it('Don’t know flips to the back, keeps the layout, turns the answers off and Next pumps', () => {
+  it('Don’t know flips to the back, keeps the layout, turns red off and Next pumps', () => {
     setup();
     fireEvent.click(btn('I don’t know Show in next round'));
     expect(side()).toBe('back');
-    // The answers stay in place, disabled; Next is the way on.
-    for (const name of ['I know it Show again in future', 'I don’t know Show in next round'])
-      expect(btn(name)).toBeDisabled();
+    // The answers stay in place; red is off, the Know stays on to change one's mind (D-109).
+    expect(btn('I don’t know Show in next round')).toBeDisabled();
+    expect(btn('I know it Show again in future')).toBeEnabled();
     // The guest's green one stays locked: off, but it can still explain itself (D-043).
     expect(btn('I know it Don’t show again (sign-in to enable)')).toHaveAttribute(
       'aria-disabled',

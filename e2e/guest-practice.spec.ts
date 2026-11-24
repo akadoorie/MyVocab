@@ -105,10 +105,11 @@ test('a guest starts with the defaults and plays a practice to the summary', asy
   await button(page, 'Next').click();
   await expect(progress(page)).toHaveText('Round 1 · Card 2/5 · 0 known');
 
-  // Don't know → auto-flip → the answers stay but turn off, and Next pumps.
+  // Don't know → auto-flip → red turns off, the Know stays on to change one's mind (D-109),
+  // and Next pumps.
   await button(page, 'I don’t know Show in next round').click();
   await expect(card(page)).toHaveAttribute('data-side', 'back');
-  await expect(button(page, 'I know it Show again in future')).toBeDisabled();
+  await expect(button(page, 'I know it Show again in future')).toBeEnabled();
   await expect(button(page, 'I don’t know Show in next round')).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Next', exact: true })).toHaveClass(/is-urgent/);
   await button(page, 'Next').click();

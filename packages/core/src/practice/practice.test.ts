@@ -114,10 +114,10 @@ describe('Know and Don’t know', () => {
     const s1 = run(s0, 'DONT_KNOW');
     expect(s1).toMatchObject({ phase: 'revealed', side: 'back', index: 0 });
     expect(s1.nextRound).toEqual([currentCardId(s0)]);
-    expect(canDispatch(s1, 'KNOW')).toBe(false);
+    expect(canDispatch(s1, 'KNOW')).toBe(true); // to change one's mind (D-109)
     expect(canDispatch(s1, 'DONT_KNOW')).toBe(false);
     expect(canDispatch(s1, 'NEXT')).toBe(true);
-    expect(run(s1, 'KNOW')).toBe(s1); // ignored
+    expect(run(s1, 'DONT_KNOW')).toBe(s1); // ignored
   });
 
   it('Next is only enabled after Don’t know and moves to the next card front side up', () => {
@@ -278,6 +278,20 @@ describe('Back and changing an answer (FR-L29a)', () => {
     expect(again.nextRound).toEqual([s0.order[0]]);
   });
 
+  it('right after Don’t know, both Knows stay on; a Know records it and moves on (D-109)', () => {
+    const s0 = createPractice([1, 2, 3], 8);
+    const dk = run(s0, 'DONT_KNOW');
+    expect(dk.phase).toBe('revealed');
+    expect(canDispatch(dk, 'DONT_KNOW')).toBe(false);
+    expect(canDispatch(dk, 'KNOW')).toBe(true);
+    expect(canDispatch(dk, 'KNOW_AGAIN')).toBe(true);
+    const changed = run(dk, 'KNOW_AGAIN');
+    expect(changed.known).toEqual([{ id: s0.order[0], round: 1, again: true }]);
+    expect(changed.nextRound).toEqual([]);
+    expect(changed.index).toBe(1);
+    expect(changed.phase).toBe('deciding');
+  });
+
   it('on a card reached with Back, the answer it already has is off; the others stay on (D-107)', () => {
     const s0 = createPractice([1, 2, 3], 8);
     const known = run(s0, 'KNOW', 'BACK');
@@ -343,8 +357,7 @@ describe('Know · ask again (FR-L27a)', () => {
     const s0 = createPractice([1, 2], 9);
     expect(canDispatch(s0, 'KNOW_AGAIN')).toBe(true);
     const revealed = run(s0, 'DONT_KNOW');
-    expect(canDispatch(revealed, 'KNOW_AGAIN')).toBe(false);
-    expect(run(revealed, 'KNOW_AGAIN')).toBe(revealed);
+    expect(canDispatch(revealed, 'KNOW_AGAIN')).toBe(canDispatch(revealed, 'KNOW'));
   });
 
   it('counts in the summary like Know', () => {

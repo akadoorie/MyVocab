@@ -286,7 +286,7 @@ private content repository. It never appears in the public code repo or any publ
 |---|---|---|---|---|---|---|---|
 | **Deciding**, card not answered yet | enabled | enabled\* | enabled | enabled | enabled\*\* | **disabled** | enabled |
 | **Deciding**, card answered earlier (reached with Back) | enabled | enabled\* | enabled | enabled | enabled\*\* | **enabled** | enabled |
-| **Revealed** (after Don't know) | disabled | enabled\* | enabled | disabled | enabled\*\* | **enabled + focused** | enabled |
+| **Revealed** (after Don't know) | **enabled** (D-109) | enabled\* | enabled | disabled | enabled\*\* | **enabled + focused** | enabled |
 
 \* Hints: the live cover on the card front (D-047), usable whenever the **front** is showing (a toggle).
 \*\* Back is disabled on the first card of a round (FR-L29a).
@@ -331,7 +331,8 @@ private content repository. It never appears in the public code repo or any publ
   "Sign-in" part being a link that starts sign-in (D-043); it is `aria-disabled` rather than `disabled`, so it can still be tapped and focused.
 - **FR-L28 Don't know** (available on either side while Deciding): adds the card to the next round. If the card is
   showing its front, it **flips automatically** to the back (answer + hints + synonyms). The phase becomes
-  **Revealed**: the three answer pills stay in place but disable, **Next** enables and receives focus, and Flip
+  **Revealed**: the three answer pills stay in place; red disables, while the two **Knows stay enabled** so the
+  learner can change their mind (a Know then records the card as known and moves on, D-109). **Next** enables and receives focus, and Flip
   stays available (Hints works only while the front shows). The layout does not change: the round **Next turns
   violet and pumps** (a gentle grow-and-shrink with a soft ring) until it is pressed, so the way on is clear; with
   reduced motion it shows a steady ring instead (D-031). It also counts down from the admin setting `practice.nextSeconds`
