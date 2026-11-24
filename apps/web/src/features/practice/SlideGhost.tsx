@@ -15,7 +15,7 @@ export type CardSlide = {
 };
 
 /** Keep in sync with base.css: slide-out. */
-export const SLIDE_MS = 340;
+export const SLIDE_MS = 550;
 
 /**
  * Next and Back (PRD §9.4, D-110): a visual copy of the card slides out sideways (left for Next,

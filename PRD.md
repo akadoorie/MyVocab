@@ -982,7 +982,7 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   "Showing answer" / "Showing front" / "Hints shown".
 - After **Don't know** on the front, the same flip animation plays automatically.
 - **Between cards: a slide** (D-110). **Next**: the card slides out to the left while the next one slides in from
-  the right, front side up (≈ 340ms). **Back**: the reverse (out to the right, the earlier card in from the left).
+  the right, front side up (≈ 550ms, easing in and out, D-114). **Back**: the reverse (out to the right, the earlier card in from the left).
   The same in every language, matching the swipe and the buttons (Back left, Next right). A new round's first card
   rises in (≈ 260ms: from slightly lower, smaller and transparent). With reduced motion: a plain 150ms fade.
 - **Know animations:** the old card does its Know animation while the next card slides in from the right (starting
