@@ -720,7 +720,13 @@ describe('PracticePage', () => {
       expect(dialog).toHaveTextContent('This will stop the practice. Are you sure?');
       fireEvent.click(within(dialog).getByRole('button', { name: 'No' }));
       expect(screen.queryByRole('dialog')).toBeNull();
-      fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+      // Two Homes at the break: at the top (D-125) and in the middle; both ask first.
+      const homes = screen.getAllByRole('button', { name: 'Home' });
+      expect(homes).toHaveLength(2);
+      fireEvent.click(homes[0]!);
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'No' }));
+      fireEvent.click(homes[1]!);
       fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Yes' }));
       await waitFor(() => expect(router.state.location.pathname).toBe('/'));
       expect(loadPractice()).toBeNull();
