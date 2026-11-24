@@ -89,8 +89,19 @@ export function RoundBreak({
             className="relative overflow-hidden"
             data-testid="continue"
           >
-            {strings.practice.continue}
-            {counting && <span aria-hidden="true">{` · ${left}`}</span>}
+            {/* As wide in both languages and for every second of the countdown, so Home and
+                Continue don't move (D-128). */}
+            <SameWidth
+              shown={
+                <>
+                  {strings.practice.continue}
+                  {counting && <span aria-hidden="true">{` · ${left}`}</span>}
+                </>
+              }
+              others={[en.practice.continue, he.practice.continue].map((label) =>
+                counting ? `${label} · ${'8'.repeat(String(seconds).length)}` : label,
+              )}
+            />
             {counting && (
               // The time left, draining across the button (not with "reduce motion").
               <span
@@ -103,7 +114,12 @@ export function RoundBreak({
               />
             )}
           </Button3D>
-          <span className="lbtn__caption">{strings.practice.continueCaption}</span>
+          <span className="lbtn__caption">
+            <SameWidth
+              shown={strings.practice.continueCaption}
+              others={[en.practice.continueCaption, he.practice.continueCaption]}
+            />
+          </span>
         </div>
       </div>
       <p className="sr-only" aria-live="polite">

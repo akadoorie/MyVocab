@@ -671,6 +671,8 @@ describe('PracticePage', () => {
       return router;
     };
     const continueButton = () => screen.getByTestId('continue');
+    // The visible label (the button also holds invisible copies that keep its width, D-128).
+    const continueLabel = () => continueButton().querySelector('[data-shown]');
     const tick = (seconds: number) => {
       for (let i = 0; i < seconds; i++) act(() => vi.advanceTimersByTime(1000));
     };
@@ -679,11 +681,11 @@ describe('PracticePage', () => {
       vi.useFakeTimers();
       toBreak();
       expect(screen.getByText('You knew 2 of 3 — 1 to go.')).toBeInTheDocument();
-      expect(screen.getByText('to next round')).toBeInTheDocument();
-      expect(continueButton()).toHaveTextContent('Continue · 10');
+      expect(screen.getAllByText('to next round')[0]).toBeVisible();
+      expect(continueLabel()).toHaveTextContent('Continue · 10');
       expect(continueButton()).toHaveAccessibleName('Continue'); // the digits aren't read out
       tick(3);
-      expect(continueButton()).toHaveTextContent('Continue · 7');
+      expect(continueLabel()).toHaveTextContent('Continue · 7');
       tick(7);
       expect(progress()).toBe('Round 2 · Card 1/1 · 2 known');
     });
@@ -691,7 +693,7 @@ describe('PracticePage', () => {
     it('uses the length from the settings; 0 means no countdown (D-068)', () => {
       vi.useFakeTimers();
       toBreak(0);
-      expect(continueButton()).toHaveTextContent(/^Continue$/);
+      expect(continueLabel()).toHaveTextContent(/^Continue$/);
       tick(15);
       expect(screen.getByRole('heading', { name: 'Round 2 · 1 card left' })).toBeInTheDocument();
     });
@@ -700,7 +702,7 @@ describe('PracticePage', () => {
       vi.useFakeTimers();
       toBreak();
       fireEvent.keyDown(window, { key: 'x' });
-      expect(continueButton()).toHaveTextContent(/^Continue$/);
+      expect(continueLabel()).toHaveTextContent(/^Continue$/);
       tick(10);
       expect(screen.getByRole('heading', { name: 'Round 2 · 1 card left' })).toBeInTheDocument();
     });

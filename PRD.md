@@ -285,8 +285,9 @@ private content repository. It never appears in the public code repo or any publ
   the version under it, as in the practice header, besides their Home in the middle (D-124, D-125; at the break it
   asks first, like during the practice). The round break and the summary use the card screen's page frame, so Home
   and the switch stay **exactly in place** across the card, the round break and the summary, in every language
-  (D-126). The summary's Home and New practice also keep their places when switching (New practice is as wide as the
-  longer language), and its card starts below the version (D-128), so the language can change anywhere in the loop; the switch is live
+  (D-126). The summary's Home and New practice, and the round break's Home and Continue, also keep their places when
+  switching (the buttons and Continue's caption are as wide as the longer language, and Continue as wide for every
+  second of its countdown), and their cards start below the version (D-128), so the language can change anywhere in the loop; the switch is live
   and the practice keeps its cards, answers and progress. On phones narrower than 420 px the header's counter and logo
   are a little smaller so the counter stays on one line (D-122).
 - **FR-L23** Header progress: `Round 2 · Card 1/3 · 2 known` (known = total known in this practice).
