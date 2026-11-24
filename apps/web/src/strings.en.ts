@@ -197,11 +197,11 @@ export const en = {
     know: 'I know it',
     dontKnow: 'I don’t know',
     knowCaption: 'Don’t show again',
-    againCaption: 'Show again in future',
+    againCaption: 'Show in future',
     dontKnowCaption: 'Show in next round',
     /** Their accessible names: exactly the visible label + caption (axe label-content-name-mismatch). */
     knowName: 'I know it Don’t show again',
-    againName: 'I know it Show again in future',
+    againName: 'I know it Show in future',
     dontKnowName: 'I don’t know Show in next round',
     /** The green button is shown to guests, but locked: only a signed-in Know is kept (D-042). */
     signInToEnable: 'Sign-in to enable',
@@ -240,7 +240,7 @@ export const en = {
     shortcutsTitle: 'Keyboard shortcuts',
     shortcuts: [
       ['K', 'I know it'],
-      ['A', 'I know it, show again in future'],
+      ['A', 'I know it, show in future'],
       ['D', 'I don’t know'],
       ['H', 'Hints'],
       ['F / Space', 'Flip'],
@@ -280,11 +280,11 @@ export const en = {
     /** What was clicked, on a card reached with Back (D-049). The orange one adds its caption for
         screen readers only: the two Knows look alike without their colour. */
     answeredKnow: 'Clicked: I know it',
-    answeredKnowAgain: 'Clicked: I know it (show again in future)',
+    answeredKnowAgain: 'Clicked: I know it (show in future)',
     answeredDontKnow: 'Clicked: I don’t know',
     /** The orange chip's visible text; the caption stays for screen readers. */
     answeredKnowAgainShort: 'Clicked: I know it',
-    answeredKnowAgainExtra: ' (show again in future)',
+    answeredKnowAgainExtra: ' (show in future)',
     /** Announced when Back lands on a card (screen readers). */
     backTo: (card: number, size: number, answer: string | null) =>
       `Card ${card} of ${size}${answer ? `. ${answer}` : ''}`,

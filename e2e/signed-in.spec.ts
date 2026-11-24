@@ -70,7 +70,7 @@ test('Know → My known words (ask again is not kept) → hidden only in that di
   await expect(page.getByTestId('progress')).toContainText('1 known');
   // The second card: Know · ask again (FR-L27a) counts in the session but is never recorded.
   const askAgain = ((await page.getByTestId('front-text').textContent()) ?? '').trim();
-  await button(page, 'I know it Show again in future').click();
+  await button(page, 'I know it Show in future').click();
   await expect(page.getByTestId('progress')).toContainText('2 known');
   await button(page, 'Home').click();
   await page.getByRole('dialog').getByRole('button', { name: 'Yes' }).click();

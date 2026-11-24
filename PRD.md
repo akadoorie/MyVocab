@@ -164,7 +164,7 @@ private content repository. It never appears in the public code repo or any publ
 | Card UI | A glassy, violet-glowing **flip card** with a 3D flip animation and a round **Flip** button on both sides |
 | Hints | On the front, hints + synonyms sit under a live cover that a tap reveals and a tap covers again (D-047, D-078). The back always shows them |
 | Flip | The round **Flip** button on the card (front and back), or Space/F; a tap elsewhere on the card does nothing (D-047). It toggles front ↔ back any number of times and never affects grading |
-| Known memory | **Any** green "I know it" (any round) is remembered per **item and direction** and hides the item in that direction (D-028). The amber "I know it · Show again in future" is never remembered: the word stays in the pool (FR-L27a) |
+| Known memory | **Any** green "I know it" (any round) is remembered per **item and direction** and hides the item in that direction (D-028). The amber "I know it · Show in future" is never remembered: the word stays in the pool (FR-L27a) |
 | Known list | "My known words": search/filter/sort; return items to practices (single, selected, all filtered) |
 | Know tap | Advances immediately; Back (or a swipe toward Back) returns to the card, and its answer can be changed (FR-L29a) |
 | Topics | Many-to-many. "All topics" = all items |
@@ -323,7 +323,7 @@ private content repository. It never appears in the public code repo or any publ
   recorded** in the learner's known items (FR-L50), so the word stays in the pool and may be drawn again in any later
   practice, at random (no schedule or waiting time).
   **Labels (D-030):** green **"I know it"** with the caption **"Don't show again"**; amber **"I know it"** with
-  **"Show again in future"**; red **"I don't know"** with **"Show in next round"**. Guests see all three, with the same
+  **"Show in future"** (short, so it fits on one line on phones, D-112); red **"I don't know"** with **"Show in next round"**. Guests see all three, with the same
   labels and captions (D-042): nothing is ever stored for them (FR-L55), so the amber one does for them exactly what
   it says and is their "I know it", while the green **"Don't show again"** is shown **locked**: a darker green, a
   yellow padlock on its top-left edge (top-right in Hebrew), off, titled "Sign-in to enable". Tapping it (or pressing K)
@@ -366,7 +366,7 @@ private content repository. It never appears in the public code repo or any publ
     is clear the red button was pressed (D-104).
   - A card that already has an answer shows a short chip on the same line as the direction label, on phones too
     (D-049): **"Clicked: I know it"** (green), **"Clicked: I know it"** (amber; screen readers also hear "(show
-    again in future)") or **"Clicked: I don't know"** (red), with no ✓ / ✗ mark, as on the answer buttons; in Hebrew
+    in future)") or **"Clicked: I don't know"** (red), with no ✓ / ✗ mark, as on the answer buttons; in Hebrew
     the chip starts with "נבחר:" (D-089), and **Next** steps forward without answering again,
     up to the first unanswered card. There, Next is the way on: it **keeps pumping** (a gentle grow-and-shrink, in
     its own colours, without the violet and the ring of Revealed) and shines with the nudge, after the green pill
