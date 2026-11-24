@@ -322,10 +322,10 @@ private content repository. It never appears in the public code repo or any publ
   "N known" and in the summary, plays the Know animation, and the next card shows. The difference: it is **not
   recorded** in the learner's known items (FR-L50), so the word stays in the pool and may be drawn again in any later
   practice, at random (no schedule or waiting time).
-  **Labels (D-030):** green **"I know it"** with the caption **"Don't show again"**; amber **"I know it"** with
+  **Labels (D-030):** green **"I know it"** with the caption **"Never show"** (short, so it fits on one line on phones, D-113); amber **"I know it"** with
   **"Show in future"** (short, so it fits on one line on phones, D-112); red **"I don't know"** with **"Show in next round"**. Guests see all three, with the same
   labels and captions (D-042): nothing is ever stored for them (FR-L55), so the amber one does for them exactly what
-  it says and is their "I know it", while the green **"Don't show again"** is shown **locked**: a darker green, a
+  it says and is their "I know it", while the green **"Never show"** is shown **locked**: a darker green, a
   yellow padlock on its top-left edge (top-right in Hebrew), off, titled "Sign-in to enable". Tapping it (or pressing K)
   marks nothing and shows **"Sign-in required"** (Hebrew "נדרשת התחברות") over that button for 1.5 seconds, the
   "Sign-in" part being a link that starts sign-in (D-043); it is `aria-disabled` rather than `disabled`, so it can still be tapped and focused.
@@ -892,7 +892,7 @@ and a colored glow around. On the practice screen they are square with softened 
 circles. The practice uses two shapes:
 - **Pills** (the three answers, FR-L27a, D-030): the label only inside ("I know it", "I know it", "I don't
   know"), on phones and desktop alike (no ✓ / ✕ icons, D-058). On phones the three pills share the row. Each has a small italic muted caption
-  under it ("Don't show again", "Show again in future", "Show in next round"), which may wrap onto two lines on a
+  under it ("Never show", "Show in future", "Show in next round"), which may wrap onto two lines on a
   phone. For guests the green pill is locked: a darker green (dimmed, not grey), disabled, with a small yellow padlock
   (no background) on its top-left edge (top-right in Hebrew), on phones too (D-042).
 - **Round buttons** (Back, Next; Flip on the card): an icon in a circle (56px mobile, 64px desktop) with an

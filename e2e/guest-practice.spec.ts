@@ -83,7 +83,7 @@ test('a guest starts with the defaults and plays a practice to the summary', asy
   // Know from the back side → next card, front side up. A guest's Know is the orange one; the
   // green "Don't show again" is locked (D-042).
   // The locked green button explains itself when tapped, and marks nothing (D-043).
-  const locked = button(page, 'I know it Don’t show again (sign-in to enable)');
+  const locked = button(page, 'I know it Never show (sign-in to enable)');
   await expect(locked).toHaveAttribute('aria-disabled', 'true');
   // Playwright won't click an aria-disabled button (a person can), and on phones the earlier
   // toast may still cover it: send the click to the button itself.

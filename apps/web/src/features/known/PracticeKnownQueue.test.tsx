@@ -56,7 +56,7 @@ describe('Know marks of a signed-in learner', () => {
     await waitFor(() => expect(client.getQueryData(ME_QUERY_KEY)).toEqual({ user: TEST_USER }));
     await act(async () => {});
     const id = firstCardId();
-    fireEvent.click(button('I know it Don’t show again'));
+    fireEvent.click(button('I know it Never show'));
     expect(stored()).toEqual([{ i: id, t: 'he', c: 1, f: 0, n: expect.any(Number) as number }]);
     expect(window.localStorage.getItem(queueStorageKey(TEST_USER.id))).not.toMatch(/sample/);
     fireEvent.click(button('Back'));
@@ -71,7 +71,7 @@ describe('Know marks of a signed-in learner', () => {
     fireEvent.click(button('I know it Show in future'));
     expect(stored()).toEqual([]);
     fireEvent.click(button('Back'));
-    fireEvent.click(button('I know it Don’t show again'));
+    fireEvent.click(button('I know it Never show'));
     expect(stored()).toHaveLength(1);
     fireEvent.click(button('Back'));
     fireEvent.click(button('I know it Show in future'));

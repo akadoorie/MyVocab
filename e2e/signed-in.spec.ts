@@ -66,7 +66,7 @@ test('Know → My known words (ask again is not kept) → hidden only in that di
   const known = ((await page.getByTestId('front-text').textContent()) ?? '').trim();
   // Any English word: other specs (admin) may have added synthetic items to the same database.
   expect(known.length).toBeGreaterThan(0);
-  await button(page, 'I know it Don’t show again').click();
+  await button(page, 'I know it Never show').click();
   await expect(page.getByTestId('progress')).toContainText('1 known');
   // The second card: Know · ask again (FR-L27a) counts in the session but is never recorded.
   const askAgain = ((await page.getByTestId('front-text').textContent()) ?? '').trim();

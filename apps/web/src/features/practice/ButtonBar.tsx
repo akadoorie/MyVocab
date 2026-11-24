@@ -66,7 +66,7 @@ export function PracticeButton({
           <LockIcon />
         </span>
       )}
-      {/* A space, so the visible text reads "I know it Don't show again", not "itDon't" (axe). */}
+      {/* A space, so the visible text reads "I know it Never show", not "itDon't" (axe). */}
       {caption && ' '}
       {caption && (
         <span className="lbtn__caption" aria-hidden="true">
@@ -86,9 +86,9 @@ export function PracticeButton({
  * the layout stays: the answers are off and Next pumps (D-031). On a card answered earlier (reached
  * with Back), Next keeps pumping and shines with the answers' nudge: it is the way on (D-084).
  * Flip is on the card.
- * The answers (D-030): green "I know it · Don't show again", orange "I know it · Show again in
+ * The answers (D-030): green "I know it · Never show", orange "I know it · Show in
  * future" (FR-L27a) and red "I don't know · Show in next round". Guests (`signedIn` false) see the
- * green one locked: nothing is kept for them, so "Don't show again" needs signing in, while the
+ * green one locked: nothing is kept for them, so "Never show" needs signing in, while the
  * orange one does for them exactly what it says (D-042).
  */
 export function ButtonBar({

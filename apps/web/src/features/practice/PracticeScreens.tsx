@@ -233,7 +233,7 @@ function BackToLastCard({ onBack }: { onBack: () => void }) {
 
 /**
  * "⌨ Keyboard shortcuts" in the practice header (PRD FR-L34): a small popover, desktop only. `K` (the
- * green "Don't show again") is listed only for signed-in learners (D-042).
+ * green "Never show") is listed only for signed-in learners (D-042).
  */
 export function ShortcutsMenu({ signedIn = false }: { signedIn?: boolean }) {
   const [open, setOpen] = useState(false);
