@@ -182,7 +182,10 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
         const known = cards.get(id);
         const from = cardRef.current?.getBoundingClientRect();
         const to = counterRef.current?.getBoundingClientRect();
-        if (known && from && to && motionAllowed()) {
+        // The last card of a round leads to the break or the summary, which have no counter to fly
+        // to: no animation there (it would play over that screen).
+        const lastOfRound = state.index === state.order.length - 1;
+        if (known && from && to && motionAllowed() && !lastOfRound) {
           setRoll({
             key: Date.now(),
             card: known,
@@ -340,7 +343,6 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
           seconds={stored.continueSeconds ?? DEFAULT_CONTINUE_SECONDS}
         />
         {leaveDialog}
-        {ghost}
       </main>
     );
   }
@@ -354,7 +356,6 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
           celebrate={!celebrated}
           onCelebrated={markCelebrated}
         />
-        {ghost}
       </main>
     );
   }
