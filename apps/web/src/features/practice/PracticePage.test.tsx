@@ -680,7 +680,7 @@ describe('PracticePage', () => {
     it('shows what was known, "to next round", and moves on by itself after 10 seconds', () => {
       vi.useFakeTimers();
       toBreak();
-      expect(screen.getByText('You knew 2 of 3 — 1 to go.')).toBeInTheDocument();
+      expect(screen.getAllByText('You knew 2 of 3 — 1 to go.')[0]).toBeInTheDocument();
       expect(screen.getAllByText('to next round')[0]).toBeVisible();
       expect(continueLabel()).toHaveTextContent('Continue · 10');
       expect(continueButton()).toHaveAccessibleName('Continue'); // the digits aren't read out

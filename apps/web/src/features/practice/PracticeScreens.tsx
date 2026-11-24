@@ -65,11 +65,23 @@ export function RoundBreak({
   const { left, counting, running } = useCountdown(seconds, onContinue, { paused });
   return (
     <section className="glass m-auto flex w-full max-w-lg flex-col items-center gap-8 px-6 py-12 text-center">
-      <div className="flex flex-col gap-3">
+      {/* The heading and the line under it keep the height of the taller language (the Hebrew
+          heading can wrap onto two lines), so the card doesn't change size when switching (D-129). */}
+      <div className="flex w-full flex-col gap-3">
         <h1 className="text-3xl font-bold tracking-tight">
-          {strings.practice.roundBreak(round, remaining)}
+          <SameWidth
+            block
+            shown={strings.practice.roundBreak(round, remaining)}
+            others={[en, he].map((l) => l.practice.roundBreak(round, remaining))}
+          />
         </h1>
-        <p className="text-muted">{strings.practice.roundRecap(knew, total, remaining)}</p>
+        <p className="text-muted">
+          <SameWidth
+            block
+            shown={strings.practice.roundRecap(knew, total, remaining)}
+            others={[en, he].map((l) => l.practice.roundRecap(knew, total, remaining))}
+          />
+        </p>
       </div>
       {/* Home on the left and Continue on the right in every language, Hebrew too (D-088). */}
       <div className="flex items-start gap-3 rtl:flex-row-reverse">
@@ -98,8 +110,10 @@ export function RoundBreak({
                   {counting && <span aria-hidden="true">{` · ${left}`}</span>}
                 </>
               }
+              // Room for the countdown whenever there is one, also once it has stopped (and when
+              // a language switch starts it again), so the button never changes width (D-129).
               others={[en.practice.continue, he.practice.continue].map((label) =>
-                counting ? `${label} · ${'8'.repeat(String(seconds).length)}` : label,
+                seconds > 0 ? `${label} · ${'8'.repeat(String(seconds).length)}` : label,
               )}
             />
             {counting && (
@@ -249,7 +263,11 @@ function BackToLastCard({ onBack }: { onBack: () => void }) {
       onClick={onBack}
       className="flex min-h-11 items-center gap-1.5 rounded-[10px] px-3 text-muted hover:text-text"
     >
-      <BackArrow /> {strings.practice.backToCard}
+      <BackArrow />{' '}
+      <SameWidth
+        shown={strings.practice.backToCard}
+        others={[en.practice.backToCard, he.practice.backToCard]}
+      />
     </button>
   );
 }
