@@ -759,7 +759,11 @@ describe('PracticePage', () => {
       .closest('section') as HTMLElement;
     expect(within(summary).getByText('Already knew').nextSibling).toHaveTextContent('2');
     expect(within(summary).getByText('Learned here').nextSibling).toHaveTextContent('1');
-    expect(loadPractice()).toBeNull(); // finishing clears the saved practice
+    // The finished practice stays saved while the summary shows (a language switch re-mounts the
+    // screen, D-123); Home clears it.
+    expect(loadPractice()?.state.phase).toBe('finished');
+    fireEvent.click(within(summary).getByRole('button', { name: 'Home' }));
+    expect(loadPractice()).toBeNull();
   });
 
   describe('New practice on the summary (FR-L32)', () => {

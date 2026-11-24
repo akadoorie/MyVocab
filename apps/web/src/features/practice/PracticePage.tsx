@@ -159,9 +159,11 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   // The card the red loop runs around, right after "I don't know" (D-106).
   const [tracedCard, setTracedCard] = useState<string | null>(null);
 
-  // Persist on every change; Stop and the end of the practice clear it (FR-L33).
+  // Persist on every change; Stop clears it (FR-L33). A finished practice stays saved until the
+  // summary is left (Home or New practice), so switching the language on the summary, which
+  // re-mounts the screen, shows the summary again rather than going Home (D-123).
   useEffect(() => {
-    if (state.phase === 'stopped' || state.phase === 'finished') clearPractice();
+    if (state.phase === 'stopped') clearPractice();
     else savePractice({ ...stored, state, celebrated, flipped });
     if (state.phase === 'stopped') navigate('/', { replace: true });
   }, [state, stored, navigate, celebrated, flipped]);
@@ -366,7 +368,8 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   if (state.phase === 'roundBreak') {
     return (
       <main id="main" className="mx-auto flex min-h-dvh w-full max-w-[640px] flex-col px-4 py-6">
-        <div className="flex justify-end">
+        {/* On the left in every language, like Home on these screens (D-123). */}
+        <div className="flex justify-start rtl:justify-end">
           <LanguageSwitch className="rounded-[var(--radius-practice)]" />
         </div>
         <RoundBreak
@@ -387,7 +390,8 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   if (state.phase === 'finished') {
     return (
       <main id="main" className="mx-auto flex min-h-dvh w-full max-w-[640px] flex-col px-4 py-6">
-        <div className="flex justify-end">
+        {/* On the left in every language, like Home on these screens (D-123). */}
+        <div className="flex justify-start rtl:justify-end">
           <LanguageSwitch className="rounded-[var(--radius-practice)]" />
         </div>
         <FinishedScreen
@@ -407,7 +411,9 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
       id="main"
       className="mx-auto flex h-dvh w-full max-w-[1100px] flex-col gap-5 px-4 pt-4 md:h-auto md:min-h-dvh md:gap-10 md:px-8 md:pt-8"
     >
-      <header className="relative flex items-center justify-between gap-2 min-[420px]:gap-3">
+      {/* Home and the language switch on the left in every language, English too (D-123): the
+          counter on the right. */}
+      <header className="relative flex items-center justify-between gap-2 min-[420px]:gap-3 ltr:flex-row-reverse">
         <RoundBar state={state} />
         {/* A little smaller on narrow phones, so the counter fits on one line beside the language
             switch and Home (D-122). */}
@@ -427,7 +433,7 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
             </span>
           </span>
         </p>
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-2 md:gap-4 ltr:flex-row-reverse">
           <ShortcutsMenu signedIn={!stored.isGuest} />
           {/* The language, switchable throughout the practice loop (D-122). */}
           <LanguageSwitch className="rounded-[var(--radius-practice)]" />
@@ -545,6 +551,7 @@ function FinishedScreen({ stored, ...rest }: FinishedProps) {
   });
   const newPractice = () => {
     if (!meta.data) {
+      clearPractice();
       navigate('/', { state: { selection: stored.selection } });
       return;
     }
@@ -556,7 +563,11 @@ function FinishedScreen({ stored, ...rest }: FinishedProps) {
     <Summary
       {...rest}
       isGuest={stored.isGuest}
-      onHome={() => navigate('/')}
+      onHome={() => {
+        // Leaving the summary ends the finished practice (FR-L33, D-123).
+        clearPractice();
+        navigate('/');
+      }}
       onNewPractice={newPractice}
       newPracticeDisabled={meta.isPending}
       starting={starting}

@@ -169,7 +169,7 @@ private content repository. It never appears in the public code repo or any publ
 | Know tap | Advances immediately; Back (or a swipe toward Back) returns to the card, and its answer can be changed (FR-L29a) |
 | Topics | Many-to-many. "All topics" = all items |
 | Content sources | Agent-written starter set (in the private content repo) → then admins add manually or by CSV bulk upload |
-| UI language | **Hebrew by default**, English on request: a switch in the Home page header, remembered in the browser (D-080, D-083). Hebrew pages are right-to-left. The admin area stays English. Content renders in its own direction |
+| UI language | **Hebrew by default**, English on request: a switch in the Home page header and the practice loop, remembered in the browser (D-080, D-083). Hebrew pages are right-to-left. The admin area stays English. Content renders in its own direction |
 | Look | Dark only. Near-black + violet palette. "Pressable ledge" 3D buttons |
 | DB tuning | Built for the D1 free tier: one row per item, only the indexes queries need, no writes from blocked requests, no per-request writes (§11.2) |
 
@@ -280,15 +280,16 @@ private content repository. It never appears in the public code repo or any publ
     Hints was pressed), or "Hint is not available".
   - Every card starts **front side up, with hints hidden**.
 - **FR-L22a** The **language switch** ("En" / "עב", as on the Home page) is in the practice header next to Home, and
-  at the top of the round break and the summary, so the language can change anywhere in the loop; the switch is live
+  at the top of the round break and the summary; Home and the switch are on the **left in every language** (the
+  counter on the right; D-123), so the language can change anywhere in the loop; the switch is live
   and the practice keeps its cards, answers and progress. On phones narrower than 420 px the header's counter and logo
   are a little smaller so the counter stays on one line (D-122).
 - **FR-L23** Header progress: `Round 2 · Card 1/3 · 2 known` (known = total known in this practice).
   Under it, on the version's line, a thin **round bar** (D-115): one segment per card in the round; a card with an
   answer shows its colour (green, orange or red); the current card is twice as tall (8px) with a thin white edge and a
   glow that breathes (D-116); the rest are faint. It runs left to
-  right in every language (like the cards and Next), ending before the version (English) or starting after it
-  (Hebrew), so the card keeps its room; decorative for screen readers (the counter says it).
+  right in every language (like the cards and Next), starting after the version (Home is on the left in every
+  language, D-123), so the card keeps its room; decorative for screen readers (the counter says it).
 - **FR-L24** Buttons and phases:
 
 | Phase | Know | Hints (cover) | Flip | Don't know | Back | Next | Home |
@@ -439,7 +440,9 @@ private content repository. It never appears in the public code repo or any publ
     and on later visits to the summary in the same practice it is already in place (no flight). With "reduce motion"
     it is simply there from the start.
 - **FR-L33** The practice state (including the current card's side and whether its hints are shown) is saved in
-  `sessionStorage`, so a page refresh resumes the same practice. Leaving with Home or finishing clears it.
+  `sessionStorage`, so a page refresh resumes the same practice. Leaving with Home clears it; a finished practice
+  stays saved until the summary is left (Home or New practice), so switching the language on the summary keeps it
+  (D-123).
 - **FR-L34** Desktop keyboard shortcuts (listed in a "Keyboard shortcuts" popover in the practice header): **K** Know (signed-in learners; guests see the sign-in tip), **A** Know · ask again, **D** Don't know, **H** Hints,
   **Space/F** Flip, **←** Back, **→** Next (the same in Hebrew, like the buttons, D-096; letter keys also work on a
   Hebrew keyboard layout, D-080), **Enter** Next or Continue, **Esc** Home (asks first, FR-L30a). Shortcuts respect the enabled/disabled state.
@@ -1092,9 +1095,10 @@ the typecheck. Components read the active language's strings through `strings.ts
 (`strings-admin.ts`) are English only.
 
 **UI language (D-080).**
-- **Default and switch:** a first visit is in Hebrew. The Home page header, and no other page, has a switch
-  showing the other language's short code in that language: "En" on Hebrew pages, "עב" on English pages. It sits
-  just before Sign-in / the avatar, and its accessible name is the full name ("English" / "עברית"). On phones, the
+- **Default and switch:** a first visit is in Hebrew. The Home page header and the practice loop (FR-L22a, D-122) have
+  a switch showing the other language's short code in that language: "En" on Hebrew pages, "עב" on English pages. On
+  Home it sits just before Sign-in / the avatar, and the two are on the **right in every language** (the logo on the
+  left, D-123), and its accessible name is the full name ("English" / "עברית"). On phones, the
   Home page's Sign-in button reads "Sign-in" / "התחברות" (its accessible name stays "Sign-in with Google") so the
   switch fits (D-083). The choice is remembered in the browser (`localStorage`). Switching re-renders
   the page in place. The admin area is always English and LTR, whatever the choice.

@@ -28,7 +28,11 @@ export function Layout() {
           {maintenance.message || strings.nav.maintenance}
         </div>
       )}
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
+      {/* On Home the language switch and sign-in sit on the right in every language, Hebrew too
+          (D-123): mirrored back on right-to-left pages. */}
+      <header
+        className={`mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 ${onHome ? 'rtl:flex-row-reverse' : ''}`}
+      >
         <div className="flex items-baseline gap-2">
           <Link
             to="/"
@@ -42,7 +46,9 @@ export function Layout() {
           </Link>
           {onHome && <AppVersion />}
         </div>
-        <nav className={`flex items-center text-sm ${onHome ? 'gap-2 sm:gap-3' : 'gap-3'}`}>
+        <nav
+          className={`flex items-center text-sm ${onHome ? 'gap-2 rtl:flex-row-reverse sm:gap-3' : 'gap-3'}`}
+        >
           {!onHome && (
             // Every page other than the start page offers a way back to it: a house (D-086).
             <Link

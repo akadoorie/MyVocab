@@ -1574,23 +1574,19 @@ body {
 }
 
 /* The round's progress bar (D-115): on the version's line under the header (the version sits
-   under Home, 44px wide, at the end), so the card keeps its room. Left to right in every language;
-   in Hebrew Home is on the left, so the bar starts after it. */
+   under Home, 44px wide), so the card keeps its room. Left to right in every language; Home is on
+   the left in every language (D-123), so the bar starts after the version. */
 .round-bar {
   position: absolute;
   /* 8px tall for the current segment; the others are 4px, centred on the same line. */
   top: calc(100% + 5px);
-  left: 0;
-  right: 52px;
+  left: 52px;
+  right: 0;
   display: flex;
   align-items: center;
   gap: 3px;
   height: 8px;
   pointer-events: none;
-}
-[dir='rtl'] .round-bar {
-  left: 52px;
-  right: 0;
 }
 @media (min-width: 768px) {
   .round-bar {
