@@ -252,13 +252,18 @@ describe('StartCard', () => {
       String(input).startsWith('/api/practices/available-by-topic')
         ? Response.json(countsOf(6))
         : Response.json(
-            { error: { code: 'RATE_LIMITED', message: 'Too many practices for now.' } },
+            { error: { code: 'RATE_LIMITED', message: 'Rate limited.' } },
             { status: 429 },
           ),
     );
     setup();
     fireEvent.click(screen.getByRole('button', { name: 'Start' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Too many practices for now.');
+    // A guest sees our own words, at the introduction's size (D-118).
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'You passed the sample practices capacity. Wait some time and try again later, or Sign-in',
+    );
+    expect(alert).toHaveClass('text-lg');
   });
 
   it('retries an unexpected failure: 1 s quietly, then twice "Refreshing in 2 seconds" (D-092)', async () => {

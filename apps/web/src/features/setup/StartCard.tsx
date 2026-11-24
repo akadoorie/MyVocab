@@ -180,7 +180,8 @@ export function StartCard({
       <div ref={containerRef} className="mt-3 flex justify-center empty:hidden" />
 
       {error && (
-        <p role="alert" className="mt-3 text-sm text-dontknow">
+        // The size of the introduction ("Pick a set…"), so it is easy to read (D-118).
+        <p role="alert" className="mt-3 text-lg text-dontknow">
           {error}
         </p>
       )}

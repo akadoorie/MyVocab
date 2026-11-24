@@ -1462,8 +1462,9 @@ type CardView = {
 **`POST /practices` rules**
 - **Guest** (not signed in): `turnstileToken` is **required** and verified server-side (Turnstile siteverify, single use,
   hostname check) **before any D1 write**. Failure → 403 `BOT_CHECK_FAILED`. `size` is **ignored** and forced to
-  `guests.practiceSize` (5). Counted against `guests.practicesPerHour` per hashed IP. Exceeding it → 429 `RATE_LIMITED` with a
-  "sign in or try later" message.
+  `guests.practiceSize` (5). Counted against `guests.practicesPerHour` per hashed IP. Exceeding it → 429 `RATE_LIMITED`; the start card says "You passed the sample practices capacity. Wait some time and try again
+  later, or Sign-in" ("עברתם את מכסת תרגולי הדוגמה. המתינו כמה זמן ונסו מאוחר יותר, או התחברו"), at the introduction's
+  size (D-118).
 - **Learner**: `size` must be one of `practice.sizeOptions` (≤ `practice.maxSize`). The returned card count is added to
   `users.cardsPerDay` for the current UTC day. If the request would exceed the cap → 429 with the remaining allowance.
   Admins are exempt.

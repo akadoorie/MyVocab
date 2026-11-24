@@ -105,7 +105,8 @@ export const en = {
         : 'You’ve reached today’s card limit. Come back tomorrow!',
     sessionExpired: 'Your session has ended. Please sign-in again.',
     /** The server's refusals, in the UI language (D-080). */
-    guestRateLimited: 'Too many practices for now. Sign-in or try again later.',
+    guestRateLimited:
+      'You passed the sample practices capacity. Wait some time and try again later, or Sign-in',
     guestsDisabled: 'Sign-in to start a practice.',
   },
   auth: {

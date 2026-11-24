@@ -116,7 +116,9 @@ export class PracticeService {
         settings['guests.practicesPerHour'],
       );
       if (!decision.allowed) {
-        throw new RateLimitedError('Too many practices for now. Sign-in or try again later.');
+        throw new RateLimitedError(
+          'You passed the sample practices capacity. Wait some time and try again later, or Sign-in',
+        );
       }
       size = settings['guests.practiceSize']; // guests can't choose (FR-L6)
     } else {
