@@ -165,6 +165,7 @@ export function FlipCard({
   pulse = false,
   nudging = null,
   trace = false,
+  answerArrived = false,
 }: {
   card: CardView;
   side: CardSide;
@@ -182,6 +183,8 @@ export function FlipCard({
   nudging?: 'full' | 'shine' | null;
   /** Right after "I don't know": a red line races once around the card's edge (D-106). */
   trace?: boolean;
+  /** The card was reached with Back: its answer chip pops in, then tilts every 3s (D-108). */
+  answerArrived?: boolean;
 }) {
   const tid = (id: string) => (decorative ? undefined : id);
   const frontTop = useRef<HTMLDivElement>(null);
@@ -197,7 +200,9 @@ export function FlipCard({
   const answerChip = (face: 'front' | 'back') =>
     answer && (
       <p
-        className={`chip shrink-0 whitespace-nowrap ${CHIP[answer].color}`}
+        // Keyed by the card, so the pop plays again on each card reached with Back.
+        key={`${card.itemId}-${card.direction.source}`}
+        className={`chip answer-chip shrink-0 whitespace-nowrap ${CHIP[answer].color} ${answerArrived ? 'answer-chip--arrived' : ''}`}
         data-testid={face === 'front' ? tid('answer-chip') : undefined}
       >
         {CHIP[answer].text}

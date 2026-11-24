@@ -104,6 +104,9 @@ describe('PracticePage', () => {
     // The "Clicked" chip shows at once, on both faces (D-104).
     expect(screen.getByTestId('answer-chip')).toHaveTextContent('Clicked: I don’t know');
     expect(screen.getAllByText('Clicked: I don’t know')).toHaveLength(2);
+    // Tinted; no pop or tilt right after the answer, only on a card reached with Back (D-108).
+    expect(screen.getByTestId('answer-chip')).toHaveClass('answer-chip');
+    expect(screen.getByTestId('answer-chip')).not.toHaveClass('answer-chip--arrived');
     // The hints cover is on the front only (the back shows the hints uncovered).
     expect(screen.queryByRole('button', { name: 'Tap to see hints' })).toBeNull();
     fireEvent.click(btn('Flip'));
@@ -172,6 +175,8 @@ describe('PracticePage', () => {
     fireEvent.click(btn('Back'));
     expect(progress()).toBe('Round 1 · Card 1/3 · 1 known');
     expect(side()).toBe('front');
+    // Reached with Back: the chip pops in, then tilts every 3s (D-108).
+    expect(screen.getByTestId('answer-chip')).toHaveClass('answer-chip--arrived');
     // A guest's Know is the orange one (D-042).
     // Short on screen; the orange one's caption is there for screen readers (D-049).
     expect(screen.getByTestId('answer-chip')).toHaveTextContent(

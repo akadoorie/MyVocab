@@ -420,6 +420,8 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
             onFlip={() => act('FLIP')}
             onToggleHints={() => act('TOGGLE_HINTS')}
             answer={shownAnswer}
+            // An answer while still deciding means the card was reached with Back (D-108).
+            answerArrived={state.phase === 'deciding'}
             pulse={!flipped && motionAllowed()}
             trace={tracedCard?.startsWith(`${state.round}-${state.index}-`) ?? false}
             nudging={

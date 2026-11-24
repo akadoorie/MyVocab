@@ -356,6 +356,9 @@ private content repository. It never appears in the public code repo or any publ
   reach). On the round break and the summary, **"← Back to the last card"** returns to the round's last card. A card
   reached with Back (or Next) **always shows its front**, even if it was showing its back when left, with its hints
   cover **as it was left**: open if the learner had revealed the hints and not covered them again (D-048).
+  - The "Clicked" chip has a soft tint and thin border in its answer's colour, flat so it reads as a label. On a
+    card reached with Back it pops in once, then every 3 s tilts right and left a few times and rests (D-108).
+    Reduced motion: the tint only.
   - On a card reached with Back, the answer button it already has is **disabled** (greyed out, its shortcut off), so
     only a change is offered; Next moves on without one (D-107).
   - Right after "I don't know", the card shows the red **"Clicked: I don't know"** chip at once, on both faces, so it
