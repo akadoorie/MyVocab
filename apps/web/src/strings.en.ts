@@ -196,16 +196,16 @@ export const en = {
     /** The three answer buttons and the captions under them (FR-L27a, D-030). */
     know: 'I know it',
     dontKnow: 'I don’t know',
-    knowCaption: 'Never show',
+    knowCaption: 'Never show again',
     againCaption: 'Show in future',
     dontKnowCaption: 'Show in next round',
     /** Their accessible names: exactly the visible label + caption (axe label-content-name-mismatch). */
-    knowName: 'I know it Never show',
+    knowName: 'I know it Never show again',
     againName: 'I know it Show in future',
     dontKnowName: 'I don’t know Show in next round',
     /** The green button is shown to guests, but locked: only a signed-in Know is kept (D-042). */
     signInToEnable: 'Sign-in to enable',
-    knowNameGuest: 'I know it Never show (sign-in to enable)',
+    knowNameGuest: 'I know it Never show again (sign-in to enable)',
     /** Over the locked green button for 1.5 seconds when tapped (D-043): the link, then the rest. */
     lockedTipBefore: '',
     lockedTipLink: 'Sign-in',

@@ -281,7 +281,7 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   const onShortcut = useCallback(
     (action: PracticeActionType | 'ENTER') => {
       if (confirmLeave) return; // the "are you sure?" question is open
-      // "Never show" needs signing in (D-042); K says so, like tapping the button (D-043).
+      // "Never show again" needs signing in (D-042); K says so, like tapping the button (D-043).
       if (action === 'KNOW' && stored.isGuest) return showLocked();
       if (action === 'ENTER') act(state.phase === 'roundBreak' ? 'CONTINUE' : 'NEXT');
       else if (action === 'STOP')

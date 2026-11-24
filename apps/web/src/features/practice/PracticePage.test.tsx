@@ -93,7 +93,7 @@ describe('PracticePage', () => {
     expect(btn('I don’t know Show in next round')).toBeDisabled();
     expect(btn('I know it Show in future')).toBeEnabled();
     // The guest's green one stays locked: off, but it can still explain itself (D-043).
-    expect(btn('I know it Never show (sign-in to enable)')).toHaveAttribute(
+    expect(btn('I know it Never show again (sign-in to enable)')).toHaveAttribute(
       'aria-disabled',
       'true',
     );
@@ -198,7 +198,7 @@ describe('PracticePage', () => {
   it('changing an answer: Know → Don’t know unmarks it, Don’t know → Know marks it', () => {
     const sink = { onKnow: vi.fn(), onUnknow: vi.fn() };
     setup(sink, { isGuest: false });
-    fireEvent.click(btn('I know it Never show'));
+    fireEvent.click(btn('I know it Never show again'));
     expect(sink.onKnow).toHaveBeenCalledTimes(1);
     expect(sink.onKnow).toHaveBeenCalledWith(expect.objectContaining({ round: 1 }), 'he');
     fireEvent.click(btn('Back'));
@@ -208,18 +208,18 @@ describe('PracticePage', () => {
     expect(side()).toBe('back');
     fireEvent.click(btn('Next'));
     fireEvent.click(btn('Back'));
-    fireEvent.click(btn('I know it Never show'));
+    fireEvent.click(btn('I know it Never show again'));
     expect(sink.onKnow).toHaveBeenCalledTimes(2);
     expect(progress()).toBe('Round 1 · Card 2/3 · 1 known');
     // Know again on a card already known changes nothing in the queue.
     fireEvent.click(btn('Back'));
-    fireEvent.click(btn('I know it Never show'));
+    fireEvent.click(btn('I know it Never show again'));
     expect(sink.onKnow).toHaveBeenCalledTimes(2);
   });
 
   it('guests see all three answers, the green one locked; K does nothing, A works (D-042)', () => {
     setup();
-    const know = btn('I know it Never show (sign-in to enable)');
+    const know = btn('I know it Never show again (sign-in to enable)');
     expect(know).toHaveAttribute('aria-disabled', 'true');
     expect(know).toHaveClass('lbtn--know', 'is-locked');
     expect(know).toHaveAttribute('title', 'Sign-in to enable');
@@ -227,7 +227,7 @@ describe('PracticePage', () => {
     expect(btn('I know it Show in future')).toBeEnabled();
     expect(btn('I know it Show in future')).not.toHaveClass('is-locked');
     // The same captions as for signed-in learners.
-    expect(screen.getByText('Never show')).toBeInTheDocument();
+    expect(screen.getByText('Never show again')).toBeInTheDocument();
     expect(screen.getByText('Show in future')).toBeInTheDocument();
     expect(screen.getByText('Show in next round')).toBeInTheDocument();
     fireEvent.keyDown(window, { key: 'k' });
@@ -241,7 +241,7 @@ describe('PracticePage', () => {
     setup();
     const tip = () => document.querySelector('.locked-tip');
     expect(tip()).toBeNull();
-    fireEvent.click(btn('I know it Never show (sign-in to enable)'));
+    fireEvent.click(btn('I know it Never show again (sign-in to enable)'));
     expect(tip()).toHaveTextContent('Sign-in required');
     expect(
       within(tip() as HTMLElement).getByRole('button', { name: 'Sign-in' }),
@@ -422,13 +422,13 @@ describe('PracticePage', () => {
       .map((b) => b.getAttribute('aria-label') ?? b.textContent)
       .filter((n) => /know/i.test(n ?? ''));
     expect(names).toEqual([
-      'I know it Never show',
+      'I know it Never show again',
       'I know it Show in future',
       'I don’t know Show in next round',
     ]);
     expect(btn('I know it Show in future')).toHaveClass('lbtn--again');
     expect(btn('I know it Show in future')).not.toHaveClass('is-locked');
-    expect(screen.getByText('Never show')).toBeInTheDocument();
+    expect(screen.getByText('Never show again')).toBeInTheDocument();
     expect(screen.getByText('Show in future')).toBeInTheDocument();
     expect(screen.getByText('Show in next round')).toBeInTheDocument();
 
@@ -453,14 +453,14 @@ describe('PracticePage', () => {
   it('signed-in: switching between the two Knows records and unrecords the word', () => {
     const sink = { onKnow: vi.fn(), onUnknow: vi.fn() };
     setup(sink, { isGuest: false });
-    fireEvent.click(btn('I know it Never show'));
+    fireEvent.click(btn('I know it Never show again'));
     expect(sink.onKnow).toHaveBeenCalledTimes(1);
     fireEvent.click(btn('Back'));
     fireEvent.click(btn('I know it Show in future'));
     expect(sink.onUnknow).toHaveBeenCalledWith(sink.onKnow.mock.calls[0]![0].id, 'he');
     expect(progress()).toBe('Round 1 · Card 2/3 · 1 known');
     fireEvent.click(btn('Back'));
-    fireEvent.click(btn('I know it Never show'));
+    fireEvent.click(btn('I know it Never show again'));
     expect(sink.onKnow).toHaveBeenCalledTimes(2);
     fireEvent.click(btn('Back'));
     fireEvent.click(btn('I know it Show in future'));
@@ -720,7 +720,7 @@ describe('PracticePage', () => {
   describe('New practice on the summary (FR-L32)', () => {
     const finish = () => {
       // Signed-in learners have two Knows; the green one is recorded.
-      for (let i = 0; i < 3; i++) fireEvent.click(btn('I know it Never show'));
+      for (let i = 0; i < 3; i++) fireEvent.click(btn('I know it Never show again'));
       expect(screen.getByRole('heading', { name: 'Practice completed' })).toBeInTheDocument();
     };
 
