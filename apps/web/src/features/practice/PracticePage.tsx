@@ -142,6 +142,10 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   const clearSlide = useCallback(() => setSlide(null), []);
   // Where the next card comes in from: the right for Next and the Knows (a little later, under the
   // Know animation), the left for Back; a new round's first card rises in (D-110).
+  // Opened and closed the hints cover once: it stops showing it can be tapped, for the rest of
+  // the practice (D-121).
+  const [coverLearned, setCoverLearned] = useState(false);
+  const learnCover = useCallback(() => setCoverLearned(true), []);
   const [enterFrom, setEnterFrom] = useState<'right' | 'know' | 'left' | 'rise'>('rise');
 
   // The summary celebrates once per practice (FR-L32a), also across Back and a refresh.
@@ -453,6 +457,8 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
             answer={shownAnswer}
             // An answer while still deciding means the card was reached with Back (D-108).
             answerArrived={state.phase === 'deciding'}
+            coverLearned={coverLearned}
+            onCoverLearned={learnCover}
             pulse={!flipped && motionAllowed()}
             trace={tracedCard?.startsWith(`${state.round}-${state.index}-`) ?? false}
             nudging={

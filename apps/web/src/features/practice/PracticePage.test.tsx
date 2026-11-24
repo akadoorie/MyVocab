@@ -419,6 +419,27 @@ describe('PracticePage', () => {
       expect(document.querySelector('.slide-ghost')).toBeNull();
     });
 
+    it('the hints cover peeks and its finger taps every 7s until opened and closed once (D-121)', () => {
+      motion();
+      vi.useFakeTimers();
+      setup();
+      const finger = () => document.querySelector('.flip-card__front .hints-cover__finger');
+      const peekCopy = () => document.querySelector('.flip-card__front .hints-cover__peek');
+      expect(peekCopy()).toHaveAttribute('aria-hidden', 'true');
+      expect(screen.queryByTestId('front-hints')).toBeNull(); // the copy carries no test ids
+      expect(finger()).not.toHaveClass('is-tapping');
+      act(() => vi.advanceTimersByTime(7000));
+      expect(finger()).toHaveClass('is-tapping');
+      // Opened and covered again: no more hints for the rest of the practice.
+      fireEvent.click(btn('Tap to see hints'));
+      fireEvent.keyDown(window, { key: 'h' });
+      expect(peekCopy()).toBeNull();
+      fireEvent.click(btn('I know Show in future'));
+      act(() => vi.advanceTimersByTime(8000));
+      expect(peekCopy()).toBeNull();
+      expect(finger()).not.toHaveClass('is-tapping');
+    });
+
     it('nothing moves with "reduce motion"', () => {
       motion(true);
       vi.useFakeTimers();

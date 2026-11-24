@@ -166,6 +166,8 @@ export function FlipCard({
   nudging = null,
   trace = false,
   answerArrived = false,
+  coverLearned = false,
+  onCoverLearned = () => undefined,
 }: {
   card: CardView;
   side: CardSide;
@@ -185,6 +187,9 @@ export function FlipCard({
   trace?: boolean;
   /** The card was reached with Back: its answer chip pops in, then tilts every 3s (D-108). */
   answerArrived?: boolean;
+  /** The hints cover was opened and closed once in this practice: it stops hinting (D-121). */
+  coverLearned?: boolean;
+  onCoverLearned?: () => void;
 }) {
   const tid = (id: string) => (decorative ? undefined : id);
   const frontTop = useRef<HTMLDivElement>(null);
@@ -286,7 +291,13 @@ export function FlipCard({
             {card.hints.length === 0 && card.synonyms.length === 0 ? (
               <Extras card={card} />
             ) : (
-              <HintsCover open={hintsShown} onToggle={onToggleHints} active={front && !decorative}>
+              <HintsCover
+                open={hintsShown}
+                onToggle={onToggleHints}
+                active={front && !decorative}
+                learned={coverLearned}
+                onLearned={onCoverLearned}
+              >
                 <Extras card={card} />
               </HintsCover>
             )}

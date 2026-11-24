@@ -299,6 +299,10 @@ private content repository. It never appears in the public code repo or any publ
 
 - **FR-L25 Hints** (D-047): on the **front**, the hints and synonyms sit under a **live cover**: a cloud of tiny
   shimmering dots over the blurred text, with a small "Tap to see hints" label, so it is clear it can be tapped.
+  **Showing it can be tapped** (D-121): every 7 s while the cover is untouched, the dots part for a moment in a spot at
+  the top of the hints area (on the side the hints start: left for left-to-right hints, right for right-to-left), showing
+  a bit of the sharp text, and a small finger next to "Tap to see hints" taps twice with a soft ring. Once the learner
+  has opened and covered the hints, this stops for the rest of the practice; with reduced motion it never plays.
   Tapping the cover (or pressing **H**) reveals them (the dots scatter and fade, the text sharpens); a **clean tap on
   the revealed hints** (or **H**) covers them again, but never a drag, a tap that stops a scroll, or a tap within
   0.35 s of scrolling, so scrolling never hides them (D-078). A "Hide hints" button stays for keyboard and screen
