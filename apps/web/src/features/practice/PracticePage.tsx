@@ -99,6 +99,12 @@ export function PracticePage({ knownSink }: { knownSink?: KnownSink }) {
 
 const META_QUERY = { queryKey: ['meta'], queryFn: api.meta, staleTime: 60_000 } as const;
 
+/** The round break's and the summary's page frame: as the card screen's (D-126). */
+const LOOP_FRAME =
+  'mx-auto flex min-h-dvh w-full max-w-[1100px] flex-col px-4 pt-4 md:px-8 md:pt-8';
+/** Their content column, as before (640px, centred, room below). */
+const LOOP_COLUMN = 'mx-auto flex w-full max-w-[640px] flex-1 flex-col pt-2 pb-6';
+
 function PracticeScreen({ knownSink }: { knownSink?: KnownSink }) {
   const [stored] = useState<StoredPractice | null>(() => loadPractice());
   // Loaded early (usually cached from the start card), so "New practice" is ready at the end.
@@ -369,7 +375,7 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   // top left in every language, as in the practice header, for one look across the screens
   // (D-123, D-124, D-125). Their Home buttons in the middle stay.
   const topBar = (onHome: () => void) => (
-    <div className="flex items-center gap-2 ltr:flex-row-reverse ltr:justify-end rtl:justify-end">
+    <div className="flex h-11 items-center gap-2 md:gap-4 ltr:flex-row-reverse ltr:justify-end rtl:justify-end">
       <LanguageSwitch className="rounded-[var(--radius-practice)]" />
       <div className="relative flex shrink-0 items-center">
         <AppVersion className="absolute top-full left-1/2 mt-1 -translate-x-1/2 text-[10px] leading-none md:text-xs" />
@@ -388,38 +394,45 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
 
   if (state.phase === 'roundBreak') {
     return (
-      <main id="main" className="mx-auto flex min-h-dvh w-full max-w-[640px] flex-col px-4 py-6">
+      // The same frame as the card screen (width, side and top padding), so Home and the language
+      // switch stay exactly in place when moving between the screens (D-126); the content keeps
+      // its own narrower column.
+      <main id="main" className={LOOP_FRAME}>
         {topBar(() => setConfirmLeave(true))}
-        <RoundBreak
-          round={state.round + 1}
-          remaining={progress.remaining}
-          knew={progress.roundSize - progress.remaining}
-          total={progress.roundSize}
-          onContinue={() => act('CONTINUE')}
-          onBack={() => act('BACK')}
-          onHome={() => setConfirmLeave(true)}
-          paused={confirmLeave}
-          seconds={stored.continueSeconds ?? DEFAULT_CONTINUE_SECONDS}
-        />
+        <div className={LOOP_COLUMN}>
+          <RoundBreak
+            round={state.round + 1}
+            remaining={progress.remaining}
+            knew={progress.roundSize - progress.remaining}
+            total={progress.roundSize}
+            onContinue={() => act('CONTINUE')}
+            onBack={() => act('BACK')}
+            onHome={() => setConfirmLeave(true)}
+            paused={confirmLeave}
+            seconds={stored.continueSeconds ?? DEFAULT_CONTINUE_SECONDS}
+          />
+        </div>
         {leaveDialog}
       </main>
     );
   }
   if (state.phase === 'finished') {
     return (
-      <main id="main" className="mx-auto flex min-h-dvh w-full max-w-[640px] flex-col px-4 py-6">
+      <main id="main" className={LOOP_FRAME}>
         {topBar(() => {
           // Leaving the summary ends the finished practice (FR-L33).
           clearPractice();
           navigate('/');
         })}
-        <FinishedScreen
-          stored={stored}
-          summary={practiceSummary(state)}
-          onBack={() => act('BACK')}
-          celebrate={!celebrated}
-          onCelebrated={markCelebrated}
-        />
+        <div className={LOOP_COLUMN}>
+          <FinishedScreen
+            stored={stored}
+            summary={practiceSummary(state)}
+            onBack={() => act('BACK')}
+            celebrate={!celebrated}
+            onCelebrated={markCelebrated}
+          />
+        </div>
       </main>
     );
   }
