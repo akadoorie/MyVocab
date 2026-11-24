@@ -281,7 +281,8 @@ private content repository. It never appears in the public code repo or any publ
   - Every card starts **front side up, with hints hidden**.
 - **FR-L22a** The **language switch** ("En" / "עב", as on the Home page) is in the practice header next to Home, and
   at the top of the round break and the summary; Home and the switch are on the **left in every language** (the
-  counter on the right; D-123), so the language can change anywhere in the loop; the switch is live
+  counter on the right; D-123). The summary also has Home at the top, left of the switch with the version under it,
+  as in the practice header, besides its Home in the middle (D-124), so the language can change anywhere in the loop; the switch is live
   and the practice keeps its cards, answers and progress. On phones narrower than 420 px the header's counter and logo
   are a little smaller so the counter stays on one line (D-122).
 - **FR-L23** Header progress: `Round 2 · Card 1/3 · 2 known` (known = total known in this practice).

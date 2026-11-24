@@ -390,9 +390,26 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   if (state.phase === 'finished') {
     return (
       <main id="main" className="mx-auto flex min-h-dvh w-full max-w-[640px] flex-col px-4 py-6">
-        {/* On the left in every language, like Home on these screens (D-123). */}
-        <div className="flex justify-start rtl:justify-end">
+        {/* Home and the language switch at the top left in every language, as in the practice
+            header, for one look across the screens (D-123, D-124); the version under Home. */}
+        <div className="flex items-center gap-2 ltr:flex-row-reverse ltr:justify-end rtl:justify-end">
           <LanguageSwitch className="rounded-[var(--radius-practice)]" />
+          <div className="relative flex shrink-0 items-center">
+            <AppVersion className="absolute top-full left-1/2 mt-1 -translate-x-1/2 text-[10px] leading-none md:text-xs" />
+            <button
+              type="button"
+              onClick={() => {
+                // Leaving the summary ends the finished practice (FR-L33).
+                clearPractice();
+                navigate('/');
+              }}
+              aria-label={strings.nav.home}
+              title={strings.nav.home}
+              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-[var(--radius-practice)] border border-border text-text transition-colors hover:border-accent hover:text-accent"
+            >
+              <HomeIcon />
+            </button>
+          </div>
         </div>
         <FinishedScreen
           stored={stored}

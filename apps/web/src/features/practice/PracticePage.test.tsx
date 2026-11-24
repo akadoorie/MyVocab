@@ -812,7 +812,10 @@ describe('PracticePage', () => {
       expect(await screen.findByRole('alert')).toHaveTextContent(
         'No new cards left for these choices. Go Home to pick others.',
       );
-      fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+      // Two Homes on the summary: at the top (as in the practice header, D-124) and in the middle.
+      const homes = screen.getAllByRole('button', { name: 'Home' });
+      expect(homes).toHaveLength(2);
+      fireEvent.click(homes[0]!);
       await waitFor(() => expect(router.state.location.pathname).toBe('/'));
     });
 
