@@ -49,21 +49,26 @@ function SettingsForm({
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
 
+  // What would be saved: only the values that differ from the saved settings.
+  const parsed: Settings = {
+    ...draft,
+    'practice.sizeOptions': draft['practice.sizeOptions']
+      .split(',')
+      .map((v) => Number(v.trim()))
+      .filter((n) => Number.isFinite(n) && n > 0),
+  };
+  const patch: SettingsUpdate = {};
+  for (const key of Object.keys(parsed) as (keyof Settings)[]) {
+    if (JSON.stringify(parsed[key]) !== JSON.stringify(base[key]))
+      Object.assign(patch, { [key]: parsed[key] });
+  }
+  // Save is off until a value changes (D-119); changing it back turns it off again.
+  const dirty = Object.keys(patch).length > 0;
+
   async function save() {
+    if (!dirty) return;
     setSaving(true);
     setError(null);
-    const parsed: Settings = {
-      ...draft,
-      'practice.sizeOptions': draft['practice.sizeOptions']
-        .split(',')
-        .map((v) => Number(v.trim()))
-        .filter((n) => Number.isFinite(n) && n > 0),
-    };
-    const patch: SettingsUpdate = {};
-    for (const key of Object.keys(parsed) as (keyof Settings)[]) {
-      if (JSON.stringify(parsed[key]) !== JSON.stringify(base[key]))
-        Object.assign(patch, { [key]: parsed[key] });
-    }
     try {
       const saved = await adminApi.saveSettings(patch);
       setBase(saved);
@@ -173,7 +178,7 @@ function SettingsForm({
         </p>
       )}
       <div>
-        <Button3D disabled={saving} onClick={() => void save()}>
+        <Button3D disabled={saving || !dirty} onClick={() => void save()}>
           {saving ? s.common.saving : s.common.save}
         </Button3D>
       </div>

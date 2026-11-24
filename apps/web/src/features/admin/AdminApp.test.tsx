@@ -298,6 +298,18 @@ describe('AdminApp', () => {
     });
   });
 
+  it('settings: Save is off until a value changes, and off again when it is changed back (D-119)', async () => {
+    render('/admin/settings', { 'GET /api/admin/settings': () => Response.json({}) });
+    const field = await screen.findByLabelText('Cards per practice: maximum');
+    const save = screen.getByRole('button', { name: 'Save' });
+    expect(save).toBeDisabled();
+    const before = (field as HTMLInputElement).value;
+    fireEvent.change(field, { target: { value: String(Number(before) + 1) } });
+    expect(save).toBeEnabled();
+    fireEvent.change(field, { target: { value: before } });
+    expect(save).toBeDisabled();
+  });
+
   it('settings: "Cards per practice: maximum" explains itself under the field', async () => {
     render('/admin/settings', { 'GET /api/admin/settings': () => Response.json({}) });
     const field = await screen.findByLabelText('Cards per practice: maximum');
