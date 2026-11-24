@@ -85,6 +85,17 @@ describe('PracticePage', () => {
       expect(btn(name)).toBeEnabled();
   });
 
+  it('the language switch is there throughout the loop: on the card and at the round break (D-122)', () => {
+    setup();
+    expect(screen.getByTestId('language-switch')).toBeInTheDocument();
+    for (let i = 0; i < 3; i++) {
+      fireEvent.click(btn('I don’t know Show in next round'));
+      fireEvent.click(btn('Next'));
+    }
+    expect(screen.getByTestId('continue')).toBeInTheDocument(); // the round break
+    expect(screen.getByTestId('language-switch')).toBeInTheDocument();
+  });
+
   it('the round bar: one segment per card, answers in their colours, the current one marked (D-115)', () => {
     setup();
     const segs = () => [...screen.getByTestId('round-bar').children];

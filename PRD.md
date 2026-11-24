@@ -279,6 +279,10 @@ private content repository. It never appears in the public code repo or any publ
     labelled "Explanation" ("הסבר" for a Hebrew answer, D-091, D-097); a thin divider; then the Hints section and the Synonyms line, **always** (whether or not
     Hints was pressed), or "Hint is not available".
   - Every card starts **front side up, with hints hidden**.
+- **FR-L22a** The **language switch** ("En" / "עב", as on the Home page) is in the practice header next to Home, and
+  at the top of the round break and the summary, so the language can change anywhere in the loop; the switch is live
+  and the practice keeps its cards, answers and progress. On phones narrower than 420 px the header's counter and logo
+  are a little smaller so the counter stays on one line (D-122).
 - **FR-L23** Header progress: `Round 2 · Card 1/3 · 2 known` (known = total known in this practice).
   Under it, on the version's line, a thin **round bar** (D-115): one segment per card in the round; a card with an
   answer shows its colour (green, orange or red); the current card is twice as tall (8px) with a thin white edge and a

@@ -28,6 +28,7 @@ import { FireworkGhost } from './FireworkGhost';
 import { RollGhost, type KnowRoll } from './RollGhost';
 import { useCountdown } from './useCountdown';
 import { usePracticeShortcuts } from './usePracticeShortcuts';
+import { LanguageSwitch } from '../../components/LanguageSwitch';
 import { RoundBar } from './RoundBar';
 import { SlideGhost, type CardSlide } from './SlideGhost';
 import { useSwipe } from './useSwipe';
@@ -365,6 +366,9 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   if (state.phase === 'roundBreak') {
     return (
       <main id="main" className="mx-auto flex min-h-dvh w-full max-w-[640px] flex-col px-4 py-6">
+        <div className="flex justify-end">
+          <LanguageSwitch className="rounded-[var(--radius-practice)]" />
+        </div>
         <RoundBreak
           round={state.round + 1}
           remaining={progress.remaining}
@@ -383,6 +387,9 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   if (state.phase === 'finished') {
     return (
       <main id="main" className="mx-auto flex min-h-dvh w-full max-w-[640px] flex-col px-4 py-6">
+        <div className="flex justify-end">
+          <LanguageSwitch className="rounded-[var(--radius-practice)]" />
+        </div>
         <FinishedScreen
           stored={stored}
           summary={practiceSummary(state)}
@@ -400,13 +407,15 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
       id="main"
       className="mx-auto flex h-dvh w-full max-w-[1100px] flex-col gap-5 px-4 pt-4 md:h-auto md:min-h-dvh md:gap-10 md:px-8 md:pt-8"
     >
-      <header className="relative flex items-center justify-between gap-3">
+      <header className="relative flex items-center justify-between gap-2 min-[420px]:gap-3">
         <RoundBar state={state} />
+        {/* A little smaller on narrow phones, so the counter fits on one line beside the language
+            switch and Home (D-122). */}
         <p
-          className="flex items-center gap-3 text-base font-medium md:text-xl"
+          className="flex items-center gap-2 text-[13px] font-medium min-[380px]:text-sm min-[420px]:gap-3 min-[420px]:text-base md:text-xl"
           data-testid="progress"
         >
-          <LogoMark className="h-8 w-8 shrink-0 md:h-10 md:w-10" />
+          <LogoMark className="h-6 w-6 shrink-0 min-[380px]:h-7 min-[380px]:w-7 min-[420px]:h-8 min-[420px]:w-8 md:h-10 md:w-10" />
           <span>
             {progressHead}
             <span
@@ -420,6 +429,8 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
         </p>
         <div className="flex items-center gap-2 md:gap-4">
           <ShortcutsMenu signedIn={!stored.isGuest} />
+          {/* The language, switchable throughout the practice loop (D-122). */}
+          <LanguageSwitch className="rounded-[var(--radius-practice)]" />
           {/* The version, centred just below Home (above the card), on phones and desktop alike
               (D-093): it takes no width, so the progress stays on one line. */}
           <div className="relative flex shrink-0 items-center">

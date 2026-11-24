@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { AppVersion } from '../components/AppVersion';
+import { LanguageSwitch } from '../components/LanguageSwitch';
 import { HomeIcon, LogoMark } from '../components/Icons';
 import { UserMenu } from '../components/UserMenu';
 import { api } from '../lib/api';
-import { useLocale } from '../lib/locale';
 import { startGoogleSignIn, useSession } from '../lib/session';
-import { strings, type Locale } from '../strings';
+import { strings } from '../strings';
 
 /** Header, maintenance banner and footer around the regular pages (PRD §9.7). */
 export function Layout() {
@@ -114,26 +114,5 @@ export function Layout() {
         </a>
       </footer>
     </div>
-  );
-}
-
-/**
- * Switches the UI between Hebrew and English (D-080), in the Home page header (D-083). It shows the
- * other language's short code in that language ("En" / "עב"); its accessible name is the full name.
- */
-function LanguageSwitch() {
-  const { setLocale } = useLocale();
-  const next = strings.locale.switchLang as Locale;
-  return (
-    <button
-      type="button"
-      lang={next}
-      onClick={() => setLocale(next)}
-      className="min-h-11 min-w-11 rounded-[10px] border border-border px-2 font-semibold text-muted hover:border-accent hover:text-text"
-      data-testid="language-switch"
-    >
-      <span aria-hidden="true">{strings.locale.switchLabel}</span>
-      <span className="sr-only">{strings.locale.switchName}</span>
-    </button>
   );
 }

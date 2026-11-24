@@ -75,7 +75,7 @@ describe('UI language (D-080)', () => {
     expect(await screen.findByText(he.notFound.title)).toBeInTheDocument();
   });
 
-  it('shows the switch on the Home page only', async () => {
+  it('shows the switch on the Home page, not on other site pages (the practice has its own, D-122)', async () => {
     mockFetch({}, null);
     renderApp('/privacy');
     expect(await screen.findByText(he.notFound.title)).toBeInTheDocument();
