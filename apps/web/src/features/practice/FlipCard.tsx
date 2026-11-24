@@ -164,7 +164,6 @@ export function FlipCard({
   answer = null,
   pulse = false,
   nudging = null,
-  stamp = false,
 }: {
   card: CardView;
   side: CardSide;
@@ -180,8 +179,6 @@ export function FlipCard({
   pulse?: boolean;
   /** Pump and shine, or shine alone, with the answer buttons (D-066, D-074); only the shine while it pulses. */
   nudging?: 'full' | 'shine' | null;
-  /** Right after "I don't know": an "AGAIN" stamp thumps onto the back, then fades (D-105). */
-  stamp?: boolean;
 }) {
   const tid = (id: string) => (decorative ? undefined : id);
   const frontTop = useRef<HTMLDivElement>(null);
@@ -298,12 +295,6 @@ export function FlipCard({
 
         <div className="flip-card__face flip-card__back" inert={front} aria-hidden={front}>
           {topRow('back')}
-          {stamp && (
-            // Decorative: the "Clicked: I don't know" chip already says it in words.
-            <span className="dk-stamp" aria-hidden="true">
-              {strings.practice.stampAgain}
-            </span>
-          )}
           {/* The answer starts on the side its language reads from (right for Hebrew) and shrinks
               to fit above the line (D-095). Each line has its label first, in the answer's
               language, then its entries (D-097). */}

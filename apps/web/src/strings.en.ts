@@ -199,8 +199,6 @@ export const en = {
     knowCaption: 'Don’t show again',
     againCaption: 'Show again in future',
     dontKnowCaption: 'Show in next round',
-    /** The stamp on the card after "I don't know" (D-105). */
-    stampAgain: 'AGAIN',
     /** Their accessible names: exactly the visible label + caption (axe label-content-name-mismatch). */
     knowName: 'I know it Don’t show again',
     againName: 'I know it Show again in future',

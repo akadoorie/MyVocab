@@ -104,15 +104,10 @@ describe('PracticePage', () => {
     // The "Clicked" chip shows at once, on both faces (D-104).
     expect(screen.getByTestId('answer-chip')).toHaveTextContent('Clicked: I don’t know');
     expect(screen.getAllByText('Clicked: I don’t know')).toHaveLength(2);
-    // An "AGAIN" stamp on the back (D-105).
-    expect(document.querySelector('.flip-card__back .dk-stamp')).toHaveTextContent('AGAIN');
     // The hints cover is on the front only (the back shows the hints uncovered).
     expect(screen.queryByRole('button', { name: 'Tap to see hints' })).toBeNull();
     fireEvent.click(btn('Flip'));
     expect(btn('Tap to see hints')).toBeEnabled();
-    // The stamp goes with the card.
-    fireEvent.click(btn('Next'));
-    expect(document.querySelector('.dk-stamp')).toBeNull();
   });
 
   it('a tap on the cover reveals the hints, a tap on them covers them again; H too; the card stays put (D-047, D-078)', () => {
