@@ -1,5 +1,8 @@
 import { useLocale } from '../lib/locale';
 import { strings, type Locale } from '../strings';
+import { en } from '../strings.en';
+import { he } from '../strings.he';
+import { SameWidth } from './SameWidth';
 
 /**
  * Switches the UI between Hebrew and English (D-080): in the Home page header (D-083) and
@@ -18,7 +21,13 @@ export function LanguageSwitch({ className = 'rounded-[10px]' }: { className?: s
       className={`min-h-11 min-w-11 shrink-0 border border-border px-2 font-semibold text-muted hover:border-accent hover:text-text ${className}`}
       data-testid="language-switch"
     >
-      <span aria-hidden="true">{strings.locale.switchLabel}</span>
+      {/* "En" and "עב" take the same width, so the switch doesn't move between languages (D-127). */}
+      <span aria-hidden="true">
+        <SameWidth
+          shown={strings.locale.switchLabel}
+          others={[en.locale.switchLabel, he.locale.switchLabel]}
+        />
+      </span>
       <span className="sr-only">{strings.locale.switchName}</span>
     </button>
   );

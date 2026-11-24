@@ -99,9 +99,9 @@ export function Confetti() {
 }
 
 /**
- * The yellow crown on the summary card's upper-left corner (FR-L32a; upper-right in Hebrew). After
- * the celebration it flies in from that top corner of the screen and lands there; on later visits
- * it is simply there.
+ * The yellow crown on the summary card's upper-right corner in every language (FR-L32a, D-127:
+ * Home and the language switch are at the top left). After the celebration it flies in from the
+ * top-right corner of the screen and lands there; on later visits it is simply there.
  */
 export function Crown({ fly }: { fly: boolean }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -109,13 +109,12 @@ export function Crown({ fly }: { fly: boolean }) {
   useLayoutEffect(() => {
     const el = ref.current;
     if (!fly || !el) return;
-    // Start just outside the top-left corner of the screen, relative to where it will sit (the
-    // outer box isn't rotated, so this is its true resting place).
+    // Start just outside the top-right corner of the screen, relative to where it will sit (the
+    // outer box isn't rotated, so this is its true resting place). The crown is mirrored
+    // (base.css), so its "left" is the screen's right.
     const r = el.getBoundingClientRect();
-    // Right-to-left, the crown is mirrored (base.css): its "left" is the screen's right.
-    const rtl = document.documentElement.dir === 'rtl';
     setFrom({
-      '--crown-dx': `${rtl ? -(window.innerWidth - r.left) - 20 : -r.right - 20}px`,
+      '--crown-dx': `${-(window.innerWidth - r.left) - 20}px`,
       '--crown-dy': `${-r.bottom - 20}px`,
     } as CSSProperties);
   }, [fly]);

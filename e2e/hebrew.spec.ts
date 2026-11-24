@@ -27,7 +27,7 @@ test('a first visit is in Hebrew, right-to-left, and switches to English', async
   // The Home header switch shows the other language's short code ("En" / "עב") and is named in
   // that language; the choice is remembered.
   await expect(
-    page.getByRole('banner').getByRole('button', { name: 'English' }).locator('[aria-hidden]'),
+    page.getByRole('banner').getByRole('button', { name: 'English' }).locator('[data-shown]'),
   ).toHaveText('En');
   await page.getByRole('button', { name: 'English' }).click();
   await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');

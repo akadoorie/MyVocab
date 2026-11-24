@@ -2,11 +2,14 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { AppVersion } from '../components/AppVersion';
 import { LanguageSwitch } from '../components/LanguageSwitch';
+import { SameWidth } from '../components/SameWidth';
 import { HomeIcon, LogoMark } from '../components/Icons';
 import { UserMenu } from '../components/UserMenu';
 import { api } from '../lib/api';
 import { startGoogleSignIn, useSession } from '../lib/session';
 import { strings } from '../strings';
+import { en } from '../strings.en';
+import { he } from '../strings.he';
 
 /** Header, maintenance banner and footer around the regular pages (PRD §9.7). */
 export function Layout() {
@@ -33,11 +36,12 @@ export function Layout() {
       <header
         className={`mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 ${onHome ? 'rtl:flex-row-reverse' : ''}`}
       >
-        <div className="flex items-baseline gap-2">
+        {/* On Home, logo, name and version read left to right in every language (D-127). */}
+        <div className={`flex items-baseline gap-2 ${onHome ? 'rtl:flex-row-reverse' : ''}`}>
           <Link
             to="/"
             // On Home, a little smaller on the smallest phones, to fit the language switch (D-083).
-            className={`flex items-center gap-2.5 self-center font-bold tracking-tight ${onHome ? 'text-lg min-[360px]:text-xl' : 'text-xl'}`}
+            className={`flex items-center gap-2.5 self-center font-bold tracking-tight ${onHome ? 'text-lg min-[360px]:text-xl rtl:flex-row-reverse' : 'text-xl'}`}
           >
             <LogoMark className={onHome ? 'h-7 w-7 min-[360px]:h-8 min-[360px]:w-8' : 'h-8 w-8'} />
             <span>
@@ -91,10 +95,21 @@ export function Layout() {
                 className="min-h-11 rounded-[10px] border border-border px-3 py-2 hover:border-accent"
               >
                 {onHome ? (
-                  // Shorter on phones, to leave room for the language switch (D-083).
+                  // Shorter on phones, to leave room for the language switch (D-083). As wide as
+                  // the longer of the two languages, so the switch beside it doesn't move (D-127).
                   <>
-                    <span className="sm:hidden">{strings.nav.signInShort}</span>
-                    <span className="hidden sm:inline">{strings.nav.signIn}</span>
+                    <span className="sm:hidden">
+                      <SameWidth
+                        shown={strings.nav.signInShort}
+                        others={[en.nav.signInShort, he.nav.signInShort]}
+                      />
+                    </span>
+                    <span className="hidden sm:inline">
+                      <SameWidth
+                        shown={strings.nav.signIn}
+                        others={[en.nav.signIn, he.nav.signIn]}
+                      />
+                    </span>
                   </>
                 ) : (
                   strings.nav.signIn

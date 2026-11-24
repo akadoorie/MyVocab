@@ -438,9 +438,9 @@ private content repository. It never appears in the public code repo or any publ
     learner went back, changed a card to Don't know and **continued into a new round**, completing that round is a
     new completion, so the celebration and the crown's flight happen again.
   - **The crown**: as the last confetti falls (about 2.4 s), a yellow crown flies in slowly (about 2 s) along one
-    smooth arc (no pause on the way) from the top-left of
-    the screen and lands, tilted, on the **upper-left corner** of the summary card with a small bounce (mirrored in
-    Hebrew: from the top right, onto the upper-right corner; D-080). It stays there,
+    smooth arc (no pause on the way) from the top-right of
+    the screen and lands, tilted, on the **upper-right corner** of the summary card with a small bounce, in every
+    language (D-127: Home and the language switch are at the top left). It stays there,
     and on later visits to the summary in the same practice it is already in place (no flight). With "reduce motion"
     it is simply there from the start.
 - **FR-L33** The practice state (including the current card's side and whether its hints are shown) is saved in
@@ -1101,7 +1101,9 @@ the typecheck. Components read the active language's strings through `strings.ts
 **UI language (D-080).**
 - **Default and switch:** a first visit is in Hebrew. The Home page header and the practice loop (FR-L22a, D-122) have
   a switch showing the other language's short code in that language: "En" on Hebrew pages, "עב" on English pages. On
-  Home it sits just before Sign-in / the avatar, and the two are on the **right in every language** (the logo on the
+  Home it sits just before Sign-in / the avatar, and the two are on the **right in every language**; the logo, the
+  name and the version read left to right in both, and Sign-in and the switch take the width of the longer language,
+  so the whole bar stays still when switching (D-127) (the logo on the
   left, D-123), and its accessible name is the full name ("English" / "עברית"). On phones, the
   Home page's Sign-in button reads "Sign-in" / "התחברות" (its accessible name stays "Sign-in with Google") so the
   switch fits (D-083). The choice is remembered in the browser (`localStorage`). Switching re-renders
@@ -1110,8 +1112,8 @@ the typecheck. Components read the active language's strings through `strings.ts
   which is the same for everyone ("ידעתי" / "לא ידעתי"). Counts spell out one ("כרטיסיה אחת"). The Hebrew slogan is "ללמוד מילים וביטויים לפסיכומטרי ביעילות ובחינם"; the locked green button's tip reads
   "נדרשת התחברות" (the link last). The slogan's last word, "ובחינם", gets the same drop-and-stick animation as "stick"
   (D-037), mirrored: it tilts the other way and the shine sweeps from the right.
-- **Mirroring (RTL):** the layout follows the page direction (logical CSS properties): the summary crown sits on the
-  card's upper-right corner and flies in from the top right.
+- **Mirroring (RTL):** the layout follows the page direction (logical CSS properties). The summary crown sits on the
+  card's upper-right corner in every language (D-127).
 - **The practice buttons keep the English order** (D-096): from left to right Back, "I don't know" (red), the
   orange "I know", the green "I know" (D-100), and Next, in Hebrew too, with Back's chevron pointing left and Next's right, and the
   green pill's padlock on its top-left edge. Swipes and arrow keys follow them: swipe left or → for Next, swipe right or

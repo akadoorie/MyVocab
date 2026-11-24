@@ -1835,8 +1835,10 @@ body {
   height: 100%;
 }
 
-/* The crown on the "Practice completed" card (PRD FR-L32a): it sits tilted on the upper-left corner;
-   after the celebration it flies in along a curve from the top-left of the screen and lands with
+/* The crown on the "Practice completed" card (PRD FR-L32a): it sits tilted on the upper-right corner
+   in every language (D-127; Home and the language switch are at the top left), drawn as the mirror
+   image of the left-corner crown; after the celebration it flies in along a curve from the
+   top-right of the screen and lands with
    a small bounce. --crown-dx / --crown-dy are the start offset, measured by the component.
    The flight is three nested layers, each with ONE easing over the whole flight (no waypoints, so
    no slow-down halfway): X glides out fast and slows, Y starts slow and speeds up (together an
@@ -1844,7 +1846,8 @@ body {
 .crown {
   position: absolute;
   top: -34px;
-  left: -26px;
+  right: -26px;
+  transform: scaleX(-1);
   z-index: 2;
   width: 68px;
   height: 56px;
@@ -1866,22 +1869,9 @@ body {
 @media (max-width: 639px) {
   .crown {
     top: -30px;
-    left: -10px;
+    right: -10px;
     width: 58px;
     height: 48px;
-  }
-}
-/* Right-to-left pages (D-080): the mirror image, on the upper-right corner. The flight offsets
-   are measured in the mirrored box (Crown in Celebration.tsx). */
-:root[dir='rtl'] .crown {
-  left: auto;
-  right: -26px;
-  transform: scaleX(-1);
-}
-@media (max-width: 639px) {
-  :root[dir='rtl'] .crown {
-    left: auto;
-    right: -10px;
   }
 }
 @keyframes crown-x {
