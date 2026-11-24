@@ -28,6 +28,7 @@ import { FireworkGhost } from './FireworkGhost';
 import { RollGhost, type KnowRoll } from './RollGhost';
 import { useCountdown } from './useCountdown';
 import { usePracticeShortcuts } from './usePracticeShortcuts';
+import { RoundBar } from './RoundBar';
 import { SlideGhost, type CardSlide } from './SlideGhost';
 import { useSwipe } from './useSwipe';
 
@@ -395,7 +396,8 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
       id="main"
       className="mx-auto flex h-dvh w-full max-w-[1100px] flex-col gap-5 px-4 pt-4 md:h-auto md:min-h-dvh md:gap-10 md:px-8 md:pt-8"
     >
-      <header className="flex items-center justify-between gap-3">
+      <header className="relative flex items-center justify-between gap-3">
+        <RoundBar state={state} />
         <p
           className="flex items-center gap-3 text-base font-medium md:text-xl"
           data-testid="progress"

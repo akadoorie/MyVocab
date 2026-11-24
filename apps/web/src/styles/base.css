@@ -1488,6 +1488,65 @@ body {
   }
 }
 
+/* The round's progress bar (D-115): on the version's line under the header (the version sits
+   under Home, 44px wide, at the end), so the card keeps its room. Left to right in every language;
+   in Hebrew Home is on the left, so the bar starts after it. */
+.round-bar {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  right: 52px;
+  display: flex;
+  gap: 3px;
+  height: 4px;
+  pointer-events: none;
+}
+[dir='rtl'] .round-bar {
+  left: 52px;
+  right: 0;
+}
+@media (min-width: 768px) {
+  .round-bar {
+    top: calc(100% + 8px);
+  }
+}
+.round-bar__seg {
+  flex: 1;
+  min-width: 0;
+  border-radius: 2px;
+  background: rgba(155, 130, 255, 0.16);
+  transition: background-color 0.45s ease;
+}
+.round-bar__seg.is-know {
+  background: var(--know-top);
+}
+.round-bar__seg.is-knowAgain {
+  background: var(--again-top);
+}
+.round-bar__seg.is-dontKnow {
+  background: var(--dontknow-top);
+}
+.round-bar__seg.is-current {
+  box-shadow: 0 0 8px rgba(196, 181, 255, 0.7);
+  animation: round-bar-glow 1.6s ease-in-out infinite;
+}
+.round-bar__seg.is-current:not(.is-know, .is-knowAgain, .is-dontKnow) {
+  background: #c4b5ff;
+}
+@keyframes round-bar-glow {
+  50% {
+    filter: brightness(1.35);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .round-bar__seg {
+    transition: none;
+  }
+  .round-bar__seg.is-current {
+    animation: none;
+  }
+}
+
 /* A new round's first card rises in (PRD §9.4); a plain fade with reduced motion. */
 @keyframes card-in {
   from {

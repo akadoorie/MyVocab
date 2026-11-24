@@ -85,6 +85,23 @@ describe('PracticePage', () => {
       expect(btn(name)).toBeEnabled();
   });
 
+  it('the round bar: one segment per card, answers in their colours, the current one marked (D-115)', () => {
+    setup();
+    const segs = () => [...screen.getByTestId('round-bar').children];
+    expect(screen.getByTestId('round-bar')).toHaveAttribute('aria-hidden', 'true');
+    expect(segs()).toHaveLength(3);
+    expect(segs()[0]).toHaveClass('is-current');
+    fireEvent.click(btn('I know it Show in future'));
+    expect(segs()[0]).toHaveClass('is-knowAgain');
+    expect(segs()[1]).toHaveClass('is-current');
+    fireEvent.click(btn('I don’t know Show in next round'));
+    expect(segs()[1]).toHaveClass('is-dontKnow');
+    // Changing an answer with Back changes its colour.
+    fireEvent.click(btn('Back'));
+    fireEvent.click(btn('I don’t know Show in next round'));
+    expect(segs()[0]).toHaveClass('is-dontKnow');
+  });
+
   it('Don’t know flips to the back, keeps the layout, turns red off and Next pumps', () => {
     setup();
     fireEvent.click(btn('I don’t know Show in next round'));

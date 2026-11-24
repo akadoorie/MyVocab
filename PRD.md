@@ -280,6 +280,10 @@ private content repository. It never appears in the public code repo or any publ
     Hints was pressed), or "Hint is not available".
   - Every card starts **front side up, with hints hidden**.
 - **FR-L23** Header progress: `Round 2 · Card 1/3 · 2 known` (known = total known in this practice).
+  Under it, on the version's line, a thin **round bar** (D-115): one segment per card in the round; a card with an
+  answer shows its colour (green, orange or red), the current card glows softly, the rest are faint. It runs left to
+  right in every language (like the cards and Next), ending before the version (English) or starting after it
+  (Hebrew), so the card keeps its room; decorative for screen readers (the counter says it).
 - **FR-L24** Buttons and phases:
 
 | Phase | Know | Hints (cover) | Flip | Don't know | Back | Next | Home |
