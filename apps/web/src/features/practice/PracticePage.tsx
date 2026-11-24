@@ -103,7 +103,8 @@ const META_QUERY = { queryKey: ['meta'], queryFn: api.meta, staleTime: 60_000 } 
 const LOOP_FRAME =
   'mx-auto flex min-h-dvh w-full max-w-[1100px] flex-col px-4 pt-4 md:px-8 md:pt-8';
 /** Their content column, as before (640px, centred, room below). */
-const LOOP_COLUMN = 'mx-auto flex w-full max-w-[640px] flex-1 flex-col pt-2 pb-6';
+// Room above (pt-6), so the card never covers the version under Home (D-128).
+const LOOP_COLUMN = 'mx-auto flex w-full max-w-[640px] flex-1 flex-col pt-6 pb-6';
 
 function PracticeScreen({ knownSink }: { knownSink?: KnownSink }) {
   const [stored] = useState<StoredPractice | null>(() => loadPractice());

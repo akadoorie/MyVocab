@@ -2,6 +2,9 @@ import type { practiceSummary } from '@myvocab/core';
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type Ref } from 'react';
 import { Button3D } from '../../components/Button3D';
 import { BackArrow, HomeIcon, KeyboardIcon } from '../../components/Icons';
+import { SameWidth } from '../../components/SameWidth';
+import { en } from '../../strings.en';
+import { he } from '../../strings.he';
 import { startGoogleSignIn } from '../../lib/session';
 import { strings } from '../../strings';
 import {
@@ -200,7 +203,11 @@ export function Summary({
           <HomeIcon className="h-6 w-6" />
         </Button3D>
         <Button3D ref={focusRef} onClick={onNewPractice} disabled={starting || newPracticeDisabled}>
-          {starting && startingLabel ? startingLabel : strings.summary.newPractice}
+          {/* As wide in both languages, so Home and New practice don't move when switching (D-128). */}
+          <SameWidth
+            shown={starting && startingLabel ? startingLabel : strings.summary.newPractice}
+            others={[en.summary.newPractice, he.summary.newPractice]}
+          />
         </Button3D>
       </div>
       {turnstileRef && <div ref={turnstileRef} className="flex justify-center empty:hidden" />}
