@@ -1053,9 +1053,10 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   thumb zone, in two rows: the three answer pills on top (**I don't know · I know it · I know it**: red on the left, green on the right, D-100; three equal pills
   with their captions), and **Back** (left) and **Next** (right) below (the same in Hebrew, D-096). Back and Next are pills
   of the same size as the answer pills, Back exactly under the red one and Next under the green one, with the label
-  inside next to the chevron ("‹ Back", "Next · 9 ›"; D-087). The spacing is kept
+  inside next to the chevron ("‹ Back", "Next · 9 ›"; D-087). All five are **54 px** tall (D-111: 10% lower than
+  before, the labels centred; the card gets the room at the bottom, its line staying in the middle). The spacing is kept
   tight so the card gets the room: about 26 px from the card to the pills and 14 px between the two rows (D-085). After Don't know, the
-  layout stays: the answer pills disable and Next pumps (FR-L28, FR-L29a, D-031); on the wide phone pill the pump is
+  layout stays: red disables, the Knows stay on (D-109), and Next pumps (FR-L28, FR-L29a, D-031); on the wide phone pill the pump is
   gentler (5% instead of 12%, D-087).
 - **Practice (desktop ≥ 768px)**: a centered column of about 1100px; the card is wide (≈ 2.3 : 1) and the pills carry
   their labels.

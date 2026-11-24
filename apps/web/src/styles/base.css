@@ -474,7 +474,7 @@ body {
     justify-content: center;
     /* A flex row drops the plain space between the link and the word: use a gap instead. */
     gap: 0.3em;
-    height: 60px;
+    height: 54px; /* the phone pill (D-111) */
     border-radius: var(--radius-practice);
     border: 1px solid rgba(139, 108, 255, 0.45);
     background: var(--surface-2);
@@ -768,7 +768,8 @@ body {
   }
   /* Pills (the three answers): icon + label inside the pill, on every screen size. */
   .lbtn--pill {
-    --size: 60px;
+    /* 54px on phones (D-111: 10% lower than 60px, the room going to the card); 72px on desktop. */
+    --size: 54px;
     grid-template-columns: 1fr auto auto 1fr;
     grid-template-rows: var(--size);
     column-gap: clamp(8px, 2.5vw, 12px);
@@ -834,7 +835,7 @@ body {
   @media (max-width: 767px) {
     .lbtn.edge-start,
     .lbtn.edge-end {
-      --size: 60px;
+      --size: 54px; /* as tall as the answer pills (D-111) */
       grid-template-columns: 1fr auto auto 1fr;
       grid-template-rows: var(--size);
       column-gap: 6px;
