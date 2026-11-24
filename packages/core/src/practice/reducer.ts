@@ -118,8 +118,14 @@ export function canDispatch(state: PracticeState, type: PracticeActionType): boo
   switch (type) {
     case 'KNOW':
     case 'KNOW_AGAIN':
-    case 'DONT_KNOW':
-      return state.phase === 'deciding';
+    case 'DONT_KNOW': {
+      if (state.phase !== 'deciding') return false;
+      // On a card reached with Back, the answer it already has is off: only a change is offered
+      // (Next moves on without one, D-107).
+      const given = answerOf(state, currentId(state));
+      const same = type === 'KNOW' ? 'know' : type === 'KNOW_AGAIN' ? 'knowAgain' : 'dontKnow';
+      return given !== same;
+    }
     case 'TOGGLE_HINTS':
       // A toggle while the front is showing (the back always shows the hints).
       return onCard && state.side === 'front';
@@ -153,7 +159,6 @@ export function practiceReducer(state: PracticeState, action: PracticeAction): P
       // between the two Knows (FR-L27a).
       const id = currentId(state);
       const again = action.type === 'KNOW_AGAIN';
-      if (answerOf(state, id) === (again ? 'knowAgain' : 'know')) return advance(state);
       const mark: KnownMark = again
         ? { id, round: state.round, again }
         : { id, round: state.round };

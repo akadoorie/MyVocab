@@ -278,11 +278,23 @@ describe('Back and changing an answer (FR-L29a)', () => {
     expect(again.nextRound).toEqual([s0.order[0]]);
   });
 
-  it('Know on a card already known just moves on', () => {
+  it('on a card reached with Back, the answer it already has is off; the others stay on (D-107)', () => {
     const s0 = createPractice([1, 2, 3], 8);
-    const s = run(s0, 'KNOW', 'BACK', 'KNOW');
-    expect(s.known).toEqual([{ id: s0.order[0], round: 1 }]);
-    expect(s.index).toBe(1);
+    const known = run(s0, 'KNOW', 'BACK');
+    expect(canDispatch(known, 'KNOW')).toBe(false);
+    expect(canDispatch(known, 'KNOW_AGAIN')).toBe(true);
+    expect(canDispatch(known, 'DONT_KNOW')).toBe(true);
+    expect(run(known, 'KNOW')).toBe(known); // ignored
+    const again = run(s0, 'KNOW_AGAIN', 'BACK');
+    expect(canDispatch(again, 'KNOW_AGAIN')).toBe(false);
+    expect(canDispatch(again, 'KNOW')).toBe(true);
+    const dontKnow = run(s0, 'DONT_KNOW', 'NEXT', 'BACK');
+    expect(canDispatch(dontKnow, 'DONT_KNOW')).toBe(false);
+    expect(canDispatch(dontKnow, 'KNOW')).toBe(true);
+    // A card not answered yet: all three are on.
+    expect(
+      canDispatch(s0, 'KNOW') && canDispatch(s0, 'KNOW_AGAIN') && canDispatch(s0, 'DONT_KNOW'),
+    ).toBe(true);
   });
 
   it('from the round break: back to the last card, and a changed answer updates the count', () => {
