@@ -194,18 +194,18 @@ export const en = {
   },
   practice: {
     /** The three answer buttons and the captions under them (FR-L27a, D-030). */
-    know: 'I know it',
+    know: 'I know',
     dontKnow: 'I don’t know',
     knowCaption: 'Never show again',
     againCaption: 'Show in future',
     dontKnowCaption: 'Show in next round',
     /** Their accessible names: exactly the visible label + caption (axe label-content-name-mismatch). */
-    knowName: 'I know it Never show again',
-    againName: 'I know it Show in future',
+    knowName: 'I know Never show again',
+    againName: 'I know Show in future',
     dontKnowName: 'I don’t know Show in next round',
     /** The green button is shown to guests, but locked: only a signed-in Know is kept (D-042). */
     signInToEnable: 'Sign-in to enable',
-    knowNameGuest: 'I know it Never show again (sign-in to enable)',
+    knowNameGuest: 'I know Never show again (sign-in to enable)',
     /** Over the locked green button for 1.5 seconds when tapped (D-043): the link, then the rest. */
     lockedTipBefore: '',
     lockedTipLink: 'Sign-in',
@@ -239,8 +239,8 @@ export const en = {
     no: 'No',
     shortcutsTitle: 'Keyboard shortcuts',
     shortcuts: [
-      ['K', 'I know it'],
-      ['A', 'I know it, show in future'],
+      ['K', 'I know'],
+      ['A', 'I know, show in future'],
       ['D', 'I don’t know'],
       ['H', 'Hints'],
       ['F / Space', 'Flip'],
@@ -279,11 +279,11 @@ export const en = {
     tapForHints: 'Tap to see hints',
     /** What was clicked, on a card reached with Back (D-049). The orange one adds its caption for
         screen readers only: the two Knows look alike without their colour. */
-    answeredKnow: 'Clicked: I know it',
-    answeredKnowAgain: 'Clicked: I know it (show in future)',
+    answeredKnow: 'Clicked: I know',
+    answeredKnowAgain: 'Clicked: I know (show in future)',
     answeredDontKnow: 'Clicked: I don’t know',
     /** The orange chip's visible text; the caption stays for screen readers. */
-    answeredKnowAgainShort: 'Clicked: I know it',
+    answeredKnowAgainShort: 'Clicked: I know',
     answeredKnowAgainExtra: ' (show in future)',
     /** Announced when Back lands on a card (screen readers). */
     backTo: (card: number, size: number, answer: string | null) =>

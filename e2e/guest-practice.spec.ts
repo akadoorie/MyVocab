@@ -83,7 +83,7 @@ test('a guest starts with the defaults and plays a practice to the summary', asy
   // Know from the back side → next card, front side up. A guest's Know is the orange one; the
   // green "Don't show again" is locked (D-042).
   // The locked green button explains itself when tapped, and marks nothing (D-043).
-  const locked = button(page, 'I know it Never show again (sign-in to enable)');
+  const locked = button(page, 'I know Never show again (sign-in to enable)');
   await expect(locked).toHaveAttribute('aria-disabled', 'true');
   // Playwright won't click an aria-disabled button (a person can), and on phones the earlier
   // toast may still cover it: send the click to the button itself.
@@ -92,14 +92,14 @@ test('a guest starts with the defaults and plays a practice to the summary', asy
   await expect(page.locator('.locked-tip')).toHaveText('Sign-in required');
   await expect(page.locator('.locked-tip')).toHaveCount(0, { timeout: 3000 });
   await expect(progress(page)).toHaveText('Round 1 · Card 1/5 · 0 known');
-  await button(page, 'I know it Show in future').click();
+  await button(page, 'I know Show in future').click();
   await expect(progress(page)).toHaveText('Round 1 · Card 2/5 · 1 known');
   await expect(card(page)).toHaveAttribute('data-side', 'front');
   // Back shows that card again (front up, with its answer); Don't know changes the answer.
   await button(page, 'Back').click();
   await expect(progress(page)).toHaveText('Round 1 · Card 1/5 · 1 known');
   await expect(card(page)).toHaveAttribute('data-side', 'front');
-  await expect(page.getByTestId('answer-chip')).toHaveText(/Clicked: I know it/);
+  await expect(page.getByTestId('answer-chip')).toHaveText(/Clicked: I know/);
   await button(page, 'I don’t know Show in next round').click();
   await expect(progress(page)).toHaveText('Round 1 · Card 1/5 · 0 known');
   await button(page, 'Next').click();
@@ -109,7 +109,7 @@ test('a guest starts with the defaults and plays a practice to the summary', asy
   // and Next pumps.
   await button(page, 'I don’t know Show in next round').click();
   await expect(card(page)).toHaveAttribute('data-side', 'back');
-  await expect(button(page, 'I know it Show in future')).toBeEnabled();
+  await expect(button(page, 'I know Show in future')).toBeEnabled();
   await expect(button(page, 'I don’t know Show in next round')).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Next', exact: true })).toHaveClass(/is-urgent/);
   await button(page, 'Next').click();
@@ -124,7 +124,7 @@ test('a guest starts with the defaults and plays a practice to the summary', asy
     if (await page.getByRole('heading', { name: 'Practice completed' }).isVisible()) break;
     const cont = page.getByRole('button', { name: 'Continue' });
     if (await cont.isVisible()) await cont.click();
-    else await button(page, 'I know it Show in future').click();
+    else await button(page, 'I know Show in future').click();
   }
   await expect(page.getByRole('heading', { name: 'Practice completed' })).toBeVisible();
   await expect(page.getByText('Sign-in to skip words that no longer need to repeat')).toBeVisible();

@@ -164,7 +164,7 @@ private content repository. It never appears in the public code repo or any publ
 | Card UI | A glassy, violet-glowing **flip card** with a 3D flip animation and a round **Flip** button on both sides |
 | Hints | On the front, hints + synonyms sit under a live cover that a tap reveals and a tap covers again (D-047, D-078). The back always shows them |
 | Flip | The round **Flip** button on the card (front and back), or Space/F; a tap elsewhere on the card does nothing (D-047). It toggles front ↔ back any number of times and never affects grading |
-| Known memory | **Any** green "I know it" (any round) is remembered per **item and direction** and hides the item in that direction (D-028). The amber "I know it · Show in future" is never remembered: the word stays in the pool (FR-L27a) |
+| Known memory | **Any** green "I know" (any round) is remembered per **item and direction** and hides the item in that direction (D-028). The amber "I know · Show in future" is never remembered: the word stays in the pool (FR-L27a) |
 | Known list | "My known words": search/filter/sort; return items to practices (single, selected, all filtered) |
 | Know tap | Advances immediately; Back (or a swipe toward Back) returns to the card, and its answer can be changed (FR-L29a) |
 | Topics | Many-to-many. "All topics" = all items |
@@ -327,10 +327,10 @@ private content repository. It never appears in the public code repo or any publ
   "N known" and in the summary, plays the Know animation, and the next card shows. The difference: it is **not
   recorded** in the learner's known items (FR-L50), so the word stays in the pool and may be drawn again in any later
   practice, at random (no schedule or waiting time).
-  **Labels (D-030):** green **"I know it"** with the caption **"Never show again"** (D-113); amber **"I know it"** with
+  **Labels (D-030; "I know" without "it", D-117):** green **"I know"** with the caption **"Never show again"** (D-113); amber **"I know"** with
   **"Show in future"** (short, so it fits on one line on phones, D-112); red **"I don't know"** with **"Show in next round"**. Guests see all three, with the same
   labels and captions (D-042): nothing is ever stored for them (FR-L55), so the amber one does for them exactly what
-  it says and is their "I know it", while the green **"Never show again"** is shown **locked**: a darker green, a
+  it says and is their "I know", while the green **"Never show again"** is shown **locked**: a darker green, a
   yellow padlock on its top-left edge (top-right in Hebrew), off, titled "Sign-in to enable". Tapping it (or pressing K)
   marks nothing and shows **"Sign-in required"** (Hebrew "נדרשת התחברות") over that button for 1.5 seconds, the
   "Sign-in" part being a link that starts sign-in (D-043); it is `aria-disabled` rather than `disabled`, so it can still be tapped and focused.
@@ -370,7 +370,7 @@ private content repository. It never appears in the public code repo or any publ
   - Right after "I don't know", the card shows the red **"Clicked: I don't know"** chip at once, on both faces, so it
     is clear the red button was pressed (D-104).
   - A card that already has an answer shows a short chip on the same line as the direction label, on phones too
-    (D-049): **"Clicked: I know it"** (green), **"Clicked: I know it"** (amber; screen readers also hear "(show
+    (D-049): **"Clicked: I know"** (green), **"Clicked: I know"** (amber; screen readers also hear "(show
     in future)") or **"Clicked: I don't know"** (red), with no ✓ / ✗ mark, as on the answer buttons; in Hebrew
     the chip starts with "נבחר:" (D-089), and **Next** steps forward without answering again,
     up to the first unanswered card. There, Next is the way on: it **keeps pumping** (a gentle grow-and-shrink, in
@@ -895,7 +895,7 @@ glossy, glowing pressable buttons.
 Buttons keep the pressable ledge, now glossy: a top-to-bottom gradient, a thin light top edge, the ledge underneath
 and a colored glow around. On the practice screen they are square with softened 4px corners (D-101), not ovals or
 circles. The practice uses two shapes:
-- **Pills** (the three answers, FR-L27a, D-030): the label only inside ("I know it", "I know it", "I don't
+- **Pills** (the three answers, FR-L27a, D-030): the label only inside ("I know", "I know", "I don't
   know"), on phones and desktop alike (no ✓ / ✕ icons, D-058). On phones the three pills share the row. Each has a small italic muted caption
   under it ("Never show again", "Show in future", "Show in next round"), which may wrap onto two lines on a
   phone. For guests the green pill is locked: a darker green (dimmed, not grey), disabled, with a small yellow padlock
@@ -992,10 +992,10 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   rises in (≈ 260ms: from slightly lower, smaller and transparent). With reduced motion: a plain 150ms fade.
 - **Know animations:** the old card does its Know animation while the next card slides in from the right (starting
   0.14s later), so Know never feels slow; reduced motion skips them.
-  - **Green "I know it" (forever): a firework** (D-103). A decorative copy of the card shrinks into a bright green spark
+  - **Green "I know" (forever): a firework** (D-103). A decorative copy of the card shrinks into a bright green spark
     (0.3s), which shoots up to the "N known" counter in the header (about 0.5s) and bursts there like a firework, its
     sparks falling in short trails (about 1.1s); the counter pops green as it bursts.
-  - **Orange "I know it" (ask again): the paper roll** (D-094). The card **rolls up like a sheet of paper**, from its
+  - **Orange "I know" (ask again): the paper roll** (D-094). The card **rolls up like a sheet of paper**, from its
     bottom edge to its top, into a tight scroll (the light back of the paper showing), and the scroll is **sucked along
     a curve into the counter**, which pops amber as it lands. The roll takes about 0.55s and the flight about 0.4s.
   - **Red "I don't know": a loop** (D-106). As the card turns to its answer, a glowing red line races once around
@@ -1051,11 +1051,11 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   the round break and the summary. Each keeps "Home" as its accessible name and tooltip. The account menu's "Home" item
   and the admin area keep the word.
 - **Practice buttons**: on desktop, one row under the card, in this order: `Back · I don't know (red) ·
-  I know it (amber) · I know it (green) · Next` (D-100) (round, pill, pill, pill, round; the green pill locked for
+  I know (amber) · I know (green) · Next` (D-100) (round, pill, pill, pill, round; the green pill locked for
   guests; the same order in Hebrew, D-096); after I don't know the row stays the same, the answers disabled and Next pumping (D-031). Flip is
   on the card itself.
 - **Practice (mobile, 360–767px)**: the flip card fills the space above; the buttons form a **sticky bottom bar** in the
-  thumb zone, in two rows: the three answer pills on top (**I don't know · I know it · I know it**: red on the left, green on the right, D-100; three equal pills
+  thumb zone, in two rows: the three answer pills on top (**I don't know · I know · I know**: red on the left, green on the right, D-100; three equal pills
   with their captions), and **Back** (left) and **Next** (right) below (the same in Hebrew, D-096). Back and Next are pills
   of the same size as the answer pills, Back exactly under the red one and Next under the green one, with the label
   inside next to the chevron ("‹ Back", "Next · 9 ›"; D-087). All five are **54 px** tall (D-111: 10% lower than
@@ -1075,7 +1075,7 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
 
 ### 9.8 Microcopy (`apps/web/src/strings.en.ts` and `strings.he.ts`)
 All learner-facing UI strings live in two modules with the same keys, English and Hebrew (e.g. `practice.know` =
-"I know it" / "ידעתי", `practice.hints` = "Hints" / "רמזים", `practice.flip` = "Flip" / "היפוך"); a missing Hebrew key fails
+"I know" / "ידעתי", `practice.hints` = "Hints" / "רמזים", `practice.flip` = "Flip" / "היפוך"); a missing Hebrew key fails
 the typecheck. Components read the active language's strings through `strings.ts`. Admin strings
 (`strings-admin.ts`) are English only.
 
@@ -1093,7 +1093,7 @@ the typecheck. Components read the active language's strings through `strings.ts
 - **Mirroring (RTL):** the layout follows the page direction (logical CSS properties): the summary crown sits on the
   card's upper-right corner and flies in from the top right.
 - **The practice buttons keep the English order** (D-096): from left to right Back, "I don't know" (red), the
-  orange "I know it", the green "I know it" (D-100), and Next, in Hebrew too, with Back's chevron pointing left and Next's right, and the
+  orange "I know", the green "I know" (D-100), and Next, in Hebrew too, with Back's chevron pointing left and Next's right, and the
   green pill's padlock on its top-left edge. Swipes and arrow keys follow them: swipe left or → for Next, swipe right or
   ← for Back.
 - **Not mirrored:** in every language, Flip stays in the card's bottom-right corner (with the hints' notch and

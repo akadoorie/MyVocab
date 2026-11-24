@@ -51,11 +51,11 @@ describe('Landing: the Buttons guide under How it works (D-030)', () => {
     // The signed-in state loads first (until then the page shows the guest version).
     await waitFor(() =>
       expect(section).toHaveTextContent(
-        "I know it: Don’t show it again. You can bring it back from 'My known words'.",
+        "I know: Don’t show it again. You can bring it back from 'My known words'.",
       ),
     );
     expect(section).toHaveTextContent(
-      'I know it: Don’t show again in this practice; it shows up again in future practices.',
+      'I know: Don’t show again in this practice; it shows up again in future practices.',
     );
     expect(section).toHaveTextContent(
       'I don’t know: Repeat it later in this practice, until you know it.',
@@ -68,10 +68,10 @@ describe('Landing: the Buttons guide under How it works (D-030)', () => {
     renderRoutes(routes, ['/']);
     const section = await guide();
     expect(section).toHaveTextContent(
-      "I know it: Don’t show it again. You can bring it back from 'My known words'. (Sign-in to enable)",
+      "I know: Don’t show it again. You can bring it back from 'My known words'. (Sign-in to enable)",
     );
     expect(section).toHaveTextContent(
-      'I know it: Don’t show again in this practice; it shows up again in future practices.',
+      'I know: Don’t show again in this practice; it shows up again in future practices.',
     );
     expect(section).not.toHaveTextContent('sign-in to use');
     expect(section.querySelector('.mini-btn--know.is-locked')).not.toBeNull();

@@ -77,7 +77,7 @@ describe('PracticePage', () => {
     expect(side()).toBe('front');
     expect(btn('Next')).toBeDisabled();
     for (const name of [
-      'I know it Show in future',
+      'I know Show in future',
       'I don’t know Show in next round',
       'Tap to see hints', // the live cover over the hints on the card (D-047)
       'Flip',
@@ -91,7 +91,7 @@ describe('PracticePage', () => {
     expect(screen.getByTestId('round-bar')).toHaveAttribute('aria-hidden', 'true');
     expect(segs()).toHaveLength(3);
     expect(segs()[0]).toHaveClass('is-current');
-    fireEvent.click(btn('I know it Show in future'));
+    fireEvent.click(btn('I know Show in future'));
     expect(segs()[0]).toHaveClass('is-knowAgain');
     expect(segs()[1]).toHaveClass('is-current');
     fireEvent.click(btn('I don’t know Show in next round'));
@@ -108,9 +108,9 @@ describe('PracticePage', () => {
     expect(side()).toBe('back');
     // The answers stay in place; red is off, the Know stays on to change one's mind (D-109).
     expect(btn('I don’t know Show in next round')).toBeDisabled();
-    expect(btn('I know it Show in future')).toBeEnabled();
+    expect(btn('I know Show in future')).toBeEnabled();
     // The guest's green one stays locked: off, but it can still explain itself (D-043).
-    expect(btn('I know it Never show again (sign-in to enable)')).toHaveAttribute(
+    expect(btn('I know Never show again (sign-in to enable)')).toHaveAttribute(
       'aria-disabled',
       'true',
     );
@@ -175,7 +175,7 @@ describe('PracticePage', () => {
     const front = () => screen.queryByTestId('front-hints');
     fireEvent.click(btn('Tap to see hints'));
     expect(front()).not.toBeNull();
-    fireEvent.click(btn('I know it Show in future'));
+    fireEvent.click(btn('I know Show in future'));
     expect(front()).toBeNull(); // the next card arrives covered
     fireEvent.click(btn('Back'));
     expect(progress()).toBe('Round 1 · Card 1/3 · 1 known');
@@ -186,7 +186,7 @@ describe('PracticePage', () => {
   it('Back shows the previous card front side up with its answer; Next steps forward again', () => {
     setup();
     expect(btn('Back')).toBeDisabled(); // first card of the round
-    fireEvent.click(btn('I know it Show in future'));
+    fireEvent.click(btn('I know Show in future'));
     fireEvent.click(btn('I don’t know Show in next round'));
     expect(side()).toBe('back');
     fireEvent.click(btn('Back'));
@@ -196,10 +196,8 @@ describe('PracticePage', () => {
     expect(screen.getByTestId('answer-chip')).toHaveClass('answer-chip--arrived');
     // A guest's Know is the orange one (D-042).
     // Short on screen; the orange one's caption is there for screen readers (D-049).
-    expect(screen.getByTestId('answer-chip')).toHaveTextContent(
-      'Clicked: I know it (show in future)',
-    );
-    expect(screen.getByText('Card 1 of 3. Clicked: I know it (show in future)')).toHaveClass(
+    expect(screen.getByTestId('answer-chip')).toHaveTextContent('Clicked: I know (show in future)');
+    expect(screen.getByText('Card 1 of 3. Clicked: I know (show in future)')).toHaveClass(
       'sr-only',
     );
     expect(btn('Next')).toBeEnabled(); // answered, so Next skips ahead without answering again
@@ -215,7 +213,7 @@ describe('PracticePage', () => {
   it('changing an answer: Know → Don’t know unmarks it, Don’t know → Know marks it', () => {
     const sink = { onKnow: vi.fn(), onUnknow: vi.fn() };
     setup(sink, { isGuest: false });
-    fireEvent.click(btn('I know it Never show again'));
+    fireEvent.click(btn('I know Never show again'));
     expect(sink.onKnow).toHaveBeenCalledTimes(1);
     expect(sink.onKnow).toHaveBeenCalledWith(expect.objectContaining({ round: 1 }), 'he');
     fireEvent.click(btn('Back'));
@@ -225,24 +223,24 @@ describe('PracticePage', () => {
     expect(side()).toBe('back');
     fireEvent.click(btn('Next'));
     fireEvent.click(btn('Back'));
-    fireEvent.click(btn('I know it Never show again'));
+    fireEvent.click(btn('I know Never show again'));
     expect(sink.onKnow).toHaveBeenCalledTimes(2);
     expect(progress()).toBe('Round 1 · Card 2/3 · 1 known');
     // Know again on a card already known changes nothing in the queue.
     fireEvent.click(btn('Back'));
-    fireEvent.click(btn('I know it Never show again'));
+    fireEvent.click(btn('I know Never show again'));
     expect(sink.onKnow).toHaveBeenCalledTimes(2);
   });
 
   it('guests see all three answers, the green one locked; K does nothing, A works (D-042)', () => {
     setup();
-    const know = btn('I know it Never show again (sign-in to enable)');
+    const know = btn('I know Never show again (sign-in to enable)');
     expect(know).toHaveAttribute('aria-disabled', 'true');
     expect(know).toHaveClass('lbtn--know', 'is-locked');
     expect(know).toHaveAttribute('title', 'Sign-in to enable');
     expect(know.querySelector('.lbtn__lock')).not.toBeNull();
-    expect(btn('I know it Show in future')).toBeEnabled();
-    expect(btn('I know it Show in future')).not.toHaveClass('is-locked');
+    expect(btn('I know Show in future')).toBeEnabled();
+    expect(btn('I know Show in future')).not.toHaveClass('is-locked');
     // The same captions as for signed-in learners.
     expect(screen.getByText('Never show again')).toBeInTheDocument();
     expect(screen.getByText('Show in future')).toBeInTheDocument();
@@ -258,7 +256,7 @@ describe('PracticePage', () => {
     setup();
     const tip = () => document.querySelector('.locked-tip');
     expect(tip()).toBeNull();
-    fireEvent.click(btn('I know it Never show again (sign-in to enable)'));
+    fireEvent.click(btn('I know Never show again (sign-in to enable)'));
     expect(tip()).toHaveTextContent('Sign-in required');
     expect(
       within(tip() as HTMLElement).getByRole('button', { name: 'Sign-in' }),
@@ -283,7 +281,7 @@ describe('PracticePage', () => {
         removeEventListener: () => undefined,
       }));
     const nudging = (name: string) => btn(name).classList.contains('is-nudging');
-    const answers = ['I know it Show in future', 'I don’t know Show in next round'];
+    const answers = ['I know Show in future', 'I don’t know Show in next round'];
     afterEach(() => vi.unstubAllGlobals());
 
     it('on the first cards, the available answers pump shortly after each change; Back and Stop never', () => {
@@ -409,7 +407,7 @@ describe('PracticePage', () => {
       expect(wrapper()).toHaveClass('card-enter--left');
       // A Know: its own animation takes the old card; the new one comes in from the right.
       fireEvent.click(btn('Next'));
-      fireEvent.click(btn('I know it Show in future'));
+      fireEvent.click(btn('I know Show in future'));
       expect(wrapper()).toHaveClass('card-enter--know');
     });
 
@@ -439,26 +437,24 @@ describe('PracticePage', () => {
       .map((b) => b.getAttribute('aria-label') ?? b.textContent)
       .filter((n) => /know/i.test(n ?? ''));
     expect(names).toEqual([
-      'I know it Never show again',
-      'I know it Show in future',
+      'I know Never show again',
+      'I know Show in future',
       'I don’t know Show in next round',
     ]);
-    expect(btn('I know it Show in future')).toHaveClass('lbtn--again');
-    expect(btn('I know it Show in future')).not.toHaveClass('is-locked');
+    expect(btn('I know Show in future')).toHaveClass('lbtn--again');
+    expect(btn('I know Show in future')).not.toHaveClass('is-locked');
     expect(screen.getByText('Never show again')).toBeInTheDocument();
     expect(screen.getByText('Show in future')).toBeInTheDocument();
     expect(screen.getByText('Show in next round')).toBeInTheDocument();
 
-    fireEvent.click(btn('I know it Show in future'));
+    fireEvent.click(btn('I know Show in future'));
     expect(progress()).toBe('Round 1 · Card 2/3 · 1 known'); // counts like Know in the practice
     expect(sink.onKnow).not.toHaveBeenCalled();
     expect(loadPractice()?.state.known[0]?.again).toBe(true); // a refresh keeps it
     fireEvent.click(btn('Back'));
     // Short on screen; the orange one's caption is there for screen readers (D-049).
-    expect(screen.getByTestId('answer-chip')).toHaveTextContent(
-      'Clicked: I know it (show in future)',
-    );
-    expect(screen.getByText('Card 1 of 3. Clicked: I know it (show in future)')).toHaveClass(
+    expect(screen.getByTestId('answer-chip')).toHaveTextContent('Clicked: I know (show in future)');
+    expect(screen.getByText('Card 1 of 3. Clicked: I know (show in future)')).toHaveClass(
       'sr-only',
     );
 
@@ -470,17 +466,17 @@ describe('PracticePage', () => {
   it('signed-in: switching between the two Knows records and unrecords the word', () => {
     const sink = { onKnow: vi.fn(), onUnknow: vi.fn() };
     setup(sink, { isGuest: false });
-    fireEvent.click(btn('I know it Never show again'));
+    fireEvent.click(btn('I know Never show again'));
     expect(sink.onKnow).toHaveBeenCalledTimes(1);
     fireEvent.click(btn('Back'));
-    fireEvent.click(btn('I know it Show in future'));
+    fireEvent.click(btn('I know Show in future'));
     expect(sink.onUnknow).toHaveBeenCalledWith(sink.onKnow.mock.calls[0]![0].id, 'he');
     expect(progress()).toBe('Round 1 · Card 2/3 · 1 known');
     fireEvent.click(btn('Back'));
-    fireEvent.click(btn('I know it Never show again'));
+    fireEvent.click(btn('I know Never show again'));
     expect(sink.onKnow).toHaveBeenCalledTimes(2);
     fireEvent.click(btn('Back'));
-    fireEvent.click(btn('I know it Show in future'));
+    fireEvent.click(btn('I know Show in future'));
     fireEvent.click(btn('Back'));
     fireEvent.click(btn('I don’t know Show in next round')); // from ask again: nothing was recorded, nothing to undo
     expect(sink.onUnknow).toHaveBeenCalledTimes(2);
@@ -503,7 +499,7 @@ describe('PracticePage', () => {
       .mockImplementation(() => Promise.resolve());
     const pause = vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
     setup();
-    for (let i = 0; i < 3; i++) fireEvent.click(btn('I know it Show in future'));
+    for (let i = 0; i < 3; i++) fireEvent.click(btn('I know Show in future'));
     expect(play).toHaveBeenCalledTimes(1);
     const toggle = screen.getByRole('button', { name: /Sound on/ });
     expect(toggle).toHaveAttribute('aria-pressed', 'true');
@@ -524,7 +520,7 @@ describe('PracticePage', () => {
       .mockImplementation(() => Promise.resolve());
     vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
     setup();
-    for (let i = 0; i < 3; i++) fireEvent.click(btn('I know it Show in future'));
+    for (let i = 0; i < 3; i++) fireEvent.click(btn('I know Show in future'));
     expect(play).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('crown')).toBeInTheDocument(); // reduced motion here: no flight
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
@@ -544,14 +540,14 @@ describe('PracticePage', () => {
       .mockImplementation(() => Promise.resolve());
     vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
     setup();
-    for (let i = 0; i < 3; i++) fireEvent.click(btn('I know it Show in future'));
+    for (let i = 0; i < 3; i++) fireEvent.click(btn('I know Show in future'));
     expect(play).toHaveBeenCalledTimes(1);
     // Back, change the last card to Don't know, then Back to Know again: no new round, no repeat.
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
     fireEvent.click(btn('I don’t know Show in next round'));
     fireEvent.click(btn('Back')); // to card 2
     fireEvent.click(btn('Next')); // card 3 again, answered Don't know
-    fireEvent.click(btn('I know it Show in future')); // changed back: the practice is completed again
+    fireEvent.click(btn('I know Show in future')); // changed back: the practice is completed again
     expect(screen.getByRole('heading', { name: 'Practice completed' })).toBeInTheDocument();
     expect(play).toHaveBeenCalledTimes(1);
     // Now a real new round: Back, Don't know, Next → round break → Continue → Know → completed.
@@ -559,7 +555,7 @@ describe('PracticePage', () => {
     fireEvent.click(btn('I don’t know Show in next round'));
     fireEvent.click(btn('Next'));
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
-    fireEvent.click(btn('I know it Show in future'));
+    fireEvent.click(btn('I know Show in future'));
     expect(screen.getByRole('heading', { name: 'Practice completed' })).toBeInTheDocument();
     expect(play).toHaveBeenCalledTimes(2);
     vi.restoreAllMocks();
@@ -567,9 +563,9 @@ describe('PracticePage', () => {
 
   it('the round break and the summary go back to the last card', () => {
     setup();
-    fireEvent.click(btn('I know it Show in future'));
-    fireEvent.click(btn('I know it Show in future'));
-    fireEvent.click(btn('I know it Show in future'));
+    fireEvent.click(btn('I know Show in future'));
+    fireEvent.click(btn('I know Show in future'));
+    fireEvent.click(btn('I know Show in future'));
     expect(screen.getByRole('heading', { name: 'Practice completed' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Back to the last card/ }));
     expect(progress()).toBe('Round 1 · Card 3/3 · 3 known');
@@ -624,7 +620,7 @@ describe('PracticePage', () => {
     it('not on a card reached with Back', () => {
       vi.useFakeTimers();
       setup();
-      fireEvent.click(btn('I know it Show in future'));
+      fireEvent.click(btn('I know Show in future'));
       fireEvent.click(btn('Back'));
       expect(nextLabel()).toBe('Next');
       tick(15);
@@ -635,8 +631,8 @@ describe('PracticePage', () => {
   describe('the break between rounds (D-067)', () => {
     const toBreak = (continueSeconds?: number) => {
       const router = setup(undefined, continueSeconds === undefined ? {} : { continueSeconds });
-      fireEvent.click(btn('I know it Show in future'));
-      fireEvent.click(btn('I know it Show in future'));
+      fireEvent.click(btn('I know Show in future'));
+      fireEvent.click(btn('I know Show in future'));
       fireEvent.click(btn('I don’t know Show in next round'));
       fireEvent.click(btn('Next'));
       expect(screen.getByRole('heading', { name: 'Round 2 · 1 card left' })).toBeInTheDocument();
@@ -718,14 +714,14 @@ describe('PracticePage', () => {
 
   it('reaches a round break, continues, and ends with a summary', () => {
     setup();
-    fireEvent.click(btn('I know it Show in future'));
-    fireEvent.click(btn('I know it Show in future'));
+    fireEvent.click(btn('I know Show in future'));
+    fireEvent.click(btn('I know Show in future'));
     fireEvent.click(btn('I don’t know Show in next round'));
     fireEvent.click(btn('Next'));
     expect(screen.getByRole('heading', { name: 'Round 2 · 1 card left' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
     expect(progress()).toBe('Round 2 · Card 1/1 · 2 known');
-    fireEvent.click(btn('I know it Show in future'));
+    fireEvent.click(btn('I know Show in future'));
     const summary = screen
       .getByRole('heading', { name: 'Practice completed' })
       .closest('section') as HTMLElement;
@@ -737,7 +733,7 @@ describe('PracticePage', () => {
   describe('New practice on the summary (FR-L32)', () => {
     const finish = () => {
       // Signed-in learners have two Knows; the green one is recorded.
-      for (let i = 0; i < 3; i++) fireEvent.click(btn('I know it Never show again'));
+      for (let i = 0; i < 3; i++) fireEvent.click(btn('I know Never show again'));
       expect(screen.getByRole('heading', { name: 'Practice completed' })).toBeInTheDocument();
     };
 
@@ -806,7 +802,7 @@ describe('PracticePage', () => {
 
   it('saves progress so a refresh resumes; there is no Stop; Home and Esc ask, then clear it (D-072)', async () => {
     const router = setup();
-    fireEvent.click(btn('I know it Show in future'));
+    fireEvent.click(btn('I know Show in future'));
     expect(loadPractice()?.state.index).toBe(1);
     expect(screen.queryByRole('button', { name: 'Stop' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Home' }));
