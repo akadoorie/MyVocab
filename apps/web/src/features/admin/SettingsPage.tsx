@@ -83,6 +83,23 @@ function SettingsForm({
     }
   }
 
+  // Discard puts every field back to the saved values (D-120).
+  function discard() {
+    setDraft(toDraft(base));
+    setError(null);
+  }
+  // The same pair at the top and the bottom of the page, so saving needs no scrolling (D-120).
+  const actions = (
+    <div className="flex flex-wrap items-center gap-3">
+      <Button3D disabled={saving || !dirty} onClick={() => void save()}>
+        {saving ? s.common.saving : s.common.save}
+      </Button3D>
+      <Button3D variant="hint" disabled={saving || !dirty} onClick={discard}>
+        {s.common.discard}
+      </Button3D>
+    </div>
+  );
+
   const label = (key: keyof Settings) => s.settings.labels[key] ?? key;
   const num = (key: keyof Draft) => (
     <NumberField
@@ -108,7 +125,10 @@ function SettingsForm({
 
   return (
     <div className="flex flex-col gap-4">
-      <PageTitle>{s.settings.title}</PageTitle>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <PageTitle>{s.settings.title}</PageTitle>
+        {actions}
+      </div>
       <Group title={s.settings.groups.defaults}>
         <SelectField
           id="defaults.sourceLang"
@@ -177,11 +197,7 @@ function SettingsForm({
           {errorMessage(error, s.common.genericError)}
         </p>
       )}
-      <div>
-        <Button3D disabled={saving || !dirty} onClick={() => void save()}>
-          {saving ? s.common.saving : s.common.save}
-        </Button3D>
-      </div>
+      {actions}
     </div>
   );
 }

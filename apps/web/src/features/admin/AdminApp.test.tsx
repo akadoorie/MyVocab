@@ -298,16 +298,23 @@ describe('AdminApp', () => {
     });
   });
 
-  it('settings: Save is off until a value changes, and off again when it is changed back (D-119)', async () => {
+  it('settings: Save and Discard (top and bottom) are off until a value changes; Discard restores it (D-119, D-120)', async () => {
     render('/admin/settings', { 'GET /api/admin/settings': () => Response.json({}) });
-    const field = await screen.findByLabelText('Cards per practice: maximum');
-    const save = screen.getByRole('button', { name: 'Save' });
-    expect(save).toBeDisabled();
-    const before = (field as HTMLInputElement).value;
+    const field = (await screen.findByLabelText('Cards per practice: maximum')) as HTMLInputElement;
+    const saves = screen.getAllByRole('button', { name: 'Save' });
+    const discards = screen.getAllByRole('button', { name: 'Discard' });
+    expect(saves).toHaveLength(2);
+    expect(discards).toHaveLength(2);
+    for (const b of [...saves, ...discards]) expect(b).toBeDisabled();
+    const before = field.value;
     fireEvent.change(field, { target: { value: String(Number(before) + 1) } });
-    expect(save).toBeEnabled();
+    for (const b of [...saves, ...discards]) expect(b).toBeEnabled();
     fireEvent.change(field, { target: { value: before } });
-    expect(save).toBeDisabled();
+    for (const b of saves) expect(b).toBeDisabled();
+    fireEvent.change(field, { target: { value: String(Number(before) + 2) } });
+    fireEvent.click(discards[0]!);
+    expect(field.value).toBe(before);
+    for (const b of [...saves, ...discards]) expect(b).toBeDisabled();
   });
 
   it('settings: "Cards per practice: maximum" explains itself under the field', async () => {

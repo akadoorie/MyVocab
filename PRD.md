@@ -634,7 +634,9 @@ so learners never download it. All admin pages work on mobile (tables collapse i
 - **FR-A50** Settings are validated with Zod (server side; e.g. the default languages must be active, and
   `defaultSize` must be in `sizeOptions`) and audit-logged.
 - **FR-A51** **Save** stays disabled until a value differs from the saved settings, and turns off again if the
-  values are changed back (D-119).
+  values are changed back (D-119). **Save** and **Discard** sit both at the top (next to the title) and at the
+  bottom, so saving needs no scrolling; Discard puts every field back to the saved values and is disabled likewise
+  (D-120).
 
 ### 7.8 CSV import (`/admin/import`): see §8.3
 - **FR-A60** Download the template; upload a CSV; **dry run** shows the counts, per-row errors and warnings; **Commit**

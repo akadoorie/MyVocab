@@ -23,6 +23,8 @@ export const adminStrings = {
   },
   common: {
     save: 'Save',
+    /** Puts the fields back to the saved values (D-120). */
+    discard: 'Discard',
     saving: 'Saving…',
     saved: 'Saved',
     cancel: 'Cancel',
