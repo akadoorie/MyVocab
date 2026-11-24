@@ -28,6 +28,7 @@ import { FireworkGhost } from './FireworkGhost';
 import { RollGhost, type KnowRoll } from './RollGhost';
 import { useCountdown } from './useCountdown';
 import { usePracticeShortcuts } from './usePracticeShortcuts';
+import { SlideGhost, type CardSlide } from './SlideGhost';
 import { useSwipe } from './useSwipe';
 
 /** How long "Sign-in required" covers the locked green button (D-043). */
@@ -135,6 +136,12 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   const counterRef = useRef<HTMLSpanElement>(null);
   const [roll, setRoll] = useState<KnowRoll | null>(null);
   const clearRoll = useCallback(() => setRoll(null), []);
+  // Next and Back: the old card slides out sideways while the new one slides in (D-110).
+  const [slide, setSlide] = useState<CardSlide | null>(null);
+  const clearSlide = useCallback(() => setSlide(null), []);
+  // Where the next card comes in from: the right for Next and the Knows (a little later, under the
+  // Know animation), the left for Back; a new round's first card rises in (D-110).
+  const [enterFrom, setEnterFrom] = useState<'right' | 'know' | 'left' | 'rise'>('rise');
 
   // The summary celebrates once per practice (FR-L32a), also across Back and a refresh.
   const [celebrated, setCelebrated] = useState(stored.celebrated ?? false);
@@ -165,7 +172,7 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   }, [state.phase, state.index, state.round]);
 
   const act = useCallback(
-    (type: PracticeActionType) => {
+    (type: PracticeActionType, swiped = false) => {
       if (!canDispatch(state, type)) return;
       const id = currentCardId(state);
       // On a card reached with Back the answer can change (FR-L29a); only changes reach the queue.
@@ -234,6 +241,27 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
       // A new round after the celebration means the practice will be completed anew: celebrate
       // (and fly the crown) again when it ends (FR-L32a).
       if (type === 'CONTINUE') setCelebrated(false);
+      // The slide between cards (D-110). A swipe has already moved the old card out; the last card
+      // of a round leads to the break or the summary, and the break has no card to slide.
+      if (type === 'NEXT' || type === 'BACK' || type === 'KNOW' || type === 'KNOW_AGAIN')
+        setEnterFrom(type === 'BACK' ? 'left' : type === 'NEXT' ? 'right' : 'know');
+      if (type === 'CONTINUE') setEnterFrom('rise');
+      const onCard = state.phase === 'deciding' || state.phase === 'revealed';
+      const lastOfRound = state.index === state.order.length - 1;
+      const shown = id === null ? undefined : cards.get(id);
+      const from = cardRef.current?.getBoundingClientRect();
+      const leaves = type === 'BACK' || (type === 'NEXT' && !lastOfRound);
+      if (leaves && onCard && !swiped && shown && from && id !== null && motionAllowed()) {
+        setSlide({
+          key: Date.now(),
+          card: shown,
+          side: state.side,
+          hintsShown: state.hintsShown,
+          answer: answerOf(state, id),
+          rect: { top: from.top, left: from.left, width: from.width, height: from.height },
+          to: type === 'BACK' ? 'right' : 'left',
+        });
+      }
       dispatch({ type });
     },
     [state, cards, knownSink],
@@ -293,12 +321,13 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   const swipeRef = useSwipe({
     canLeft: canDispatch(state, swipeLeft),
     canRight: canDispatch(state, swipeRight),
-    onLeft: () => act(swipeLeft),
-    onRight: () => act(swipeRight),
+    onLeft: () => act(swipeLeft, true),
+    onRight: () => act(swipeRight, true),
     enabled: !confirmLeave,
     animate: motionAllowed(),
   });
 
+  const slideGhost = slide && <SlideGhost key={slide.key} slide={slide} onDone={clearSlide} />;
   const ghost = !roll ? null : roll.kind === 'firework' ? (
     <FireworkGhost key={roll.key} roll={roll} onDone={clearRoll} />
   ) : (
@@ -408,7 +437,7 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
       <div
         key={`${state.round}-${state.index}`}
         ref={cardRef}
-        className="card-enter flex min-h-0 flex-1 flex-col md:h-[clamp(420px,58vh,600px)] md:flex-none"
+        className={`card-enter card-enter--${enterFrom} flex min-h-0 flex-1 flex-col md:h-[clamp(420px,58vh,600px)] md:flex-none`}
       >
         {/* The swipe moves this inner box: the rise-in animation owns the outer one's transform.
             Vertical drags stay with the page (touch-action: pan-y). */}
@@ -456,6 +485,7 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
         />
       </div>
       {ghost}
+      {slideGhost}
     </main>
   );
 }

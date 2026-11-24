@@ -351,7 +351,7 @@ private content repository. It never appears in the public code repo or any publ
   Back (FR-L29a), where it shines after the green pill, its neighbour; otherwise it doesn't (after Don't know it has its own pump). Nothing
   moves with reduced motion.
 - **FR-L29 Next**: moves to the next card (enabled in the Revealed phase, and on a card answered earlier that was
-  reached with Back). The next card enters front side up with a short rise-in (no reverse-flip animation).
+  reached with Back). The next card enters front side up, sliding in from the side (§9.4, D-110; no reverse-flip animation).
 - **FR-L29a Back and changing an answer**: the round **Back** button (or **←**; **→** in Hebrew) shows the
   previous card of the current round, card by card, down to the first card of the round (earlier rounds are out of
   reach). On the round break and the summary, **"← Back to the last card"** returns to the round's last card. A card
@@ -981,10 +981,12 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   `aria-hidden="true"`, so only the visible face's Flip button is focusable. An `aria-live="polite"` region announces
   "Showing answer" / "Showing front" / "Hints shown".
 - After **Don't know** on the front, the same flip animation plays automatically.
-- **Next** / **Know**: the next card enters front side up, rising in (≈ 260ms: from slightly lower, smaller and
-  transparent to full size; a plain 150ms fade with reduced motion).
-- **Know animations:** the next card rises in underneath at the same time, so Know never feels slow; reduced motion
-  skips them.
+- **Between cards: a slide** (D-110). **Next**: the card slides out to the left while the next one slides in from
+  the right, front side up (≈ 340ms). **Back**: the reverse (out to the right, the earlier card in from the left).
+  The same in every language, matching the swipe and the buttons (Back left, Next right). A new round's first card
+  rises in (≈ 260ms: from slightly lower, smaller and transparent). With reduced motion: a plain 150ms fade.
+- **Know animations:** the old card does its Know animation while the next card slides in from the right (starting
+  0.14s later), so Know never feels slow; reduced motion skips them.
   - **Green "I know it" (forever): a firework** (D-103). A decorative copy of the card shrinks into a bright green spark
     (0.3s), which shoots up to the "N known" counter in the header (about 0.5s) and bursts there like a firework, its
     sparks falling in short trails (about 1.1s); the counter pops green as it bursts.
@@ -994,8 +996,8 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   - **Red "I don't know": a loop** (D-106). As the card turns to its answer, a glowing red line races once around
     the card's edge, like a "repeat" arrow (the card comes back next round), then fades; decorative (the "Clicked"
     chip says it in words). Reduced motion: none.
-  - Back has no reverse animation: the earlier card simply rises in,
-  front side up. Don't know keeps the flip. A swipe slides the card out sideways (FR-L29b).
+  - Don't know keeps the flip; the slide comes with Next. A swipe slides the card out sideways (FR-L29b) and the
+    new card slides in as with Next or Back.
 
 ### 9.5 Start card (look)
 - Under the heading, first: the "N cards available" line, with "Reset to defaults" on its right when shown

@@ -377,6 +377,33 @@ describe('PracticePage', () => {
       expect(loadPractice()?.flipped).toBe(true);
     });
 
+    it('between cards: Next slides the old card out left and the new one in from the right; Back the reverse (D-110)', () => {
+      motion();
+      setup();
+      const wrapper = () => screen.getByTestId('flip-card').closest('.card-enter');
+      const ghost = () => document.querySelector('.slide-ghost');
+      fireEvent.click(btn('I don’t know Show in next round'));
+      fireEvent.click(btn('Next'));
+      expect(ghost()).toHaveClass('slide-ghost--left');
+      expect(ghost()).toHaveAttribute('aria-hidden', 'true');
+      expect(wrapper()).toHaveClass('card-enter--right');
+      fireEvent.click(btn('Back'));
+      expect(ghost()).toHaveClass('slide-ghost--right');
+      expect(wrapper()).toHaveClass('card-enter--left');
+      // A Know: its own animation takes the old card; the new one comes in from the right.
+      fireEvent.click(btn('Next'));
+      fireEvent.click(btn('I know it Show again in future'));
+      expect(wrapper()).toHaveClass('card-enter--know');
+    });
+
+    it('between cards: no sliding copy with "reduce motion" (D-110)', () => {
+      motion(true);
+      setup();
+      fireEvent.click(btn('I don’t know Show in next round'));
+      fireEvent.click(btn('Next'));
+      expect(document.querySelector('.slide-ghost')).toBeNull();
+    });
+
     it('nothing moves with "reduce motion"', () => {
       motion(true);
       vi.useFakeTimers();
