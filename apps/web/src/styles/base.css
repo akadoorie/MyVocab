@@ -1270,11 +1270,47 @@ body {
 /* In the practice the card has a fixed height (the space on a phone, a clamp on desktop), so it never
    changes size when it flips or shows hints; a face with a lot of content scrolls inside. */
 .flip-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
   perspective: 1600px;
+}
+/* "I don't know" (D-106): as the card turns, a glowing red line races once around its edge, like a
+   "repeat" arrow (this card comes back next round), then fades. 1.5s: wait 0.4s, run 0.9s, fade. */
+.dk-trace {
+  position: absolute;
+  inset: -2px;
+  z-index: 3;
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+  overflow: visible;
+  pointer-events: none;
+}
+.dk-trace rect {
+  fill: none;
+  stroke: #fb7185;
+  stroke-width: 3;
+  stroke-dasharray: 28 100;
+  filter: drop-shadow(0 0 6px rgba(244, 63, 94, 0.9));
+  animation: dk-trace 1500ms both;
+}
+@keyframes dk-trace {
+  0%,
+  26% {
+    stroke-dashoffset: 28;
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.3, 1);
+  }
+  86% {
+    stroke-dashoffset: -100;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: -100;
+    opacity: 0;
+  }
 }
 .flip-card__inner {
   flex: 1;
@@ -1681,7 +1717,8 @@ body {
     animation: card-fade 150ms ease-out;
   }
   .roll-ghost,
-  .firework-ghost {
+  .firework-ghost,
+  .dk-trace {
     display: none;
   }
   .count-pop {

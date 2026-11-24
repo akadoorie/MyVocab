@@ -164,6 +164,7 @@ export function FlipCard({
   answer = null,
   pulse = false,
   nudging = null,
+  trace = false,
 }: {
   card: CardView;
   side: CardSide;
@@ -179,6 +180,8 @@ export function FlipCard({
   pulse?: boolean;
   /** Pump and shine, or shine alone, with the answer buttons (D-066, D-074); only the shine while it pulses. */
   nudging?: 'full' | 'shine' | null;
+  /** Right after "I don't know": a red line races once around the card's edge (D-106). */
+  trace?: boolean;
 }) {
   const tid = (id: string) => (decorative ? undefined : id);
   const frontTop = useRef<HTMLDivElement>(null);
@@ -238,6 +241,13 @@ export function FlipCard({
   // The hidden face is inert and aria-hidden, so only the visible face's Flip button is reachable.
   return (
     <div className={`flip-card ${front ? '' : 'is-flipped'}`}>
+      {trace && (
+        // Decorative, outside the turning faces: a "repeat" loop around the edge; the "Clicked" chip
+        // says it in words.
+        <svg className="dk-trace" aria-hidden="true">
+          <rect x="0" y="0" width="100%" height="100%" rx="4" pathLength={100} />
+        </svg>
+      )}
       <div className="flip-card__inner" data-testid={tid('flip-card')} data-side={side}>
         <div className="flip-card__face flip-card__front" inert={!front} aria-hidden={!front}>
           {topRow('front')}

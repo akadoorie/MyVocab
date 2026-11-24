@@ -985,6 +985,9 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   - **Orange "I know it" (ask again): the paper roll** (D-094). The card **rolls up like a sheet of paper**, from its
     bottom edge to its top, into a tight scroll (the light back of the paper showing), and the scroll is **sucked along
     a curve into the counter**, which pops amber as it lands. The roll takes about 0.55s and the flight about 0.4s.
+  - **Red "I don't know": a loop** (D-106). As the card turns to its answer, a glowing red line races once around
+    the card's edge, like a "repeat" arrow (the card comes back next round), then fades; decorative (the "Clicked"
+    chip says it in words). Reduced motion: none.
   - Back has no reverse animation: the earlier card simply rises in,
   front side up. Don't know keeps the flip. A swipe slides the card out sideways (FR-L29b).
 

@@ -108,6 +108,10 @@ describe('PracticePage', () => {
     expect(screen.queryByRole('button', { name: 'Tap to see hints' })).toBeNull();
     fireEvent.click(btn('Flip'));
     expect(btn('Tap to see hints')).toBeEnabled();
+    // A red loop around the card (D-106); it goes with the card.
+    expect(document.querySelector('.flip-card .dk-trace')).not.toBeNull();
+    fireEvent.click(btn('Next'));
+    expect(document.querySelector('.dk-trace')).toBeNull();
   });
 
   it('a tap on the cover reveals the hints, a tap on them covers them again; H too; the card stays put (D-047, D-078)', () => {
