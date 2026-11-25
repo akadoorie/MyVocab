@@ -1,6 +1,9 @@
-# Production deploy (PRD §16). Runs on pushes to main (and manually), but its job targets the
-# GitHub Environment "production", whose required reviewer (the owner) must click Approve before
-# anything runs. Only then: the checks again → D1 migrations → wrangler deploy.
+# Production deploy (PRD §16). Runs on pushes to main (and manually) in two jobs:
+# 1. "checks": the checks again and the SPA build, with no credentials at all;
+# 2. "deploy": targets the GitHub Environment "production", whose required reviewer (the owner)
+#    must click Approve. Only then: D1 migrations → wrangler deploy, from a fresh install with no
+#    install scripts and none of the tests or build tools running, so dependency code that ran in
+#    "checks" never shares a job with the Cloudflare token (security review).
 # It never seeds, exports or prints data. Cloudflare credentials exist only in that Environment.
 name: Deploy
 
@@ -17,12 +20,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Checks, migrations, deploy
+  checks:
+    name: Checks and build
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment:
-      name: production
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -54,6 +55,44 @@ jobs:
 
       - name: Build the SPA
         run: pnpm build
+
+      - name: Keep the build for the deploy job
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: web-dist
+          path: apps/web/dist
+          retention-days: 1
+          if-no-files-found: error
+
+  deploy:
+    name: Migrations and deploy
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install (no install scripts)
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Get the SPA build
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: web-dist
+          path: apps/web/dist
 
       - name: Apply D1 migrations (production)
         working-directory: apps/api

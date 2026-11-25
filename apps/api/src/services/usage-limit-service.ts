@@ -39,39 +39,44 @@ export class UsageLimitService {
     private readonly now: Clock = Date.now,
   ) {}
 
-  /** Guests: `limit` practices per hour per hashed IP. */
-  async checkGuestPractice(ipHash: string, limit: number): Promise<LimitDecision> {
+  /**
+   * Guests: `limit` practices per hour per hashed IP. Checks and counts the practice in one step,
+   * so parallel requests can't all pass the check before any is counted.
+   */
+  async consumeGuestPractice(ipHash: string, limit: number): Promise<LimitDecision> {
     const subject = `ip:${ipHash}`;
-    const period = hourPeriod(this.now());
-    const used = await this.usage.get(subject, period);
-    if (used < limit) return { allowed: true };
+    const now = this.now();
+    const period = hourPeriod(now);
+    if (await this.usage.tryIncrement(subject, period, 1, limit, now)) return { allowed: true };
     await this.recordBlock(subject, period, { kind: 'guest.practicesPerHour', limit });
     return { allowed: false, remaining: 0 };
   }
 
-  async recordGuestPractice(ipHash: string): Promise<void> {
-    const now = this.now();
-    await this.usage.increment(`ip:${ipHash}`, hourPeriod(now), 1, now);
-  }
-
-  /** Learners: at most `limit` cards served per UTC day. */
-  async checkLearnerCards(
+  /** Learners: reserves `requested` cards of the `limit` per UTC day, in one step. */
+  async reserveLearnerCards(
     userId: string,
     requested: number,
     limit: number,
   ): Promise<LimitDecision> {
     const subject = `user:${userId}`;
-    const period = dayPeriod(this.now());
-    const used = await this.usage.get(subject, period);
-    if (used + requested <= limit) return { allowed: true };
+    const now = this.now();
+    const period = dayPeriod(now);
+    if (await this.usage.tryIncrement(subject, period, requested, limit, now)) {
+      return { allowed: true };
+    }
     await this.recordBlock(subject, period, { kind: 'users.cardsPerDay', limit });
+    const used = await this.usage.get(subject, period);
     return { allowed: false, remaining: Math.max(0, limit - used) };
   }
 
-  async recordLearnerCards(userId: string, served: number): Promise<void> {
-    if (served <= 0) return;
+  /**
+   * Gives back what a reservation didn't use (fewer cards were available than reserved), so the
+   * day's count is the cards actually served. Writes only when there is something to give back.
+   */
+  async releaseLearnerCards(userId: string, unused: number): Promise<void> {
+    if (unused <= 0) return;
     const now = this.now();
-    await this.usage.increment(`user:${userId}`, dayPeriod(now), served, now);
+    await this.usage.increment(`user:${userId}`, dayPeriod(now), -unused, now);
   }
 
   private async recordBlock(subject: string, period: string, details: Record<string, unknown>) {

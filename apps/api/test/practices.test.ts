@@ -387,6 +387,22 @@ describe('PracticeService (learner path)', () => {
       practices.start({ ...guestBody, size: 10 }, { ...learner, isAdmin: true }),
     ).resolves.toBeTruthy();
   });
+
+  it('parallel starts cannot overshoot the daily cap: checked and counted in one step', async () => {
+    const practices = await service();
+    await setSetting('users.cardsPerDay', 20);
+    const results = await Promise.allSettled(
+      [1, 2, 3, 4].map(() => practices.start({ ...guestBody, size: 10 }, learner)),
+    );
+    // 7 cards are playable: each start reserves 10 and gives back the 3 it didn't serve.
+    expect(results.filter((r) => r.status === 'fulfilled').length).toBeLessThanOrEqual(2);
+    const row = await env.DB.prepare(
+      "SELECT count FROM usage_counters WHERE subject = 'user:' || ?",
+    )
+      .bind(learner.userId)
+      .first<{ count: number }>();
+    expect(row?.count ?? 0).toBeLessThanOrEqual(20);
+  });
 });
 
 describe('the sample set (D-038)', () => {

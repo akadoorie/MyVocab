@@ -90,6 +90,17 @@ export interface SettingsRepository {
 export interface UsageRepository {
   get(subject: string, period: string): Promise<number>;
   increment(subject: string, period: string, by: number, now: number): Promise<void>;
+  /**
+   * Adds `by` only if the total stays within `limit`, in one statement (no race between check and
+   * count); true when it was added. Nothing is written when it wasn't.
+   */
+  tryIncrement(
+    subject: string,
+    period: string,
+    by: number,
+    limit: number,
+    now: number,
+  ): Promise<boolean>;
   /** Inserts a marker row once per subject/period; true only the first time. */
   markOnce(subject: string, period: string, now: number): Promise<boolean>;
 }

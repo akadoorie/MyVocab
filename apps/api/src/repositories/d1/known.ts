@@ -76,13 +76,18 @@ export class D1KnownRepository implements KnownRepository {
 
   async insertMany(userId: string, marks: readonly KnownMarkRow[], now: number): Promise<number> {
     // One statement for the whole batch: marks travel as one JSON parameter. Existing rows win
-    // (idempotent, keeps the earliest known_at); unknown or trashed items are skipped.
+    // (idempotent, keeps the earliest known_at). Only a mark a practice could have made is kept:
+    // an active target language and a published item playable in that direction (FR-L40), so
+    // made-up directions can't fill the table and burn the D1 write allowance (PRD §11.2).
     const res = await this.db.run(sql`
       INSERT INTO user_known_items (user_id, item_id, known_target, known_in_round, known_at)
-      SELECT ${userId}, i.id, json_extract(m.value, '$.target'), json_extract(m.value, '$.round'), ${now}
+      SELECT ${userId}, i.id, l.code, json_extract(m.value, '$.round'), ${now}
       FROM json_each(${JSON.stringify(marks)}) AS m
       JOIN items AS i ON i.id = json_extract(m.value, '$.itemId')
-      WHERE i.deleted_at IS NULL
+      JOIN languages AS l ON l.code = json_extract(m.value, '$.target') AND l.is_active = 1
+      WHERE i.deleted_at IS NULL AND i.status = 'published'
+        AND CASE WHEN l.code = i.lang THEN json_array_length(i.explanation) > 0
+                 ELSE COALESCE(json_array_length(i.translation_meaning, '$."' || l.code || '"'), 0) > 0 END
       ON CONFLICT (user_id, item_id, known_target) DO NOTHING
     `);
     return res.meta.changes;

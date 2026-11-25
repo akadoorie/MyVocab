@@ -107,19 +107,6 @@ export class PracticeService {
     let size: number;
     if (requester.kind === 'guest') {
       if (!settings['guests.enabled']) throw new UnauthorizedError('Sign-in to start a practice');
-      // Bot check first: an unverified request must not write anything (PRD §11.2 rule 5).
-      if (!(await this.deps.botCheck.verify(input.turnstileToken, requester.ip))) {
-        throw new BotCheckFailedError();
-      }
-      const decision = await this.deps.limits.checkGuestPractice(
-        requester.ipHash,
-        settings['guests.practicesPerHour'],
-      );
-      if (!decision.allowed) {
-        throw new RateLimitedError(
-          'You passed the sample practices capacity. Wait some time and try again later, or Sign-in',
-        );
-      }
       size = settings['guests.practiceSize']; // guests can't choose (FR-L6)
     } else {
       size = input.size ?? settings['practice.defaultSize'];
@@ -129,10 +116,26 @@ export class PracticeService {
         );
       }
     }
-
+    // Reads only: an invalid language or topic is refused before anything is counted.
     const selection = await this.selection(input, requester);
-    if (requester.kind === 'learner' && !isAdmin) {
-      const decision = await this.deps.limits.checkLearnerCards(
+
+    if (requester.kind === 'guest') {
+      // Bot check first: an unverified request must not write anything (PRD §11.2 rule 5).
+      if (!(await this.deps.botCheck.verify(input.turnstileToken, requester.ip))) {
+        throw new BotCheckFailedError();
+      }
+      // Checked and counted in one step, so parallel requests can't overshoot (security review).
+      const decision = await this.deps.limits.consumeGuestPractice(
+        requester.ipHash,
+        settings['guests.practicesPerHour'],
+      );
+      if (!decision.allowed) {
+        throw new RateLimitedError(
+          'You passed the sample practices capacity. Wait some time and try again later, or Sign-in',
+        );
+      }
+    } else if (!isAdmin) {
+      const decision = await this.deps.limits.reserveLearnerCards(
         requester.userId,
         size,
         settings['users.cardsPerDay'],
@@ -148,8 +151,9 @@ export class PracticeService {
     );
     const cards = items.map((item) => buildCard(item, input.target, languages));
 
-    if (requester.kind === 'guest') await this.deps.limits.recordGuestPractice(requester.ipHash);
-    else if (!isAdmin) await this.deps.limits.recordLearnerCards(requester.userId, cards.length);
+    if (requester.kind === 'learner' && !isAdmin) {
+      await this.deps.limits.releaseLearnerCards(requester.userId, size - cards.length);
+    }
 
     return { requested: size, returned: cards.length, cards };
   }

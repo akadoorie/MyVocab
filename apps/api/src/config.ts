@@ -11,6 +11,16 @@ const TURNSTILE_TEST_SECRETS = new Set([
   '3x0000000000000000000000000000000AA',
 ]);
 
+/** The Workers Rate Limiting bindings (PRD §14.3); production refuses to run without any of them. */
+export const LIMITER_NAMES = [
+  'RL_PRACTICES',
+  'RL_AVAILABLE',
+  'RL_AUTH',
+  'RL_IMPORT',
+  'RL_ADMIN',
+  'RL_ME',
+] as const;
+
 const envSchema = z
   .object({
     ENVIRONMENT: z.enum(['development', 'test', 'production']),
@@ -81,6 +91,15 @@ export function loadConfig(env: Env): AppConfig {
     throw new Error(`Invalid configuration: ${problems.join('; ')}`);
   }
   const isProduction = result.data.ENVIRONMENT === 'production';
+  if (isProduction) {
+    // A missing binding would silently switch its burst limit off.
+    const missing = LIMITER_NAMES.filter(
+      (name) => !(env as unknown as Record<string, unknown>)[name],
+    );
+    if (missing.length > 0) {
+      throw new Error(`Invalid configuration: missing rate limit bindings: ${missing.join(', ')}`);
+    }
+  }
   const config: AppConfig = {
     ...result.data,
     isProduction,

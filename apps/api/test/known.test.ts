@@ -94,6 +94,20 @@ describe('POST /api/me/known', () => {
     expect(await count('user_known_items')).toBe(1);
   });
 
+  it('keeps only marks a practice could make: active language, published, playable (security review)', async () => {
+    const { cookie } = await signIn();
+    const id = await itemId('fx-word-1');
+    const draft = await itemId('fx-word-3');
+    await env.DB.prepare("UPDATE items SET status = 'draft' WHERE id = ?").bind(draft).run();
+    const res = await mark(cookie, [
+      { itemId: id, target: 'zz', round: 1 }, // not a language
+      { itemId: draft, target: 'he', round: 1 }, // not published
+      { itemId: id, target: 'he', round: 1 },
+    ]);
+    expect(await res.json()).toEqual({ saved: 1 });
+    expect(await count('user_known_items')).toBe(1);
+  });
+
   it('validates the batch strictly', async () => {
     const { cookie } = await signIn();
     const one = { itemId: 1, target: 'he', round: 1 };

@@ -1,9 +1,10 @@
 import type { Context } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import type { AppEnv } from '../app';
+import type { LIMITER_NAMES } from '../config';
 import { RateLimitedError } from './errors';
 
-type LimiterName = 'RL_PRACTICES' | 'RL_AVAILABLE' | 'RL_AUTH' | 'RL_IMPORT' | 'RL_ADMIN';
+type LimiterName = (typeof LIMITER_NAMES)[number];
 
 /** Per-IP key: the hashed IP (the same HMAC as the usage counters), never the raw address. */
 export async function ipKey(c: Context<AppEnv>): Promise<string> {
@@ -27,6 +28,7 @@ export function burstLimit(
   key: (c: Context<AppEnv>) => string | Promise<string>,
 ) {
   return createMiddleware<AppEnv>(async (c, next) => {
+    // Missing only in development or tests: production refuses to start without them (config.ts).
     const limiter = c.env[name] as RateLimit | undefined;
     if (limiter) {
       const { success } = await limiter.limit({ key: await key(c) });

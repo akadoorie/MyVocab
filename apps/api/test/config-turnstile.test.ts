@@ -32,6 +32,10 @@ describe('loadConfig', () => {
     ).toThrow(/https/);
   });
 
+  it('refuses production when a rate limit binding is missing (it would switch its limit off)', () => {
+    expect(() => loadConfig({ ...base, RL_ME: undefined } as unknown as Env)).toThrow(/RL_ME/);
+  });
+
   it('refuses production without Google OAuth, and a short auth secret anywhere', () => {
     expect(() => loadConfig({ ...base, GOOGLE_CLIENT_SECRET: '' } as unknown as Env)).toThrow(
       /Google/,

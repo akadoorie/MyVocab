@@ -410,7 +410,8 @@ Each entry is on its own line, **numbered** ("1.", "2.") when there are two or m
 - **FR-L52** The queue is mirrored to `localStorage` (keyed by user id; item ids and target codes only, never item
   text; a newer mark replaces only an older one of the same item **and** direction) so unsent
   entries survive a closed tab and are sent on the next app load. Sends retry with exponential backoff. The server
-  upsert is **idempotent** (it keeps the earliest `known_at`).
+  upsert is **idempotent** (it keeps the earliest `known_at`) and keeps only marks a practice could make: an active
+  target language and a published item playable in that direction (FR-L40).
 - **FR-L53** Changing a Know to Don't know or to Know · ask again (FR-L29a) removes the entry from the queue. If it
   was already sent, the client calls `DELETE /api/me/known/:itemId?target=<code>` (that direction only). Changing
   Don't know or Know · ask again to Know
@@ -1280,7 +1281,8 @@ follow these rules:
    when a topic is chosen, checks playability on the candidate row itself (no extra lookups), and returns the
    chosen cards' data in the same query (no second round trip).
 5. **No writes from blocked or unverified requests**: a guest's Turnstile token is verified before any D1 write;
-   usage caps are checked before incrementing, so an over-limit request writes nothing; `limit.exceeded` is audited
+   usage caps are checked and counted in one conditional statement (so parallel requests can't overshoot), and an
+   over-limit request writes nothing; `limit.exceeded` is audited
    at most once per subject per period; burst limits use the Workers Rate Limiting binding, not D1.
 6. **No per-request writes**: Better Auth refreshes a sign-in at most once a day (`updateAge` ≥ 1 day); "last seen"
    comes from that refresh. Known marks are batched (FR-L51).
@@ -1511,7 +1513,8 @@ The app must show cards to its users, so scraping can be made **slow, costly and
   → at most ~50 cards per hour per IP.
 - **Learner limits**: `users.cardsPerDay` (default 500) cards served per UTC day per user; admins exempt.
 - **Burst limits** (Workers Rate Limiting binding, per minute): `POST /practices` 10/min per IP, `GET /practices/available` and
-  `/practices/available-by-topic` 60/min per IP (shared), `/auth/*` 20/min per IP, `/admin/import` 10/min per admin, other `/api/admin/*` 120/min per admin.
+  `/practices/available-by-topic` 60/min per IP (shared), `/auth/*` 20/min per IP, `/admin/import` 10/min per admin, other `/api/admin/*` 120/min per admin, a learner's own data changes
+  (`/me/*` writes) 30/min per account. Production refuses to start if any of these bindings is missing.
 - **The daily write allowance can't be burned by bots**: blocked or unverified requests write nothing to D1 (§11.2
   rule 5).
 - **Visibility**: the first over-limit request per subject and period writes a `limit.exceeded` audit entry. The admin
@@ -1563,7 +1566,7 @@ Cloudflare Access: free for ≤ 50 users. Turnstile: free.
 ## 16. Hosting, deployment and operations
 - **Worker** `myvocab`, configured in `apps/api/wrangler.jsonc`:
   - `assets.directory` → `../web/dist`, `not_found_handling: "single-page-application"`, `run_worker_first: ["/api/*"]`.
-  - Bindings: `DB` (D1 `myvocab-prod`), `RL_PRACTICES`, `RL_AVAILABLE`, `RL_AUTH`, `RL_IMPORT`, `RL_ADMIN` (Rate Limiting), cron trigger `0 * * * *` (FR-A23, FR-A72: Trash purge +
+  - Bindings: `DB` (D1 `myvocab-prod`), `RL_PRACTICES`, `RL_AVAILABLE`, `RL_AUTH`, `RL_IMPORT`, `RL_ADMIN`, `RL_ME` (Rate Limiting), cron trigger `0 * * * *` (FR-A23, FR-A72: Trash purge +
     cleanup).
   - Vars: `ENVIRONMENT`, `APP_URL`, `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`, `TURNSTILE_SITE_KEY`.
   - Secrets (`wrangler secret put`): `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAILS`,
@@ -1574,9 +1577,11 @@ Cloudflare Access: free for ≤ 50 users. Turnstile: free.
 - **GitHub Actions** (public code repo):
   - `ci.yml` (every PR and push): install → lint → typecheck → `check:no-vocabulary` → unit + integration tests →
     build → Playwright (against a local `wrangler dev` with the test env and synthetic data).
-  - `deploy.yml`: triggered on push to `main` (and manually). Its deploy job targets the **`production` Environment**
-    with the owner as **required reviewer**, so it **waits for the owner's Approve click**. Then: CI checks →
-    `wrangler d1 migrations apply myvocab-prod --remote` → `wrangler deploy`. It never seeds, exports or prints data.
+  - `deploy.yml`: triggered on push to `main` (and manually), in two jobs. **Checks** (no credentials): the CI checks
+    and the SPA build. **Deploy** targets the **`production` Environment** with the owner as **required reviewer**,
+    so it **waits for the owner's Approve click**; then, from a fresh install without install scripts and with the
+    checked build: `wrangler d1 migrations apply myvocab-prod --remote` → `wrangler deploy`. No test or build tool
+    runs in the job that holds the Cloudflare token. It never seeds, exports or prints data.
   - `codeql.yml`: CodeQL for JS/TS. `dependabot.yml`: npm + GitHub Actions, weekly.
 - **Content operations** (owner, locally): first production seed with
   `pnpm db:seed --file ..\MyVocab-Content\starter.csv --remote` (after reviewing it); snapshots with

@@ -12,10 +12,12 @@ export default defineConfig(async () => {
         miniflare: {
           // Generous burst limits for the suite; the 429 path is tested with a fake limiter.
           ratelimits: Object.fromEntries(
-            ['RL_PRACTICES', 'RL_AVAILABLE', 'RL_AUTH', 'RL_IMPORT', 'RL_ADMIN'].map((name, i) => [
-              name,
-              { namespace_id: String(9001 + i), simple: { limit: 100_000, period: 60 as const } },
-            ]),
+            ['RL_PRACTICES', 'RL_AVAILABLE', 'RL_AUTH', 'RL_IMPORT', 'RL_ADMIN', 'RL_ME'].map(
+              (name, i) => [
+                name,
+                { namespace_id: String(9001 + i), simple: { limit: 100_000, period: 60 as const } },
+              ],
+            ),
           ),
           bindings: {
             ENVIRONMENT: 'test',

@@ -93,6 +93,21 @@ describe('burst limits (PRD §14.3)', () => {
     expect(await snapshot()).toBe(before);
   });
 
+  it("a learner's own data changes are limited per account (security review)", async () => {
+    const learner = await signIn('user');
+    const res = await fetchWith({ RL_ME: refuse }, '/me/known', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: ORIGIN, Cookie: learner.cookie },
+      body: JSON.stringify({ items: [{ itemId: 1, target: 'he', round: 1 }] }),
+    });
+    expect(res.status).toBe(429);
+    // Reading stays unlimited by it.
+    const list = await fetchWith({ RL_ME: refuse }, '/me/known', {
+      headers: { Cookie: learner.cookie },
+    });
+    expect(list.status).toBe(200);
+  });
+
   it('admin routes are limited per admin', async () => {
     const admin = await signIn('admin');
     const res = await fetchWith({ RL_ADMIN: refuse }, '/admin/stats', {

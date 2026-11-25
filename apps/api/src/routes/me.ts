@@ -12,6 +12,7 @@ import { Hono, type Context } from 'hono';
 import { deleteCookie } from 'hono/cookie';
 import type { AppEnv } from '../app';
 import { parseOrThrow, readJson } from '../lib/validate';
+import { burstLimit, ipKey } from '../middleware/burst-limit';
 import { UnauthorizedError } from '../middleware/errors';
 
 /** The signed-in user; 401 for guests (PRD §12.3). */
@@ -36,6 +37,10 @@ async function clearAuthCookies(c: Context<AppEnv>): Promise<void> {
 
 /** Current user and known items (PRD §12.2–12.3). `user_id` always comes from the session. */
 export const meRoutes = new Hono<AppEnv>()
+  // Every change to a learner's own data is rate limited per account: each one writes to D1, whose
+  // daily write allowance the whole site shares (PRD §11.2, §14.3).
+  .on(['POST', 'PUT', 'PATCH', 'DELETE'], '/me/*', burstLimit('RL_ME', ipKey))
+  .on('DELETE', '/me', burstLimit('RL_ME', ipKey))
   .get('/me', async (c) => c.json<MeResponse>({ user: await c.get('currentUser')() }))
 
   .delete('/me', async (c) => {

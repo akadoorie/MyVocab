@@ -8,6 +8,7 @@ interface __BaseEnv_Env {
 	RL_AUTH: RateLimit;
 	RL_IMPORT: RateLimit;
 	RL_ADMIN: RateLimit;
+	RL_ME: RateLimit;
 	ASSETS: Fetcher;
 	ENVIRONMENT: string;
 	APP_URL: string;
