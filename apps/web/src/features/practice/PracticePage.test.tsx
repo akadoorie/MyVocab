@@ -113,6 +113,16 @@ describe('PracticePage', () => {
     expect(segs()[0]).toHaveClass('is-dontKnow');
   });
 
+  it('a round of a single card has no round bar (D-132)', () => {
+    setup();
+    fireEvent.click(btn('I don’t know Show in next round'));
+    fireEvent.click(btn('Next'));
+    fireEvent.click(btn('I know Show in future'));
+    fireEvent.click(btn('I know Show in future'));
+    fireEvent.click(screen.getByTestId('continue')); // round 2: one card
+    expect(screen.queryByTestId('round-bar')).not.toBeInTheDocument();
+  });
+
   it('Don’t know flips to the back, keeps the layout, turns red off and Next pumps', () => {
     setup();
     fireEvent.click(btn('I don’t know Show in next round'));

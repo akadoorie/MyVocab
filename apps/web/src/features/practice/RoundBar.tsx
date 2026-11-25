@@ -5,8 +5,10 @@ import { answerOf, type PracticeState } from '@myvocab/core';
  * line under the header, so the card keeps its room. A card with an answer shows its colour
  * (green, orange or red); the current card glows. It always runs left to right, like the cards
  * and Next, in every language (D-096). Decorative: the counter above says "Card 4 of 10".
+ * A round of a single card has no bar: one lone segment says nothing (D-132).
  */
 export function RoundBar({ state }: { state: PracticeState }) {
+  if (state.order.length < 2) return null;
   return (
     <div className="round-bar" dir="ltr" aria-hidden="true" data-testid="round-bar">
       {state.order.map((id, i) => {

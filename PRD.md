@@ -260,7 +260,8 @@ private content repository. It never appears in the public code repo or any publ
 - **FR-L23 Progress**: the header shows `Round 2 · Card 1/3 · 2 known` (known = total known in this practice). Under it,
   on the version's line, a thin **round bar** (D-115): one segment per card of the round, left to right; an answered
   card shows its colour (green, orange or red); the current one is twice as tall (8 px) with a thin white edge and a
-  breathing glow (D-116); the rest are faint. Decorative for screen readers (the counter says it).
+  breathing glow (D-116); the rest are faint. A round of a single card has no bar (D-132). Decorative for screen
+  readers (the counter says it).
 - **FR-L24** Buttons and phases:
 
 | Phase | Know (both) | Hints cover | Flip | Don't know | Back | Next | Home |
