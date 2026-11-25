@@ -4,7 +4,7 @@
 |---|---|
 | **Product** | MyVocab: learn words and expressions in practices that shrink as you learn |
 | **Version** | 1.1 (v1 scope) |
-| **Updated** | 2026-11-23 |
+| **Updated** | 2026-11-25 |
 | **Status** | Live; this document describes the current product |
 | **Implementation prompt** | `AGENT_PROMPT.md` (local only: git-ignored, never committed to the public repo) |
 
@@ -147,334 +147,258 @@ private content repository. It never appears in the public code repo or any publ
 | Hosting | One Cloudflare Worker serves both the SPA assets and `/api/*` (same origin, so no CORS). Free tier; commercial use allowed |
 | Code repo | **Public** GitHub repo `MyVocab` (code only, **no vocabulary**) + GitHub Actions. Deploys and migrations run only after the owner's manual **Approve** click |
 | Content repo | **Private** GitHub repo `MyVocab-Content` (sibling folder): starter set, import CSVs, vocabulary snapshots |
-| Data flow | Content repo file → (owner's computer) → admin CSV upload **or** `pnpm db:seed` → D1. D1 is the live copy; the content repo is the archive |
-| Export | `pnpm db:export`, run locally by an owner: SQL dump + JSON per table + import-ready vocabulary CSV + schema README. `--content-only` = vocabulary CSV only (for snapshots). Clear README instructions |
+| Data flow | Content repo file → (owner's computer) → admin CSV upload **or** `pnpm db:seed` → D1. D1 is the live copy; the content repo is the archive (§8.5) |
+| Export | `pnpm db:export`, run locally by an owner (§8.6) |
 | Backups | D1 Time Travel (free; 7-day point-in-time restore) + vocabulary snapshots committed to the private content repo |
 | Deleting content | 1-day restorable **Trash**, then auto-purge. A full snapshot is kept permanently in the audit log |
 | Auth | Better Auth, **Google sign-in only**. `role` = `user` or `admin` |
 | Admin protection | Server-side role check **+ mandatory Cloudflare Access** (emailed one-time code) on `/admin*` and `/api/admin/*` |
-| Start defaults | Source **English**, Target **Hebrew**, Topic **All topics**, Amount **10**, shown in a muted "default" style |
-| Amount | Learners: **10 / 20 / 30 / 40 / 50** (default 10). Guests: **always 5**, locked, with a "Sign-in to change" message over the field |
-| Guests | Can run 5-card practices after an invisible **Turnstile** bot check. Their Know marks are **not** remembered |
-| Anti-scraping | Turnstile for guests + strict limits (guests ~10 practices/hour per IP; learners ~500 cards/day) + `noindex` + no third-party content exposure |
-| Content model | One **item** per word, expression or anything else (no type, D-046), in its own language. The three kinds of translation (parallel, meaning, literal; per other language), explanation, synonyms and hints are **ordered lists** stored inside the item row (§11) |
-| Topic pairs | Topics classify items (no types, D-046); two topics can be marked as not combinable on one item, e.g. "Expressions (except Idioms)" and "Idioms" |
-| Back of card | Different languages → the **parallel** (or the **meaning** when there is no parallel), then **Meaning** and **Literally** (muted) when present, each under its own headline; same language → **explanation**. Hints + synonyms always below |
-| Multiple meanings | Admin-set flag. Shown as a "◆ Multiple meanings" badge on the front |
-| Card UI | A glassy, violet-glowing **flip card** with a 3D flip animation and a round **Flip** button on both sides |
-| Hints | On the front, hints + synonyms sit under a live cover that a tap reveals and a tap covers again (D-047, D-078). The back always shows them |
-| Flip | The round **Flip** button on the card (front and back), or Space/F; a tap elsewhere on the card does nothing (D-047). It toggles front ↔ back any number of times and never affects grading |
-| Known memory | **Any** green "I know" (any round) is remembered per **item and direction** and hides the item in that direction (D-028). The amber "I know · Show in future" is never remembered: the word stays in the pool (FR-L27a) |
-| Known list | "My known words": search/filter/sort; return items to practices (single, selected, all filtered) |
-| Know tap | Advances immediately; Back (or a swipe toward Back) returns to the card, and its answer can be changed (FR-L29a) |
-| Topics | Many-to-many. "All topics" = all items |
-| Content sources | Agent-written starter set (in the private content repo) → then admins add manually or by CSV bulk upload |
-| UI language | **Hebrew by default**, English on request: a switch in the Home page header and the practice loop, remembered in the browser (D-080, D-083). Hebrew pages are right-to-left. The admin area stays English. Content renders in its own direction |
-| Look | Dark only. Near-black + violet palette. "Pressable ledge" 3D buttons |
-| DB tuning | Built for the D1 free tier: one row per item, only the indexes queries need, no writes from blocked requests, no per-request writes (§11.2) |
+| Start card | Defaults English → Hebrew, All topics, 10 cards; learners choose 10–50, guests always 5 from the Sample set (§6.1) |
+| Guests | Invisible **Turnstile** bot check; nothing is remembered (FR-L55) |
+| Anti-scraping | Turnstile for guests + strict limits + `noindex` + no third-party content exposure (§14.3) |
+| Content model | One **item** per word, expression or anything else (no type, D-046), in its own language, with ordered lists inside the row (§8.1, §11) |
+| Practice | Shrinking rounds of **flip cards** (§6.2); the back follows §6.3 |
+| Known memory | The green "I know" is remembered per **item and direction** (D-028); the amber one never is (FR-L27a) |
+| UI language | **Hebrew by default**, English on request, switchable in place (§9.8). The practice loop has **one layout in every language** (§9.8). The admin area stays English |
+| Look | Dark only. Near-black + violet palette. Glossy "pressable ledge" 3D buttons (§9) |
+| DB tuning | Built for the D1 free tier (§11.2) |
 
 ---
 
 ## 6. Functional requirements: Learner
 
 ### 6.1 Landing page and start card
-- **FR-L1** The landing page (`/`) shows the slogan, with **"Registered users: N"** in small muted text under it (the number in yellow, like the version):
-  for guests and learners only once N reaches the admin setting `stats.registeredUsersMin` (default 100), for admins
-  always, even at 0 (D-082; fetched once when the page opens; hidden if it fails to load, D-036) (when the page loads or is refreshed on Home, the first words
-  fade in and the last word ("stick"; Hebrew "ובחינם") drops in, bounces off twice and sticks on the third try with a soft squash and a faint shine, about
-  3s; not when coming back to Home inside the app; a short fade with reduced motion, D-034, D-037), the app version (a small yellow "v1.N" next to the name, D-032; also in the practice header, D-093), a short hero, a 3-step "How it works" section with a **"Buttons"** guide
-  (a small copy of each answer button as it looks in a practice: the same gradient, glossy edge, glow and ledge, label only, with its caption under it, D-058; and what it does; for guests the green one is dark, with a
-  small yellow lock, and its line ends "(Sign-in to enable)", the whole "Sign-in to enable" a link that starts sign-in, D-030, D-042, D-071), and the **Start card**.
-  Desktop: hero and start card side by side. Mobile: stacked, with the **Start** button right under the hero text
-  (and the guest sign-in note), above the start card's fields, so it can be pressed without scrolling (D-021).
-- **FR-L2** Start card fields and **defaults** (the defaults come from admin settings, §7.7):
+- **FR-L1 Landing page** (`/`; layout in §9.7):
+  - **Slogan** with its entrance: when the page loads or is refreshed, the first words fade in and the last word
+    ("stick"; Hebrew "ובחינם") drops in, bounces off twice and sticks on the third try with a soft squash and a faint
+    shine, about 3 s; not when coming back to Home inside the app; a short fade with reduced motion (D-034, D-037).
+  - **"Registered users: N"** in small muted text under it (N in yellow): for guests and learners only once N reaches
+    `stats.registeredUsersMin` (default 100), for admins always, even at 0 (D-082). Fetched once when the page opens;
+    hidden if it fails to load (D-036).
+  - The **app version**, a small yellow "v1.N" next to the name (D-032; also in the practice header, D-093).
+  - A short hero, a 3-step **"How it works"**, and a **"Buttons"** guide: a small copy of each answer button exactly as
+    in a practice (label only, caption under it, D-058) and what it does. For guests the green one is dark with a small
+    yellow lock, and its line ends "(Sign-in to enable)", all of it a link that starts sign-in (D-030, D-042, D-071).
+  - The **Start card**. Desktop: hero and start card side by side. Mobile: stacked, with **Start** right under the
+    hero text (and the guest sign-in note), above the fields, so it can be pressed without scrolling (D-021).
+- **FR-L2** Start card fields and **defaults** (from admin settings, §7.7; look in §9.5):
 
 | Field | Options | Default |
 |---|---|---|
 | Source language | Active languages | **English** |
 | Target language | Active languages | **Hebrew** |
-| Topic | "All topics" (admins and guests: "Sample set" first), a separator line, then the active topics (by `sort_order`), all aligned left (D-062). In the open list on desktop the special choices above the line sit on a lighter band in bold accent text (a guest's locked "All topics" in grey; D-063) | **All topics** |
-| Amount (signed-in) | **10 / 20 / 30 / 40 / 50** (a sliding pill, D-098) | **10** |
-| Amount (guest) | **5**, fixed and locked | **5** |
+| Topic | "All topics" (admins and guests: "Sample set" first), a separator line, then the active topics (by `sort_order`), all aligned left (D-062). In the open desktop list the choices above the line sit on a lighter band in bold accent text (a guest's locked "All topics" in grey; D-063) | **All topics** |
+| Cards per practice (signed-in) | **10 / 20 / 30 / 40 / 50** (a sliding pill, D-098) | **10** |
+| Cards per practice (guest) | **5**, fixed and locked | **5** |
 
-- **FR-L3 Default styling**: a default value must still read as **chosen**: same background and bright `--text`
-  value as a selected one (the selected option of a segmented control is filled the same way), with a subtle solid
-  `--border` outline and a small violet **"Default"** tag. As soon as the user changes it, the field gets a solid
-  `--accent` outline and the tag disappears.
-  When any field differs from its default, a **"Reset to defaults"** link appears. The user can press **Start**
-  immediately without touching anything.
-- **FR-L4** "New practice" from the summary starts the next practice with the same selection right away (FR-L32,
-  D-029). A fresh visit to `/`, including **Home** from the summary, always starts from the defaults (nothing is
-  remembered between visits).
-- **FR-L5 Same language**: choosing source = target is allowed. The back of the card then shows the item's
-  **explanation** instead of a translation. While the two languages are the same, a short muted note under the
-  fields says "Same language: the back shows an explanation".
-- **FR-L6 Guest amount**: guests see the Amount field fixed at **5** with a lock icon. It cannot be changed. A
-  **temporary message** says **"Sign-in to change"**, where **"Sign-in"** is a link that starts sign-in (D-043),
-  and goes away after 2 s (D-045). It appears over the Cards per practice field (on desktop on its right side, the lock
-  and the 5 staying visible; on phones over the whole narrow field, on one line), so it shows where the field is however far the page is scrolled
-  (D-044, D-070). It appears:
-  - once automatically, the first time a guest sees the start card while the browser tab is open, and
-  - every time the guest taps/clicks the locked Amount field.
-  The server **enforces** 5 for guests regardless of the request (§12.1).
+- **FR-L3 Default styling**: a default value still reads as **chosen** (the look of a selected value) plus a small
+  violet **"Default"** tag; once changed, the field gets an `--accent` outline and the tag goes (§9.5). When any field
+  differs from its default, a **"Reset to defaults"** link appears. **Start** works without touching anything.
+- **FR-L4 Nothing is remembered between visits**: a fresh visit to `/`, including **Home** from the summary, starts
+  from the defaults. Only **New practice** on the summary reuses the selection (FR-L32).
+- **FR-L5 Same language**: source = target is allowed; the back then shows the **explanation** (§6.3), and a short
+  muted note under the fields says "Same language: the back shows an explanation".
+- **FR-L6 Guest amount**: fixed at **5** with a lock icon. A **temporary message** "**Sign-in** to change" ("Sign-in"
+  is a link that starts sign-in, D-043) shows for 2 s (D-045) over the field (on desktop on its right side, the lock and
+  the 5 staying visible; on phones over the whole field, on one line; D-044, D-070): once automatically, the first time
+  a guest sees the start card in the tab, and every time the locked field is tapped. The server **enforces** 5 (§12.1).
 - **FR-L6a Guest topic: the Sample set** (D-038): guests play only items marked **"Include in Sample set"**, across
-  every topic. Their Topic dropdown shows **"Sample set"** selected, then "All topics", a separator line and every
-  topic (D-062), all but "Sample set" **greyed out and unselectable**, and a lock icon on the field (no note; D-054). They still
-  choose the languages, and the "N cards available" count only counts the sample set. The server
-  **enforces** it for guests whatever the request says (both the count and starting a practice). Signed-in learners
-  never see a "Sample set" option; **admins** do, so they can play exactly what guests get.
-- **FR-L7** The start card shows **"N cards available"** for the current selection, with N in yellow (counts only
-  playable items (FR-L40); excludes known items for signed-in users). The counts come from one request per language
-  direction (debounced 300 ms, kept 5 minutes per direction, fetched again whenever the start card opens), which also
-  labels every Topic option with its count, e.g. "Home [15]"; changing the topic asks nothing (D-064). A topic with
-  0 cards is greyed out; guests see the full counts on their locked topics, but their "Sample set" has none (it is the "N cards available" line, and the narrow phone field with its lock has no room, D-065). It sits right under the card's
-  heading, before the fields, with "Reset to defaults" beside it (D-060). The Amount field is labeled **"Cards per
-  practice"** (D-054).
-- **FR-L7a Amounts above the count** (D-057): all five amounts stay visible, but those above the "N cards
-  available" count are disabled (greyed out); the smallest (10) always stays selectable. A chosen amount that is
-  no longer allowed shows, and starts, as the largest allowed one; the choice comes back when more cards are
-  available again. While a new count loads, the last count's limits stay.
-- **FR-L8** If fewer cards are available than the amount, the practice starts with all available cards and shows a notice
-  ("Only 7 new cards in Home, starting with 7"). If 0 are available: an empty state ("You know every card in this
-  selection 🎉") with links to change the selection or open "My known words".
-- **FR-L9** Guests see a subtle banner: "Sign-in with Google to remember the words you already know, choose different topics and bigger practices."
-  "Sign-in with Google" is a link that starts sign-in. A soft violet light runs round the banner's frame three times
-  (about 7s a lap), then the frame keeps a steady faint glow; with reduced motion, only the glow (D-033).
-- **FR-L10** Guests pass an **invisible Cloudflare Turnstile** check when they press Start (§14.3). In the rare case
-  Turnstile shows an interactive challenge, it appears inline in the start card.
-- **FR-L10a Something went wrong** (D-092): an unexpected failure is retried before the error shows: after 1 s
-  quietly, then twice, 2 s apart, with "Something went wrong. Refreshing in 2 seconds." ("משהו השתבש. מרענן בעוד 2
-  שניות."); if those fail too, "Something went wrong. Please refresh the page." stays and nothing more is tried. When
-  the Home page can't load its settings, each retry reloads the page (the count is kept in the tab's sessionStorage
-  and ends after a successful load or a minute); when starting a practice fails, each retry starts it again. Known
-  errors (daily limit, guest limits, the bot check, sign-in needed, maintenance) are shown at once, as before.
-- **FR-L11** When `guests.enabled` = false, guests see "Sign-in to start" instead of the Start button.
-- **FR-L12** When `maintenance.enabled` = true, every page shows `maintenance.message`, and starting practices is disabled
-  for non-admins.
+  every topic. Their Topic field shows **"Sample set"** selected, with every other choice **greyed out and
+  unselectable**, and a lock icon on the field (no note; D-054). They still choose the languages. The server
+  **enforces** it (count and start). Signed-in learners never see "Sample set"; **admins** do, to play what guests get.
+- **FR-L7 "N cards available"** (N in yellow) for the current selection: only playable items (FR-L40), without the
+  learner's known ones. It sits right under the card's heading, before the fields, with "Reset to defaults" beside it
+  (D-060). One request per direction (debounced 300 ms, kept 5 minutes per direction, fetched again whenever the start
+  card opens) also labels every Topic option with its count, e.g. "Home [15]", so changing the topic asks nothing
+  (D-064). A topic with 0 cards is greyed out; guests see the counts on their locked topics, but not on "Sample set"
+  (the "N cards available" line gives it; D-065).
+- **FR-L7a Amounts above the count** (D-057): all five stay visible; those above N are disabled, except 10, which is
+  always selectable. A chosen amount that is no longer allowed shows, and starts, as the largest allowed one, and comes
+  back when more cards are available. While a new count loads, the last limits stay.
+- **FR-L8** Fewer cards than the amount: the practice starts with all of them and a notice ("Only 7 new cards in Home,
+  starting with 7"). None: "You know every card in this selection 🎉", with links to change the selection or open
+  "My known words".
+- **FR-L9** Guests see a banner: "Sign-in with Google to remember the words you already know, choose different topics
+  and bigger practices." ("Sign-in with Google" is a link that starts sign-in). A soft violet light runs round its frame
+  three times (about 7 s a lap), then a steady faint glow stays; reduced motion: the glow only (D-033).
+- **FR-L10** Guests pass an **invisible Cloudflare Turnstile** check on Start (§14.3); a rare interactive challenge
+  appears inline in the start card.
+- **FR-L10a Something went wrong** (D-092): an unexpected failure is retried: after 1 s quietly, then twice, 2 s apart,
+  with "Something went wrong. Refreshing in 2 seconds." ("משהו השתבש. מרענן בעוד 2 שניות."); then "Something went
+  wrong. Please refresh the page." stays. On the Home page each retry reloads the page (the count is kept in
+  `sessionStorage` and ends after a successful load or a minute); when starting a practice fails, each retry starts it
+  again. Known errors (daily limit, guest limits, bot check, sign-in needed, maintenance) show at once.
+- **FR-L11** When `guests.enabled` = false, guests see "Sign-in to start" instead of Start.
+- **FR-L12** When `maintenance.enabled` = true, every page shows `maintenance.message`, and non-admins can't start
+  practices.
 
 ### 6.2 The practice
-- **FR-L20** `POST /api/practices` returns the selected cards (fully composed for display). The practice then runs **entirely
-  in the browser** (no network round-trip per tap).
-- **FR-L21** Round 1 = all selected cards, shuffled with Fisher–Yates. Each later round = the previous round's
-  "Don't know" cards, re-shuffled. **If a round has more than one card, its order must differ from the previous
-  round's relative order** (re-shuffle, up to 10 attempts; then rotate by one).
-- **FR-L22 The flip card.** Each card is shown on a raised card with a soft shadow (§9.3).
-  - **Front**: a small label with the direction (e.g. "EN → HE"); the item **text**, large and
-    centered, with `dir`/`lang` from its language (`rtl` for Hebrew); a **"◆ Multiple meanings"** badge under the text
-    when the item has multiple meanings. Under the text, the **Hints** section (FR-L25): the hints in order, then a
-    **Synonyms:** line (if there are synonyms), in smaller muted text with the item language's `dir`, always there but
-    under a **live cover** until tapped (D-047). If the item has no hints and no synonyms, the section shows "Hint is
-    not available", with no cover.
-  - **Back**: at the top, the same row as the front, in the same place: the direction label and, on a card reached
-    with Back, the "Clicked: …" chip, so neither moves when the card turns (D-091). Then, for a translation, labelled lines (D-024, D-025, D-097): each line starts with its
-    label and continues with its entries. The main answer, large, labelled **"Parallel translation"** when the item has a
-    parallel; without one, **"Translation"** for a plain word (the meaning is then simply the translation) but
-    **"Meaning"** when the item has a literal translation (an expression whose words don't simply translate); under a parallel, a
-    **"Meaning"** line in a medium size; then a **"Literally"** line, small and muted. When the literal is marked as the
-    same as the parallel (D-026), the first label reads **"Parallel translation (also literally)"**, on two lines (it breaks before the
-    brackets, so the label column stays narrow and the answer gets the width), and there is no
-    Literally line. The labels are in the **answer's language**, not the UI's: a Hebrew answer gets "תרגום מקביל",
-    "תרגום", "משמעות", "מילולית" (and "תרגום מקביל (גם מילולית)"). Each line is in the answer language's `dir`; two
-    or more entries are numbered; a kind with no entries isn't shown. For the same language: the explanation lines
-    labelled "Explanation" ("הסבר" for a Hebrew answer, D-091, D-097); a thin divider; then the Hints section and the Synonyms line, **always** (whether or not
-    Hints was pressed), or "Hint is not available".
-  - Every card starts **front side up, with hints hidden**.
-- **FR-L22a** The **language switch** ("En" / "עב", as on the Home page) is in the practice header next to Home, and
-  at the top of the round break and the summary; Home and the switch are on the **left in every language** (the
-  counter on the right; D-123). The round break and the summary also have Home at the top, left of the switch with
-  the version under it, as in the practice header, besides their Home in the middle (D-124, D-125; at the break it
-  asks first, like during the practice). The round break and the summary use the card screen's page frame, so Home
-  and the switch stay **exactly in place** across the card, the round break and the summary, in every language
-  (D-126). The summary's Home and New practice, and the round break's Home and Continue, also keep their places when
-  switching (the buttons and Continue's caption are as wide as the longer language, and Continue as wide for every
-  second of its countdown), and their cards start below the version (D-128). On the round break, the heading and
-  the line under it also keep the height of the taller language (the Hebrew heading may wrap onto two lines), and
-  Continue keeps room for its countdown even after it stops, so nothing on the break moves when switching (D-129), so the language can change anywhere in the loop; the switch is live
-  and the practice keeps its cards, answers and progress. On phones narrower than 420 px the header's counter and logo
-  are a little smaller so the counter stays on one line (D-122).
-- **FR-L23** Header progress: `Round 2 · Card 1/3 · 2 known` (known = total known in this practice).
-  Under it, on the version's line, a thin **round bar** (D-115): one segment per card in the round; a card with an
-  answer shows its colour (green, orange or red); the current card is twice as tall (8px) with a thin white edge and a
-  glow that breathes (D-116); the rest are faint. It runs left to
-  right in every language (like the cards and Next), starting after the version (Home is on the left in every
-  language, D-123), so the card keeps its room; decorative for screen readers (the counter says it).
+- **FR-L20** `POST /api/practices` returns the selected cards, fully composed. The practice then runs **entirely in
+  the browser** (no request per tap).
+- **FR-L21 Rounds**: round 1 = all selected cards, shuffled (Fisher–Yates). Each later round = the previous round's
+  "Don't know" cards, re-shuffled; **with more than one card, the order must differ from the previous round's**
+  (up to 10 attempts, then rotate by one).
+- **FR-L22 The flip card** (look and placement in §9.3; every card starts **front up, hints covered**):
+  - **Front**: the direction label (e.g. "EN → HE"); the item **text**, large, with its language's `dir`/`lang`; a
+    **"◆ Multiple meanings"** badge when set; then the **hints area** (FR-L25): synonyms and hints in the item's
+    language, under a live cover, or "Hint is not available" (no cover) when there are none.
+  - **Back**: the same top row (direction label and, once answered, the "Clicked" chip), so nothing moves when the card
+    turns (D-091); the **answer** (§6.3) as labelled lines; a thin divider; the hints area, **always uncovered**.
+  - **Answer labels** (D-024, D-025, D-097): each line starts with its label, in the **answer's language** (Hebrew:
+    "תרגום מקביל", "תרגום", "משמעות", "מילולית", "הסבר"):
+    - main answer, large: **"Parallel translation"** when the item has a parallel; without one, **"Translation"** for a
+      plain word, but **"Meaning"** when the item has a literal translation;
+    - under a parallel, **"Meaning"**, medium size; then **"Literally"**, small and muted;
+    - literal marked as the parallel (D-026): **"Parallel translation (also literally)"**, breaking before the
+      brackets, and no Literally line;
+    - same language: **"Explanation"**.
+    Two or more entries are numbered; a kind with no entries isn't shown.
+- **FR-L22a Language switch** (D-080, D-122): "En" / "עב", as on the Home page, in the practice header and at the top
+  of the round break and the summary, next to Home. It works anywhere in the loop, live: the practice keeps its cards,
+  answers and progress, and **nothing moves**, only the words change (the one-layout rule, §9.8; D-123–D-130). On phones
+  narrower than 420 px the header's counter and logo are a little smaller, so the counter stays on one line (D-122).
+- **FR-L23 Progress**: the header shows `Round 2 · Card 1/3 · 2 known` (known = total known in this practice). Under it,
+  on the version's line, a thin **round bar** (D-115): one segment per card of the round, left to right; an answered
+  card shows its colour (green, orange or red); the current one is twice as tall (8 px) with a thin white edge and a
+  breathing glow (D-116); the rest are faint. Decorative for screen readers (the counter says it).
 - **FR-L24** Buttons and phases:
 
-| Phase | Know | Hints (cover) | Flip | Don't know | Back | Next | Home |
+| Phase | Know (both) | Hints cover | Flip | Don't know | Back | Next | Home |
 |---|---|---|---|---|---|---|---|
-| **Deciding**, card not answered yet | enabled | enabled\* | enabled | enabled | enabled\*\* | **disabled** | enabled |
-| **Deciding**, card answered earlier (reached with Back) | enabled | enabled\* | enabled | enabled | enabled\*\* | **enabled** | enabled |
-| **Revealed** (after Don't know) | **enabled** (D-109) | enabled\* | enabled | disabled | enabled\*\* | **enabled + focused** | enabled |
+| **Deciding**, card not answered yet | enabled | front only | enabled | enabled | enabled\* | **disabled** | enabled |
+| **Deciding**, card answered earlier (reached with Back) | enabled† | front only | enabled | enabled† | enabled\* | **enabled** | enabled |
+| **Revealed** (after Don't know) | **enabled** (D-109) | front only | enabled | disabled | enabled\* | **enabled + focused** | enabled |
 
-\* Hints: the live cover on the card front (D-047), usable whenever the **front** is showing (a toggle).
-\*\* Back is disabled on the first card of a round (FR-L29a).
-**Know · ask again** (FR-L27a) is enabled and disabled exactly like Know; for guests the green Know stays locked (FR-L27a).
+\* Back is disabled on the first card of a round. † The answer the card already has is disabled (FR-L29a). For guests the
+green Know stays locked (FR-L27a).
 
-- **FR-L25 Hints** (D-047): on the **front**, the hints and synonyms sit under a **live cover**: a cloud of tiny
-  shimmering dots over the blurred text, with a small "Tap to see hints" label, so it is clear it can be tapped.
-  **Showing it can be tapped** (D-121): every 5 s while the cover is untouched, the dots part for a moment in a spot at
-  the top of the hints area (on the side the hints start: left for left-to-right hints, right for right-to-left), showing
-  a bit of the sharp text, and a small finger next to "Tap to see hints" taps twice with a soft ring. Once the learner
-  has opened and covered the hints, this stops for the rest of the practice; with reduced motion it never plays.
-  Tapping the cover (or pressing **H**) reveals them (the dots scatter and fade, the text sharpens); a **clean tap on
-  the revealed hints** (or **H**) covers them again, but never a drag, a tap that stops a scroll, or a tap within
-  0.35 s of scrolling, so scrolling never hides them (D-078). A "Hide hints" button stays for keyboard and screen
-  reader users, out of sight until it has keyboard focus (D-078). **Long hints** (D-050): the hints and synonyms sit in their own
-  area, the room left between the divider and the Flip button's row; when they don't fit, only that area scrolls,
-  with a thin violet scrollbar and the last lines fading out while there is more below (the word and the Flip button
-  never move). On the front the hints reach down to the card's bottom (D-078, D-079): covered, the dots fill it with
-  a notch around the Flip button; revealed, the text runs down too, fading softly where it passes Flip, with room
-  after the last line so at the end of the scroll it rests above the Flip button. The back
-  works exactly the same way under the answer: its hints also reach down beside Flip, so with the line in the same
-  place both faces have the same room for the hints and fade at the same point (D-090). **Synonyms come first**, then one empty line (a tighter 1rem gap on phones, D-051), then the hint sentences. On phones the Flip button is 48px (64px on desktop), leaving more room for the hints (D-051). The cover is a real button ("Tap to see hints" / "Hide hints", `aria-expanded`); the hidden text is not
-  read out until revealed; it is at least 4.5rem tall, so a one-line hint is still easy to tap; with reduced motion
-  the dots stand still. There is **no Hints button**. The state survives flipping back and forth and is remembered per card
-  within the round: a new card starts covered, a card reached again with Back or Next shows it as it was left, and
-  a new round starts every card covered again (D-048). The back shows the hints uncovered, always. **Hints have no effect on grading** and are not
-  recorded.
-- **FR-L26 Flip**: turns the card over (front ↔ back) with a 3D flip animation (§9.4). It can be triggered by the
-  round **Flip** button in the card's corner (shown on **both** faces, never covered) or by the **Space**/**F** keys.
-  A tap or click anywhere else on the card does nothing, so a near-miss on the hints cover never flips it (D-047). The learner can flip back and forth
-  **any number of times**, in both phases. **Flipping has no effect on grading** and is not recorded.
-- **FR-L27 Know** (available on either side while Deciding): removes the card from the practice (it won't appear in the
-  next round), records it as known in this round, and **immediately** shows the next card (front side up). A Know made
-  by mistake is fixed with **Back** and then **Don't know** (FR-L29a); there is no separate Undo (D-019).
-- **FR-L27a Know · ask again** (D-023): a second, **amber** Know
-  button between Know and Don't know. Inside the practice it is exactly Know: the card leaves the practice, counts in
-  "N known" and in the summary, plays the Know animation, and the next card shows. The difference: it is **not
-  recorded** in the learner's known items (FR-L50), so the word stays in the pool and may be drawn again in any later
-  practice, at random (no schedule or waiting time).
-  **Labels (D-030; "I know" without "it", D-117):** green **"I know"** with the caption **"Never show again"** (D-113); amber **"I know"** with
-  **"Show in future"** (short, so it fits on one line on phones, D-112); red **"I don't know"** with **"Show in next round"**. Guests see all three, with the same
-  labels and captions (D-042): nothing is ever stored for them (FR-L55), so the amber one does for them exactly what
-  it says and is their "I know", while the green **"Never show again"** is shown **locked**: a darker green, a
-  yellow padlock on its top-left edge (top-right in Hebrew), off, titled "Sign-in to enable". Tapping it (or pressing K)
-  marks nothing and shows **"Sign-in required"** (Hebrew "נדרשת התחברות") over that button for 1.5 seconds, the
-  "Sign-in" part being a link that starts sign-in (D-043); it is `aria-disabled` rather than `disabled`, so it can still be tapped and focused.
-- **FR-L28 Don't know** (available on either side while Deciding): adds the card to the next round. If the card is
-  showing its front, it **flips automatically** to the back (answer + hints + synonyms). The phase becomes
-  **Revealed**: the three answer pills stay in place; red disables, while the two **Knows stay enabled** so the
-  learner can change their mind (a Know then records the card as known and moves on, D-109). **Next** enables and receives focus, and Flip
-  stays available (Hints works only while the front shows). The layout does not change: the round **Next turns
-  violet and pumps** (a gentle grow-and-shrink with a soft ring) until it is pressed, so the way on is clear; with
-  reduced motion it shows a steady ring instead (D-031). It also counts down from the admin setting `practice.nextSeconds`
-  (default 10; "Next · 10, 9…" on the button, with a light pie draining inside the round desktop button and a light
-  band draining across the phone pill, D-087) and moves to the next card by
-  itself at 0, like Continue on the break (D-069). Any tap, click, key or mouse-wheel scroll stops the countdown for
-  good (the learner may still be reading); it pauses while the page is hidden or "Are you sure?" is open; screen
-  readers hear "Next card in 10 seconds" once; 0 seconds means no countdown; not on a card reached with Back.
-- **FR-L28a The nudge** (D-066): to show what to press, the enabled answer pills and Flip pump once and a soft
-  shine sweeps across them (red, orange, green, Flip, about 80 ms apart). On the first 3 cards of each round this
-  plays 0.3 s after every change of the screen (a new card, a flip, hints, Don't know); after that, only when the
-  user waits 4 s without acting; while the user still waits, a soft shine alone (no pump) repeats every 10 s
-  (D-074). Flip pulses gently until it is first used in the practice (remembered across a refresh); after that it
-  joins the nudge and the shine only while the current card shows its front and wasn't flipped yet; while it still
-  pulses, it shines too, without the pump (D-074). Disabled or locked buttons, Back and Home don't take part. Next takes part only on a card reached with
-  Back (FR-L29a), where it shines after the green pill, its neighbour; otherwise it doesn't (after Don't know it has its own pump). Nothing
-  moves with reduced motion.
-- **FR-L29 Next**: moves to the next card (enabled in the Revealed phase, and on a card answered earlier that was
-  reached with Back). The next card enters front side up, sliding in from the side (§9.4, D-110; no reverse-flip animation).
-- **FR-L29a Back and changing an answer**: the round **Back** button (or **←**; **→** in Hebrew) shows the
-  previous card of the current round, card by card, down to the first card of the round (earlier rounds are out of
-  reach). On the round break and the summary, **"← Back to the last card"** returns to the round's last card. A card
-  reached with Back (or Next) **always shows its front**, even if it was showing its back when left, with its hints
-  cover **as it was left**: open if the learner had revealed the hints and not covered them again (D-048).
-  - The "Clicked" chip has a soft tint and thin border in its answer's colour, flat so it reads as a label. On a
-    card reached with Back it pops in once, then every 3 s tilts right and left a few times and rests (D-108).
-    Reduced motion: the tint only.
-  - On a card reached with Back, the answer button it already has is **disabled** (greyed out, its shortcut off), so
-    only a change is offered; Next moves on without one (D-107).
-  - Right after "I don't know", the card shows the red **"Clicked: I don't know"** chip at once, on both faces, so it
-    is clear the red button was pressed (D-104).
-  - A card that already has an answer shows a short chip on the same line as the direction label, on phones too
-    (D-049): **"Clicked: I know"** (green), **"Clicked: I know"** (amber; screen readers also hear "(show
-    in future)") or **"Clicked: I don't know"** (red), with no ✓ / ✗ mark, as on the answer buttons; in Hebrew
-    the chip starts with "נבחר:" (D-089), and **Next** steps forward without answering again,
-    up to the first unanswered card. There, Next is the way on: it **keeps pumping** (a gentle grow-and-shrink, in
-    its own colours, without the violet and the ring of Revealed) and shines with the nudge, after the green pill
-    (FR-L28a); the answer pills keep their own nudge. Nothing moves with reduced motion (D-084).
-  - **The answer can be changed.** **Know** on a Don't know card takes it out of the next round, records it as known
-    and moves on. **Don't know** on a Know card removes the Know, adds the card to the next round (never twice) and
-    reveals the answer as in FR-L28. Switching between the two Knows only changes whether the word is recorded
-    (FR-L53). Choosing the same answer again changes nothing. A change on the last card can
-    turn the summary into a round break, or the reverse.
-  - Answers are derived from the practice state (`known` for this round, with an "ask again" flag, and `nextRound`), so
-    there is no separate store.
-- **FR-L29b Swipe** (phones, touch only): **swipe left = Next**, **swipe right = Back** (the same in Hebrew, where
-  the buttons keep the English order, D-096), only when that action is allowed. The card follows the finger with a slight tilt; past about 70 px (or a quick flick)
-  it slides out and the action runs, otherwise it springs back. When the action isn't allowed it moves only a little,
-  with resistance. A mostly vertical drag is ignored, a tap does nothing, and with "reduce motion" there is no movement
-  (the action just happens). There is no on-screen hint; the buttons stay.
-- **FR-L30 Leaving a practice**: **Home** in the header (or Esc) ends the practice (there is no separate Stop
-  button, D-072), after asking **"Back to Home? This will stop the practice. Are you sure?"** with **Yes** /
-  **No** (FR-L30a). **Yes** ends the practice and returns to `/`; already-made Know marks are kept (and flushed, §6.4).
-  **No** continues where it was.
-- **FR-L30a Home from the practice**: the practice header has a **Home** button showing a house icon (no word; its accessible
-  name and tooltip are "Home", D-086), outlined so it reads as a control (it is
-  the only way out of a practice, D-072); it is not pumped or nudged, so it doesn't compete with the answers. Because it leaves the
-  practice, it first asks **"Back to Home? This will stop the practice. Are you sure?"** with **Yes** / **No**. **Yes** ends the practice (FR-L30);
-  **No** closes the question and the practice continues where it was. While the question is open, practice shortcuts are
-  ignored and Esc means No.
-- **FR-L31 Round break**: when a round ends and "Don't know" cards remain, an interstitial shows
-  "Round 3 · 2 cards left", a recap ("You knew 5 of 8 — 3 to go."), then **Home** and **Continue** side by side as on
-  the summary, with "to next round" under Continue (D-067). Home is on the left and Continue on the right in every
-  language, Hebrew too, as are Home and New practice on the summary (D-088). **Continue** (or Enter) starts the next round; it counts
-  down from the admin setting `practice.continueSeconds` (default 10; "Continue · 10, 9…", with a light band draining across it) and starts the next round by itself at 0; 0 seconds means no countdown (D-068).
-  Any tap, click or key stops the countdown for good; it pauses while the page is hidden; screen readers hear
-  "Continuing in N seconds" once; with reduced motion only the numbers count. **Home** (or Esc) asks "Back to
-  Home? This will stop the practice. Are you sure?" first, as during a card (FR-L30a). "← Back to the last card"
-  stays.
-- **FR-L32 End of practice**: when a round ends with no "Don't know" cards, a summary shows the total cards, the number of
-  rounds, **Already knew** (known in round 1) vs **Learned here** (known in round ≥ 2), and buttons **New practice**
-  and **Home**. **New practice** starts the next practice at once with the same selection (languages, topic,
-  amount), without the start card (D-029): the button reads "Starting…" (guests: the security check) meanwhile, and a
-  problem (no new cards left, the daily limit, a failed check) is shown under the buttons, where Home stays available.
-  It waits while the start settings load, and if they can't load it falls back to the start card, pre-filled.
-  **Home** goes to the start card with the defaults. Guests also see "Sign-in to skip words that no longer need to repeat".
-- **FR-L32a Celebration**: when the summary appears, a burst of **confetti** in the app's
-  colours shoots up from the bottom corners and flutters down for about 3 seconds (a canvas drawn by the app, no
-  library; none with "reduce motion"), and a short **applause** plays (`/sounds/applause.wav`, 2.3 s, mono, about
-  150 KB, loaded only then). A **🔊 Sound on / 🔇 Sound off** switch on the summary turns it off; the choice is
-  remembered on the device (`localStorage`), and sound is on by default. If the browser refuses to play, only the
-  confetti shows.
-  - **Once per practice**: after "← Back to the last card", reaching the summary again shows no confetti and plays no
-    sound. The flag is kept with the saved practice, so a refresh doesn't repeat it either. **Exception**: if the
-    learner went back, changed a card to Don't know and **continued into a new round**, completing that round is a
-    new completion, so the celebration and the crown's flight happen again.
-  - **The crown**: as the last confetti falls (about 2.4 s), a yellow crown flies in slowly (about 2 s) along one
-    smooth arc (no pause on the way) from the top-right of
-    the screen and lands, tilted, on the **upper-right corner** of the summary card with a small bounce, in every
-    language (D-127: Home and the language switch are at the top left). It stays there,
-    and on later visits to the summary in the same practice it is already in place (no flight). With "reduce motion"
-    it is simply there from the start.
-- **FR-L33** The practice state (including the current card's side and whether its hints are shown) is saved in
-  `sessionStorage`, so a page refresh resumes the same practice. Leaving with Home clears it; a finished practice
-  stays saved until the summary is left (Home or New practice), so switching the language on the summary keeps it
-  (D-123).
-- **FR-L34** Desktop keyboard shortcuts (listed in a "Keyboard shortcuts" popover in the practice header): **K** Know (signed-in learners; guests see the sign-in tip), **A** Know · ask again, **D** Don't know, **H** Hints,
-  **Space/F** Flip, **←** Back, **→** Next (the same in Hebrew, like the buttons, D-096; letter keys also work on a
-  Hebrew keyboard layout, D-080), **Enter** Next or Continue, **Esc** Home (asks first, FR-L30a). Shortcuts respect the enabled/disabled state.
+- **FR-L25 Hints** (D-047, D-048, D-050, D-078, D-090, D-121):
+  - **The cover**: on the front, synonyms and hints sit under a cloud of tiny shimmering dots over the blurred text,
+    labelled "Tap to see hints". It is a real button (`aria-expanded`; the hidden text isn't read out), at least
+    4.5rem tall. Tapping it (or **H**) reveals them (the dots scatter, the text sharpens); a **clean tap on the
+    revealed hints** (or **H**) covers them again, never a drag, a tap that stops a scroll or a tap within 0.35 s of
+    scrolling. A "Hide hints" button stays for keyboard and screen-reader users, visible only with focus. There is
+    **no Hints button**.
+  - **Showing it can be tapped**: every 5 s while untouched, the dots part for a moment at the top of the hints area (on
+    the side the hints start), and a small finger next to "Tap to see hints" taps twice with a soft ring. It stops for
+    the rest of the practice once the learner has opened and covered the hints.
+  - **State**: kept through flips and per card within the round (a card reached with Back or Next shows it as left);
+    a new card and a new round start covered. The back always shows the hints uncovered.
+  - **The area**: synonyms first, an empty line (1rem on phones), then the hints. It fills the room between the
+    divider and the card's bottom on both faces, beside the Flip button (a notch around it, the text fading where it
+    passes Flip), so both faces have the same room. Long content scrolls inside the area only (thin violet scrollbar,
+    the last lines fading while there is more), with room at the end to rest above Flip; the word and Flip never move.
+  - Hints never reveal the meaning or the literal translation, have **no effect on grading** and are not recorded.
+    Reduced motion: no scatter, the dots stand still, no tap demonstration.
+- **FR-L26 Flip**: turns the card over (3D animation, §9.4), any number of times, in both phases, by the **Flip**
+  button in the card's bottom-right corner (on both faces, never covered) or **Space**/**F**. A tap anywhere else on
+  the card does nothing (D-047). **No effect on grading**; not recorded.
+- **FR-L27 Know** (either side, while Deciding): removes the card from the practice, records it as known in this round
+  and **immediately** shows the next card. A mistaken Know is fixed with **Back** (FR-L29a); there is no Undo (D-019).
+- **FR-L27a The two Knows** (D-023, D-030, D-042, D-112, D-113, D-117): inside the practice both are exactly Know.
+  - Green **"I know"**, caption **"Never show again"**: recorded in the learner's known items (FR-L50).
+  - Amber **"I know"**, caption **"Show in future"**: **never recorded**, so the word stays in the pool and may come
+    back in any later practice, at random.
+  - Red **"I don't know"**, caption **"Show in next round"** (FR-L28).
+  - **Guests** see all three. Nothing is stored for them (FR-L55), so the amber one is their "I know"; the green one is
+    **locked**: darker green, a yellow padlock, titled "Sign-in to enable", `aria-disabled` (not `disabled`), so it
+    can still be tapped and focused. Tapping it (or **K**) marks nothing and shows **"Sign-in required"** ("נדרשת
+    התחברות"; "Sign-in" a link that starts sign-in, D-043) over the button for 1.5 s.
+- **FR-L28 Don't know** (either side, while Deciding): adds the card to the next round, flips a front-up card to the
+  back, and enters **Revealed**: the red pill disables, the two **Knows stay enabled** so the learner can change their
+  mind (D-109), Flip stays, and **Next** enables, takes focus, turns violet and **pumps** (a gentle grow-and-shrink with
+  a soft ring; reduced motion: a steady ring; D-031). Next also **counts down** from `practice.nextSeconds` (default
+  10; "Next · 10, 9…", a light pie draining inside the desktop button and a band across the phone pill, D-087) and
+  moves on by itself at 0 (D-069). Any tap, click, key or wheel scroll stops it for good; it pauses while the page is
+  hidden or a question is open; screen readers hear "Next card in 10 seconds" once; 0 means no countdown; never on a
+  card reached with Back.
+- **FR-L28a The nudge** (D-066, D-074): the enabled answer pills and Flip pump once with a soft shine sweeping across
+  them (red, orange, green, Flip, about 80 ms apart). On the first 3 cards of each round it plays 0.3 s after every
+  change of the screen (a new card, a flip, hints, Don't know); later only after 4 s without action; while the learner
+  still waits, a shine alone repeats every 10 s. Flip pulses gently until it is first used in the practice (remembered
+  across a refresh), shining without the pump meanwhile; then it joins only while the card shows a front not yet
+  flipped. Next joins only on a card reached with Back, after the green pill. Disabled or locked buttons, Back and Home
+  never take part. Nothing moves with reduced motion.
+- **FR-L29 Next**: moves to the next card (Revealed, or a card answered earlier). The card slides in, front up (§9.4).
+- **FR-L29a Back and changing an answer**:
+  - **Back** (or **←**) shows the previous card of the current round, down to its first card (earlier rounds are out of
+    reach). On the round break and the summary, **"← Back to the last card"** (the arrow first and pointing left in
+    every language, D-130) returns to the round's last card.
+  - A card reached with Back or Next **always shows its front**, its hints as left (D-048), and **Next** steps forward
+    without answering again, up to the first unanswered card. There Next keeps **pumping** (in its own colours, without
+    Revealed's violet and ring) and shines with the nudge (D-084).
+  - **The "Clicked" chip** (D-049, D-089, D-104, D-108): a card with an answer shows it on the direction label's line,
+    on both faces and on phones too: **"Clicked: I know"** (green), **"Clicked: I know"** (amber; screen readers add
+    "(show in future)") or **"Clicked: I don't know"** (red, at once after the red button); Hebrew "נבחר: …". A soft
+    tint and thin border in the answer's colour, flat like a label. On a card reached with Back it pops in once, then
+    every 3 s tilts right and left a few times; reduced motion: the tint only.
+  - **Changing the answer**: the answer the card already has is **disabled** (its shortcut too), so only a change is
+    offered (D-107). Know on a Don't know card takes it out of the next round, records it and moves on; Don't know on a
+    Know card removes the Know, adds the card to the next round (never twice) and reveals as in FR-L28; switching
+    between the two Knows only changes whether the word is recorded (FR-L53). A change on the last card can turn the
+    summary into a round break, or the reverse. Answers are derived from the practice state (`known` with an "ask
+    again" flag, and `nextRound`); there is no separate store.
+- **FR-L29b Swipe** (touch only): **left = Next**, **right = Back**, in every language, only when allowed. The card
+  follows the finger with a slight tilt; past about 70 px (or a quick flick) it slides out and the action runs,
+  otherwise it springs back; when not allowed it moves only a little, with resistance. A mostly vertical drag is
+  ignored, a tap does nothing, reduced motion: no movement. No on-screen hint.
+- **FR-L30 (and FR-L30a) Leaving a practice** (D-072, D-086): **Home** (a house icon, accessible name and tooltip "Home") in the
+  header, or Esc, asks **"Back to Home? This will stop the practice. Are you sure?"** with **Yes** / **No**. Yes ends
+  the practice and returns to `/`, keeping (and flushing, §6.4) the Know marks made; No continues where it was. While
+  the question is open, practice shortcuts are ignored and Esc means No. Home is outlined, not pumped or nudged. There
+  is no separate Stop button. The same applies to Home on the round break.
+- **FR-L31 Round break**: when a round ends and "Don't know" cards remain: "Round 3 · 2 cards left", a recap ("You
+  knew 5 of 8 — 3 to go."), then **Home** and **Continue** (with "to next round" under it, D-067), and "← Back to the
+  last card". **Continue** (or Enter) starts the next round; it counts down from `practice.continueSeconds` (default
+  10; "Continue · 10, 9…", a band draining across it) and continues by itself at 0; 0 means no countdown (D-068). Any
+  tap, click or key stops it for good; it pauses while the page is hidden; screen readers hear "Continuing in N
+  seconds" once; reduced motion: only the numbers count. Home asks first (FR-L30).
+- **FR-L32 Summary**: when a round ends with no "Don't know" cards: the total cards, the rounds, **Already knew**
+  (known in round 1) and **Learned here** (round ≥ 2), then **Home** and **New practice**, and at the bottom "← Back to
+  the last card" and the sound switch (FR-L32a). **New practice** starts the next practice at once with the same
+  selection, without the start card (D-029): it reads "Starting…" meanwhile (guests: the security check), and a
+  problem (no new cards left, the daily limit, a failed check) shows under the buttons; it waits while the start
+  settings load and falls back to the pre-filled start card if they can't load. **Home** goes to the start card with
+  the defaults. Guests also see "Sign-in to skip words that no longer need to repeat".
+- **FR-L32a Celebration**: when the summary appears, **confetti** in the app's colours shoots up from the bottom corners
+  and flutters down for about 3 s (an app-drawn canvas, no library), and a short **applause** plays
+  (`/sounds/applause.wav`, 2.3 s, mono, about 150 KB, loaded only then; if the browser refuses, only the confetti).
+  A **🔊 Sound on / 🔇 Sound off** switch on the summary turns the sound off (remembered in `localStorage`; on by
+  default). As the last confetti falls (about 2.4 s), a yellow **crown** flies in slowly (about 2 s) along one smooth
+  arc from the top-right and lands, tilted, on the summary card's **upper-right corner** with a small bounce (D-127),
+  and stays.
+  - **Once per practice**: coming back to the summary (after "← Back to the last card", or a refresh; the flag is kept
+    with the saved practice) shows the crown in place, with no confetti, sound or flight. **Exception**: going back,
+    changing a card to Don't know and finishing the resulting new round is a new completion and celebrates again.
+  - Reduced motion: no confetti, the crown is simply there.
+- **FR-L33** The practice state (including the current card's side and hints) is saved in `sessionStorage`, so a
+  refresh resumes it. Leaving with Home clears it; a finished practice stays saved until the summary is left (Home or
+  New practice), so a language switch on the summary keeps it (D-123).
+- **FR-L34** Desktop keyboard shortcuts (listed in a "⌨ Keyboard shortcuts" popover in the header): **K** green Know
+  (guests: the sign-in tip), **A** amber Know, **D** Don't know, **H** Hints, **Space/F** Flip, **←** Back, **→** Next,
+  **Enter** Next or Continue, **Esc** Home (asks first). The same in every language, and letter keys work on a Hebrew
+  keyboard layout (the physical key decides, D-080). Shortcuts respect the enabled state.
 
 ### 6.3 What the back of the card shows
 The front always shows the item text. The back depends only on whether the two languages are the **same or
-different**:
+different** (labels in FR-L22):
 
-| Languages | Answer (large) | Below the divider |
-|---|---|---|
-| different (e.g. EN → HE) | the item's **parallel** in the target language, or its **meaning** when it has no parallel: each entry on its own line; then "Meaning" (under a parallel) and "Literal translation" (smaller, muted) when the item has them in the target language (D-024) | Hints + Synonyms (item language) |
-| same (e.g. EN → EN) | the item's **explanation**: each entry on its own line, **numbered** ("1.", "2.") when there are two or more | Hints + Synonyms (item language) |
+| Languages | Answer (large) | Then | Below the divider |
+|---|---|---|---|
+| different (e.g. EN → HE) | the item's **parallel** in the target language, or its **meaning** when it has no parallel | "Meaning" (under a parallel) and "Literally" (smaller, muted), when present (D-024) | Hints + Synonyms (item language) |
+| same (e.g. EN → EN) | the item's **explanation** | — | Hints + Synonyms (item language) |
 
-- **FR-L40 Playability**: an item can be used for a direction only if it is `published`, not in Trash, its
-  language is the source language, and:
-  - different languages: it has **≥ 1 meaning** entry in the target language (D-025: the meaning is the required
-    translation; a parallel or literal translation alone never makes an item playable);
+Each entry is on its own line, **numbered** ("1.", "2.") when there are two or more.
+
+- **FR-L40 Playability**: an item can be used for a direction only if it is `published`, not in Trash, its language is
+  the source language, and:
+  - different languages: it has **≥ 1 meaning** entry in the target language (D-025; a parallel or literal translation
+    alone never makes an item playable);
   - same language: it has **≥ 1 explanation** entry.
-- **FR-L41** The server composes each card (front, answer lines and what they are, meaning, literal translation, hints, synonyms, languages and text directions)
-  before sending it (§12.1). The browser only renders it and never applies these rules itself.
-- **FR-L42** Hints and synonyms are always in the item's language and are shown with its `dir`.
-- **FR-L43** The parallel and the literal translation never make an item playable on their own (FR-L40 needs a
-  meaning). The meaning and the literal translation are never revealed by **Hints** (they would give the answer away).
-  "My known words" shows the main answer only (the parallel, else the meaning).
+- **FR-L41** The server composes each card (front, answer lines and what they are, meaning, literal translation, hints,
+  synonyms, languages and text directions) before sending it (§12.1). The browser only renders it.
+- **FR-L42** Hints and synonyms are always in the item's language and shown with its `dir`.
+- **FR-L43** "My known words" shows the main answer only (the parallel, else the meaning).
 
 ### 6.4 Known items (signed-in learners only)
 - **FR-L50** Every Know (in any round) is recorded as `{itemId, target, round}` in a client-side **pending queue**.
@@ -699,7 +623,7 @@ This JSON shape is used by the API, the admin editor and the JSON export (illust
 | `lang` | A known language, active or not (D-027). **Fixed after creation** |
 | `multipleMeanings` | Boolean, default `false` |
 | `topics` | 0..N topic slugs (ids in the admin API). An item without topics appears only under All topics |
-| `parallel` | Column `translation_parallel`. An object whose keys are language codes **other than `lang`**; each value is a non-empty ordered list (≤ 10 entries, each ≤ 200 chars): the equivalent word or expression in that language. For a plain word, this is simply its translation. The main answer of a card |
+| `parallel` | Column `translation_parallel`. An object whose keys are language codes **other than `lang`**; each value is a non-empty ordered list (≤ 10 entries, each ≤ 200 chars): the equivalent word or expression in that language (a plain word has none; D-025). The main answer of a card when present |
 | `meaning` | Column `translation_meaning`. Same shape (≤ 10 entries, each ≤ 300 chars): what the item means, in that language. Shown under the parallel, or as the main answer when there is no parallel |
 | `literal` | Column `translation_literal`. Same shape (≤ 5 entries, each ≤ 200 chars): the word-for-word translation, shown last in a muted color. When it is word for word the same as the parallel, the list holds only the marker `=parallel` (D-026), allowed only where that language has a parallel; an empty list means "not filled in" |
 | `explanation` | Ordered list in `lang` (≤ 10 entries, each ≤ 500 chars), one entry per meaning |
@@ -880,10 +804,7 @@ myvocab-export-2026-11-16-1430/
 ## 9. UX and visual design
 
 ### 9.1 Design tokens (dark theme only)
-| Token | Value | Use |
-|---|---|---|
-The look (D-017): a deep navy-violet night, glassy cards with a violet glow, and
-glossy, glowing pressable buttons.
+The look (D-017): a deep navy-violet night, glassy cards with a violet glow, and glossy, glowing pressable buttons.
 
 | Token | Value | Use |
 |---|---|---|
@@ -894,38 +815,34 @@ glossy, glowing pressable buttons.
 | `--text` | `#F1EEFB` | Primary text, user-selected values |
 | `--text-muted` | `#A79FC6` | Secondary text, button captions, hints and synonyms |
 | `--accent` | `#9B82FF` (button gradient `#8B6CFF → #6A3EF5`) | Primary actions, links, focus ring, selected-field outline, the card glow |
-| `--know` | `#2BD46A → #16A34A` | Know pill (white text) |
-| `--again` | `#F8A920 → #C96A05` | Know · ask again pill (amber, white text; FR-L27a) |
+| `--know` | `#2BD46A → #16A34A` | Green Know pill (white text) |
+| `--again` | `#F8A920 → #C96A05` | Amber Know pill (white text; FR-L27a) |
 | `--dontknow` | `#FB4D6D → #E11D48` | Don't know pill (white text), destructive actions |
-| `--hint` | `#FACC15` | Yellow accents: the version, counts, padlocks |
-| `--round` | `#3E2D7E → #251A50` | Back, Next and Flip round buttons (white icon) |
+| `--hint` | `#FACC15` | Yellow accents: the version, counts, padlocks, the crown |
+| `--round` | `#3E2D7E → #251A50` | Back, Next and Flip buttons (white icon) |
 | `--stop` | `#2E2650` | Secondary actions (e.g. Home) |
 | `--card-glow` | `0 0 0 1px #6D4CFF66, 0 0 32px #6D4CFF40, 0 20px 50px #0009` | Flip card edge glow + elevation |
 
-- Every button color has a `--*-ledge` variant (a darker shade for the 3D ledge) and a `--*-glow` (a soft colored
+- Every button colour has a `--*-ledge` variant (a darker shade for the 3D ledge) and a `--*-glow` (a soft coloured
   halo, about 45% opacity).
-- Text/background combinations must meet **WCAG AA** contrast. White on the Know pill is used only as large bold text
-  (≥ 20px bold); icons meet 3:1.
-- Radius: the **practice screen is square with softened 4px corners** (D-101): the flip card, the answer pills, Back,
-  Next and Flip, the chips ("EN → HE", "Clicked: …", "◆ Multiple meanings"), the hints cover and its label, the
-  "Sign-in required" tip, the practice header's Home button, and the small button copies in the Home page's "Buttons"
-  guide (`--radius-practice`). The 3D buttons everywhere else (Start, Continue, New practice, Home on the summary,
-  dialogs, the Account, Known words and admin pages) share the same 4px corners (D-102). Elsewhere: 18px (other
-  cards), 12px (inputs).
-  Spacing on a 4px scale.
+- Text/background combinations meet **WCAG AA**. White on the green pill is used only as large bold text (≥ 20px
+  bold); icons meet 3:1.
+- **Radius** (D-101, D-102): **4px** (`--radius-practice`) for everything in the practice loop (the flip card, the
+  answer pills, Back, Next and Flip, the chips, the hints cover and its label, the "Sign-in required" tip, the header's
+  Home button, the Home page's "Buttons" guide copies) and for every 3D button elsewhere (Start, Continue, New
+  practice, Home, dialogs, the Account, Known words and admin pages). Other cards 18px; inputs 12px.
+- Spacing on a 4px scale.
 
 ### 9.2 Pressable-ledge 3D buttons
-Buttons keep the pressable ledge, now glossy: a top-to-bottom gradient, a thin light top edge, the ledge underneath
-and a colored glow around. On the practice screen they are square with softened 4px corners (D-101), not ovals or
-circles. The practice uses two shapes:
-- **Pills** (the three answers, FR-L27a, D-030): the label only inside ("I know", "I know", "I don't
-  know"), on phones and desktop alike (no ✓ / ✕ icons, D-058). On phones the three pills share the row. Each has a small italic muted caption
-  under it ("Never show again", "Show in future", "Show in next round"), which may wrap onto two lines on a
-  phone. For guests the green pill is locked: a darker green (dimmed, not grey), disabled, with a small yellow padlock
-  (no background) on its top-left edge (top-right in Hebrew), on phones too (D-042).
-- **Round buttons** (Back, Next; Flip on the card): an icon in a circle (56px mobile, 64px desktop) with an
-  italic muted caption underneath ("Back", "Next"). Hints are on the card itself (D-047).
-Disabled buttons lose glow and ledge and look muted. Base mechanics:
+Glossy: a top-to-bottom gradient, a thin light top edge, the ledge underneath and a coloured glow around; square with
+4px corners, never ovals or circles. Disabled buttons lose glow and ledge and look muted. The practice uses two shapes:
+- **Answer pills** (D-030, D-058): the label only ("I don't know", "I know", "I know"; no icons), with a small italic
+  muted caption under it ("Show in next round", "Show in future", "Never show again"), which may wrap onto two lines on
+  a phone. The guest's locked green pill (FR-L27a) is a dimmed darker green (not grey) with a small yellow padlock (no
+  background) on its top-left edge, on phones too (D-042).
+- **Square icon buttons** (Back, Next on desktop; Flip on the card): an icon (56px mobile, 64px desktop; Flip 48px on
+  phones, D-051) with an italic muted caption under Back and Next. On phones Back and Next are pills (§9.7).
+
 ```css
 .btn3d {
   background: var(--c);
@@ -943,44 +860,31 @@ Disabled buttons lose glow and ledge and look muted. Base mechanics:
 - Keyboard focus: a 2px `--accent` outline with offset. Minimum touch target 48×48px.
 
 ### 9.3 The flip card (look)
-- A glassy card: a translucent violet gradient over `--surface`, a 1px violet border with `--card-glow`, radius 28px,
-  and a subtle top highlight. Generous padding (24px mobile, 40px desktop).
-- **Front**: a pill chip at the top left in every language ("EN → HE", uppercase, violet text on `--surface-2`;
-  D-080), with the answer chip on the right on a card reached with Back; the item text centered, large and bold;
-  under it, when applicable, a small pill badge "◆ Multiple meanings" (`--surface-2` background, `--accent` text).
-  Then a thin divider and the hints area: the hints cover, or (revealed) a "Synonyms: …" line and the hints as a
-  muted list (or "Hint is not available").
-- **Back** (D-097): the answer is a two-column grid, one line per kind: the **label at the start of the line** (right
-  for a Hebrew answer, left for an English one; small, semibold, violet, in the answer's language; a long label wraps
-  onto two lines, never taking more than about a third of the width) and the **entries after it on the same line**.
-  The main answer, large and bold ("Parallel translation", or "Translation" when there is no parallel); under a
-  parallel, "Meaning" in `--text`, semibold, a size below the answer; then "Literally" in `--text-muted` at the hints'
-  size, the least emphasized. When the literal is the parallel (D-026), the first label reads "Parallel translation
-  (also literally)" and the Literally line is left out. Two or more entries are numbered ("1.", "2."). For the same
-  language: the explanation lines labelled "Explanation" (numbered when there are two or more, smaller when long). Then a thin divider;
-  then
-  **Hints** as a muted list and a "Synonyms: …" line (or "Hint is not available").
-- A round **Flip** button (↻) sits in the bottom-right corner of **both** faces, in every language, so the card can be
-  turned back from the answer side too.
-- **Size**: in the practice the card has a **fixed height** that never changes when it flips,
-  shows hints, or moves to the next card: on phones it fills the space between the header and the buttons; on desktop
-  it is `clamp(420px, 58vh, 600px)`. Both faces share one grid cell. A face with more content than fits scrolls
-  inside the card.
-- **Placement** (D-095): the line under the upper part sits at **exactly the middle of the card**, on both faces and
-  for every word, so it never moves when the card turns. Above it, under the top row (direction label and "Clicked"
-  chip), the item (front, centred) or the answer (back) sits in the upper half, vertically centred; the hints and
-  synonyms appear below the line. The answer starts on the side its language reads from (right for Hebrew, left for
-  English), each line with its label first (D-097). When the content doesn't fit above the line (many meanings, a
-  Meaning and a Literally line, a long word), its text **shrinks until it fits**: the main answer, Meaning and
-  Literally together, keeping their proportions, never below 12 px for the main text; the gaps between the lines shrink
-  with them, and the labels shrink a little (to 80% at most).
+- A glassy card: a translucent violet gradient over `--surface`, a 1px violet border with `--card-glow`, 4px corners,
+  a subtle top highlight; padding 24px mobile, 40px desktop.
+- **Top row** (both faces): the direction chip on the left ("EN → HE", uppercase, violet text on `--surface-2`) and the
+  "Clicked" chip on the right (D-091).
+- **Front**: the item text centred, large and bold; under it, when set, a small "◆ Multiple meanings" badge
+  (`--surface-2` background, `--accent` text).
+- **Back** (D-097): the answer is a two-column grid, one line per kind: the **label first** (on the side the answer's
+  language reads from; small, semibold, violet; a long label wraps, never taking more than about a third of the width)
+  and the entries after it. Main answer large and bold; "Meaning" in `--text`, semibold, a size below; "Literally" in
+  `--text-muted` at the hints' size; explanations smaller when long.
+- **Flip** (↻) in the bottom-right corner of both faces.
+- **Size**: a **fixed height** that never changes when the card flips, shows hints or moves on: on phones it fills the
+  space between the header and the buttons; on desktop `clamp(420px, 58vh, 600px)`. Both faces share one grid cell.
+- **Placement** (D-095): the divider sits at **exactly the middle of the card**, on both faces and for every word.
+  Above it, under the top row, the item (front, centred) or the answer (back) sits vertically centred; the hints area
+  (FR-L25) fills below it. When the content doesn't fit above the line, its text **shrinks until it fits** (the main
+  answer, Meaning and Literally together, keeping their proportions, never below 12px for the main text; the gaps
+  shrink with them, the labels to 80% at most).
 
 ```
 FRONT, hints revealed            BACK, after Flip (EN → HE)
 ┌────────────────────────────┐   ┌────────────────────────────┐
-│ EN → HE                    │   │          MEANING           │
-│           Date             │   │           תאריך            │
-│   ◆ Multiple meanings      │   │            תמר             │
+│ EN → HE                    │   │ EN → HE                    │
+│           Date             │   │ Translation  1. תאריך      │
+│   ◆ Multiple meanings      │   │              2. תמר        │
 │ ────────────────────────── │   │ ────────────────────────── │
 │ • What is the date today?  │   │ • What is the date today?  │
 │ • Dates grow on palm trees.│   │ • Dates grow on palm trees.│
@@ -999,139 +903,110 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   .flip-card__inner { transition: none; }      /* swap faces with a 150ms opacity crossfade instead */
 }
 ```
-- Triggers: the round **Flip** button on the card and the **Space**/**F** keys (a tap on the card does nothing, D-047). It toggles
-  both ways without limit.
-- Rapid repeated flips simply reverse the animation (no queued spins).
-- RTL: the rotation direction stays the same; only text direction changes per face.
-- **Hints**: the live cover's dots scatter and fade while the text sharpens (none with reduced motion, D-047).
-- **Accessibility**: the round Flip button on the visible face is the keyboard control (a real `button` named
-  "Flip"); it is the only pointer control for flipping. The hidden face gets `inert` +
-  `aria-hidden="true"`, so only the visible face's Flip button is focusable. An `aria-live="polite"` region announces
-  "Showing answer" / "Showing front" / "Hints shown".
-- After **Don't know** on the front, the same flip animation plays automatically.
-- **Between cards: a slide** (D-110). **Next**: the card slides out to the left while the next one slides in from
-  the right, front side up (≈ 550ms, easing in and out, D-114). **Back**: the reverse (out to the right, the earlier card in from the left).
-  The same in every language, matching the swipe and the buttons (Back left, Next right). A new round's first card
-  rises in (≈ 260ms: from slightly lower, smaller and transparent). With reduced motion: a plain 150ms fade.
-- **Know animations:** the old card does its Know animation while the next card slides in from the right (starting
-  0.14s later), so Know never feels slow; reduced motion skips them.
-  - **Green "I know" (forever): a firework** (D-103). A decorative copy of the card shrinks into a bright green spark
-    (0.3s), which shoots up to the "N known" counter in the header (about 0.5s) and bursts there like a firework, its
-    sparks falling in short trails (about 1.1s); the counter pops green as it bursts.
-  - **Orange "I know" (ask again): the paper roll** (D-094). The card **rolls up like a sheet of paper**, from its
-    bottom edge to its top, into a tight scroll (the light back of the paper showing), and the scroll is **sucked along
-    a curve into the counter**, which pops amber as it lands. The roll takes about 0.55s and the flight about 0.4s.
-  - **Red "I don't know": a loop** (D-106). As the card turns to its answer, a glowing red line races once around
-    the card's edge, like a "repeat" arrow (the card comes back next round), then fades; decorative (the "Clicked"
-    chip says it in words). Reduced motion: none.
-  - Don't know keeps the flip; the slide comes with Next. A swipe slides the card out sideways (FR-L29b) and the
-    new card slides in as with Next or Back.
+- Rapid repeated flips reverse the animation (no queued spins). The rotation is the same in every language. After
+  **Don't know** on the front, the same flip plays automatically.
+- **Accessibility**: the Flip button on the visible face is the keyboard and pointer control (a real `button` named
+  "Flip"). The hidden face gets `inert` + `aria-hidden="true"`. An `aria-live="polite"` region announces "Showing
+  answer" / "Showing front" / "Hints shown".
+- **Between cards: a slide** (D-110, D-114). **Next**: the card slides out to the left while the next slides in from
+  the right, front up (≈ 550ms, easing in and out); **Back**: the reverse. A swipe slides the card out the same way. A
+  new round's first card rises in (≈ 260ms, from slightly lower, smaller and transparent). Reduced motion: a 150ms fade.
+- **Know animations** (decorative; the next card slides in 0.14s after they start, so Know never feels slow; none with
+  reduced motion):
+  - **Green: a firework** (D-103). A copy of the card shrinks into a bright green spark (0.3s), shoots up to the "N
+    known" counter (about 0.5s) and bursts there, its sparks falling in short trails (about 1.1s); the counter pops green.
+  - **Amber: the paper roll** (D-094). The card rolls up like a sheet of paper from its bottom edge into a tight scroll
+    (about 0.55s), which is sucked along a curve into the counter (about 0.4s); the counter pops amber.
+  - **Red: a loop** (D-106). As the card turns to its answer, a glowing red line races once around its edge, like a
+    "repeat" arrow, then fades.
 
 ### 9.5 Start card (look)
-- Under the heading, first: the "N cards available" line, with "Reset to defaults" on its right when shown
-  (D-060).
-- Each field has a label and either a select (languages, topic) or, for the amount, a **sliding pill** (D-098): the
-  five amounts in one track and a violet pill on the chosen one, which slides to a new amount when it is tapped, when
-  the pill (or the track) is dragged sideways with a finger or the mouse, or with the arrow keys; a mostly vertical
-  swipe still scrolls the page, amounts not allowed right now stay greyed out and the pill never lands on them, and it
-  runs right to left in Hebrew. For screen readers it stays a radio group. Phones and
-  desktop share one layout (D-055): From and To on one line with a small round **switch button** (⇄) between
-  them that swaps the two languages (disabled when they are the same), then Topic and Cards per practice on the
-  next line (D-046). Both lines share one grid: Topic sits exactly under From
-  and Cards per practice under To, with the same widths, heights and label positions (D-056).
-- **Default style** (value unchanged): looks chosen (bright value text, filled selected option), subtle solid
-  outline, a small violet "Default" tag on the right (not on phones, where each field shares its line;
-  D-053, D-055). **Selected style** (user changed it): the same, with a solid
-  `--accent` outline and no tag.
-- **Guest amount**: a single "5" with a lock icon; tapping it shows the "Sign-in to change" message over the field (FR-L6).
-- The "Same language: the back shows an explanation" note (FR-L5) appears under the language fields when they match.
-- The card's heading is **"Configure a Practice loop"**.
-- The large **Start** button (accent color, pressable ledge): on desktop it sits under the fields, with the "N new
-  cards available" line just above it; on mobile it sits above the card, right under the hero text (FR-L1). The
-  security check (if any) and error messages appear next to it.
+- Heading **"Configure a Practice loop"**; under it the "N cards available" line, with "Reset to defaults" on its right
+  when shown (D-060).
+- **Fields** (D-046, D-055, D-056): one layout on phones and desktop: From and To on one line with a small round
+  **switch button** (⇄) between them that swaps the languages (disabled when they are the same), then Topic and Cards
+  per practice, sharing one grid (Topic under From, Cards per practice under To, same widths, heights and label
+  positions).
+- **Cards per practice** is a **sliding pill** (D-098): the five amounts in one track, a violet pill on the chosen one
+  that slides when an amount is tapped, when the pill or track is dragged sideways, or with the arrow keys; a mostly
+  vertical swipe still scrolls; disallowed amounts stay greyed out and the pill never lands on them; it runs right to
+  left in Hebrew; for screen readers a radio group. Guests: a single "5" with a lock icon (FR-L6).
+- **Default style**: bright value text (a segmented control's chosen option filled), a subtle solid `--border` outline
+  and a small violet "Default" tag on the right (not on phones; D-053, D-055). **Selected style**: the same with a solid
+  `--accent` outline and no tag. Not conveyed by colour alone.
+- The "Same language" note (FR-L5) appears under the language fields.
+- The large **Start** button (accent, pressable ledge): on desktop under the fields; on mobile above the card, under the
+  hero text (FR-L1). The security check (if any) and errors appear next to it.
 
 ### 9.6 Typography
-- **Rubik** (Latin, Hebrew, Arabic and Cyrillic), self-hosted via `@fontsource/rubik` (no external font requests;
-  keeps the CSP strict). The per-weight files give each subset a `unicode-range`, so a browser downloads only the
-  subsets a page shows (D-027).
-- Item text (front): `clamp(2rem, 6vw, 3.5rem)`, weight 600. Answer lines (back): `clamp(1.5rem, 4.5vw, 2.25rem)`;
-  long explanation lines step down to `1.125rem–1.25rem`. Hints, synonyms and the literal translation: 1.125rem on every screen, `--text-muted`.
-- Every piece of content text gets `dir` and `lang` from its language (`he` → `rtl`). The UI chrome follows the UI
-  language (D-080): Hebrew pages are RTL, English pages LTR; the admin area is always LTR English.
+- **Rubik** (Latin, Hebrew, Arabic and Cyrillic), self-hosted via `@fontsource/rubik` (no external font requests; keeps
+  the CSP strict). Each subset has a `unicode-range`, so a browser downloads only what a page shows (D-027).
+- Item text (front): `clamp(2rem, 6vw, 3.5rem)`, weight 600. Answer lines (back): `clamp(1.5rem, 4.5vw, 2.25rem)`; long
+  explanation lines step down to `1.125rem–1.25rem`. Hints, synonyms and the literal translation: 1.125rem, `--text-muted`.
 
 ### 9.7 Layouts
-- **Landing**: header (logo "MyVocab", the language switch, sign-in / avatar, an "Admin" link for admins as a full-page navigation); hero
-  ("Learn words until they stick"; Hebrew "ללמוד מילים וביטויים לפסיכומטרי ביעילות ובחינם"); How it works (1. Pick languages and a topic, or just press Start ·
-  2. Use Hints or Flip, then mark what you know · 3. Repeat the words that you didn’t know, till nothing is left), then "Buttons" (a small copy
-  of each answer pill with its caption, each with one line on what it does; D-058); Start card; footer (Privacy, Licenses). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
-- **Practice header**: the MyVocab logo mark (two stacked cards) and the progress `Round 1 • Card 2/10 • 1 known` at the
-  start (left; right in Hebrew); at the other end, on desktop a "⌨ Keyboard shortcuts" link that opens a small popover listing the shortcuts,
-  and the Home button with its house icon (asks before stopping the practice, FR-L30a). The app version is centred just
-  below the Home button, above the card (the same small yellow "v1.N" as on the Home page, a little smaller on phones,
-  D-093); it takes no width, so the progress keeps its one line.
-- **Home as an icon (D-086)**: the way back to the Home page is a house icon, not the word, in three places: the practice
-  header, the header of the other regular pages (Privacy, My known words, Account; 44 px, muted), and the Home button on
-  the round break and the summary. Each keeps "Home" as its accessible name and tooltip. The account menu's "Home" item
-  and the admin area keep the word.
-- **Practice buttons**: on desktop, one row under the card, in this order: `Back · I don't know (red) ·
-  I know (amber) · I know (green) · Next` (D-100) (round, pill, pill, pill, round; the green pill locked for
-  guests; the same order in Hebrew, D-096); after I don't know the row stays the same, the answers disabled and Next pumping (D-031). Flip is
-  on the card itself.
-- **Practice (mobile, 360–767px)**: the flip card fills the space above; the buttons form a **sticky bottom bar** in the
-  thumb zone, in two rows: the three answer pills on top (**I don't know · I know · I know**: red on the left, green on the right, D-100; three equal pills
-  with their captions), and **Back** (left) and **Next** (right) below (the same in Hebrew, D-096). Back and Next are pills
-  of the same size as the answer pills, Back exactly under the red one and Next under the green one, with the label
-  inside next to the chevron ("‹ Back", "Next · 9 ›"; D-087). All five are **54 px** tall (D-111: 10% lower than
-  before, the labels centred; the card gets the room at the bottom, its line staying in the middle). The spacing is kept
-  tight so the card gets the room: about 26 px from the card to the pills and 14 px between the two rows (D-085). After Don't know, the
-  layout stays: red disables, the Knows stay on (D-109), and Next pumps (FR-L28, FR-L29a, D-031); on the wide phone pill the pump is
-  gentler (5% instead of 12%, D-087).
-- **Practice (desktop ≥ 768px)**: a centered column of about 1100px; the card is wide (≈ 2.3 : 1) and the pills carry
-  their labels.
-- **Round break / Summary**: a glassy card with large numbers and the 3D buttons.
-- **Toasts**: bottom-center on mobile (above the button bar), top-right on desktop (below the header, clear of the
-  practice buttons); auto-dismiss; `aria-live="polite"`.
-- **Admin**: a left sidebar (collapses into a top menu on mobile); content max width about 1100px. Menu order:
-  Dashboard, Items, Topics, Languages, Import, Users, Trash, Settings, Audit log (D-075). A top bar on every screen shows "MyVocab · Admin"
-  and an outlined **"← Home"** button top right, as in a practice (D-077); on phones a "Menu" button (named "Admin
-  menu") opens the menu.
+- **Landing**: header (logo "MyVocab", version, the language switch, Sign-in / avatar, an "Admin" link for admins as a
+  full-page navigation); hero ("Learn words until they stick"; Hebrew "ללמוד מילים וביטויים לפסיכומטרי ביעילות ובחינם");
+  How it works (1. Pick languages and a topic, or just press Start · 2. Use Hints or Flip, then mark what you know ·
+  3. Repeat the words that you didn't know, till nothing is left); "Buttons" (FR-L1); Start card; footer (Privacy,
+  Licenses). **The landing page never shows real vocabulary** (illustrations use made-up or generic examples).
+- **Home as an icon** (D-086): a house icon with "Home" as its accessible name and tooltip, in the practice header, the
+  round break and summary, and the header of the other regular pages (Privacy, My known words, Account; 44px, muted).
+  The account menu and the admin area keep the word.
+- **Practice header** (D-093, D-123): on the left, Home (the version, a small yellow "v1.N", a little smaller on phones, centred under it, taking no
+  width), the language switch and, on desktop, "⌨ Keyboard shortcuts"; on the right, the progress with the MyVocab logo
+  mark (two stacked cards); the round bar under the progress, on the version's line (FR-L23).
+- **Practice buttons, desktop** (D-100): one row under the card, `Back · I don't know · I know (amber) · I know (green)
+  · Next`. Flip is on the card.
+- **Practice buttons, phones (360–767px)**: a **sticky bottom bar** in the thumb zone, two rows: the three equal answer
+  pills (red, amber, green) with their captions, and below them Back and Next as pills of the same size, Back under the
+  red one, Next under the green one, label beside the chevron ("‹ Back", "Next · 9 ›"; D-087). All five **54px** tall
+  (D-111); about 26px from the card to the pills and 14px between the rows (D-085). Next's pump is gentler on the wide
+  pill (5% instead of 12%, D-087).
+- **Practice, desktop (≥ 768px)**: a centred column of about 1100px; the card is wide (≈ 2.3 : 1).
+- **Round break / Summary** (D-124–D-128): the card screen's page frame, so Home and the switch stay exactly in place
+  across the loop: Home (version under it) and the switch at the top left; a glassy card starting below the version,
+  with large numbers and the 3D buttons (Home on the left, Continue / New practice on the right). The summary's bottom
+  line: "← Back to the last card", then the sound switch (D-130).
+- **Toasts**: bottom-centre on mobile (above the button bar), top-right on desktop (below the header); auto-dismiss;
+  `aria-live="polite"`.
+- **Admin**: a left sidebar (a top menu on mobile, opened by a "Menu" button named "Admin menu"); content max width about
+  1100px. Menu order: Dashboard, Items, Topics, Languages, Import, Users, Trash, Settings, Audit log (D-075). A top bar
+  shows "MyVocab · Admin" and an outlined **"← Home"** button top right (D-077).
 
-### 9.8 Microcopy (`apps/web/src/strings.en.ts` and `strings.he.ts`)
-All learner-facing UI strings live in two modules with the same keys, English and Hebrew (e.g. `practice.know` =
-"I know" / "ידעתי", `practice.hints` = "Hints" / "רמזים", `practice.flip` = "Flip" / "היפוך"); a missing Hebrew key fails
-the typecheck. Components read the active language's strings through `strings.ts`. Admin strings
-(`strings-admin.ts`) are English only.
+### 9.8 UI language and direction (`apps/web/src/strings.en.ts` and `strings.he.ts`)
+All learner-facing strings live in two modules with the same keys, English and Hebrew (e.g. `practice.know` = "I know" /
+"ידעתי"); a missing Hebrew key fails the typecheck. Components read the active language through `strings.ts`. Admin
+strings (`strings-admin.ts`) are English only, and the admin area is always English and LTR.
 
-**UI language (D-080).**
-- **Default and switch:** a first visit is in Hebrew. The Home page header and the practice loop (FR-L22a, D-122) have
-  a switch showing the other language's short code in that language: "En" on Hebrew pages, "עב" on English pages. On
-  Home it sits just before Sign-in / the avatar, and the two are on the **right in every language**; the logo, the
-  name and the version read left to right in both, and Sign-in and the switch take the width of the longer language,
-  so the whole bar stays still when switching (D-127) (the logo on the
-  left, D-123), and its accessible name is the full name ("English" / "עברית"). On phones, the
-  Home page's Sign-in button reads "Sign-in" / "התחברות" (its accessible name stays "Sign-in with Google") so the
-  switch fits (D-083). The choice is remembered in the browser (`localStorage`). Switching re-renders
-  the page in place. The admin area is always English and LTR, whatever the choice.
-- **Hebrew copy:** the learner is addressed in the plural ("בחרו", "לחצו"); first-person labels use the past tense,
-  which is the same for everyone ("ידעתי" / "לא ידעתי"). Counts spell out one ("כרטיסיה אחת"). The Hebrew slogan is "ללמוד מילים וביטויים לפסיכומטרי ביעילות ובחינם"; the locked green button's tip reads
-  "נדרשת התחברות" (the link last). The slogan's last word, "ובחינם", gets the same drop-and-stick animation as "stick"
-  (D-037), mirrored: it tilts the other way and the shine sweeps from the right.
-- **Mirroring (RTL):** the layout follows the page direction (logical CSS properties). The summary crown sits on the
-  card's upper-right corner in every language (D-127).
-- **The practice buttons keep the English order** (D-096): from left to right Back, "I don't know" (red), the
-  orange "I know", the green "I know" (D-100), and Next, in Hebrew too, with Back's chevron pointing left and Next's right, and the
-  green pill's padlock on its top-left edge. Swipes and arrow keys follow them: swipe left or → for Next, swipe right or
-  ← for Back.
-- **Not mirrored:** in every language, Flip stays in the card's bottom-right corner (with the hints' notch and
-  fade there), and the direction label (e.g. "EN → HE") stays on the left of the card, on both faces, with the
-  "Clicked: …" chip on the right (D-091).
-- **Names:** language names come from the UI strings ("אנגלית", "עברית"); topics have an optional Hebrew name
-  (`name_he`, FR-A30), shown in the Hebrew UI when set, otherwise the English name.
-- **Server messages:** errors that reach learners (the daily card limit, guest practice limits, sign-in needed,
-  maintenance, deleting the last admin) are shown from the UI strings by error code. A maintenance message the
-  admin wrote is shown as written.
-- **Other:** dates in "My known words" use Hebrew formatting in the Hebrew UI; the Turnstile challenge uses the UI
-  language; keyboard shortcuts also work on a Hebrew keyboard layout (the physical key decides).
+- **Default and switch** (D-080, D-083): a first visit is in Hebrew. The switch shows the other language's short code in
+  that language ("En" on Hebrew pages, "עב" on English pages; accessible name "English" / "עברית"). It sits in the Home
+  page header and the practice loop (FR-L22a). The choice is remembered in `localStorage`; switching re-renders in
+  place. On phones the Home page's Sign-in reads "Sign-in" / "התחברות" (accessible name "Sign-in with Google") so the
+  switch fits.
+- **Direction**: Hebrew pages are right-to-left and the layout follows the page direction (logical CSS properties),
+  except where the one-layout rule applies. Content always gets `dir` and `lang` from its own language (`he` → `rtl`),
+  on both card faces.
+- **The one-layout rule** (D-096, D-123–D-130): the **practice loop** (card screen, round break, summary) and the
+  **Home page top bar** look the same in every language. Positions, order, arrows, swipes and arrow keys are the
+  English ones; switching the language only translates the words. Anything whose text changes keeps the size of its
+  longest version (both languages, every state, every countdown second, a heading that wraps in Hebrew), so nothing
+  moves. Concretely:
+  - Home page top bar: logo, name and version on the left; the switch, then Sign-in / avatar, on the right (D-127).
+  - Practice header, round break and summary: as in §9.7 (Home and the switch on the left).
+  - Card: direction chip top left, "Clicked" chip top right, Flip bottom right (with the hints' notch and fade there).
+  - Buttons: Back, red, amber, green, Next from left to right; Back's chevron points left, Next's right; the padlock on
+    the green pill's top-left edge; ← / swipe right = Back, → / swipe left = Next; the slides go the same way.
+  - Round bar: left to right. Crown: the summary card's upper-right corner. "← Back to the last card": the arrow first,
+    pointing left.
+- **Hebrew copy**: the learner is addressed in the plural ("בחרו", "לחצו"); first-person labels use the past tense
+  ("ידעתי" / "לא ידעתי"). Counts spell out one ("כרטיסיה אחת"). The slogan's last word, "ובחינם", gets the drop-and-stick
+  animation (D-037), mirrored: it tilts the other way and the shine sweeps from the right.
+- **Names**: language names come from the UI strings ("אנגלית", "עברית"); topics show their optional Hebrew name
+  (`name_he`, FR-A30) in the Hebrew UI when set.
+- **Server messages**: errors that reach learners (daily limit, guest limits, sign-in needed, maintenance, deleting the
+  last admin) are shown from the UI strings by error code. An admin-written maintenance message is shown as written.
+- **Other**: dates in "My known words" use the UI language's formatting; the Turnstile challenge uses the UI language.
 
 ---
 
@@ -1148,7 +1023,7 @@ Cloudflare Worker "myvocab"
    ├─ static assets (apps/web/dist, SPA fallback)
    ├─ /api/*  → Hono app
    │     routes → services → repository interfaces → Drizzle/D1 implementations
-   ├─ Cron Trigger (hourly) → Trash purge + old usage counters and user audit entries cleanup
+   ├─ Cron Trigger (hourly) → Trash purge + cleanup of old usage counters, user audit entries and expired sign-ins
    └─ bindings: DB (D1), RL_* (Workers Rate Limiting, burst limits), ASSETS
    ▼
 Cloudflare D1 "myvocab-prod" (SQLite; no public endpoint)
@@ -1233,7 +1108,7 @@ MyVocab/
     kind: AnswerKind;
     appliesTo(src: LangCode, tgt: LangCode): boolean;      // translation: src !== tgt; explanation: src === tgt
     isPlayable(item: ItemData, tgt: LangCode): boolean;     // has ≥ 1 entry to show (FR-L40)
-    answerLines(item: ItemData, tgt: LangCode): string[];   // translation[tgt] or explanation, in order
+    answerLines(item: ItemData, tgt: LangCode): string[];   // parallel[tgt], else meaning[tgt]; or explanation, in order
     numbered(lines: string[]): boolean;                     // explanation: true when 2+ lines
   }
   const answerStrategies: AnswerStrategy[] = [translationStrategy, explanationStrategy];
@@ -1519,9 +1394,9 @@ type CardView = {
 | Method | Path | Description |
 |---|---|---|
 | GET | `/admin/stats` | Dashboard counts |
-| GET / POST | `/admin/items` | List (filters, pagination) / create `{ lang, text, multipleMeanings?, status?, topicIds?, translation?, explanation?, synonyms?, hints? }` |
+| GET / POST | `/admin/items` | List (filters, pagination) / create `{ lang, text, multipleMeanings?, status?, inSampleSet?, topicIds?, parallel?, meaning?, literal?, explanation?, synonyms?, hints? }` |
 | GET | `/admin/items/:id` | The full item (§8.1 shape) + `version` + `topicIds` + warnings |
-| PATCH | `/admin/items/:id` | `{ version, text?, multipleMeanings?, status?, topicIds?, translation?, explanation?, synonyms?, hints? }`. A list field replaces that whole list (`translation` replaces the whole object). `lang` is not accepted. → the updated item with its new `version`; 409 `CONFLICT` on a stale `version` |
+| PATCH | `/admin/items/:id` | `{ version, text?, multipleMeanings?, status?, inSampleSet?, topicIds?, parallel?, meaning?, literal?, explanation?, synonyms?, hints? }`. A list field replaces that whole list (`parallel`, `meaning` and `literal` each replace the whole object). `lang` is not accepted. → the updated item with its new `version`; 409 `CONFLICT` on a stale `version` |
 | DELETE | `/admin/items/:id` | Soft delete → Trash |
 | GET | `/admin/items/:id/preview` | `CardView[]` for every direction (the same `buildCard` as `POST /practices`) |
 | GET | `/admin/trash` | Trashed items, with purge times |
@@ -1623,7 +1498,7 @@ In test, Turnstile uses Cloudflare's documented **test keys** (always-pass / alw
 | Shared caches / CDN | `Cache-Control: no-store` on all `/api/*` responses |
 | Third-party services | No third-party analytics, fonts, CDNs, error trackers or AI APIs receive content. Fonts are self-hosted. Cloudflare Web Analytics is cookieless and collects page views only (no API bodies). Turnstile receives only its challenge data, never content |
 | Logs | Worker logs record ids, counts, status codes and timings, **never** item text, CSV contents or request/response bodies. The audit log stores vocabulary snapshots inside the private D1 only |
-| Browser storage | `sessionStorage` holds the current practice (needed to resume after a refresh) and is cleared when the practice ends or is left with Home. `localStorage` holds only item ids (known queue), never text |
+| Browser storage | `sessionStorage` holds the current practice (needed to resume after a refresh) and is cleared when the practice is left with Home or its summary is left (FR-L33). `localStorage` holds only item ids (known queue), never text |
 | Future AI features | Sending content to an AI provider is a future, explicit owner decision (not in v1) |
 
 ### 14.3 Anti-scraping (bulk copying by scripts)
@@ -1647,7 +1522,7 @@ The app must show cards to its users, so scraping can be made **slow, costly and
 |---|---|
 | SQL injection | Drizzle parameterized queries only. A lint rule bans `sql.raw(...)` and `db.exec`/multi-statement execution in app code. JSON paths are built from validated language codes only |
 | Mass assignment | Zod `.strict()` schemas whitelist fields per endpoint (`lang` is not accepted on item update) |
-| Oversized/malicious input | Length limits (item text ≤ 200, translation entry ≤ 200, explanation entry ≤ 500, synonym ≤ 100, hint ≤ 500, message ≤ 280), list sizes (translations ≤ 10 per language, explanation ≤ 10, synonyms ≤ 20, hints ≤ 20), NFC normalization, CSV ≤ 2 MB / 5,000 rows, request body size limits |
+| Oversized/malicious input | Length and list-size limits per field (§8.1; maintenance message ≤ 280), NFC normalization, CSV ≤ 2 MB / 5,000 rows, request body size limits |
 | XSS | React escaping; **no** `dangerouslySetInnerHTML`; strict CSP: `default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; style-src 'self'; img-src 'self' https://lh3.googleusercontent.com data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com` (adjust only as strictly needed for Google sign-in, Turnstile and Cloudflare Web Analytics) |
 | Clickjacking | `frame-ancestors 'none'` (+ `X-Frame-Options: DENY`) |
 | CSRF | `SameSite=Lax` cookies + Better Auth origin checks + `Origin` must equal `APP_URL` on all mutating `/api/*` requests + JSON content type required |
@@ -1687,8 +1562,8 @@ Cloudflare Access: free for ≤ 50 users. Turnstile: free.
 ## 16. Hosting, deployment and operations
 - **Worker** `myvocab`, configured in `apps/api/wrangler.jsonc`:
   - `assets.directory` → `../web/dist`, `not_found_handling: "single-page-application"`, `run_worker_first: ["/api/*"]`.
-  - Bindings: `DB` (D1 `myvocab-prod`), `RL_PRACTICES`, `RL_AVAILABLE`, `RL_AUTH`, `RL_IMPORT`, `RL_ADMIN` (Rate Limiting), cron trigger `0 * * * *` (Trash purge +
-    usage counter cleanup).
+  - Bindings: `DB` (D1 `myvocab-prod`), `RL_PRACTICES`, `RL_AVAILABLE`, `RL_AUTH`, `RL_IMPORT`, `RL_ADMIN` (Rate Limiting), cron trigger `0 * * * *` (FR-A23, FR-A72: Trash purge +
+    cleanup).
   - Vars: `ENVIRONMENT`, `APP_URL`, `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`, `TURNSTILE_SITE_KEY`.
   - Secrets (`wrangler secret put`): `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAILS`,
     `TURNSTILE_SECRET_KEY`, `USAGE_HASH_SECRET`.
@@ -1717,7 +1592,7 @@ Cloudflare Access: free for ≤ 50 users. Turnstile: free.
 | Scripts | Vitest (Node) against a local D1 | `db:seed` falls back to `seed/sample.csv` when `CONTENT_DIR` is missing; **export round-trip**: seed → `db:export --local --content-only` → import into an empty D1 → identical content; full export produces `manifest.json` row counts that match the tables, valid JSON per table (item lists as real arrays/objects), and a `schema.sql` that recreates the schema in a fresh SQLite |
 | Guard | CI | `check:no-vocabulary` fails on a committed non-fixture `.csv`/`.sql`/export, or a `seed/sample.csv` over 20 rows |
 | Component | Vitest + Testing Library | Button states per phase; FlipCard (button/keyboard flipping, a card tap does nothing, the hints cover on the front and the hints always on the back, multiple-meanings badge, numbered explanation lines, hidden face `inert`, live-region text, reduced-motion path); start card default vs selected styling + "Reset to defaults" + same-language note; guest locked amount + message (automatically once per tab, and on tap); Back, the "Clicked" chip, ← / →, and answer changes reaching the Know queue; ListEditor add/edit/delete/reorder + 409 handling; RTL rendering on both faces |
-| E2E | Playwright (mobile 390×844 + desktop 1280×800) | Guest: landing → press Start without changing anything (defaults EN→HE, Sample set) → 5-card practice to the summary (incl. revealing the hints on the front, then Flip showing hints on the back, Flip back and forth by button and by key, Know from the back side, Don't know → auto-flip → Next, Know → Back → Don't know; touch swipes left = Next and right = Back); guest sees the "Sign-in to change" message and can't change the amount. Hebrew: the default UI, right-to-left, the language switch, mirrored buttons, keys and swipes. Signed-in (test sign-in): choose 20 → practice; Know → appears in My known words → no longer offered in the other direction → Return to practices → available again. Admin: create an item with translations, explanation, synonyms, hints and multiple meanings; preview both directions; delete to Trash; restore. CSV: dry run with errors and warnings, then commit |
+| E2E | Playwright (mobile 390×844 + desktop 1280×800) | Guest: landing → press Start without changing anything (defaults EN→HE, Sample set) → 5-card practice to the summary (incl. revealing the hints on the front, then Flip showing hints on the back, Flip back and forth by button and by key, Know from the back side, Don't know → auto-flip → Next, Know → Back → Don't know; touch swipes left = Next and right = Back); guest sees the "Sign-in to change" message and can't change the amount. Hebrew: the default UI, right-to-left, the language switch, and the one-layout rule (§9.8: buttons, keys and swipes as in English, nothing moving on a switch). Signed-in (test sign-in): choose 20 → practice; Know → appears in My known words → no longer offered in the other direction → Return to practices → available again. Admin: create an item with translations, explanation, synonyms, hints and multiple meanings; preview both directions; delete to Trash; restore. CSV: dry run with errors and warnings, then commit |
 | Manual (post-deploy) | Phone + desktop | Play a practice (check the flip and hints feel on a real phone); guest Turnstile works invisibly; sign in; known list; `/admin` → Cloudflare Access asks for a one-time code; a non-admin email is refused by Access; a normal user calling `/api/admin/*` → 403; `pnpm db:export` and `--content-only` work from the owner's machine; the D1 dashboard shows rows read/written well within the free tier |
 
 CI fails on lint, type or test errors, a guard failure, or if `packages/core` coverage < 90%.
