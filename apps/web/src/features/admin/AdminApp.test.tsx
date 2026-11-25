@@ -1,5 +1,5 @@
 import type { AdminItem, SessionUser } from '@myvocab/contracts';
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mockFetch, renderRoutes, TEST_USER } from '../../test/render';
 import { AdminApp } from './AdminApp';
@@ -67,7 +67,10 @@ function render(path: string, routes: Parameters<typeof mockFetch>[0], user: Ses
   return renderRoutes([{ path: '/admin/*', element: <AdminApp /> }], [path]);
 }
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  sessionStorage.clear();
+});
 
 describe('AdminApp', () => {
   it('shows "Admins only" to non-admins', async () => {
@@ -97,6 +100,28 @@ describe('AdminApp', () => {
         'false',
       ),
     );
+  });
+
+  it('items: coming back shows the list as it was left (filters, search and page)', async () => {
+    const urls: string[] = [];
+    const routes = {
+      'GET /api/admin/items': (_init: RequestInit | undefined, url: string) => {
+        urls.push(url);
+        return Response.json({ items: [], total: 0, page: 1, pageSize: 50 });
+      },
+    };
+    render('/admin/items', routes);
+    fireEvent.change(await screen.findByLabelText('Multiple meanings'), {
+      target: { value: 'true' },
+    });
+    fireEvent.change(screen.getByLabelText('Gaps'), { target: { value: 'noHints' } });
+    cleanup();
+    render('/admin/items', routes);
+    expect(await screen.findByLabelText('Multiple meanings')).toHaveValue('true');
+    expect(screen.getByLabelText('Gaps')).toHaveValue('noHints');
+    const last = new URL(urls.at(-1) ?? '', 'http://x').searchParams;
+    expect(last.get('multipleMeanings')).toBe('true');
+    expect(last.get('noHints')).toBe('true');
   });
 
   it('item editor: shows warnings, a fixed language and the translation list for the other language', async () => {

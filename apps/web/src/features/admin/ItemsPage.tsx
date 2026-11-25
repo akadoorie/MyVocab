@@ -1,7 +1,8 @@
 import type { AdminItemListQuery } from '@myvocab/contracts';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Link } from 'react-router';
+import { readJson, writeJson } from '../../lib/storage';
 import { adminStrings as s } from '../../strings-admin';
 import { useDebounced } from '../setup/useDebounced';
 import { adminApi } from './admin-api';
@@ -17,6 +18,47 @@ import {
 } from './ui';
 
 type Gap = '' | 'missingExplanation' | 'noHints' | 'notPlayable' | `missing:${string}`;
+type YesNo = '' | 'true' | 'false';
+type Sort = 'updated' | 'text' | 'created';
+
+/** The list's search, filters, sort and page, kept for this tab so coming back shows the same list. */
+type ListState = {
+  search: string;
+  lang: string;
+  topicId: string;
+  status: string;
+  sample: YesNo;
+  multiple: YesNo;
+  gap: Gap;
+  sort: Sort;
+  page: number;
+};
+const LIST_KEY = 'myvocab.admin.items';
+const DEFAULT_LIST: ListState = {
+  search: '',
+  lang: '',
+  topicId: '',
+  status: '',
+  sample: '',
+  multiple: '',
+  gap: '',
+  sort: 'updated',
+  page: 1,
+};
+
+function savedList(): ListState {
+  const saved = readJson(
+    'session',
+    LIST_KEY,
+    (v): v is Partial<ListState> => typeof v === 'object' && v !== null,
+  );
+  const merged = { ...DEFAULT_LIST, ...saved };
+  return Object.keys(DEFAULT_LIST).every(
+    (k) => typeof merged[k as keyof ListState] === typeof DEFAULT_LIST[k as keyof ListState],
+  )
+    ? merged
+    : DEFAULT_LIST;
+}
 
 /** `/admin/items` (FR-A10): search, filters, sort, 50 per page. */
 export function ItemsPage() {
@@ -30,16 +72,31 @@ export function ItemsPage() {
     gap: useId(),
     sort: useId(),
   };
-  const [search, setSearch] = useState('');
+  // Back from an item (or the menu) shows the list as it was left, in this tab.
+  const [initial] = useState(savedList);
+  const [search, setSearch] = useState(initial.search);
   const q = useDebounced(search.trim(), 300);
-  const [lang, setLang] = useState('');
-  const [topicId, setTopicId] = useState('');
-  const [status, setStatus] = useState('');
-  const [sample, setSample] = useState<'' | 'true' | 'false'>('');
-  const [multiple, setMultiple] = useState<'' | 'true' | 'false'>('');
-  const [gap, setGap] = useState<Gap>('');
-  const [sort, setSort] = useState<'updated' | 'text' | 'created'>('updated');
-  const [page, setPage] = useState(1);
+  const [lang, setLang] = useState(initial.lang);
+  const [topicId, setTopicId] = useState(initial.topicId);
+  const [status, setStatus] = useState(initial.status);
+  const [sample, setSample] = useState<YesNo>(initial.sample);
+  const [multiple, setMultiple] = useState<YesNo>(initial.multiple);
+  const [gap, setGap] = useState<Gap>(initial.gap);
+  const [sort, setSort] = useState<Sort>(initial.sort);
+  const [page, setPage] = useState(initial.page);
+  useEffect(() => {
+    writeJson('session', LIST_KEY, {
+      search,
+      lang,
+      topicId,
+      status,
+      sample,
+      multiple,
+      gap,
+      sort,
+      page,
+    } satisfies ListState);
+  }, [search, lang, topicId, status, sample, multiple, gap, sort, page]);
 
   const languages = useQuery({ queryKey: ['admin', 'languages'], queryFn: adminApi.languages });
   const topics = useQuery({ queryKey: ['admin', 'topics'], queryFn: adminApi.topics });

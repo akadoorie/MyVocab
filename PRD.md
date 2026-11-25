@@ -473,6 +473,8 @@ so learners never download it. All admin pages work on mobile (tables collapse i
   "missing translation into X", "missing explanation", "no hints", "not playable"), sort, pagination (50 per page).
   Columns: text, language, ◆, a "Sample" badge, topics, translation badges per language, explanation ✓, hint
   count, status, updated.
+  The search, filters, sort and page are kept for the browser tab, so coming back from an item ("← All items" or the
+  menu) shows the same list.
 - **FR-A11** **Item editor**:
   - **Header**: language, text, **Multiple meanings** (toggle), **Include in Sample set** (toggle,
     off for new items, D-038), status (draft/published),
