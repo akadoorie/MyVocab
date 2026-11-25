@@ -154,7 +154,7 @@ private content repository. It never appears in the public code repo or any publ
 | Auth | Better Auth, **Google sign-in only**. `role` = `user` or `admin` |
 | Admin protection | Server-side role check **+ mandatory Cloudflare Access** (emailed one-time code) on `/admin*` and `/api/admin/*` |
 | Start card | Defaults English → Hebrew, All topics, 10 cards; learners choose 10–50, guests always 5 from the Sample set (§6.1) |
-| Guests | Invisible **Turnstile** bot check; nothing is remembered (FR-L55) |
+| Guests | Invisible **Turnstile** bot check; their Know marks are not remembered (FR-L55) |
 | Anti-scraping | Turnstile for guests + strict limits + `noindex` + no third-party content exposure (§14.3) |
 | Content model | One **item** per word, expression or anything else (no type, D-046), in its own language, with ordered lists inside the row (§8.1, §11) |
 | Practice | Shrinking rounds of **flip cards** (§6.2); the back follows §6.3 |
@@ -204,8 +204,8 @@ private content repository. It never appears in the public code repo or any publ
   a guest sees the start card in the tab, and every time the locked field is tapped. The server **enforces** 5 (§12.1).
 - **FR-L6a Guest topic: the Sample set** (D-038): guests play only items marked **"Include in Sample set"**, across
   every topic. Their Topic field shows **"Sample set"** selected, with every other choice **greyed out and
-  unselectable**, and a lock icon on the field (no note; D-054). They still choose the languages. The server
-  **enforces** it (count and start). Signed-in learners never see "Sample set"; **admins** do, to play what guests get.
+  unselectable**, and a lock icon on the field (no note; D-054). They still choose the languages, and "N cards
+  available" counts only the Sample set. The server **enforces** it (count and start). Signed-in learners never see "Sample set"; **admins** do, to play what guests get.
 - **FR-L7 "N cards available"** (N in yellow) for the current selection: only playable items (FR-L40), without the
   learner's known ones. It sits right under the card's heading, before the fields, with "Reset to defaults" beside it
   (D-060). One request per direction (debounced 300 ms, kept 5 minutes per direction, fetched again whenever the start
@@ -225,7 +225,7 @@ private content repository. It never appears in the public code repo or any publ
   appears inline in the start card.
 - **FR-L10a Something went wrong** (D-092): an unexpected failure is retried: after 1 s quietly, then twice, 2 s apart,
   with "Something went wrong. Refreshing in 2 seconds." ("משהו השתבש. מרענן בעוד 2 שניות."); then "Something went
-  wrong. Please refresh the page." stays. On the Home page each retry reloads the page (the count is kept in
+  wrong. Please refresh the page." stays. When the Home page can't load its settings, each retry reloads the page (the count is kept in
   `sessionStorage` and ends after a successful load or a minute); when starting a practice fails, each retry starts it
   again. Known errors (daily limit, guest limits, bot check, sign-in needed, maintenance) show at once.
 - **FR-L11** When `guests.enabled` = false, guests see "Sign-in to start" instead of Start.
@@ -375,7 +375,7 @@ green Know stays locked (FR-L27a).
   refresh resumes it. Leaving with Home clears it; a finished practice stays saved until the summary is left (Home or
   New practice), so a language switch on the summary keeps it (D-123).
 - **FR-L34** Desktop keyboard shortcuts (listed in a "⌨ Keyboard shortcuts" popover in the header): **K** green Know
-  (guests: the sign-in tip), **A** amber Know, **D** Don't know, **H** Hints, **Space/F** Flip, **←** Back, **→** Next,
+  (listed for signed-in learners only; a guest pressing it gets the sign-in tip, D-042), **A** amber Know, **D** Don't know, **H** Hints, **Space/F** Flip, **←** Back, **→** Next,
   **Enter** Next or Continue, **Esc** Home (asks first). The same in every language, and letter keys work on a Hebrew
   keyboard layout (the physical key decides, D-080). Shortcuts respect the enabled state.
 
@@ -840,7 +840,7 @@ Glossy: a top-to-bottom gradient, a thin light top edge, the ledge underneath an
   muted caption under it ("Show in next round", "Show in future", "Never show again"), which may wrap onto two lines on
   a phone. The guest's locked green pill (FR-L27a) is a dimmed darker green (not grey) with a small yellow padlock (no
   background) on its top-left edge, on phones too (D-042).
-- **Square icon buttons** (Back, Next on desktop; Flip on the card): an icon (56px mobile, 64px desktop; Flip 48px on
+- **Square icon buttons** (Back, Next on desktop; Flip on the card): an icon (64px on desktop; Flip 48px on
   phones, D-051) with an italic muted caption under Back and Next. On phones Back and Next are pills (§9.7).
 
 ```css
@@ -880,14 +880,13 @@ Glossy: a top-to-bottom gradient, a thin light top edge, the ledge underneath an
   shrink with them, the labels to 80% at most).
 
 ```
-FRONT, hints revealed            BACK, after Flip (EN → HE)
+FRONT, hints revealed            BACK, after Flip (HE → EN)
 ┌────────────────────────────┐   ┌────────────────────────────┐
-│ EN → HE                    │   │ EN → HE                    │
-│           Date             │   │ Translation  1. תאריך      │
-│   ◆ Multiple meanings      │   │              2. תמר        │
+│ HE → EN                    │   │ HE → EN                    │
+│            מהיר            │   │ Translation  1. fast       │
+│                            │   │              2. quick      │
 │ ────────────────────────── │   │ ────────────────────────── │
-│ • What is the date today?  │   │ • What is the date today?  │
-│ • Dates grow on palm trees.│   │ • Dates grow on palm trees.│
+│    הרכבת המהירה הגיעה בזמן  │   │    הרכבת המהירה הגיעה בזמן  │
 └────────────────────────────┘   └────────────────────────────┘
 ```
 
@@ -933,7 +932,7 @@ FRONT, hints revealed            BACK, after Flip (EN → HE)
   left in Hebrew; for screen readers a radio group. Guests: a single "5" with a lock icon (FR-L6).
 - **Default style**: bright value text (a segmented control's chosen option filled), a subtle solid `--border` outline
   and a small violet "Default" tag on the right (not on phones; D-053, D-055). **Selected style**: the same with a solid
-  `--accent` outline and no tag. Not conveyed by colour alone.
+  `--accent` outline and no tag. On desktop the tag also tells them apart; on phones only the outline colour does.
 - The "Same language" note (FR-L5) appears under the language fields.
 - The large **Start** button (accent, pressable ledge): on desktop under the fields; on mobile above the card, under the
   hero text (FR-L1). The security check (if any) and errors appear next to it.
@@ -999,6 +998,8 @@ strings (`strings-admin.ts`) are English only, and the admin area is always Engl
     the green pill's top-left edge; ← / swipe right = Back, → / swipe left = Next; the slides go the same way.
   - Round bar: left to right. Crown: the summary card's upper-right corner. "← Back to the last card": the arrow first,
     pointing left.
+  - **Exceptions** (they follow the page direction and keep their natural width, so they may shift on a switch): the
+    practice header's progress counter with its logo, and the "⌨ Keyboard shortcuts" link.
 - **Hebrew copy**: the learner is addressed in the plural ("בחרו", "לחצו"); first-person labels use the past tense
   ("ידעתי" / "לא ידעתי"). Counts spell out one ("כרטיסיה אחת"). The slogan's last word, "ובחינם", gets the drop-and-stick
   animation (D-037), mirrored: it tilts the other way and the shine sweeps from the right.
@@ -1498,7 +1499,7 @@ In test, Turnstile uses Cloudflare's documented **test keys** (always-pass / alw
 | Shared caches / CDN | `Cache-Control: no-store` on all `/api/*` responses |
 | Third-party services | No third-party analytics, fonts, CDNs, error trackers or AI APIs receive content. Fonts are self-hosted. Cloudflare Web Analytics is cookieless and collects page views only (no API bodies). Turnstile receives only its challenge data, never content |
 | Logs | Worker logs record ids, counts, status codes and timings, **never** item text, CSV contents or request/response bodies. The audit log stores vocabulary snapshots inside the private D1 only |
-| Browser storage | `sessionStorage` holds the current practice (needed to resume after a refresh) and is cleared when the practice is left with Home or its summary is left (FR-L33). `localStorage` holds only item ids (known queue), never text |
+| Browser storage | `sessionStorage` holds the current practice (needed to resume after a refresh) and is cleared when the practice is left with Home or its summary is left (FR-L33). `localStorage` holds the known queue (item ids and target codes), the UI language and the sound choice, never vocabulary text |
 | Future AI features | Sending content to an AI provider is a future, explicit owner decision (not in v1) |
 
 ### 14.3 Anti-scraping (bulk copying by scripts)
@@ -1542,7 +1543,7 @@ Answers are sent to the browser at practice start **by design** (self-assessment
 |---|---|
 | Responsiveness | 360px → 1440px+. No horizontal scrolling. Touch targets ≥ 48px |
 | Performance | Learner path JS ≤ 200 KB gzipped (admin lazy-loaded; Turnstile script loaded only for guests). LCP < 2.5 s on mid-range mobile over 4G. Button response < 50 ms (the practice is local). Flip animation at 60 fps (transform-only) |
-| Accessibility | WCAG 2.2 AA: contrast, visible focus, full keyboard operation, ARIA labels/live regions (announce Back with the card's answer, flip side, hints shown, round changes, toasts), `prefers-reduced-motion` respected (no 3D flip; crossfade instead). The default/selected field styles are not conveyed by color alone (the "Default" tag + outline style) |
+| Accessibility | WCAG 2.2 AA: contrast, visible focus, full keyboard operation, ARIA labels/live regions (announce Back with the card's answer, flip side, hints shown, round changes, toasts), `prefers-reduced-motion` respected (no 3D flip; crossfade instead). The default/selected field styles: the "Default" tag and the outline colour on desktop, the outline colour only on phones (§9.5) |
 | Browsers | The last 2 versions of Chrome, Edge, Firefox and Safari; iOS Safari 16+; Android Chrome |
 | RTL | Hebrew pages are right-to-left (D-080); content renders in its own direction (and mixed Hebrew/English correctly) via per-element `dir`/`lang` on both card faces |
 | Reliability | Known marks are never lost silently (persistent queue + retries). A tab opened before a deploy whose lazily loaded part (e.g. the admin area) no longer exists reloads itself once to pick up the new version, instead of showing "'text/html' is not a valid JavaScript MIME type" (`vite:preloadError`; at most one automatic reload per 15 s, so a real error still shows) |
