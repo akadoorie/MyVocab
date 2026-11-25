@@ -92,7 +92,7 @@ export const adminStrings = {
     gapExplanation: 'Missing explanation',
     gapHints: 'No hints',
     gapNotPlayable: 'Not playable',
-    gapMultiple: 'Multiple meanings',
+    multipleMeanings: 'Multiple meanings',
     explanation: 'Explanation',
     hints: (n: number) => `${n} ${n === 1 ? 'hint' : 'hints'}`,
     empty: 'No items match.',

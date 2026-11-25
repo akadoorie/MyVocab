@@ -16,8 +16,7 @@ import {
   PageTitle,
 } from './ui';
 
-type Gap =
-  '' | 'missingExplanation' | 'noHints' | 'notPlayable' | 'multipleMeanings' | `missing:${string}`;
+type Gap = '' | 'missingExplanation' | 'noHints' | 'notPlayable' | `missing:${string}`;
 
 /** `/admin/items` (FR-A10): search, filters, sort, 50 per page. */
 export function ItemsPage() {
@@ -27,6 +26,7 @@ export function ItemsPage() {
     cat: useId(),
     status: useId(),
     sample: useId(),
+    multiple: useId(),
     gap: useId(),
     sort: useId(),
   };
@@ -36,6 +36,7 @@ export function ItemsPage() {
   const [topicId, setTopicId] = useState('');
   const [status, setStatus] = useState('');
   const [sample, setSample] = useState<'' | 'true' | 'false'>('');
+  const [multiple, setMultiple] = useState<'' | 'true' | 'false'>('');
   const [gap, setGap] = useState<Gap>('');
   const [sort, setSort] = useState<'updated' | 'text' | 'created'>('updated');
   const [page, setPage] = useState(1);
@@ -57,7 +58,7 @@ export function ItemsPage() {
     ...(gap === 'missingExplanation' ? { missingExplanation: 'true' as const } : {}),
     ...(gap === 'noHints' ? { noHints: 'true' as const } : {}),
     ...(gap === 'notPlayable' ? { notPlayable: 'true' as const } : {}),
-    ...(gap === 'multipleMeanings' ? { multipleMeanings: 'true' as const } : {}),
+    ...(multiple ? { multipleMeanings: multiple } : {}),
   };
   const list = useQuery({
     queryKey: ['admin', 'items', params],
@@ -153,6 +154,19 @@ export function ItemsPage() {
             <option value="false">{s.items.notInSampleSet}</option>
           </select>
         </Field>
+        {/* Its own filter, so it combines with a gap (e.g. multiple meanings and missing Hebrew). */}
+        <Field id={ids.multiple} label={s.items.multipleMeanings}>
+          <select
+            id={ids.multiple}
+            value={multiple}
+            onChange={(e) => filter(setMultiple)(e.target.value as typeof multiple)}
+            className={inputClass}
+          >
+            <option value="">{s.common.all}</option>
+            <option value="true">{s.common.yes}</option>
+            <option value="false">{s.common.no}</option>
+          </select>
+        </Field>
         <Field id={ids.gap} label={s.items.gaps}>
           <select
             id={ids.gap}
@@ -169,7 +183,6 @@ export function ItemsPage() {
             <option value="missingExplanation">{s.items.gapExplanation}</option>
             <option value="noHints">{s.items.gapHints}</option>
             <option value="notPlayable">{s.items.gapNotPlayable}</option>
-            <option value="multipleMeanings">{s.items.gapMultiple}</option>
           </select>
         </Field>
         <Field id={ids.sort} label={s.items.sort}>
@@ -210,7 +223,7 @@ export function ItemsPage() {
                         {item.text}
                       </bdi>
                       {item.multipleMeanings && (
-                        <span className="text-accent" title={s.items.gapMultiple}>
+                        <span className="text-accent" title={s.items.multipleMeanings}>
                           ◆
                         </span>
                       )}

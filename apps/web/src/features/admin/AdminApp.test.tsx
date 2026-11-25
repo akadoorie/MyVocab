@@ -75,6 +75,30 @@ describe('AdminApp', () => {
     expect(await screen.findByRole('heading', { name: 'Admins only' })).toBeVisible();
   });
 
+  it('items: "Multiple meanings" is its own filter and combines with a gap', async () => {
+    const urls: string[] = [];
+    render('/admin/items', {
+      'GET /api/admin/items': (_init, url) => {
+        urls.push(url);
+        return Response.json({ items: [], total: 0, page: 1, pageSize: 50 });
+      },
+    });
+    const multiple = await screen.findByLabelText('Multiple meanings');
+    fireEvent.change(multiple, { target: { value: 'true' } });
+    fireEvent.change(screen.getByLabelText('Gaps'), { target: { value: 'missing:he' } });
+    await waitFor(() => {
+      const last = new URL(urls.at(-1) ?? '', 'http://x').searchParams;
+      expect(last.get('multipleMeanings')).toBe('true');
+      expect(last.get('missingTranslation')).toBe('he');
+    });
+    fireEvent.change(multiple, { target: { value: 'false' } });
+    await waitFor(() =>
+      expect(new URL(urls.at(-1) ?? '', 'http://x').searchParams.get('multipleMeanings')).toBe(
+        'false',
+      ),
+    );
+  });
+
   it('item editor: shows warnings, a fixed language and the translation list for the other language', async () => {
     render('/admin/items/7', { 'GET /api/admin/items/7': () => Response.json(ITEM) });
     expect(await screen.findByRole('heading', { name: 'sample-item', level: 1 })).toBeVisible();
