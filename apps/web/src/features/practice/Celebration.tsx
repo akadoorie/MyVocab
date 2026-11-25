@@ -1,6 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { readJson, writeJson } from '../../lib/storage';
+import { SameWidth } from '../../components/SameWidth';
 import { strings } from '../../strings';
+import { en } from '../../strings.en';
+import { he } from '../../strings.he';
 
 /**
  * The "Practice completed" celebration (PRD FR-L32a): a burst of confetti and a short applause.
@@ -215,7 +218,11 @@ export function SoundToggle({ on, onChange }: { on: boolean; onChange: (on: bool
       className="flex min-h-11 items-center gap-2 rounded-[10px] px-3 text-sm text-muted hover:text-text"
     >
       <span aria-hidden="true">{on ? '🔊' : '🔇'}</span>
-      {on ? strings.summary.soundOn : strings.summary.soundOff}
+      {/* One width for on/off in both languages, so nothing beside it moves (D-130). */}
+      <SameWidth
+        shown={on ? strings.summary.soundOn : strings.summary.soundOff}
+        others={[en.summary.soundOn, en.summary.soundOff, he.summary.soundOn, he.summary.soundOff]}
+      />
     </button>
   );
 }

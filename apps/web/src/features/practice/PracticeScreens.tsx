@@ -1,7 +1,7 @@
 import type { practiceSummary } from '@myvocab/core';
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type Ref } from 'react';
 import { Button3D } from '../../components/Button3D';
-import { BackArrow, HomeIcon, KeyboardIcon } from '../../components/Icons';
+import { HomeIcon, KeyboardIcon } from '../../components/Icons';
 import { SameWidth } from '../../components/SameWidth';
 import { en } from '../../strings.en';
 import { he } from '../../strings.he';
@@ -246,7 +246,9 @@ export function Summary({
           {error}
         </p>
       )}
-      <div className="flex flex-wrap items-center justify-center gap-2">
+      {/* Laid out as in English in every language: ← Back to the last card, then the sound toggle, so a
+          language switch only translates the words (D-130). */}
+      <div dir="ltr" className="flex flex-wrap items-center justify-center gap-2">
         <BackToLastCard onBack={onBack} />
         <SoundToggle on={sound} onChange={setSound} />
       </div>
@@ -256,14 +258,16 @@ export function Summary({
 }
 
 /** "← Back to the last card" on the break between rounds and the summary (PRD FR-L29a). */
+/** The arrow points left and comes first in every language (D-130). */
 function BackToLastCard({ onBack }: { onBack: () => void }) {
   return (
     <button
       type="button"
+      dir="ltr"
       onClick={onBack}
       className="flex min-h-11 items-center gap-1.5 rounded-[10px] px-3 text-muted hover:text-text"
     >
-      <BackArrow />{' '}
+      <span aria-hidden="true">←</span>{' '}
       <SameWidth
         shown={strings.practice.backToCard}
         others={[en.practice.backToCard, he.practice.backToCard]}
