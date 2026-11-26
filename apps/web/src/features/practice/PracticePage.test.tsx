@@ -85,6 +85,14 @@ describe('PracticePage', () => {
       expect(btn(name)).toBeEnabled();
   });
 
+  it('turns the page bounce off while practising and back on when leaving (D-134)', () => {
+    const router = setup();
+    expect(document.documentElement).toHaveClass('no-overscroll');
+    act(() => void router.navigate('/'));
+    expect(screen.getByText('home page')).toBeInTheDocument();
+    expect(document.documentElement).not.toHaveClass('no-overscroll');
+  });
+
   it('the language switch is there throughout the loop: on the card and at the round break (D-122)', () => {
     setup();
     expect(screen.getByTestId('language-switch')).toBeInTheDocument();

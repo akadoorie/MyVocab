@@ -25,6 +25,15 @@ html {
   color: var(--text);
   font-family: var(--font-sans);
   -webkit-text-size-adjust: 100%;
+  /* Clip, not hidden: iOS still lets a page with hidden overflow be dragged sideways, e.g. while a
+     swiped card flies out past the edge (D-134). */
+  overflow-x: clip;
+}
+
+/* While practising (D-134): no rubber-band bounce of the whole page. */
+html.no-overscroll,
+html.no-overscroll body {
+  overscroll-behavior: none;
 }
 
 body {
@@ -32,7 +41,7 @@ body {
   min-height: 100dvh;
   background: var(--bg-glow), var(--bg);
   background-attachment: fixed;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 :focus-visible {

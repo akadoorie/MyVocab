@@ -126,6 +126,14 @@ function PracticeScreen({ knownSink }: { knownSink?: KnownSink }) {
   // Leaving the practice screen ends every waiting period: pending marks become final.
   useEffect(() => () => queue?.finalizeAll(), [queue]);
 
+  // No page bounce while practising, so a slightly diagonal swipe on a phone moves only the card,
+  // not the whole screen (D-134).
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add('no-overscroll');
+    return () => root.classList.remove('no-overscroll');
+  }, []);
+
   if (!stored) return <Navigate to="/" replace />;
   return <Practice stored={stored} knownSink={sink} />;
 }
