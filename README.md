@@ -2,8 +2,9 @@
 
 Learn words and expressions in a **shrinking loop** of flip cards. English and Hebrew first.
 Each round shows only the cards you still don't know, until nothing is left. The full
-specification is in [`PRD.md`](./PRD.md). Implementation decisions (the "D-0xx" references) are
-kept in a private log.
+specification (the PRD, cited in the code as "PRD §…") and the implementation decisions (the "D-0xx"
+references) are kept in the private content repository. The design concepts are in
+[`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
 > **Vocabulary privacy:** this repository is public and contains **no real vocabulary**.
 > Content lives only in the private `MyVocab-Content` repository and in the app's database.

@@ -3,5 +3,3 @@ pnpm-lock.yaml
 **/coverage
 **/.wrangler
 **/worker-configuration.d.ts
-PRD.md
-AGENT_PROMPT.md

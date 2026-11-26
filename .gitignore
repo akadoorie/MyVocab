@@ -1,4 +1,5 @@
 # Local-only files (never committed to the public repo)
+# The agent prompt lives in the private content repo (docs/AGENT_PROMPT.md)
 /AGENT_PROMPT.md
 # The decisions log lives in the private MyVocab-Content repo (docs/DECISIONS.md).
 /docs/DECISIONS.md
@@ -35,3 +36,6 @@ blob-report/
 *.log
 .DS_Store
 Thumbs.db
+
+# The PRD lives in the private content repository (docs/PRD.md); never commit a copy here
+/PRD.md
