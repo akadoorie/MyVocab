@@ -1,6 +1,6 @@
 import { createPractice } from '@myvocab/core';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '../../components/Toast';
@@ -298,6 +298,99 @@ describe('PracticePage', () => {
     fireEvent.keyDown(window, { key: 'k' });
     expect(tip()).toHaveTextContent('Sign-in required');
     expect(progress()).toBe('Round 1 · Card 1/3 · 0 known');
+  });
+
+  describe('the Flip hint (D-136)', () => {
+    const hint = () => screen.queryByTestId('flip-hint');
+    const learned = () => window.localStorage.getItem('myvocab.flipHint.learned');
+    beforeEach(() => window.localStorage.removeItem('myvocab.flipHint.learned'));
+
+    it('on a waiting card front: after 2.5 seconds, then again 6 seconds after each one ends', () => {
+      vi.useFakeTimers();
+      setup();
+      act(() => vi.advanceTimersByTime(2400));
+      expect(hint()).toBeNull();
+      act(() => vi.advanceTimersByTime(100));
+      expect(hint()).not.toBeNull();
+      act(() => vi.advanceTimersByTime(3200)); // it ends by itself
+      expect(hint()).toBeNull();
+      act(() => vi.advanceTimersByTime(5900));
+      expect(hint()).toBeNull();
+      act(() => vi.advanceTimersByTime(100));
+      expect(hint()).not.toBeNull();
+    });
+
+    it('any tap ends it and restarts the wait', () => {
+      vi.useFakeTimers();
+      setup();
+      act(() => vi.advanceTimersByTime(2500));
+      expect(hint()).not.toBeNull();
+      fireEvent.pointerDown(document.body);
+      expect(hint()).toBeNull();
+    });
+
+    it('a Flip (tap or F) ends it for good, also in a later practice', () => {
+      vi.useFakeTimers();
+      setup();
+      act(() => vi.advanceTimersByTime(2500));
+      expect(hint()).not.toBeNull();
+      fireEvent.keyDown(window, { key: 'f' });
+      expect(hint()).toBeNull();
+      expect(learned()).toBe('1');
+      fireEvent.keyDown(window, { key: 'f' }); // back to the front
+      act(() => vi.advanceTimersByTime(20_000));
+      expect(hint()).toBeNull();
+      cleanup();
+      setup();
+      act(() => vi.advanceTimersByTime(20_000));
+      expect(hint()).toBeNull();
+    });
+
+    it('"I don\'t know" doesn\'t count: the next card front still gets it', () => {
+      vi.useFakeTimers();
+      setup();
+      fireEvent.click(btn('I don’t know Show in next round'));
+      act(() => vi.advanceTimersByTime(5000));
+      expect(hint()).toBeNull(); // the back is showing
+      expect(learned()).toBeNull();
+      fireEvent.click(btn('Next'));
+      act(() => vi.advanceTimersByTime(2500));
+      expect(hint()).not.toBeNull();
+    });
+
+    it('waits while the swipe hint shows, then comes', () => {
+      vi.stubGlobal('matchMedia', (q: string) => ({
+        matches: q.includes('pointer: coarse'),
+        media: q,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      }));
+      vi.useFakeTimers();
+      setup();
+      fireEvent.click(btn('I know Show in future')); // card 2: Back opens up
+      // Small steps, so the screen updates between timers as it does in a browser.
+      const wait = (ms: number) => {
+        for (let t = 0; t < ms; t += 100) act(() => vi.advanceTimersByTime(100));
+      };
+      wait(2600);
+      expect(screen.queryByTestId('swipe-hint')).not.toBeNull();
+      expect(hint()).toBeNull(); // its 2.5 seconds have passed, but the swipe hint is on
+      wait(1000); // the swipe hint ends; the Flip hint's wait starts over
+      expect(screen.queryByTestId('swipe-hint')).toBeNull();
+      expect(hint()).toBeNull();
+      wait(2500);
+      expect(hint()).not.toBeNull();
+      vi.unstubAllGlobals();
+    });
+
+    it('not on a card answered earlier (reached with Back)', () => {
+      vi.useFakeTimers();
+      setup();
+      fireEvent.click(btn('I know Show in future'));
+      fireEvent.click(btn('Back'));
+      act(() => vi.advanceTimersByTime(10_000));
+      expect(hint()).toBeNull();
+    });
   });
 
   describe('the swipe hint (D-135)', () => {

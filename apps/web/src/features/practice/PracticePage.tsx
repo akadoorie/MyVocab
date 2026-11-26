@@ -43,6 +43,13 @@ import {
   type SwipeHintDirs,
 } from './swipe-hint';
 import { useMediaQuery } from '../../lib/useMediaQuery';
+import { FlipHint } from './FlipHint';
+import {
+  FLIP_HINT_FIRST_MS,
+  FLIP_HINT_REPEAT_MS,
+  isFlipLearned,
+  markFlipLearned,
+} from './flip-hint';
 
 /** The swipe hint waits this long after a change, so the card has finished arriving (D-135). */
 const SWIPE_HINT_SETTLE_MS = 900;
@@ -212,11 +219,21 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   const [swipeHint, setSwipeHint] = useState<{ key: number; dirs: SwipeHintDirs } | null>(null);
   const endSwipeHint = useCallback(() => setSwipeHint(null), []);
   const hintShownOn = useRef<{ card: string; dirs: Set<SwipeDir> }>({ card: '', dirs: new Set() });
+  // The Flip hint showing now (D-136), and whether this device has used Flip yet.
+  const [flipHint, setFlipHint] = useState<number | null>(null);
+  const endFlipHint = useCallback(() => setFlipHint(null), []);
+  const [flipLearned, setFlipLearned] = useState(isFlipLearned);
 
   const act = useCallback(
     (type: PracticeActionType, swiped = false) => {
       if (!canDispatch(state, type)) return;
       setSwipeHint(null);
+      setFlipHint(null);
+      // Flip used once (tap or key): no more Flip hints on this device (D-136).
+      if (type === 'FLIP') {
+        markFlipLearned();
+        setFlipLearned(true);
+      }
       const id = currentCardId(state);
       // On a card reached with Back the answer can change (FR-L29a); only changes reach the queue.
       const before = id === null ? null : answerOf(state, id);
@@ -338,7 +355,8 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   const nudging = useNudge(
     `${state.round}-${state.index}-${state.phase}-${state.side}-${state.hintsShown}`,
     state.index < NUDGE_CARDS,
-    !confirmLeave && motionAllowed(),
+    // Waits while the Flip hint plays, so the two don't move at once (D-136).
+    !confirmLeave && motionAllowed() && flipHint === null,
   );
 
   // After "I don't know", Next counts down and moves on by itself; any tap, key or scroll stops
@@ -393,7 +411,8 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
   const touch = useMediaQuery(TOUCH_QUERY);
   const onCardNow = state.phase === 'deciding' || state.phase === 'revealed';
   const cardKey = `${state.round}-${state.index}`;
-  const busy = confirmLeave || roll !== null || slide !== null || swipeHint !== null;
+  const busy =
+    confirmLeave || roll !== null || slide !== null || swipeHint !== null || flipHint !== null;
   useEffect(() => {
     if (!touch || !onCardNow || busy) return;
     const shown = hintShownOn.current;
@@ -410,6 +429,38 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
     }, SWIPE_HINT_SETTLE_MS);
     return () => window.clearTimeout(timer);
   }, [touch, onCardNow, busy, cardKey, canLeft, canRight]);
+
+  // The Flip hint (D-136): on an unanswered card front, until Flip has been used on this device.
+  // First after a short wait without a tap or key, then again a while after each one ends.
+  const flipWaiting =
+    !flipLearned &&
+    state.phase === 'deciding' &&
+    state.side === 'front' &&
+    id !== null &&
+    answerOf(state, id) === null;
+  const flipRuns = useRef<{ card: string; count: number }>({ card: '', count: 0 });
+  // Any tap or key restarts the wait.
+  const [activity, setActivity] = useState(0);
+  useEffect(() => {
+    if (!flipWaiting || flipHint !== null) return;
+    const bump = () => setActivity((n) => n + 1);
+    document.addEventListener('pointerdown', bump, true);
+    document.addEventListener('keydown', bump, true);
+    return () => {
+      document.removeEventListener('pointerdown', bump, true);
+      document.removeEventListener('keydown', bump, true);
+    };
+  }, [flipWaiting, flipHint]);
+  useEffect(() => {
+    if (!flipWaiting || busy) return;
+    if (flipRuns.current.card !== cardKey) flipRuns.current = { card: cardKey, count: 0 };
+    const wait = flipRuns.current.count === 0 ? FLIP_HINT_FIRST_MS : FLIP_HINT_REPEAT_MS;
+    const timer = window.setTimeout(() => {
+      flipRuns.current.count += 1;
+      setFlipHint(Date.now());
+    }, wait);
+    return () => window.clearTimeout(timer);
+  }, [flipWaiting, busy, cardKey, activity]);
 
   const slideGhost = slide && <SlideGhost key={slide.key} slide={slide} onDone={clearSlide} />;
   const ghost = !roll ? null : roll.kind === 'firework' ? (
@@ -594,6 +645,14 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
             card={swipeBox}
             animate={motionAllowed()}
             onDone={endSwipeHint}
+          />
+        )}
+        {flipHint !== null && (
+          <FlipHint
+            key={flipHint}
+            container={cardRef}
+            animate={motionAllowed()}
+            onDone={endFlipHint}
           />
         )}
       </div>

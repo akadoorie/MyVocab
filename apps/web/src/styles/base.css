@@ -2049,15 +2049,45 @@ body {
   background: color-mix(in srgb, var(--accent-top) 40%, transparent);
   opacity: 0;
 }
-.swipe-hint__palm {
+.hint-hand__palm {
   fill: #f3eeff;
   stroke: var(--accent-bottom);
   stroke-width: 2;
   stroke-linejoin: round;
 }
-.swipe-hint__knuckles {
+.hint-hand__knuckles {
   fill: none;
   stroke: var(--accent-top);
   stroke-width: 2;
   stroke-linecap: round;
+}
+
+/* The Flip hint (D-136): a hand that taps Flip and a ripple ring from it; FlipHint places both on
+   the button and moves them by script. */
+.flip-hint {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+.flip-hint__spot {
+  position: absolute;
+  width: 54px;
+  height: 64px;
+}
+.flip-hint__hand {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform-origin: 25px 2px;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+}
+.flip-hint__ring {
+  position: absolute;
+  border: 2px solid var(--accent);
+  opacity: 0;
+}
+.flip-hint__ring--still {
+  border-width: 3px;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 60%, transparent);
 }
