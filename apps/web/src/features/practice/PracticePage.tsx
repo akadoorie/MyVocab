@@ -32,6 +32,20 @@ import { LanguageSwitch } from '../../components/LanguageSwitch';
 import { RoundBar } from './RoundBar';
 import { SlideGhost, type CardSlide } from './SlideGhost';
 import { useSwipe } from './useSwipe';
+import { SwipeHint } from './SwipeHint';
+import {
+  markSwipeLearned,
+  pickSwipeHint,
+  readSwipeHintSeen,
+  recordSwipeHintShown,
+  TOUCH_QUERY,
+  type SwipeDir,
+  type SwipeHintDirs,
+} from './swipe-hint';
+import { useMediaQuery } from '../../lib/useMediaQuery';
+
+/** The swipe hint waits this long after a change, so the card has finished arriving (D-135). */
+const SWIPE_HINT_SETTLE_MS = 900;
 
 /** How long "Sign-in required" covers the locked green button (D-043). */
 const LOCKED_TIP_MS = 1500;
@@ -194,9 +208,15 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
     if (state.phase === 'revealed') nextRef.current?.focus();
   }, [state.phase, state.index, state.round]);
 
+  // The swipe hint showing now (D-135), and the directions already shown on the current card.
+  const [swipeHint, setSwipeHint] = useState<{ key: number; dirs: SwipeHintDirs } | null>(null);
+  const endSwipeHint = useCallback(() => setSwipeHint(null), []);
+  const hintShownOn = useRef<{ card: string; dirs: Set<SwipeDir> }>({ card: '', dirs: new Set() });
+
   const act = useCallback(
     (type: PracticeActionType, swiped = false) => {
       if (!canDispatch(state, type)) return;
+      setSwipeHint(null);
       const id = currentCardId(state);
       // On a card reached with Back the answer can change (FR-L29a); only changes reach the queue.
       const before = id === null ? null : answerOf(state, id);
@@ -341,14 +361,55 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
       : null;
   // Next sits on the right in every language (D-096): swipe left for Next, right for Back.
   const [swipeLeft, swipeRight] = ['NEXT', 'BACK'] as const;
+  const canLeft = canDispatch(state, swipeLeft);
+  const canRight = canDispatch(state, swipeRight);
   const swipeRef = useSwipe({
-    canLeft: canDispatch(state, swipeLeft),
-    canRight: canDispatch(state, swipeRight),
-    onLeft: () => act(swipeLeft, true),
-    onRight: () => act(swipeRight, true),
+    canLeft,
+    canRight,
+    // A swipe by the user means that direction is learned: no more hints for it (D-135).
+    onLeft: () => {
+      markSwipeLearned('left');
+      act(swipeLeft, true);
+    },
+    onRight: () => {
+      markSwipeLearned('right');
+      act(swipeRight, true);
+    },
     enabled: !confirmLeave,
     animate: motionAllowed(),
   });
+  // The element the swipe moves; the hint moves it the same way.
+  const swipeBox = useRef<HTMLDivElement>(null);
+  const setSwipeBox = useCallback(
+    (el: HTMLDivElement | null) => {
+      swipeBox.current = el;
+      return swipeRef(el);
+    },
+    [swipeRef],
+  );
+
+  // The swipe hint (D-135): on a touch screen, once the card has settled, for the directions that
+  // just became available and the device hasn't learned yet. Never over a dialog or an animation.
+  const touch = useMediaQuery(TOUCH_QUERY);
+  const onCardNow = state.phase === 'deciding' || state.phase === 'revealed';
+  const cardKey = `${state.round}-${state.index}`;
+  const busy = confirmLeave || roll !== null || slide !== null || swipeHint !== null;
+  useEffect(() => {
+    if (!touch || !onCardNow || busy) return;
+    const shown = hintShownOn.current;
+    if (shown.card !== cardKey) hintShownOn.current = { card: cardKey, dirs: new Set() };
+    const available = { left: canLeft, right: canRight };
+    if (!pickSwipeHint(available, readSwipeHintSeen(), hintShownOn.current.dirs)) return;
+    const timer = window.setTimeout(() => {
+      const dirs = pickSwipeHint(available, readSwipeHintSeen(), hintShownOn.current.dirs);
+      if (!dirs) return;
+      if (dirs !== 'right') hintShownOn.current.dirs.add('left');
+      if (dirs !== 'left') hintShownOn.current.dirs.add('right');
+      recordSwipeHintShown(dirs);
+      setSwipeHint({ key: Date.now(), dirs });
+    }, SWIPE_HINT_SETTLE_MS);
+    return () => window.clearTimeout(timer);
+  }, [touch, onCardNow, busy, cardKey, canLeft, canRight]);
 
   const slideGhost = slide && <SlideGhost key={slide.key} slide={slide} onDone={clearSlide} />;
   const ghost = !roll ? null : roll.kind === 'firework' ? (
@@ -501,11 +562,11 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
       <div
         key={`${state.round}-${state.index}`}
         ref={cardRef}
-        className={`card-enter card-enter--${enterFrom} flex min-h-0 flex-1 flex-col md:h-[clamp(420px,58vh,600px)] md:flex-none`}
+        className={`card-enter card-enter--${enterFrom} relative flex min-h-0 flex-1 flex-col md:h-[clamp(420px,58vh,600px)] md:flex-none`}
       >
         {/* The swipe moves this inner box: the rise-in animation owns the outer one's transform.
             Vertical drags stay with the page (touch-action: pan-y). */}
-        <div ref={swipeRef} className="flex min-h-0 flex-1 touch-pan-y flex-col">
+        <div ref={setSwipeBox} className="flex min-h-0 flex-1 touch-pan-y flex-col">
           <FlipCard
             card={card}
             side={state.side}
@@ -526,6 +587,15 @@ function Practice({ stored, knownSink }: { stored: StoredPractice; knownSink: Kn
             }
           />
         </div>
+        {swipeHint && (
+          <SwipeHint
+            key={swipeHint.key}
+            dirs={swipeHint.dirs}
+            card={swipeBox}
+            animate={motionAllowed()}
+            onDone={endSwipeHint}
+          />
+        )}
       </div>
 
       <p className="sr-only" aria-live="polite">

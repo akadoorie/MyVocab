@@ -1989,3 +1989,75 @@ body {
   inherits: false;
   initial-value: 100%;
 }
+
+/* The swipe hint (D-135): a hand over the card and an arrow at each side it can go. Physical
+   left/right on purpose: swipes aren't mirrored in Hebrew (D-096). Script moves them (SwipeHint). */
+.swipe-hint {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+.swipe-hint__arrow {
+  position: absolute;
+  top: 50%;
+  width: 28px;
+  height: 56px;
+  margin-top: -28px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: var(--accent-top);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  opacity: 0;
+}
+.swipe-hint__arrow--left {
+  left: -10px;
+}
+.swipe-hint__arrow--right {
+  right: -10px;
+}
+.swipe-hint__arrow svg path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.swipe-hint__spot {
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: 54px;
+  height: 64px;
+  margin-left: -27px;
+}
+.swipe-hint__hand {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+}
+.swipe-hint__dot {
+  position: absolute;
+  left: 9px;
+  top: -4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent-top) 40%, transparent);
+  opacity: 0;
+}
+.swipe-hint__palm {
+  fill: #f3eeff;
+  stroke: var(--accent-bottom);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.swipe-hint__knuckles {
+  fill: none;
+  stroke: var(--accent-top);
+  stroke-width: 2;
+  stroke-linecap: round;
+}

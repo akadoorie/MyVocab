@@ -300,6 +300,87 @@ describe('PracticePage', () => {
     expect(progress()).toBe('Round 1 · Card 1/3 · 0 known');
   });
 
+  describe('the swipe hint (D-135)', () => {
+    /** A touch screen (phones, tablets); motion stays off so no other animation plays. */
+    const touch = () =>
+      vi.stubGlobal('matchMedia', (q: string) => ({
+        matches: q.includes('pointer: coarse'),
+        media: q,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      }));
+    const hint = () => screen.queryByTestId('swipe-hint');
+    const seen = () => JSON.parse(window.localStorage.getItem('myvocab.swipeHint') ?? 'null');
+    beforeEach(() => window.localStorage.removeItem('myvocab.swipeHint'));
+    afterEach(() => vi.unstubAllGlobals());
+
+    it('after "I don\'t know" on card 1 it shows the swipe to Next (left), once the card has settled', () => {
+      touch();
+      vi.useFakeTimers();
+      setup();
+      act(() => vi.advanceTimersByTime(2000));
+      expect(hint()).toBeNull(); // card 1: neither Back nor Next yet
+      fireEvent.click(btn('I don’t know Show in next round'));
+      act(() => vi.advanceTimersByTime(800));
+      expect(hint()).toBeNull();
+      act(() => vi.advanceTimersByTime(100));
+      expect(hint()).toHaveAttribute('data-dirs', 'left');
+      expect(seen()).toMatchObject({ left: 1, right: 0 });
+      // It ends by itself, and isn't shown again on this card.
+      act(() => vi.advanceTimersByTime(3000));
+      expect(hint()).toBeNull();
+      act(() => vi.advanceTimersByTime(2000));
+      expect(hint()).toBeNull();
+      expect(seen()).toMatchObject({ left: 1 });
+    });
+
+    it('a Know on card 1 leads to card 2, where it shows the swipe to Back (right)', () => {
+      touch();
+      vi.useFakeTimers();
+      setup();
+      fireEvent.click(btn('I know Show in future'));
+      expect(progress()).toBe('Round 1 · Card 2/3 · 1 known');
+      act(() => vi.advanceTimersByTime(900));
+      expect(hint()).toHaveAttribute('data-dirs', 'right');
+    });
+
+    it('any touch ends it at once', () => {
+      touch();
+      vi.useFakeTimers();
+      setup();
+      fireEvent.click(btn('I don’t know Show in next round'));
+      act(() => vi.advanceTimersByTime(900));
+      expect(hint()).not.toBeNull();
+      fireEvent.pointerDown(document.body);
+      expect(hint()).toBeNull();
+    });
+
+    it('not after the direction was shown twice or learned by a swipe, and never without a touch screen', () => {
+      touch();
+      vi.useFakeTimers();
+      window.localStorage.setItem(
+        'myvocab.swipeHint',
+        JSON.stringify({ left: 2, right: 0, leftLearned: false, rightLearned: true }),
+      );
+      setup();
+      fireEvent.click(btn('I don’t know Show in next round'));
+      act(() => vi.advanceTimersByTime(2000));
+      expect(hint()).toBeNull();
+      fireEvent.click(btn('Next'));
+      act(() => vi.advanceTimersByTime(2000));
+      expect(hint()).toBeNull(); // card 2: Back is learned
+    });
+
+    it('never with a mouse', () => {
+      vi.useFakeTimers();
+      setup();
+      fireEvent.click(btn('I don’t know Show in next round'));
+      act(() => vi.advanceTimersByTime(2000));
+      expect(hint()).toBeNull();
+      expect(seen()).toBeNull();
+    });
+  });
+
   describe('the nudge (D-066)', () => {
     /** Motion allowed (no "reduce motion"), unless `reduce`. */
     const motion = (reduce = false) =>
