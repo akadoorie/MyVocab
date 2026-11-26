@@ -31,8 +31,19 @@ export function Avatar({ user, size = 36 }: { user: SessionUser; size?: number }
   );
 }
 
-/** Avatar button with a small disclosure menu (PRD FR-L70). */
-export function UserMenu({ user }: { user: SessionUser }) {
+/**
+ * Avatar button with a small disclosure menu (PRD FR-L70).
+ * `alignRight` anchors the menu to the physical right edge: on Home the header is mirrored back to
+ * left-to-right in Hebrew too (D-123), so the avatar sits at the right in every language and a
+ * logical `end` anchor would open the menu off-screen on right-to-left pages.
+ */
+export function UserMenu({
+  user,
+  alignRight = false,
+}: {
+  user: SessionUser;
+  alignRight?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -78,7 +89,7 @@ export function UserMenu({ user }: { user: SessionUser }) {
       {open && (
         <div
           id={menuId}
-          className="absolute end-0 z-40 mt-2 w-64 rounded-[14px] border border-border bg-surface p-2 shadow-[var(--card-shadow)]"
+          className={`absolute ${alignRight ? 'right-0' : 'end-0'} z-40 mt-2 w-64 max-w-[calc(100vw-2rem)] rounded-[14px] border border-border bg-surface p-2 shadow-[var(--card-shadow)]`}
         >
           <div className="border-b border-border px-3 pt-1 pb-3">
             <p className="truncate font-medium">{user.name}</p>

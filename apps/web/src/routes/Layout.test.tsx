@@ -26,4 +26,19 @@ describe('Layout', () => {
     expect(screen.getByText('start page')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Home/ })).not.toBeInTheDocument();
   });
+
+  // On Home the avatar sits at the right in every language (D-123), so the menu anchors to the
+  // physical right; elsewhere it follows the reading direction (logical end).
+  it.each([
+    ['/', 'right-0', 'end-0'],
+    ['/known', 'end-0', 'right-0'],
+  ])('anchors the account menu on %s with %s', async (path, anchor, other) => {
+    mockFetch({});
+    renderRoutes(routes, [path]);
+    const button = await screen.findByRole('button', { name: 'Account menu' });
+    fireEvent.click(button);
+    const panel = document.getElementById(button.getAttribute('aria-controls')!)!;
+    expect(panel).toHaveClass(anchor);
+    expect(panel).not.toHaveClass(other);
+  });
 });

@@ -84,7 +84,7 @@ export function Layout() {
               >
                 {strings.nav.knownWords}
               </NavLink>
-              <UserMenu user={session.user} />
+              <UserMenu user={session.user} alignRight={onHome} />
             </>
           ) : (
             !session.loading && (
